@@ -27,6 +27,7 @@
     "typescript": "^3.4.5"
   },
   "dependencies": {
+    "@claasahl/spotware-adapter": "^0.4.8",
     "inquirer": "^6.3.1"
   }
 }
