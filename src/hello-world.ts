@@ -3,8 +3,14 @@ import {
   connect,
   fromProtoMessage,
   toProtoMessage,
-  writeProtoMessage
+  writeProtoMessage,
+  SpotwareSocket
 } from "@claasahl/spotware-adapter";
+import {
+  IProtoMessage,
+  ProtoPayloadType
+} from "@claasahl/spotware-adapter/build/spotware-messages";
+import SpotwarePayloadTypes from "@claasahl/spotware-adapter/build/spotware-payload-types";
 
 inquirer
   .prompt<StartupOptions>([
@@ -36,26 +42,28 @@ interface StartupOptions {
 }
 
 function startupClient(options: StartupOptions) {
-  console.log(JSON.stringify(options, null, 2));
-  // establish connection
   const client = connect(
     options.port,
     options.host
   );
+  printProtoMessages(client);
+  scheduleHeartbeats(client);
 
-  // handle proto messages
+  writeProtoMessage(client, toProtoMessage("PROTO_OA_VERSION_REQ", {}));
+}
+
+function printProtoMessages(client: SpotwareSocket) {
   client.on("PROTO_MESSAGE", (message, payloadType) => {
     const msg = fromProtoMessage(payloadType as any, message);
     const data = JSON.stringify({ payloadType, ...msg }, null, 2);
     console.log(data);
   });
+}
 
-  // write proto messages
+function scheduleHeartbeats(client: SpotwareSocket): void {
   const heartbeats = setInterval(() => {
     const message = toProtoMessage("HEARTBEAT_EVENT", {});
     writeProtoMessage(client, message);
   }, 10000);
   client.on("end", () => clearInterval(heartbeats));
-
-  writeProtoMessage(client, toProtoMessage("PROTO_OA_VERSION_REQ", {}));
 }
