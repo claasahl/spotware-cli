@@ -27,13 +27,29 @@ inquirer
         return "Please enter a valid port number";
       },
       default: "5035"
+    },
+    {
+      type: "input",
+      name: "clientId",
+      message: "Enter OAuth 'clientId'",
+      when: () => typeof process.env.SPOTWARE__CLIENT_ID === "undefined"
+    },
+    {
+      type: "input",
+      name: "clientSecret",
+      message: "Enter OAuth 'clientSecret'",
+      when: () => typeof process.env.SPOTWARE__CLIENT_SECRET === "undefined"
     }
   ])
   .then(startupClient);
 
+const ui = new inquirer.ui.BottomBar();
+
 interface StartupOptions {
   host: string;
   port: number;
+  clientId: string;
+  clientSecret: string;
 }
 
 function startupClient(options: StartupOptions) {
@@ -43,15 +59,24 @@ function startupClient(options: StartupOptions) {
   );
   printProtoMessages(client);
   scheduleHeartbeats(client);
+  client.on("end", () => ui.close());
 
   writeProtoMessage(client, toProtoMessage("PROTO_OA_VERSION_REQ", {}));
+  const {
+    clientId = process.env.SPOTWARE__CLIENT_ID || "",
+    clientSecret = process.env.SPOTWARE__CLIENT_SECRET || ""
+  } = options;
+  writeProtoMessage(
+    client,
+    toProtoMessage("PROTO_OA_APPLICATION_AUTH_REQ", { clientId, clientSecret })
+  );
 }
 
 function printProtoMessages(client: SpotwareSocket) {
   client.on("PROTO_MESSAGE", (message, payloadType) => {
     const msg = fromProtoMessage(payloadType as any, message);
     const data = JSON.stringify({ payloadType, ...msg }, null, 2);
-    console.log(data);
+    ui.writeLog(data);
   });
 }
 
