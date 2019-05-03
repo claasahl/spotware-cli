@@ -6,11 +6,6 @@ import {
   writeProtoMessage,
   SpotwareSocket
 } from "@claasahl/spotware-adapter";
-import {
-  IProtoMessage,
-  ProtoPayloadType
-} from "@claasahl/spotware-adapter/build/spotware-messages";
-import SpotwarePayloadTypes from "@claasahl/spotware-adapter/build/spotware-payload-types";
 
 inquirer
   .prompt<StartupOptions>([
