@@ -38,31 +38,17 @@ inquirer.prompt(questions).then(answers => {
 
   // handle (incoming) proto messages
   client.on("PROTO_MESSAGE", (message, payloadType) => {
-    console.log(payloadType);
-    switch (payloadType) {
-      case "ERROR_RES": {
-        const msg = fromProtoMessage("ERROR_RES", message);
-        console.log(msg);
-        break;
-      }
-      case "PROTO_OA_VERSION_REQ": {
-        const msg = fromProtoMessage("PROTO_OA_VERSION_REQ", message);
-        console.log(msg);
-        break;
-      }
-      case "PROTO_OA_VERSION_RES": {
-        const msg = fromProtoMessage("PROTO_OA_VERSION_RES", message);
-        console.log(msg);
-        break;
-      }
-    }
+    const msg = fromProtoMessage(payloadType as any, message);
+    const data = JSON.stringify({ payloadType, ...msg }, null, 2);
+    console.log(data);
   });
 
   // write (outgoing) proto messages
-  setInterval(() => {
+  const heartbeats = setInterval(() => {
     const message = toProtoMessage("HEARTBEAT_EVENT", {});
     writeProtoMessage(client, message);
   }, 10000);
+  client.on("end", () => clearInterval(heartbeats));
 
   writeProtoMessage(client, toProtoMessage("PROTO_OA_VERSION_REQ", {}));
 });
