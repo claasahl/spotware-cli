@@ -7,26 +7,47 @@ interface State {
   port: number;
 }
 
-const INITIAL_STATE: State = {
-  connected: false,
-  host: "live.ctraderapi.com",
-  port: 5035
-};
-
-function counter(state: State = INITIAL_STATE, action: actions.SpotwareAction) {
+function connected(state: boolean = false, action: actions.SpotwareAction) {
   switch (action.type) {
-    case actions.SPOTWARE__CONFIGURE:
-      return { ...state, host: action.host, port: action.port };
     case actions.SPOTWARE__CONNECT:
-      return { ...state, connected: true };
+      return true;
     case actions.SPOTWARE__DISCONNECT:
-      return { ...state, connected: false };
+      return false;
     default:
       return state;
   }
 }
 
-const store = createStore(counter);
+function host(
+  state: string = "live.ctraderapi.com",
+  action: actions.SpotwareAction
+) {
+  switch (action.type) {
+    case actions.SPOTWARE__CONFIGURE:
+      return action.host;
+    default:
+      return state;
+  }
+}
+
+function port(state: number = 5035, action: actions.SpotwareAction) {
+  switch (action.type) {
+    case actions.SPOTWARE__CONFIGURE:
+      return action.port;
+    default:
+      return state;
+  }
+}
+
+function reducer(state: Partial<State> = {}, action: actions.SpotwareAction) {
+  return {
+    connected: connected(state.connected, action),
+    host: host(state.host, action),
+    port: port(state.port, action)
+  };
+}
+
+const store = createStore(reducer);
 export default store;
 
 store.subscribe(() => {});
