@@ -1,4 +1,5 @@
 import * as actions from "./actions";
+import { combineReducers } from "redux";
 interface State {
   connected: boolean;
   host: string;
@@ -37,13 +38,4 @@ function port(state: number = 5035, action: actions.SpotwareAction) {
   }
 }
 
-export function spotwareClient(
-  state: Partial<State> = {},
-  action: actions.SpotwareAction
-) {
-  return {
-    connected: connected(state.connected, action),
-    host: host(state.host, action),
-    port: port(state.port, action)
-  };
-}
+export const spotwareClient = combineReducers({ connected, host, port });
