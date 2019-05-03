@@ -38,6 +38,7 @@ inquirer.prompt(prompts).ui.process.subscribe(
       switch (next.answer) {
         case "exit":
           prompts.complete();
+          unscribe();
           break;
         case "connect":
           STORE.dispatch(connect());
@@ -53,4 +54,4 @@ inquirer.prompt(prompts).ui.process.subscribe(
 );
 
 prompts.next(mainMenu);
-STORE.subscribe(() => prompts.next(mainMenu));
+const unscribe = STORE.subscribe(() => prompts.next(mainMenu));
