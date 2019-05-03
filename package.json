@@ -20,6 +20,7 @@
   "devDependencies": {
     "@types/inquirer": "^6.0.1",
     "@types/node": "^11.13.8",
+    "@types/redux": "^3.6.0",
     "husky": "^2.2.0",
     "prettier": "^1.17.0",
     "pretty-quick": "^1.10.0",
@@ -30,6 +31,7 @@
     "@claasahl/spotware-adapter": "^0.4.8",
     "dotenv": "^8.0.0",
     "inquirer": "^6.3.1",
+    "redux": "^4.0.1",
     "rxjs": "^6.5.1"
   }
 }
