@@ -64,17 +64,19 @@ inquirer.prompt(prompts).ui.process.subscribe(
       switch (next.answer) {
         case "exit":
           prompts.complete();
-          unscribe();
           break;
         case "configure":
           prompts.next(askForHost);
           prompts.next(askForPort);
+          prompts.next(mainMenu);
           break;
         case "connect":
           STORE.dispatch(connect());
+          prompts.next(mainMenu);
           break;
         case "disconnect":
           STORE.dispatch(disconnect());
+          prompts.next(mainMenu);
           break;
       }
     } else if (next.name === "host") {
@@ -88,4 +90,3 @@ inquirer.prompt(prompts).ui.process.subscribe(
 );
 
 prompts.next(mainMenu);
-const unscribe = STORE.subscribe(() => prompts.next(mainMenu));
