@@ -1,6 +1,13 @@
-import { createStore } from "redux";
+import { createStore, applyMiddleware } from "redux";
+import { createLogger } from "redux-logger";
+import thunkMiddleware from "redux-thunk";
 
 import { spotwareClient } from "./reducers";
 
-const store = createStore(spotwareClient);
+const loggerMiddleware = createLogger({ colors: false });
+
+const store = createStore(
+  spotwareClient,
+  applyMiddleware(thunkMiddleware, loggerMiddleware)
+);
 export default store;
