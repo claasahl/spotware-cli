@@ -14,7 +14,7 @@ function connected(state: boolean = false, action: actions.Actions) {
 
 function host(state: string = "live.ctraderapi.com", action: actions.Actions) {
   switch (action.type) {
-    case actions.SPOTWARE__CONFIGURE:
+    case actions.SPOTWARE__CONFIGURE_HOST:
       return action.host;
     default:
       return state;
@@ -23,7 +23,7 @@ function host(state: string = "live.ctraderapi.com", action: actions.Actions) {
 
 function port(state: number = 5035, action: actions.Actions) {
   switch (action.type) {
-    case actions.SPOTWARE__CONFIGURE:
+    case actions.SPOTWARE__CONFIGURE_PORT:
       return action.port;
     default:
       return state;

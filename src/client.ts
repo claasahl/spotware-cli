@@ -2,7 +2,7 @@ import inquirer from "inquirer";
 import * as Rx from "rxjs";
 
 import STORE from "./store";
-import { configure, connect, disconnect } from "./actions";
+import { configureHost, configurePort, connect, disconnect } from "./actions";
 
 const mainMenu = {
   type: "list",
@@ -80,9 +80,9 @@ inquirer.prompt(prompts).ui.process.subscribe(
           break;
       }
     } else if (next.name === "host") {
-      STORE.dispatch(configure(next.answer, STORE.getState().port));
+      STORE.dispatch(configureHost(next.answer));
     } else if (next.name === "port") {
-      STORE.dispatch(configure(STORE.getState().host, next.answer));
+      STORE.dispatch(configurePort(next.answer));
     }
   },
   error => console.log("error", error),
