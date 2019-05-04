@@ -1,12 +1,7 @@
 import * as actions from "./actions";
 import { combineReducers } from "redux";
-interface State {
-  connected: boolean;
-  host: string;
-  port: number;
-}
 
-function connected(state: boolean = false, action: actions.SpotwareAction) {
+function connected(state: boolean = false, action: actions.Actions) {
   switch (action.type) {
     case actions.SPOTWARE__CONNECT:
       return true;
@@ -17,10 +12,7 @@ function connected(state: boolean = false, action: actions.SpotwareAction) {
   }
 }
 
-function host(
-  state: string = "live.ctraderapi.com",
-  action: actions.SpotwareAction
-) {
+function host(state: string = "live.ctraderapi.com", action: actions.Actions) {
   switch (action.type) {
     case actions.SPOTWARE__CONFIGURE:
       return action.host;
@@ -29,7 +21,7 @@ function host(
   }
 }
 
-function port(state: number = 5035, action: actions.SpotwareAction) {
+function port(state: number = 5035, action: actions.Actions) {
   switch (action.type) {
     case actions.SPOTWARE__CONFIGURE:
       return action.port;
