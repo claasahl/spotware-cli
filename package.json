@@ -7,8 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "tsc",
     "build": "tsc",
-    "start": "ts-node -r dotenv/config src/client.ts",
-    "sample": "ts-node ./src/blessed.ts"
+    "start": "ts-node -r dotenv/config src/client.ts"
   },
   "keywords": [],
   "author": "",
@@ -19,7 +18,6 @@
     }
   },
   "devDependencies": {
-    "@types/blessed": "^0.1.11",
     "@types/inquirer": "^6.0.1",
     "@types/node": "^11.13.8",
     "@types/redux": "^3.6.0",
@@ -33,7 +31,6 @@
   },
   "dependencies": {
     "@claasahl/spotware-adapter": "^0.4.8",
-    "blessed": "^0.1.81",
     "dotenv": "^8.0.0",
     "inquirer": "^6.3.1",
     "redux": "^4.0.1",
