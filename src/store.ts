@@ -1,9 +1,6 @@
-import { createStore, applyMiddleware } from "redux";
-import { createLogger } from "redux-logger";
+import { createStore } from "redux";
 
 import { spotwareClient } from "./reducers";
 
-const loggerMiddleware = createLogger({ colors: false });
-
-const store = createStore(spotwareClient, applyMiddleware(loggerMiddleware));
+const store = createStore(spotwareClient);
 export default store;
