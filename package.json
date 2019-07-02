@@ -1,0 +1,27 @@
+{
+  "name": "spotware-cli",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "precommit": "pretty-quick --staged",
+    "prepare": "tsc",
+    "build": "tsc",
+    "start": "ts-node src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/claasahl/spotware-cli.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/claasahl/spotware-cli/issues"
+  },
+  "homepage": "https://github.com/claasahl/spotware-cli#readme",
+  "devDependencies": {
+    "create-typescript-project-dependencies": "^10.0.4"
+  }
+}
