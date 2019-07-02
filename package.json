@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "preimport": "rimraf ./protobuf",
+    "import": "isogit clone --url=https://github.com/spotware/Open-API-2.0-protobuf-messages.git --dir=./protobuf --singleBranch",
+    "postimport": "rimraf ./protobuf/.git",
     "test": "echo \"Error: no test specified\" && exit 1",
     "precommit": "pretty-quick --staged",
     "prepare": "tsc",
@@ -22,6 +25,8 @@
   },
   "homepage": "https://github.com/claasahl/spotware-cli#readme",
   "devDependencies": {
-    "create-typescript-project-dependencies": "^10.0.4"
+    "create-typescript-project-dependencies": "^10.0.4",
+    "isomorphic-git": "^0.55.4",
+    "rimraf": "^2.6.3"
   }
 }
