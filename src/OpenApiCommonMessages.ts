@@ -1,12 +1,12 @@
 import PBF from "pbf";
 
-enum ProtoPayloadType {
+export enum ProtoPayloadType {
   "PROTO_MESSAGE" = 5,
   "ERROR_RES" = 50,
   "HEARTBEAT_EVENT" = 51
 }
 
-enum ProtoErrorCode {
+export enum ProtoErrorCode {
   "UNKNOWN_ERROR" = 1,
   "UNSUPPORTED_MESSAGE" = 2,
   "INVALID_REQUEST" = 3,
