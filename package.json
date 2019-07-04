@@ -11,7 +11,7 @@
     "precommit": "pretty-quick --staged",
     "prepare": "npm run build",
     "build": "npm run import && tsc",
-    "start": "ts-node src/index.ts"
+    "start": "ts-node src/compile.ts && npx prettier --write ./src/**"
   },
   "repository": {
     "type": "git",
@@ -26,6 +26,7 @@
   "homepage": "https://github.com/claasahl/spotware-cli#readme",
   "devDependencies": {
     "@types/pbf": "^3.0.1",
+    "@types/protocol-buffers-schema": "^3.3.0",
     "create-typescript-project-dependencies": "^10.0.4",
     "isomorphic-git": "^0.55.4",
     "rimraf": "^2.6.3"
