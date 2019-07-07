@@ -11,7 +11,8 @@
     "precommit": "pretty-quick --staged",
     "prepare": "npm run build",
     "build": "npm run import && tsc",
-    "start": "ts-node src/compile.ts && npx prettier --write ./src/**"
+    "start": "ts-node ./src/index.ts",
+    "compile": "ts-node src/compile.ts && npx prettier --write ./src/**"
   },
   "repository": {
     "type": "git",

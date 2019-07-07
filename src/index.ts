@@ -1,17 +1,7 @@
-import resolve from "resolve-protobuf-schema";
-import fs from "fs";
 import tls from "tls";
 
 import * as util from "./util";
-import { IProtoMessage, ProtoPayloadType } from "./OpenApiCommonMessages";
-
-const schema = resolve.sync("./protobuf/OpenApiCommonMessages.proto");
-fs.writeFileSync("abc.json", JSON.stringify(schema, null, 2));
-
-resolve("./protobuf/OpenApiCommonMessages.proto", (err, schema) => {
-  console.log("error", err);
-  fs.writeFileSync("abc2.json", JSON.stringify(schema, null, 2));
-});
+import { IProtoMessage } from "./OpenApiCommonMessages";
 
 // see compileRaw in compile.js
 // https://github.com/mapbox/pbf/blob/master/compile.js#L16
