@@ -1,7 +1,7 @@
 import tls from "tls";
 
 import * as util from "./util";
-import { IProtoMessage } from "./OpenApiCommonMessages";
+import { ProtoMessage } from "./OpenApiCommonMessages";
 
 // see compileRaw in compile.js
 // https://github.com/mapbox/pbf/blob/master/compile.js#L16
@@ -23,7 +23,7 @@ function readProtoMessage(this: tls.TLSSocket, data: string) {
 
 export function writeProtoMessage(
   socket: tls.TLSSocket,
-  message: IProtoMessage
+  message: ProtoMessage
 ) {
   const buffer = util.serialize(message);
   return socket.write(buffer, (err: Error) => {
@@ -53,7 +53,7 @@ export function connect(
     // net.Socket
     .on("close", (had_error: boolean) => console.log("close", had_error))
     .on("connect", () => console.log("connect"))
-    .on("data", (data: Buffer) => console.log("data", data))
+    //.on("data", (data: Buffer) => console.log("data", data))
     .on("drain", () => console.log("drain"))
     .on("end", () => console.log("end"))
     .on("error", (err: Error) => console.log("error", err))

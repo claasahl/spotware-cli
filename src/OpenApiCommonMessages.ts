@@ -22,16 +22,16 @@ export enum ProtoErrorCode {
 
 // ProtoMessage ================================================
 
-export interface IProtoMessage {
+export interface ProtoMessage {
   payloadType: number;
   payload?: Uint8Array;
   clientMsgId?: string;
 }
 
-export class ProtoMessage {
+export class ProtoMessageUtils {
   static read(pbf: PBF, end?: number) {
     return pbf.readFields(
-      ProtoMessage._readField,
+      ProtoMessageUtils._readField,
       {
         payloadType: 0
       },
@@ -39,32 +39,32 @@ export class ProtoMessage {
     );
   }
 
-  private static _readField(tag: number, obj: IProtoMessage, pbf: PBF) {
+  private static _readField(tag: number, obj: ProtoMessage, pbf: PBF) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.payload = pbf.readBytes();
     if (tag === 3) obj.clientMsgId = pbf.readString();
   }
 
-  static write(obj: IProtoMessage, pbf: PBF) {
-    if (obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
-    if (obj.payload) pbf.writeBytesField(2, obj.payload);
-    if (obj.clientMsgId) pbf.writeStringField(3, obj.clientMsgId);
+  static write(obj: ProtoMessage, pbf?: PBF) {
+    if (pbf && obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
+    if (pbf && obj.payload) pbf.writeBytesField(2, obj.payload);
+    if (pbf && obj.clientMsgId) pbf.writeStringField(3, obj.clientMsgId);
   }
 }
 
 // ProtoErrorRes ===============================================
 
-export interface IProtoErrorRes {
+export interface ProtoErrorRes {
   payloadType?: ProtoPayloadType;
   errorCode: string;
   description?: string;
   maintenanceEndTimestamp?: number;
 }
 
-export class ProtoErrorRes {
+export class ProtoErrorResUtils {
   static read(pbf: PBF, end?: number) {
     return pbf.readFields(
-      ProtoErrorRes._readField,
+      ProtoErrorResUtils._readField,
       {
         errorCode: ""
       },
@@ -72,38 +72,38 @@ export class ProtoErrorRes {
     );
   }
 
-  private static _readField(tag: number, obj: IProtoErrorRes, pbf: PBF) {
+  private static _readField(tag: number, obj: ProtoErrorRes, pbf: PBF) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.errorCode = pbf.readString();
     if (tag === 3) obj.description = pbf.readString();
     if (tag === 4) obj.maintenanceEndTimestamp = pbf.readVarint64();
   }
 
-  static write(obj: IProtoErrorRes, pbf: PBF) {
-    if (obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
-    if (obj.errorCode) pbf.writeStringField(2, obj.errorCode);
-    if (obj.description) pbf.writeStringField(3, obj.description);
-    if (obj.maintenanceEndTimestamp)
+  static write(obj: ProtoErrorRes, pbf?: PBF) {
+    if (pbf && obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
+    if (pbf && obj.errorCode) pbf.writeStringField(2, obj.errorCode);
+    if (pbf && obj.description) pbf.writeStringField(3, obj.description);
+    if (pbf && obj.maintenanceEndTimestamp)
       pbf.writeVarintField(4, obj.maintenanceEndTimestamp);
   }
 }
 
 // ProtoHeartbeatEvent =========================================
 
-export interface IProtoHeartbeatEvent {
+export interface ProtoHeartbeatEvent {
   payloadType?: ProtoPayloadType;
 }
 
-export class ProtoHeartbeatEvent {
+export class ProtoHeartbeatEventUtils {
   static read(pbf: PBF, end?: number) {
-    return pbf.readFields(ProtoHeartbeatEvent._readField, {}, end);
+    return pbf.readFields(ProtoHeartbeatEventUtils._readField, {}, end);
   }
 
-  private static _readField(tag: number, obj: IProtoHeartbeatEvent, pbf: PBF) {
+  private static _readField(tag: number, obj: ProtoHeartbeatEvent, pbf: PBF) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
   }
 
-  static write(obj: IProtoHeartbeatEvent, pbf: PBF) {
-    if (obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
+  static write(obj: ProtoHeartbeatEvent, pbf?: PBF) {
+    if (pbf && obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
   }
 }
