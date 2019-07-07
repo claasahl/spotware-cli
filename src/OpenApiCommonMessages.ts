@@ -45,10 +45,10 @@ export class ProtoMessageUtils {
     if (tag === 3) obj.clientMsgId = pbf.readString();
   }
 
-  static write(obj: ProtoMessage, pbf?: PBF) {
-    if (pbf && obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
-    if (pbf && obj.payload) pbf.writeBytesField(2, obj.payload);
-    if (pbf && obj.clientMsgId) pbf.writeStringField(3, obj.clientMsgId);
+  static write(obj: ProtoMessage, pbf: PBF = new PBF()) {
+    if (obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
+    if (obj.payload) pbf.writeBytesField(2, obj.payload);
+    if (obj.clientMsgId) pbf.writeStringField(3, obj.clientMsgId);
   }
 }
 
@@ -79,11 +79,11 @@ export class ProtoErrorResUtils {
     if (tag === 4) obj.maintenanceEndTimestamp = pbf.readVarint64();
   }
 
-  static write(obj: ProtoErrorRes, pbf?: PBF) {
-    if (pbf && obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
-    if (pbf && obj.errorCode) pbf.writeStringField(2, obj.errorCode);
-    if (pbf && obj.description) pbf.writeStringField(3, obj.description);
-    if (pbf && obj.maintenanceEndTimestamp)
+  static write(obj: ProtoErrorRes, pbf: PBF = new PBF()) {
+    if (obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
+    if (obj.errorCode) pbf.writeStringField(2, obj.errorCode);
+    if (obj.description) pbf.writeStringField(3, obj.description);
+    if (obj.maintenanceEndTimestamp)
       pbf.writeVarintField(4, obj.maintenanceEndTimestamp);
   }
 }
@@ -103,7 +103,7 @@ export class ProtoHeartbeatEventUtils {
     if (tag === 1) obj.payloadType = pbf.readVarint();
   }
 
-  static write(obj: ProtoHeartbeatEvent, pbf?: PBF) {
-    if (pbf && obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
+  static write(obj: ProtoHeartbeatEvent, pbf: PBF = new PBF()) {
+    if (obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
   }
 }

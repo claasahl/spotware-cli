@@ -87,9 +87,9 @@ function compileReadMethod(protoMessage: Message): string[] {
 
 function compileWriteMethod(protoMessage: Message): string[] {
   const lines: string[] = [];
-  lines.push(`static write(obj: ${protoMessage.name}, pbf?: PBF) {`);
+  lines.push(`static write(obj: ${protoMessage.name}, pbf: PBF = new PBF()) {`);
   protoMessage.fields.forEach(field =>
-    lines.push(`if (pbf && obj.${field.name}) ${mapWriteMethod(field)}`)
+    lines.push(`if (obj.${field.name}) ${mapWriteMethod(field)}`)
   );
   lines.push("}", "");
   return lines;
