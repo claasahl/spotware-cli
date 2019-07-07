@@ -1,7 +1,12 @@
 import tls from "tls";
+import Pbf from "pbf";
 
 import * as util from "./util";
 import { ProtoMessage } from "./OpenApiCommonMessages";
+import {
+  ProtoOAVersionResUtils,
+  ProtoOAVersionReqUtils
+} from "./OpenApiMessages";
 
 // see compileRaw in compile.js
 // https://github.com/mapbox/pbf/blob/master/compile.js#L16
@@ -73,7 +78,19 @@ const socket = connect(
   5035,
   "live.ctraderapi.com"
 );
-socket.on("PROTO_MESSAGE", console.log);
+socket.on("PROTO_MESSAGE", message => {
+  const msg = {
+    payloadType: message.payloadType,
+    payload: message.payload
+  };
+  switch (message.payloadType) {
+    case 2104:
+      msg.payload = ProtoOAVersionReqUtils.read(new Pbf(message.payload));
+    case 2105:
+      msg.payload = ProtoOAVersionResUtils.read(new Pbf(message.payload));
+  }
+  console.log(msg);
+});
 writeProtoMessage(socket, {
   clientMsgId: "moin",
   payloadType: 2104,
