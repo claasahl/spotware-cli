@@ -14,6 +14,12 @@ import {
 // generate typescript based on .proto files
 // generated typescript should be close to generated javascript by pbf
 
+// pbf-ts OPTIONS
+// --no-interface
+// --no-class
+// --uint32=string
+// --single-file --multi-files???
+
 function readProtoMessage(this: tls.TLSSocket, data: string) {
   {
     try {
