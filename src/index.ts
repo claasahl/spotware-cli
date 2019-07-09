@@ -97,8 +97,13 @@ socket.on("PROTO_MESSAGE", message => {
   }
   console.log(msg);
 });
+
 writeProtoMessage(socket, {
   clientMsgId: "moin",
   payloadType: 2104,
-  payload: Buffer.alloc(0)
+  payload: (() => {
+    const pbf = new Pbf();
+    ProtoOAVersionReqUtils.write({}, pbf);
+    return pbf.finish();
+  })()
 });
