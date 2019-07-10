@@ -492,7 +492,7 @@ export class ProtoOAClientDisconnectEventUtils {
 
 export interface ProtoOAAccountsTokenInvalidatedEvent {
   payloadType?: ProtoOAPayloadType;
-  ctidTraderAccountIds?: number;
+  ctidTraderAccountIds: number[];
   reason?: string;
 }
 
@@ -500,7 +500,9 @@ export class ProtoOAAccountsTokenInvalidatedEventUtils {
   static read(pbf: PBF, end?: number) {
     return pbf.readFields(
       ProtoOAAccountsTokenInvalidatedEventUtils._readField,
-      {},
+      {
+        ctidTraderAccountIds: []
+      },
       end
     );
   }
@@ -511,7 +513,7 @@ export class ProtoOAAccountsTokenInvalidatedEventUtils {
     pbf: PBF
   ) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
-    if (tag === 2) obj.ctidTraderAccountIds = pbf.readVarint64();
+    if (tag === 2) obj.ctidTraderAccountIds.push(pbf.readVarint64());
     if (tag === 3) obj.reason = pbf.readString();
   }
 
@@ -521,7 +523,9 @@ export class ProtoOAAccountsTokenInvalidatedEventUtils {
   ) {
     if (obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
     if (obj.ctidTraderAccountIds)
-      pbf.writeVarintField(2, obj.ctidTraderAccountIds);
+      obj.ctidTraderAccountIds.forEach(ctidTraderAccountIds =>
+        pbf.writeVarintField(2, ctidTraderAccountIds)
+      );
     if (obj.reason) pbf.writeStringField(3, obj.reason);
   }
 }
@@ -1042,7 +1046,7 @@ export class ProtoOAAssetListReqUtils {
 export interface ProtoOAAssetListRes {
   payloadType?: ProtoOAPayloadType;
   ctidTraderAccountId: number;
-  asset?: ProtoOAAsset;
+  asset: ProtoOAAsset[];
 }
 
 export class ProtoOAAssetListResUtils {
@@ -1050,7 +1054,8 @@ export class ProtoOAAssetListResUtils {
     return pbf.readFields(
       ProtoOAAssetListResUtils._readField,
       {
-        ctidTraderAccountId: 0
+        ctidTraderAccountId: 0,
+        asset: []
       },
       end
     );
@@ -1060,14 +1065,17 @@ export class ProtoOAAssetListResUtils {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
-      obj.asset = ProtoOAAssetUtils.read(pbf, pbf.readVarint() + pbf.pos);
+      obj.asset.push(ProtoOAAssetUtils.read(pbf, pbf.readVarint() + pbf.pos));
   }
 
   static write(obj: ProtoOAAssetListRes, pbf: PBF = new PBF()) {
     if (obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
     if (obj.ctidTraderAccountId)
       pbf.writeVarintField(2, obj.ctidTraderAccountId);
-    if (obj.asset) pbf.writeMessage(3, ProtoOAAssetUtils.write, obj.asset);
+    if (obj.asset)
+      obj.asset.forEach(asset =>
+        pbf.writeMessage(3, ProtoOAAssetUtils.write, asset)
+      );
   }
 }
 
@@ -1106,7 +1114,7 @@ export class ProtoOASymbolsListReqUtils {
 export interface ProtoOASymbolsListRes {
   payloadType?: ProtoOAPayloadType;
   ctidTraderAccountId: number;
-  symbol?: ProtoOALightSymbol;
+  symbol: ProtoOALightSymbol[];
 }
 
 export class ProtoOASymbolsListResUtils {
@@ -1114,7 +1122,8 @@ export class ProtoOASymbolsListResUtils {
     return pbf.readFields(
       ProtoOASymbolsListResUtils._readField,
       {
-        ctidTraderAccountId: 0
+        ctidTraderAccountId: 0,
+        symbol: []
       },
       end
     );
@@ -1124,9 +1133,8 @@ export class ProtoOASymbolsListResUtils {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
-      obj.symbol = ProtoOALightSymbolUtils.read(
-        pbf,
-        pbf.readVarint() + pbf.pos
+      obj.symbol.push(
+        ProtoOALightSymbolUtils.read(pbf, pbf.readVarint() + pbf.pos)
       );
   }
 
@@ -1135,7 +1143,9 @@ export class ProtoOASymbolsListResUtils {
     if (obj.ctidTraderAccountId)
       pbf.writeVarintField(2, obj.ctidTraderAccountId);
     if (obj.symbol)
-      pbf.writeMessage(3, ProtoOALightSymbolUtils.write, obj.symbol);
+      obj.symbol.forEach(symbol =>
+        pbf.writeMessage(3, ProtoOALightSymbolUtils.write, symbol)
+      );
   }
 }
 
@@ -1144,7 +1154,7 @@ export class ProtoOASymbolsListResUtils {
 export interface ProtoOASymbolByIdReq {
   payloadType?: ProtoOAPayloadType;
   ctidTraderAccountId: number;
-  symbolId?: number;
+  symbolId: number[];
 }
 
 export class ProtoOASymbolByIdReqUtils {
@@ -1152,7 +1162,8 @@ export class ProtoOASymbolByIdReqUtils {
     return pbf.readFields(
       ProtoOASymbolByIdReqUtils._readField,
       {
-        ctidTraderAccountId: 0
+        ctidTraderAccountId: 0,
+        symbolId: []
       },
       end
     );
@@ -1161,14 +1172,15 @@ export class ProtoOASymbolByIdReqUtils {
   private static _readField(tag: number, obj: ProtoOASymbolByIdReq, pbf: PBF) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
-    if (tag === 3) obj.symbolId = pbf.readVarint64();
+    if (tag === 3) obj.symbolId.push(pbf.readVarint64());
   }
 
   static write(obj: ProtoOASymbolByIdReq, pbf: PBF = new PBF()) {
     if (obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
     if (obj.ctidTraderAccountId)
       pbf.writeVarintField(2, obj.ctidTraderAccountId);
-    if (obj.symbolId) pbf.writeVarintField(3, obj.symbolId);
+    if (obj.symbolId)
+      obj.symbolId.forEach(symbolId => pbf.writeVarintField(3, symbolId));
   }
 }
 
@@ -1177,7 +1189,7 @@ export class ProtoOASymbolByIdReqUtils {
 export interface ProtoOASymbolByIdRes {
   payloadType?: ProtoOAPayloadType;
   ctidTraderAccountId: number;
-  symbol?: ProtoOASymbol;
+  symbol: ProtoOASymbol[];
 }
 
 export class ProtoOASymbolByIdResUtils {
@@ -1185,7 +1197,8 @@ export class ProtoOASymbolByIdResUtils {
     return pbf.readFields(
       ProtoOASymbolByIdResUtils._readField,
       {
-        ctidTraderAccountId: 0
+        ctidTraderAccountId: 0,
+        symbol: []
       },
       end
     );
@@ -1195,14 +1208,17 @@ export class ProtoOASymbolByIdResUtils {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
-      obj.symbol = ProtoOASymbolUtils.read(pbf, pbf.readVarint() + pbf.pos);
+      obj.symbol.push(ProtoOASymbolUtils.read(pbf, pbf.readVarint() + pbf.pos));
   }
 
   static write(obj: ProtoOASymbolByIdRes, pbf: PBF = new PBF()) {
     if (obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
     if (obj.ctidTraderAccountId)
       pbf.writeVarintField(2, obj.ctidTraderAccountId);
-    if (obj.symbol) pbf.writeMessage(3, ProtoOASymbolUtils.write, obj.symbol);
+    if (obj.symbol)
+      obj.symbol.forEach(symbol =>
+        pbf.writeMessage(3, ProtoOASymbolUtils.write, symbol)
+      );
   }
 }
 
@@ -1253,7 +1269,7 @@ export class ProtoOASymbolsForConversionReqUtils {
 export interface ProtoOASymbolsForConversionRes {
   payloadType?: ProtoOAPayloadType;
   ctidTraderAccountId: number;
-  symbol?: ProtoOALightSymbol;
+  symbol: ProtoOALightSymbol[];
 }
 
 export class ProtoOASymbolsForConversionResUtils {
@@ -1261,7 +1277,8 @@ export class ProtoOASymbolsForConversionResUtils {
     return pbf.readFields(
       ProtoOASymbolsForConversionResUtils._readField,
       {
-        ctidTraderAccountId: 0
+        ctidTraderAccountId: 0,
+        symbol: []
       },
       end
     );
@@ -1275,9 +1292,8 @@ export class ProtoOASymbolsForConversionResUtils {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
-      obj.symbol = ProtoOALightSymbolUtils.read(
-        pbf,
-        pbf.readVarint() + pbf.pos
+      obj.symbol.push(
+        ProtoOALightSymbolUtils.read(pbf, pbf.readVarint() + pbf.pos)
       );
   }
 
@@ -1286,7 +1302,9 @@ export class ProtoOASymbolsForConversionResUtils {
     if (obj.ctidTraderAccountId)
       pbf.writeVarintField(2, obj.ctidTraderAccountId);
     if (obj.symbol)
-      pbf.writeMessage(3, ProtoOALightSymbolUtils.write, obj.symbol);
+      obj.symbol.forEach(symbol =>
+        pbf.writeMessage(3, ProtoOALightSymbolUtils.write, symbol)
+      );
   }
 }
 
@@ -1295,7 +1313,7 @@ export class ProtoOASymbolsForConversionResUtils {
 export interface ProtoOASymbolChangedEvent {
   payloadType?: ProtoOAPayloadType;
   ctidTraderAccountId: number;
-  symbolId?: number;
+  symbolId: number[];
 }
 
 export class ProtoOASymbolChangedEventUtils {
@@ -1303,7 +1321,8 @@ export class ProtoOASymbolChangedEventUtils {
     return pbf.readFields(
       ProtoOASymbolChangedEventUtils._readField,
       {
-        ctidTraderAccountId: 0
+        ctidTraderAccountId: 0,
+        symbolId: []
       },
       end
     );
@@ -1316,14 +1335,15 @@ export class ProtoOASymbolChangedEventUtils {
   ) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
-    if (tag === 3) obj.symbolId = pbf.readVarint64();
+    if (tag === 3) obj.symbolId.push(pbf.readVarint64());
   }
 
   static write(obj: ProtoOASymbolChangedEvent, pbf: PBF = new PBF()) {
     if (obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
     if (obj.ctidTraderAccountId)
       pbf.writeVarintField(2, obj.ctidTraderAccountId);
-    if (obj.symbolId) pbf.writeVarintField(3, obj.symbolId);
+    if (obj.symbolId)
+      obj.symbolId.forEach(symbolId => pbf.writeVarintField(3, symbolId));
   }
 }
 
@@ -1366,7 +1386,7 @@ export class ProtoOAAssetClassListReqUtils {
 export interface ProtoOAAssetClassListRes {
   payloadType?: ProtoOAPayloadType;
   ctidTraderAccountId: number;
-  assetClass?: ProtoOAAssetClass;
+  assetClass: ProtoOAAssetClass[];
 }
 
 export class ProtoOAAssetClassListResUtils {
@@ -1374,7 +1394,8 @@ export class ProtoOAAssetClassListResUtils {
     return pbf.readFields(
       ProtoOAAssetClassListResUtils._readField,
       {
-        ctidTraderAccountId: 0
+        ctidTraderAccountId: 0,
+        assetClass: []
       },
       end
     );
@@ -1388,9 +1409,8 @@ export class ProtoOAAssetClassListResUtils {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
-      obj.assetClass = ProtoOAAssetClassUtils.read(
-        pbf,
-        pbf.readVarint() + pbf.pos
+      obj.assetClass.push(
+        ProtoOAAssetClassUtils.read(pbf, pbf.readVarint() + pbf.pos)
       );
   }
 
@@ -1399,7 +1419,9 @@ export class ProtoOAAssetClassListResUtils {
     if (obj.ctidTraderAccountId)
       pbf.writeVarintField(2, obj.ctidTraderAccountId);
     if (obj.assetClass)
-      pbf.writeMessage(3, ProtoOAAssetClassUtils.write, obj.assetClass);
+      obj.assetClass.forEach(assetClass =>
+        pbf.writeMessage(3, ProtoOAAssetClassUtils.write, assetClass)
+      );
   }
 }
 
@@ -1542,8 +1564,8 @@ export class ProtoOAReconcileReqUtils {
 export interface ProtoOAReconcileRes {
   payloadType?: ProtoOAPayloadType;
   ctidTraderAccountId: number;
-  position?: ProtoOAPosition;
-  order?: ProtoOAOrder;
+  position: ProtoOAPosition[];
+  order: ProtoOAOrder[];
 }
 
 export class ProtoOAReconcileResUtils {
@@ -1551,7 +1573,9 @@ export class ProtoOAReconcileResUtils {
     return pbf.readFields(
       ProtoOAReconcileResUtils._readField,
       {
-        ctidTraderAccountId: 0
+        ctidTraderAccountId: 0,
+        position: [],
+        order: []
       },
       end
     );
@@ -1561,9 +1585,11 @@ export class ProtoOAReconcileResUtils {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
-      obj.position = ProtoOAPositionUtils.read(pbf, pbf.readVarint() + pbf.pos);
+      obj.position.push(
+        ProtoOAPositionUtils.read(pbf, pbf.readVarint() + pbf.pos)
+      );
     if (tag === 4)
-      obj.order = ProtoOAOrderUtils.read(pbf, pbf.readVarint() + pbf.pos);
+      obj.order.push(ProtoOAOrderUtils.read(pbf, pbf.readVarint() + pbf.pos));
   }
 
   static write(obj: ProtoOAReconcileRes, pbf: PBF = new PBF()) {
@@ -1571,8 +1597,13 @@ export class ProtoOAReconcileResUtils {
     if (obj.ctidTraderAccountId)
       pbf.writeVarintField(2, obj.ctidTraderAccountId);
     if (obj.position)
-      pbf.writeMessage(3, ProtoOAPositionUtils.write, obj.position);
-    if (obj.order) pbf.writeMessage(4, ProtoOAOrderUtils.write, obj.order);
+      obj.position.forEach(position =>
+        pbf.writeMessage(3, ProtoOAPositionUtils.write, position)
+      );
+    if (obj.order)
+      obj.order.forEach(order =>
+        pbf.writeMessage(4, ProtoOAOrderUtils.write, order)
+      );
   }
 }
 
@@ -1669,7 +1700,7 @@ export class ProtoOADealListReqUtils {
 export interface ProtoOADealListRes {
   payloadType?: ProtoOAPayloadType;
   ctidTraderAccountId: number;
-  deal?: ProtoOADeal;
+  deal: ProtoOADeal[];
   hasMore: boolean;
 }
 
@@ -1679,6 +1710,7 @@ export class ProtoOADealListResUtils {
       ProtoOADealListResUtils._readField,
       {
         ctidTraderAccountId: 0,
+        deal: [],
         hasMore: false
       },
       end
@@ -1689,7 +1721,7 @@ export class ProtoOADealListResUtils {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
-      obj.deal = ProtoOADealUtils.read(pbf, pbf.readVarint() + pbf.pos);
+      obj.deal.push(ProtoOADealUtils.read(pbf, pbf.readVarint() + pbf.pos));
     if (tag === 4) obj.hasMore = pbf.readBoolean();
   }
 
@@ -1697,7 +1729,10 @@ export class ProtoOADealListResUtils {
     if (obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
     if (obj.ctidTraderAccountId)
       pbf.writeVarintField(2, obj.ctidTraderAccountId);
-    if (obj.deal) pbf.writeMessage(3, ProtoOADealUtils.write, obj.deal);
+    if (obj.deal)
+      obj.deal.forEach(deal =>
+        pbf.writeMessage(3, ProtoOADealUtils.write, deal)
+      );
     if (obj.hasMore) pbf.writeBooleanField(4, obj.hasMore);
   }
 }
@@ -1708,7 +1743,7 @@ export interface ProtoOAExpectedMarginReq {
   payloadType?: ProtoOAPayloadType;
   ctidTraderAccountId: number;
   symbolId: number;
-  volume?: number;
+  volume: number[];
 }
 
 export class ProtoOAExpectedMarginReqUtils {
@@ -1717,7 +1752,8 @@ export class ProtoOAExpectedMarginReqUtils {
       ProtoOAExpectedMarginReqUtils._readField,
       {
         ctidTraderAccountId: 0,
-        symbolId: 0
+        symbolId: 0,
+        volume: []
       },
       end
     );
@@ -1731,7 +1767,7 @@ export class ProtoOAExpectedMarginReqUtils {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.symbolId = pbf.readVarint64();
-    if (tag === 4) obj.volume = pbf.readVarint64();
+    if (tag === 4) obj.volume.push(pbf.readVarint64());
   }
 
   static write(obj: ProtoOAExpectedMarginReq, pbf: PBF = new PBF()) {
@@ -1739,7 +1775,8 @@ export class ProtoOAExpectedMarginReqUtils {
     if (obj.ctidTraderAccountId)
       pbf.writeVarintField(2, obj.ctidTraderAccountId);
     if (obj.symbolId) pbf.writeVarintField(3, obj.symbolId);
-    if (obj.volume) pbf.writeVarintField(4, obj.volume);
+    if (obj.volume)
+      obj.volume.forEach(volume => pbf.writeVarintField(4, volume));
   }
 }
 
@@ -1748,7 +1785,7 @@ export class ProtoOAExpectedMarginReqUtils {
 export interface ProtoOAExpectedMarginRes {
   payloadType?: ProtoOAPayloadType;
   ctidTraderAccountId: number;
-  margin?: ProtoOAExpectedMargin;
+  margin: ProtoOAExpectedMargin[];
 }
 
 export class ProtoOAExpectedMarginResUtils {
@@ -1756,7 +1793,8 @@ export class ProtoOAExpectedMarginResUtils {
     return pbf.readFields(
       ProtoOAExpectedMarginResUtils._readField,
       {
-        ctidTraderAccountId: 0
+        ctidTraderAccountId: 0,
+        margin: []
       },
       end
     );
@@ -1770,9 +1808,8 @@ export class ProtoOAExpectedMarginResUtils {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
-      obj.margin = ProtoOAExpectedMarginUtils.read(
-        pbf,
-        pbf.readVarint() + pbf.pos
+      obj.margin.push(
+        ProtoOAExpectedMarginUtils.read(pbf, pbf.readVarint() + pbf.pos)
       );
   }
 
@@ -1781,7 +1818,9 @@ export class ProtoOAExpectedMarginResUtils {
     if (obj.ctidTraderAccountId)
       pbf.writeVarintField(2, obj.ctidTraderAccountId);
     if (obj.margin)
-      pbf.writeMessage(3, ProtoOAExpectedMarginUtils.write, obj.margin);
+      obj.margin.forEach(margin =>
+        pbf.writeMessage(3, ProtoOAExpectedMarginUtils.write, margin)
+      );
   }
 }
 
@@ -1874,7 +1913,7 @@ export class ProtoOACashFlowHistoryListReqUtils {
 export interface ProtoOACashFlowHistoryListRes {
   payloadType?: ProtoOAPayloadType;
   ctidTraderAccountId: number;
-  depositWithdraw?: ProtoOADepositWithdraw;
+  depositWithdraw: ProtoOADepositWithdraw[];
 }
 
 export class ProtoOACashFlowHistoryListResUtils {
@@ -1882,7 +1921,8 @@ export class ProtoOACashFlowHistoryListResUtils {
     return pbf.readFields(
       ProtoOACashFlowHistoryListResUtils._readField,
       {
-        ctidTraderAccountId: 0
+        ctidTraderAccountId: 0,
+        depositWithdraw: []
       },
       end
     );
@@ -1896,9 +1936,8 @@ export class ProtoOACashFlowHistoryListResUtils {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
-      obj.depositWithdraw = ProtoOADepositWithdrawUtils.read(
-        pbf,
-        pbf.readVarint() + pbf.pos
+      obj.depositWithdraw.push(
+        ProtoOADepositWithdrawUtils.read(pbf, pbf.readVarint() + pbf.pos)
       );
   }
 
@@ -1907,10 +1946,8 @@ export class ProtoOACashFlowHistoryListResUtils {
     if (obj.ctidTraderAccountId)
       pbf.writeVarintField(2, obj.ctidTraderAccountId);
     if (obj.depositWithdraw)
-      pbf.writeMessage(
-        3,
-        ProtoOADepositWithdrawUtils.write,
-        obj.depositWithdraw
+      obj.depositWithdraw.forEach(depositWithdraw =>
+        pbf.writeMessage(3, ProtoOADepositWithdrawUtils.write, depositWithdraw)
       );
   }
 }
@@ -1957,7 +1994,7 @@ export interface ProtoOAGetAccountListByAccessTokenRes {
   payloadType?: ProtoOAPayloadType;
   accessToken: string;
   permissionScope?: ProtoOAClientPermissionScope;
-  ctidTraderAccount?: ProtoOACtidTraderAccount;
+  ctidTraderAccount: ProtoOACtidTraderAccount[];
 }
 
 export class ProtoOAGetAccountListByAccessTokenResUtils {
@@ -1965,7 +2002,8 @@ export class ProtoOAGetAccountListByAccessTokenResUtils {
     return pbf.readFields(
       ProtoOAGetAccountListByAccessTokenResUtils._readField,
       {
-        accessToken: ""
+        accessToken: "",
+        ctidTraderAccount: []
       },
       end
     );
@@ -1980,9 +2018,8 @@ export class ProtoOAGetAccountListByAccessTokenResUtils {
     if (tag === 2) obj.accessToken = pbf.readString();
     if (tag === 3) obj.permissionScope = pbf.readVarint();
     if (tag === 4)
-      obj.ctidTraderAccount = ProtoOACtidTraderAccountUtils.read(
-        pbf,
-        pbf.readVarint() + pbf.pos
+      obj.ctidTraderAccount.push(
+        ProtoOACtidTraderAccountUtils.read(pbf, pbf.readVarint() + pbf.pos)
       );
   }
 
@@ -1994,10 +2031,12 @@ export class ProtoOAGetAccountListByAccessTokenResUtils {
     if (obj.accessToken) pbf.writeStringField(2, obj.accessToken);
     if (obj.permissionScope) pbf.writeVarintField(3, obj.permissionScope);
     if (obj.ctidTraderAccount)
-      pbf.writeMessage(
-        4,
-        ProtoOACtidTraderAccountUtils.write,
-        obj.ctidTraderAccount
+      obj.ctidTraderAccount.forEach(ctidTraderAccount =>
+        pbf.writeMessage(
+          4,
+          ProtoOACtidTraderAccountUtils.write,
+          ctidTraderAccount
+        )
       );
   }
 }
@@ -2007,7 +2046,7 @@ export class ProtoOAGetAccountListByAccessTokenResUtils {
 export interface ProtoOASubscribeSpotsReq {
   payloadType?: ProtoOAPayloadType;
   ctidTraderAccountId: number;
-  symbolId?: number;
+  symbolId: number[];
 }
 
 export class ProtoOASubscribeSpotsReqUtils {
@@ -2015,7 +2054,8 @@ export class ProtoOASubscribeSpotsReqUtils {
     return pbf.readFields(
       ProtoOASubscribeSpotsReqUtils._readField,
       {
-        ctidTraderAccountId: 0
+        ctidTraderAccountId: 0,
+        symbolId: []
       },
       end
     );
@@ -2028,14 +2068,15 @@ export class ProtoOASubscribeSpotsReqUtils {
   ) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
-    if (tag === 3) obj.symbolId = pbf.readVarint64();
+    if (tag === 3) obj.symbolId.push(pbf.readVarint64());
   }
 
   static write(obj: ProtoOASubscribeSpotsReq, pbf: PBF = new PBF()) {
     if (obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
     if (obj.ctidTraderAccountId)
       pbf.writeVarintField(2, obj.ctidTraderAccountId);
-    if (obj.symbolId) pbf.writeVarintField(3, obj.symbolId);
+    if (obj.symbolId)
+      obj.symbolId.forEach(symbolId => pbf.writeVarintField(3, symbolId));
   }
 }
 
@@ -2078,7 +2119,7 @@ export class ProtoOASubscribeSpotsResUtils {
 export interface ProtoOAUnsubscribeSpotsReq {
   payloadType?: ProtoOAPayloadType;
   ctidTraderAccountId: number;
-  symbolId?: number;
+  symbolId: number[];
 }
 
 export class ProtoOAUnsubscribeSpotsReqUtils {
@@ -2086,7 +2127,8 @@ export class ProtoOAUnsubscribeSpotsReqUtils {
     return pbf.readFields(
       ProtoOAUnsubscribeSpotsReqUtils._readField,
       {
-        ctidTraderAccountId: 0
+        ctidTraderAccountId: 0,
+        symbolId: []
       },
       end
     );
@@ -2099,14 +2141,15 @@ export class ProtoOAUnsubscribeSpotsReqUtils {
   ) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
-    if (tag === 3) obj.symbolId = pbf.readVarint64();
+    if (tag === 3) obj.symbolId.push(pbf.readVarint64());
   }
 
   static write(obj: ProtoOAUnsubscribeSpotsReq, pbf: PBF = new PBF()) {
     if (obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
     if (obj.ctidTraderAccountId)
       pbf.writeVarintField(2, obj.ctidTraderAccountId);
-    if (obj.symbolId) pbf.writeVarintField(3, obj.symbolId);
+    if (obj.symbolId)
+      obj.symbolId.forEach(symbolId => pbf.writeVarintField(3, symbolId));
   }
 }
 
@@ -2152,7 +2195,7 @@ export interface ProtoOASpotEvent {
   symbolId: number;
   bid?: number;
   ask?: number;
-  trendbar?: ProtoOATrendbar;
+  trendbar: ProtoOATrendbar[];
 }
 
 export class ProtoOASpotEventUtils {
@@ -2161,7 +2204,8 @@ export class ProtoOASpotEventUtils {
       ProtoOASpotEventUtils._readField,
       {
         ctidTraderAccountId: 0,
-        symbolId: 0
+        symbolId: 0,
+        trendbar: []
       },
       end
     );
@@ -2174,7 +2218,9 @@ export class ProtoOASpotEventUtils {
     if (tag === 4) obj.bid = pbf.readVarint64();
     if (tag === 5) obj.ask = pbf.readVarint64();
     if (tag === 6)
-      obj.trendbar = ProtoOATrendbarUtils.read(pbf, pbf.readVarint() + pbf.pos);
+      obj.trendbar.push(
+        ProtoOATrendbarUtils.read(pbf, pbf.readVarint() + pbf.pos)
+      );
   }
 
   static write(obj: ProtoOASpotEvent, pbf: PBF = new PBF()) {
@@ -2185,7 +2231,9 @@ export class ProtoOASpotEventUtils {
     if (obj.bid) pbf.writeVarintField(4, obj.bid);
     if (obj.ask) pbf.writeVarintField(5, obj.ask);
     if (obj.trendbar)
-      pbf.writeMessage(6, ProtoOATrendbarUtils.write, obj.trendbar);
+      obj.trendbar.forEach(trendbar =>
+        pbf.writeMessage(6, ProtoOATrendbarUtils.write, trendbar)
+      );
   }
 }
 
@@ -2330,7 +2378,7 @@ export interface ProtoOAGetTrendbarsRes {
   ctidTraderAccountId: number;
   period: ProtoOATrendbarPeriod;
   timestamp: number;
-  trendbar?: ProtoOATrendbar;
+  trendbar: ProtoOATrendbar[];
   symbolId?: number;
 }
 
@@ -2341,7 +2389,8 @@ export class ProtoOAGetTrendbarsResUtils {
       {
         ctidTraderAccountId: 0,
         period: ProtoOATrendbarPeriod.M1,
-        timestamp: 0
+        timestamp: 0,
+        trendbar: []
       },
       end
     );
@@ -2357,7 +2406,9 @@ export class ProtoOAGetTrendbarsResUtils {
     if (tag === 3) obj.period = pbf.readVarint();
     if (tag === 4) obj.timestamp = pbf.readVarint64();
     if (tag === 5)
-      obj.trendbar = ProtoOATrendbarUtils.read(pbf, pbf.readVarint() + pbf.pos);
+      obj.trendbar.push(
+        ProtoOATrendbarUtils.read(pbf, pbf.readVarint() + pbf.pos)
+      );
     if (tag === 6) obj.symbolId = pbf.readVarint64();
   }
 
@@ -2368,7 +2419,9 @@ export class ProtoOAGetTrendbarsResUtils {
     if (obj.period) pbf.writeVarintField(3, obj.period);
     if (obj.timestamp) pbf.writeVarintField(4, obj.timestamp);
     if (obj.trendbar)
-      pbf.writeMessage(5, ProtoOATrendbarUtils.write, obj.trendbar);
+      obj.trendbar.forEach(trendbar =>
+        pbf.writeMessage(5, ProtoOATrendbarUtils.write, trendbar)
+      );
     if (obj.symbolId) pbf.writeVarintField(6, obj.symbolId);
   }
 }
@@ -2424,7 +2477,7 @@ export class ProtoOAGetTickDataReqUtils {
 export interface ProtoOAGetTickDataRes {
   payloadType?: ProtoOAPayloadType;
   ctidTraderAccountId: number;
-  tickData?: ProtoOATickData;
+  tickData: ProtoOATickData[];
   hasMore: boolean;
 }
 
@@ -2434,6 +2487,7 @@ export class ProtoOAGetTickDataResUtils {
       ProtoOAGetTickDataResUtils._readField,
       {
         ctidTraderAccountId: 0,
+        tickData: [],
         hasMore: false
       },
       end
@@ -2444,7 +2498,9 @@ export class ProtoOAGetTickDataResUtils {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
-      obj.tickData = ProtoOATickDataUtils.read(pbf, pbf.readVarint() + pbf.pos);
+      obj.tickData.push(
+        ProtoOATickDataUtils.read(pbf, pbf.readVarint() + pbf.pos)
+      );
     if (tag === 4) obj.hasMore = pbf.readBoolean();
   }
 
@@ -2453,7 +2509,9 @@ export class ProtoOAGetTickDataResUtils {
     if (obj.ctidTraderAccountId)
       pbf.writeVarintField(2, obj.ctidTraderAccountId);
     if (obj.tickData)
-      pbf.writeMessage(3, ProtoOATickDataUtils.write, obj.tickData);
+      obj.tickData.forEach(tickData =>
+        pbf.writeMessage(3, ProtoOATickDataUtils.write, tickData)
+      );
     if (obj.hasMore) pbf.writeBooleanField(4, obj.hasMore);
   }
 }
@@ -2535,8 +2593,8 @@ export interface ProtoOADepthEvent {
   payloadType?: ProtoOAPayloadType;
   ctidTraderAccountId: number;
   symbolId: number;
-  newQuotes?: ProtoOADepthQuote;
-  deletedQuotes?: number;
+  newQuotes: ProtoOADepthQuote[];
+  deletedQuotes: number[];
 }
 
 export class ProtoOADepthEventUtils {
@@ -2545,7 +2603,9 @@ export class ProtoOADepthEventUtils {
       ProtoOADepthEventUtils._readField,
       {
         ctidTraderAccountId: 0,
-        symbolId: 0
+        symbolId: 0,
+        newQuotes: [],
+        deletedQuotes: []
       },
       end
     );
@@ -2556,11 +2616,10 @@ export class ProtoOADepthEventUtils {
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.symbolId = pbf.readVarint64();
     if (tag === 4)
-      obj.newQuotes = ProtoOADepthQuoteUtils.read(
-        pbf,
-        pbf.readVarint() + pbf.pos
+      obj.newQuotes.push(
+        ProtoOADepthQuoteUtils.read(pbf, pbf.readVarint() + pbf.pos)
       );
-    if (tag === 5) obj.deletedQuotes = pbf.readVarint64();
+    if (tag === 5) obj.deletedQuotes.push(pbf.readVarint64());
   }
 
   static write(obj: ProtoOADepthEvent, pbf: PBF = new PBF()) {
@@ -2569,8 +2628,13 @@ export class ProtoOADepthEventUtils {
       pbf.writeVarintField(2, obj.ctidTraderAccountId);
     if (obj.symbolId) pbf.writeVarintField(3, obj.symbolId);
     if (obj.newQuotes)
-      pbf.writeMessage(4, ProtoOADepthQuoteUtils.write, obj.newQuotes);
-    if (obj.deletedQuotes) pbf.writeVarintField(5, obj.deletedQuotes);
+      obj.newQuotes.forEach(newQuotes =>
+        pbf.writeMessage(4, ProtoOADepthQuoteUtils.write, newQuotes)
+      );
+    if (obj.deletedQuotes)
+      obj.deletedQuotes.forEach(deletedQuotes =>
+        pbf.writeVarintField(5, deletedQuotes)
+      );
   }
 }
 
@@ -2579,7 +2643,7 @@ export class ProtoOADepthEventUtils {
 export interface ProtoOASubscribeDepthQuotesReq {
   payloadType?: ProtoOAPayloadType;
   ctidTraderAccountId: number;
-  symbolId?: number;
+  symbolId: number[];
 }
 
 export class ProtoOASubscribeDepthQuotesReqUtils {
@@ -2587,7 +2651,8 @@ export class ProtoOASubscribeDepthQuotesReqUtils {
     return pbf.readFields(
       ProtoOASubscribeDepthQuotesReqUtils._readField,
       {
-        ctidTraderAccountId: 0
+        ctidTraderAccountId: 0,
+        symbolId: []
       },
       end
     );
@@ -2600,14 +2665,15 @@ export class ProtoOASubscribeDepthQuotesReqUtils {
   ) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
-    if (tag === 3) obj.symbolId = pbf.readVarint64();
+    if (tag === 3) obj.symbolId.push(pbf.readVarint64());
   }
 
   static write(obj: ProtoOASubscribeDepthQuotesReq, pbf: PBF = new PBF()) {
     if (obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
     if (obj.ctidTraderAccountId)
       pbf.writeVarintField(2, obj.ctidTraderAccountId);
-    if (obj.symbolId) pbf.writeVarintField(3, obj.symbolId);
+    if (obj.symbolId)
+      obj.symbolId.forEach(symbolId => pbf.writeVarintField(3, symbolId));
   }
 }
 
@@ -2650,7 +2716,7 @@ export class ProtoOASubscribeDepthQuotesResUtils {
 export interface ProtoOAUnsubscribeDepthQuotesReq {
   payloadType?: ProtoOAPayloadType;
   ctidTraderAccountId: number;
-  symbolId?: number;
+  symbolId: number[];
 }
 
 export class ProtoOAUnsubscribeDepthQuotesReqUtils {
@@ -2658,7 +2724,8 @@ export class ProtoOAUnsubscribeDepthQuotesReqUtils {
     return pbf.readFields(
       ProtoOAUnsubscribeDepthQuotesReqUtils._readField,
       {
-        ctidTraderAccountId: 0
+        ctidTraderAccountId: 0,
+        symbolId: []
       },
       end
     );
@@ -2671,14 +2738,15 @@ export class ProtoOAUnsubscribeDepthQuotesReqUtils {
   ) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
-    if (tag === 3) obj.symbolId = pbf.readVarint64();
+    if (tag === 3) obj.symbolId.push(pbf.readVarint64());
   }
 
   static write(obj: ProtoOAUnsubscribeDepthQuotesReq, pbf: PBF = new PBF()) {
     if (obj.payloadType) pbf.writeVarintField(1, obj.payloadType);
     if (obj.ctidTraderAccountId)
       pbf.writeVarintField(2, obj.ctidTraderAccountId);
-    if (obj.symbolId) pbf.writeVarintField(3, obj.symbolId);
+    if (obj.symbolId)
+      obj.symbolId.forEach(symbolId => pbf.writeVarintField(3, symbolId));
   }
 }
 
@@ -2755,7 +2823,7 @@ export class ProtoOASymbolCategoryListReqUtils {
 export interface ProtoOASymbolCategoryListRes {
   payloadType?: ProtoOAPayloadType;
   ctidTraderAccountId: number;
-  symbolCategory?: ProtoOASymbolCategory;
+  symbolCategory: ProtoOASymbolCategory[];
 }
 
 export class ProtoOASymbolCategoryListResUtils {
@@ -2763,7 +2831,8 @@ export class ProtoOASymbolCategoryListResUtils {
     return pbf.readFields(
       ProtoOASymbolCategoryListResUtils._readField,
       {
-        ctidTraderAccountId: 0
+        ctidTraderAccountId: 0,
+        symbolCategory: []
       },
       end
     );
@@ -2777,9 +2846,8 @@ export class ProtoOASymbolCategoryListResUtils {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
-      obj.symbolCategory = ProtoOASymbolCategoryUtils.read(
-        pbf,
-        pbf.readVarint() + pbf.pos
+      obj.symbolCategory.push(
+        ProtoOASymbolCategoryUtils.read(pbf, pbf.readVarint() + pbf.pos)
       );
   }
 
@@ -2788,7 +2856,9 @@ export class ProtoOASymbolCategoryListResUtils {
     if (obj.ctidTraderAccountId)
       pbf.writeVarintField(2, obj.ctidTraderAccountId);
     if (obj.symbolCategory)
-      pbf.writeMessage(3, ProtoOASymbolCategoryUtils.write, obj.symbolCategory);
+      obj.symbolCategory.forEach(symbolCategory =>
+        pbf.writeMessage(3, ProtoOASymbolCategoryUtils.write, symbolCategory)
+      );
   }
 }
 
@@ -2942,7 +3012,7 @@ export interface ProtoOASymbol {
   minVolume?: number;
   stepVolume?: number;
   maxExposure?: number;
-  schedule?: ProtoOAInterval;
+  schedule: ProtoOAInterval[];
   commission: number;
   commissionType?: ProtoOACommissionType;
   slDistance?: number;
@@ -2968,6 +3038,7 @@ export class ProtoOASymbolUtils {
         symbolId: 0,
         digits: 0,
         pipPosition: 0,
+        schedule: [],
         commission: 0
       },
       end
@@ -2988,7 +3059,9 @@ export class ProtoOASymbolUtils {
     if (tag === 11) obj.stepVolume = pbf.readVarint64();
     if (tag === 12) obj.maxExposure = pbf.readVarint64();
     if (tag === 13)
-      obj.schedule = ProtoOAIntervalUtils.read(pbf, pbf.readVarint() + pbf.pos);
+      obj.schedule.push(
+        ProtoOAIntervalUtils.read(pbf, pbf.readVarint() + pbf.pos)
+      );
     if (tag === 14) obj.commission = pbf.readVarint64();
     if (tag === 15) obj.commissionType = pbf.readVarint();
     if (tag === 16) obj.slDistance = pbf.readVarint();
@@ -3022,7 +3095,9 @@ export class ProtoOASymbolUtils {
     if (obj.stepVolume) pbf.writeVarintField(11, obj.stepVolume);
     if (obj.maxExposure) pbf.writeVarintField(12, obj.maxExposure);
     if (obj.schedule)
-      pbf.writeMessage(13, ProtoOAIntervalUtils.write, obj.schedule);
+      obj.schedule.forEach(schedule =>
+        pbf.writeMessage(13, ProtoOAIntervalUtils.write, schedule)
+      );
     if (obj.commission) pbf.writeVarintField(14, obj.commission);
     if (obj.commissionType) pbf.writeVarintField(15, obj.commissionType);
     if (obj.slDistance) pbf.writeVarintField(16, obj.slDistance);

@@ -42,7 +42,9 @@ function compileMessageInterface(protoMessage: Message): string[] {
   lines.push(`export interface ${protoMessage.name} {`);
   protoMessage.fields.forEach(field =>
     lines.push(
-      `  ${field.name}${field.required ? "" : "?"}: ${mapType(field.type)},`
+      `  ${field.name}${field.required || field.repeated ? "" : "?"}: ${mapType(
+        field
+      )},`
     )
   );
   lines.push("}", "");
@@ -64,9 +66,9 @@ function compileReadMethod(protoMessage: Message): string[] {
   lines.push("    return pbf.readFields(");
   lines.push(`      ${protoMessage.name}Utils._readField,`, "      {");
   protoMessage.fields
-    .filter(field => field.required)
+    .filter(field => field.required || field.repeated)
     .forEach(field =>
-      lines.push(`      ${field.name}: ${defaultValue(field.type)},`)
+      lines.push(`      ${field.name}: ${defaultValue(field)},`)
     );
   lines.push("      },", "      end", "    );");
   lines.push("  }", "");
@@ -75,11 +77,7 @@ function compileReadMethod(protoMessage: Message): string[] {
     `private static _readField(tag: number, obj: ${protoMessage.name}, pbf: PBF) {`
   );
   protoMessage.fields.forEach(field =>
-    lines.push(
-      `if (tag === ${field.tag}) obj.${field.name} = ${mapReadMethod(
-        field.type
-      )};`
-    )
+    lines.push(`if (tag === ${field.tag}) ${mapReadMethod(field)};`)
   );
   lines.push("}", "");
   return lines;
@@ -95,8 +93,8 @@ function compileWriteMethod(protoMessage: Message): string[] {
   return lines;
 }
 
-function mapType(type: string): string {
-  switch (type) {
+function mapType(field: Field): string {
+  switch (field.type) {
     case "string":
       return "string";
     case "bool":
@@ -114,11 +112,11 @@ function mapType(type: string): string {
     case "fixed64":
     case "sfixed32":
     case "sfixed64":
-      return "number";
+      return field.repeated ? "number[]" : "number";
     case "bytes":
       return "Uint8Array";
     default:
-      return type;
+      return field.repeated ? `${field.type}[]` : field.type;
     //throw new Error("Unexpected type: " + type);
   }
 }
@@ -142,7 +140,9 @@ function mapWriteMethod(field: Field): string {
     case "uint64":
     case "int32":
     case "int64":
-      return `pbf.writeVarintField(${field.tag}, obj.${field.name})`;
+      return field.repeated
+        ? `obj.${field.name}.forEach(${field.name} =>pbf.writeVarintField(${field.tag}, ${field.name}))`
+        : `pbf.writeVarintField(${field.tag}, obj.${field.name})`;
     case "sint32":
     case "sint64":
       return `pbf.writeSVarintField(${field.tag}, obj.${field.name})`;
@@ -155,51 +155,60 @@ function mapWriteMethod(field: Field): string {
     case "bool":
       return `pbf.writeBooleanField(${field.tag}, obj.${field.name})`;
     default:
-      return `pbf.writeMessage(${field.tag}, ${field.type}Utils.write, obj.${field.name})`;
+      return field.repeated
+        ? `obj.${field.name}.forEach(${field.name} => pbf.writeMessage(${field.tag}, ${field.type}Utils.write, ${field.name}))`
+        : `pbf.writeMessage(${field.tag}, ${field.type}Utils.write, obj.${field.name})`;
     //return `no mapping for '${type}'`
   }
 }
-function mapReadMethod(type: string): string {
-  if (enums.has(type)) {
-    return "pbf.readVarint()";
+function mapReadMethod(field: Field): string {
+  if (enums.has(field.type)) {
+    return `obj.${field.name} = pbf.readVarint()`;
   }
-  switch (type) {
+  switch (field.type) {
     case "bytes":
-      return "pbf.readBytes()";
+      return `obj.${field.name} = pbf.readBytes()`;
     case "fixed32":
-      return "pbf.readFixed32()";
+      return `obj.${field.name} = pbf.readFixed32()`;
     case "sfixed32":
-      return "pbf.readSFixed32()";
+      return `obj.${field.name} = pbf.readSFixed32()`;
     case "fixed64":
-      return "pbf.readFixed64()";
+      return `obj.${field.name} = pbf.readFixed64()`;
     case "sfixed64":
-      return "pbf.readSFixed64()";
+      return `obj.${field.name} = pbf.readSFixed64()`;
     case "uint32":
     case "int32":
-      return "pbf.readVarint()";
+      return `obj.${field.name} = pbf.readVarint()`;
     case "uint64":
     case "int64":
-      return "pbf.readVarint64()";
+      return field.repeated
+        ? `obj.${field.name}.push(pbf.readVarint64())`
+        : `obj.${field.name} = pbf.readVarint64()`;
     case "sint32":
     case "sint64":
-      return "pbf.readSVarint()";
+      return `obj.${field.name} = pbf.readSVarint()`;
     case "string":
-      return "pbf.readString()";
+      return `obj.${field.name} = pbf.readString()`;
     case "float":
-      return "pbf.readFloat()";
+      return `obj.${field.name} = pbf.readFloat()`;
     case "double":
-      return "pbf.readDouble()";
+      return `obj.${field.name} = pbf.readDouble()`;
     case "bool":
-      return "pbf.readBoolean()";
+      return `obj.${field.name} = pbf.readBoolean()`;
     default:
-      return `${type}Utils.read(pbf, pbf.readVarint() + pbf.pos)`;
+      return field.repeated
+        ? `obj.${field.name}.push(${field.type}Utils.read(pbf, pbf.readVarint() + pbf.pos))`
+        : `obj.${field.name} = ${field.type}Utils.read(pbf, pbf.readVarint() + pbf.pos)`;
     //return "pbf.readVarint()";
     //return `no mapping for '${type}'`
   }
 }
 
-function defaultValue(type: string): string {
-  switch (type) {
+function defaultValue(field: Field): string {
+  if (field.repeated) {
+    return "[]";
+  }
+  switch (field.type) {
     case "bytes":
       return "Buffer.alloc(0)";
     case "fixed32":
@@ -246,6 +255,6 @@ function defaultValue(type: string): string {
     case "ProtoOADealStatus":
       return "ProtoOADealStatus.FILLED";
     default:
-      return `no default value for '${type}'`;
+      return `no default value for '${field.type}'`;
   }
 }
