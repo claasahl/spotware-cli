@@ -706,12 +706,22 @@ export class ProtoOAExecutionEventUtils {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.executionType = pbf.readVarint();
-    if (tag === 4) obj.position = ProtoOAPositionUtils.read(pbf);
-    if (tag === 5) obj.order = ProtoOAOrderUtils.read(pbf);
-    if (tag === 6) obj.deal = ProtoOADealUtils.read(pbf);
+    if (tag === 4)
+      obj.position = ProtoOAPositionUtils.read(pbf, pbf.readVarint() + pbf.pos);
+    if (tag === 5)
+      obj.order = ProtoOAOrderUtils.read(pbf, pbf.readVarint() + pbf.pos);
+    if (tag === 6)
+      obj.deal = ProtoOADealUtils.read(pbf, pbf.readVarint() + pbf.pos);
     if (tag === 7)
-      obj.bonusDepositWithdraw = ProtoOABonusDepositWithdrawUtils.read(pbf);
-    if (tag === 8) obj.depositWithdraw = ProtoOADepositWithdrawUtils.read(pbf);
+      obj.bonusDepositWithdraw = ProtoOABonusDepositWithdrawUtils.read(
+        pbf,
+        pbf.readVarint() + pbf.pos
+      );
+    if (tag === 8)
+      obj.depositWithdraw = ProtoOADepositWithdrawUtils.read(
+        pbf,
+        pbf.readVarint() + pbf.pos
+      );
     if (tag === 9) obj.errorCode = pbf.readString();
     if (tag === 10) obj.isServerEvent = pbf.readBoolean();
   }
@@ -1049,7 +1059,8 @@ export class ProtoOAAssetListResUtils {
   private static _readField(tag: number, obj: ProtoOAAssetListRes, pbf: PBF) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
-    if (tag === 3) obj.asset = ProtoOAAssetUtils.read(pbf);
+    if (tag === 3)
+      obj.asset = ProtoOAAssetUtils.read(pbf, pbf.readVarint() + pbf.pos);
   }
 
   static write(obj: ProtoOAAssetListRes, pbf: PBF = new PBF()) {
@@ -1112,7 +1123,11 @@ export class ProtoOASymbolsListResUtils {
   private static _readField(tag: number, obj: ProtoOASymbolsListRes, pbf: PBF) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
-    if (tag === 3) obj.symbol = ProtoOALightSymbolUtils.read(pbf);
+    if (tag === 3)
+      obj.symbol = ProtoOALightSymbolUtils.read(
+        pbf,
+        pbf.readVarint() + pbf.pos
+      );
   }
 
   static write(obj: ProtoOASymbolsListRes, pbf: PBF = new PBF()) {
@@ -1179,7 +1194,8 @@ export class ProtoOASymbolByIdResUtils {
   private static _readField(tag: number, obj: ProtoOASymbolByIdRes, pbf: PBF) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
-    if (tag === 3) obj.symbol = ProtoOASymbolUtils.read(pbf);
+    if (tag === 3)
+      obj.symbol = ProtoOASymbolUtils.read(pbf, pbf.readVarint() + pbf.pos);
   }
 
   static write(obj: ProtoOASymbolByIdRes, pbf: PBF = new PBF()) {
@@ -1258,7 +1274,11 @@ export class ProtoOASymbolsForConversionResUtils {
   ) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
-    if (tag === 3) obj.symbol = ProtoOALightSymbolUtils.read(pbf);
+    if (tag === 3)
+      obj.symbol = ProtoOALightSymbolUtils.read(
+        pbf,
+        pbf.readVarint() + pbf.pos
+      );
   }
 
   static write(obj: ProtoOASymbolsForConversionRes, pbf: PBF = new PBF()) {
@@ -1367,7 +1387,11 @@ export class ProtoOAAssetClassListResUtils {
   ) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
-    if (tag === 3) obj.assetClass = ProtoOAAssetClassUtils.read(pbf);
+    if (tag === 3)
+      obj.assetClass = ProtoOAAssetClassUtils.read(
+        pbf,
+        pbf.readVarint() + pbf.pos
+      );
   }
 
   static write(obj: ProtoOAAssetClassListRes, pbf: PBF = new PBF()) {
@@ -1432,7 +1456,8 @@ export class ProtoOATraderResUtils {
   private static _readField(tag: number, obj: ProtoOATraderRes, pbf: PBF) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
-    if (tag === 3) obj.trader = ProtoOATraderUtils.read(pbf);
+    if (tag === 3)
+      obj.trader = ProtoOATraderUtils.read(pbf, pbf.readVarint() + pbf.pos);
   }
 
   static write(obj: ProtoOATraderRes, pbf: PBF = new PBF()) {
@@ -1470,7 +1495,8 @@ export class ProtoOATraderUpdatedEventUtils {
   ) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
-    if (tag === 3) obj.trader = ProtoOATraderUtils.read(pbf);
+    if (tag === 3)
+      obj.trader = ProtoOATraderUtils.read(pbf, pbf.readVarint() + pbf.pos);
   }
 
   static write(obj: ProtoOATraderUpdatedEvent, pbf: PBF = new PBF()) {
@@ -1534,8 +1560,10 @@ export class ProtoOAReconcileResUtils {
   private static _readField(tag: number, obj: ProtoOAReconcileRes, pbf: PBF) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
-    if (tag === 3) obj.position = ProtoOAPositionUtils.read(pbf);
-    if (tag === 4) obj.order = ProtoOAOrderUtils.read(pbf);
+    if (tag === 3)
+      obj.position = ProtoOAPositionUtils.read(pbf, pbf.readVarint() + pbf.pos);
+    if (tag === 4)
+      obj.order = ProtoOAOrderUtils.read(pbf, pbf.readVarint() + pbf.pos);
   }
 
   static write(obj: ProtoOAReconcileRes, pbf: PBF = new PBF()) {
@@ -1660,7 +1688,8 @@ export class ProtoOADealListResUtils {
   private static _readField(tag: number, obj: ProtoOADealListRes, pbf: PBF) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
-    if (tag === 3) obj.deal = ProtoOADealUtils.read(pbf);
+    if (tag === 3)
+      obj.deal = ProtoOADealUtils.read(pbf, pbf.readVarint() + pbf.pos);
     if (tag === 4) obj.hasMore = pbf.readBoolean();
   }
 
@@ -1740,7 +1769,11 @@ export class ProtoOAExpectedMarginResUtils {
   ) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
-    if (tag === 3) obj.margin = ProtoOAExpectedMarginUtils.read(pbf);
+    if (tag === 3)
+      obj.margin = ProtoOAExpectedMarginUtils.read(
+        pbf,
+        pbf.readVarint() + pbf.pos
+      );
   }
 
   static write(obj: ProtoOAExpectedMarginRes, pbf: PBF = new PBF()) {
@@ -1862,7 +1895,11 @@ export class ProtoOACashFlowHistoryListResUtils {
   ) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
-    if (tag === 3) obj.depositWithdraw = ProtoOADepositWithdrawUtils.read(pbf);
+    if (tag === 3)
+      obj.depositWithdraw = ProtoOADepositWithdrawUtils.read(
+        pbf,
+        pbf.readVarint() + pbf.pos
+      );
   }
 
   static write(obj: ProtoOACashFlowHistoryListRes, pbf: PBF = new PBF()) {
@@ -1943,7 +1980,10 @@ export class ProtoOAGetAccountListByAccessTokenResUtils {
     if (tag === 2) obj.accessToken = pbf.readString();
     if (tag === 3) obj.permissionScope = pbf.readVarint();
     if (tag === 4)
-      obj.ctidTraderAccount = ProtoOACtidTraderAccountUtils.read(pbf);
+      obj.ctidTraderAccount = ProtoOACtidTraderAccountUtils.read(
+        pbf,
+        pbf.readVarint() + pbf.pos
+      );
   }
 
   static write(
@@ -2133,7 +2173,8 @@ export class ProtoOASpotEventUtils {
     if (tag === 3) obj.symbolId = pbf.readVarint64();
     if (tag === 4) obj.bid = pbf.readVarint64();
     if (tag === 5) obj.ask = pbf.readVarint64();
-    if (tag === 6) obj.trendbar = ProtoOATrendbarUtils.read(pbf);
+    if (tag === 6)
+      obj.trendbar = ProtoOATrendbarUtils.read(pbf, pbf.readVarint() + pbf.pos);
   }
 
   static write(obj: ProtoOASpotEvent, pbf: PBF = new PBF()) {
@@ -2315,7 +2356,8 @@ export class ProtoOAGetTrendbarsResUtils {
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.period = pbf.readVarint();
     if (tag === 4) obj.timestamp = pbf.readVarint64();
-    if (tag === 5) obj.trendbar = ProtoOATrendbarUtils.read(pbf);
+    if (tag === 5)
+      obj.trendbar = ProtoOATrendbarUtils.read(pbf, pbf.readVarint() + pbf.pos);
     if (tag === 6) obj.symbolId = pbf.readVarint64();
   }
 
@@ -2401,7 +2443,8 @@ export class ProtoOAGetTickDataResUtils {
   private static _readField(tag: number, obj: ProtoOAGetTickDataRes, pbf: PBF) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
-    if (tag === 3) obj.tickData = ProtoOATickDataUtils.read(pbf);
+    if (tag === 3)
+      obj.tickData = ProtoOATickDataUtils.read(pbf, pbf.readVarint() + pbf.pos);
     if (tag === 4) obj.hasMore = pbf.readBoolean();
   }
 
@@ -2472,7 +2515,11 @@ export class ProtoOAGetCtidProfileByTokenResUtils {
     pbf: PBF
   ) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
-    if (tag === 2) obj.profile = ProtoOACtidProfileUtils.read(pbf);
+    if (tag === 2)
+      obj.profile = ProtoOACtidProfileUtils.read(
+        pbf,
+        pbf.readVarint() + pbf.pos
+      );
   }
 
   static write(obj: ProtoOAGetCtidProfileByTokenRes, pbf: PBF = new PBF()) {
@@ -2508,7 +2555,11 @@ export class ProtoOADepthEventUtils {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.symbolId = pbf.readVarint64();
-    if (tag === 4) obj.newQuotes = ProtoOADepthQuoteUtils.read(pbf);
+    if (tag === 4)
+      obj.newQuotes = ProtoOADepthQuoteUtils.read(
+        pbf,
+        pbf.readVarint() + pbf.pos
+      );
     if (tag === 5) obj.deletedQuotes = pbf.readVarint64();
   }
 
@@ -2725,7 +2776,11 @@ export class ProtoOASymbolCategoryListResUtils {
   ) {
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
-    if (tag === 3) obj.symbolCategory = ProtoOASymbolCategoryUtils.read(pbf);
+    if (tag === 3)
+      obj.symbolCategory = ProtoOASymbolCategoryUtils.read(
+        pbf,
+        pbf.readVarint() + pbf.pos
+      );
   }
 
   static write(obj: ProtoOASymbolCategoryListRes, pbf: PBF = new PBF()) {
@@ -2932,7 +2987,8 @@ export class ProtoOASymbolUtils {
     if (tag === 10) obj.minVolume = pbf.readVarint64();
     if (tag === 11) obj.stepVolume = pbf.readVarint64();
     if (tag === 12) obj.maxExposure = pbf.readVarint64();
-    if (tag === 13) obj.schedule = ProtoOAIntervalUtils.read(pbf);
+    if (tag === 13)
+      obj.schedule = ProtoOAIntervalUtils.read(pbf, pbf.readVarint() + pbf.pos);
     if (tag === 14) obj.commission = pbf.readVarint64();
     if (tag === 15) obj.commissionType = pbf.readVarint();
     if (tag === 16) obj.slDistance = pbf.readVarint();
@@ -3211,7 +3267,11 @@ export class ProtoOAPositionUtils {
 
   private static _readField(tag: number, obj: ProtoOAPosition, pbf: PBF) {
     if (tag === 1) obj.positionId = pbf.readVarint64();
-    if (tag === 2) obj.tradeData = ProtoOATradeDataUtils.read(pbf);
+    if (tag === 2)
+      obj.tradeData = ProtoOATradeDataUtils.read(
+        pbf,
+        pbf.readVarint() + pbf.pos
+      );
     if (tag === 3) obj.positionStatus = pbf.readVarint();
     if (tag === 4) obj.swap = pbf.readVarint64();
     if (tag === 5) obj.price = pbf.readDouble();
@@ -3337,7 +3397,11 @@ export class ProtoOAOrderUtils {
 
   private static _readField(tag: number, obj: ProtoOAOrder, pbf: PBF) {
     if (tag === 1) obj.orderId = pbf.readVarint64();
-    if (tag === 2) obj.tradeData = ProtoOATradeDataUtils.read(pbf);
+    if (tag === 2)
+      obj.tradeData = ProtoOATradeDataUtils.read(
+        pbf,
+        pbf.readVarint() + pbf.pos
+      );
     if (tag === 3) obj.orderType = pbf.readVarint();
     if (tag === 4) obj.orderStatus = pbf.readVarint();
     if (tag === 6) obj.expirationTimestamp = pbf.readVarint64();
@@ -3568,7 +3632,10 @@ export class ProtoOADealUtils {
     if (tag === 14) obj.commission = pbf.readVarint64();
     if (tag === 15) obj.baseToUsdConversionRate = pbf.readDouble();
     if (tag === 16)
-      obj.closePositionDetail = ProtoOAClosePositionDetailUtils.read(pbf);
+      obj.closePositionDetail = ProtoOAClosePositionDetailUtils.read(
+        pbf,
+        pbf.readVarint() + pbf.pos
+      );
   }
 
   static write(obj: ProtoOADeal, pbf: PBF = new PBF()) {

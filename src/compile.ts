@@ -192,7 +192,7 @@ function mapReadMethod(type: string): string {
     case "bool":
       return "pbf.readBoolean()";
     default:
-      return `${type}Utils.read(pbf)`;
+      return `${type}Utils.read(pbf, pbf.readVarint() + pbf.pos)`;
     //return "pbf.readVarint()";
     //return `no mapping for '${type}'`
   }
