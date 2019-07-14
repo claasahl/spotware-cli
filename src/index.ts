@@ -3,12 +3,8 @@ import Pbf from "pbf";
 import { EOL } from "os";
 
 import * as util from "./util";
-import { ProtoMessage } from "./OpenApiCommonMessages";
-import {
-  ProtoOAVersionResUtils,
-  ProtoOAVersionReqUtils,
-  ProtoOAErrorResUtils
-} from "./OpenApiMessages";
+import * as $$ from "./OpenApiCommonMessages";
+import * as $ from "./OpenApiMessages";
 
 // see compileRaw in compile.js
 // https://github.com/mapbox/pbf/blob/master/compile.js#L16
@@ -36,7 +32,7 @@ function readProtoMessage(this: tls.TLSSocket, data: string) {
 
 export function writeProtoMessage(
   socket: tls.TLSSocket,
-  message: ProtoMessage
+  message: $$.ProtoMessage
 ) {
   const buffer = util.serialize(message);
   return socket.write(buffer, (err: Error) => {
@@ -63,7 +59,7 @@ export function connect(
 
 const socket = connect(
   5035,
-  "live.ctraderapi.com"
+  "demo.ctraderapi.com"
 );
 socket.on("PROTO_MESSAGE", message => {
   const msg = {
@@ -72,14 +68,82 @@ socket.on("PROTO_MESSAGE", message => {
     payload: message.payload
   };
   switch (message.payloadType) {
-    case 2104:
-      msg.payload = ProtoOAVersionReqUtils.read(new Pbf(message.payload));
+    case $.ProtoOAPayloadType.PROTO_OA_VERSION_REQ:
+      msg.payload = $.ProtoOAVersionReqUtils.read(new Pbf(message.payload));
       break;
-    case 2105:
-      msg.payload = ProtoOAVersionResUtils.read(new Pbf(message.payload));
+    case $.ProtoOAPayloadType.PROTO_OA_VERSION_RES:
+      msg.payload = $.ProtoOAVersionResUtils.read(new Pbf(message.payload));
       break;
-    case 2142:
-      msg.payload = ProtoOAErrorResUtils.read(new Pbf(message.payload));
+    case $.ProtoOAPayloadType.PROTO_OA_ERROR_RES:
+      msg.payload = $.ProtoOAErrorResUtils.read(new Pbf(message.payload));
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_REQ:
+      msg.payload = $.ProtoOAApplicationAuthReqUtils.read(
+        new Pbf(message.payload)
+      );
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_RES:
+      msg.payload = $.ProtoOAApplicationAuthResUtils.read(
+        new Pbf(message.payload)
+      );
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ:
+      msg.payload = $.ProtoOAGetAccountListByAccessTokenReqUtils.read(
+        new Pbf(message.payload)
+      );
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES:
+      msg.payload = $.ProtoOAGetAccountListByAccessTokenResUtils.read(
+        new Pbf(message.payload)
+      );
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_GET_CTID_PROFILE_BY_TOKEN_REQ:
+      msg.payload = $.ProtoOAGetCtidProfileByTokenReqUtils.read(
+        new Pbf(message.payload)
+      );
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_GET_CTID_PROFILE_BY_TOKEN_RES:
+      msg.payload = $.ProtoOAGetCtidProfileByTokenResUtils.read(
+        new Pbf(message.payload)
+      );
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_REQ:
+      msg.payload = $.ProtoOAAccountAuthReqUtils.read(new Pbf(message.payload));
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES:
+      msg.payload = $.ProtoOAAccountAuthResUtils.read(new Pbf(message.payload));
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_REQ:
+      msg.payload = $.ProtoOASymbolsListReqUtils.read(new Pbf(message.payload));
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_RES:
+      msg.payload = $.ProtoOASymbolsListResUtils.read(new Pbf(message.payload));
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_REQ:
+      msg.payload = $.ProtoOASubscribeSpotsReqUtils.read(
+        new Pbf(message.payload)
+      );
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_RES:
+      msg.payload = $.ProtoOASubscribeSpotsResUtils.read(
+        new Pbf(message.payload)
+      );
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_SYMBOL_CATEGORY_REQ:
+      msg.payload = $.ProtoOASymbolCategoryListReqUtils.read(
+        new Pbf(message.payload)
+      );
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_SYMBOL_CATEGORY_RES:
+      msg.payload = $.ProtoOASymbolCategoryListResUtils.read(
+        new Pbf(message.payload)
+      );
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_SPOT_EVENT:
+      msg.payload = $.ProtoOASpotEventUtils.read(new Pbf(message.payload));
+      break;
+    case $$.ProtoPayloadType.HEARTBEAT_EVENT:
+      msg.payload = $$.ProtoHeartbeatEventUtils.read(new Pbf(message.payload));
       break;
   }
   process.stdout.write(JSON.stringify(msg) + EOL);
@@ -96,14 +160,68 @@ process.stdin.on("data", data => {
     payload: (() => {
       const pbf = new Pbf();
       switch (message.payloadType) {
-        case 2104:
-          ProtoOAVersionReqUtils.write(message.payload, pbf);
+        case $.ProtoOAPayloadType.PROTO_OA_VERSION_REQ:
+          $.ProtoOAVersionReqUtils.write(message.payload, pbf);
           break;
-        case 2105:
-          ProtoOAVersionResUtils.write(message.payload, pbf);
+        case $.ProtoOAPayloadType.PROTO_OA_VERSION_RES:
+          $.ProtoOAVersionResUtils.write(message.payload, pbf);
           break;
-        case 2142:
-          ProtoOAErrorResUtils.write(message.payload, pbf);
+        case $.ProtoOAPayloadType.PROTO_OA_ERROR_RES:
+          $.ProtoOAErrorResUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_REQ:
+          $.ProtoOAApplicationAuthReqUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_RES:
+          $.ProtoOAApplicationAuthResUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ:
+          $.ProtoOAGetAccountListByAccessTokenReqUtils.write(
+            message.payload,
+            pbf
+          );
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES:
+          $.ProtoOAGetAccountListByAccessTokenResUtils.write(
+            message.payload,
+            pbf
+          );
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_GET_CTID_PROFILE_BY_TOKEN_REQ:
+          $.ProtoOAGetCtidProfileByTokenReqUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_GET_CTID_PROFILE_BY_TOKEN_RES:
+          $.ProtoOAGetCtidProfileByTokenResUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_REQ:
+          $.ProtoOAAccountAuthReqUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES:
+          $.ProtoOAAccountAuthResUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_REQ:
+          $.ProtoOASymbolsListReqUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_RES:
+          $.ProtoOASymbolsListResUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_REQ:
+          $.ProtoOASubscribeSpotsReqUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_RES:
+          $.ProtoOASubscribeSpotsResUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_SYMBOL_CATEGORY_REQ:
+          $.ProtoOASymbolCategoryListReqUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_SYMBOL_CATEGORY_RES:
+          $.ProtoOASymbolCategoryListResUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_SPOT_EVENT:
+          $.ProtoOASpotEventUtils.write(message.payload, pbf);
+          break;
+        case $$.ProtoPayloadType.HEARTBEAT_EVENT:
+          $$.ProtoHeartbeatEventUtils.write(message.payload, pbf);
           break;
       }
       return pbf.finish();
@@ -115,7 +233,98 @@ writeProtoMessage(socket, {
   payloadType: 2104,
   payload: (() => {
     const pbf = new Pbf();
-    ProtoOAVersionReqUtils.write({}, pbf);
+    $.ProtoOAVersionReqUtils.write({}, pbf);
     return pbf.finish();
   })()
 });
+
+const clientId = "";
+const clientSecret = "";
+const accessToken = "";
+const refreshToken = "";
+const ctidTraderAccountId = 0;
+const symbolId = [1]; //,47,22395];
+writeProtoMessage(socket, {
+  payloadType: $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_REQ,
+  payload: (() => {
+    const pbf = new Pbf();
+    $.ProtoOAApplicationAuthReqUtils.write({ clientId, clientSecret }, pbf);
+    return pbf.finish();
+  })()
+});
+setInterval(() => {
+  writeProtoMessage(socket, {
+    payloadType: $$.ProtoPayloadType.HEARTBEAT_EVENT,
+    payload: (() => {
+      const pbf = new Pbf();
+      $$.ProtoHeartbeatEventUtils.write({}, pbf);
+      return pbf.finish();
+    })()
+  });
+}, 10000);
+setTimeout(() => {
+  writeProtoMessage(socket, {
+    payloadType: $.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ,
+    payload: (() => {
+      const pbf = new Pbf();
+      $.ProtoOAGetAccountListByAccessTokenReqUtils.write({ accessToken }, pbf);
+      return pbf.finish();
+    })()
+  });
+}, 1000);
+setTimeout(() => {
+  writeProtoMessage(socket, {
+    payloadType: $.ProtoOAPayloadType.PROTO_OA_GET_CTID_PROFILE_BY_TOKEN_REQ,
+    payload: (() => {
+      const pbf = new Pbf();
+      $.ProtoOAGetCtidProfileByTokenReqUtils.write({ accessToken }, pbf);
+      return pbf.finish();
+    })()
+  });
+}, 2000);
+setTimeout(() => {
+  writeProtoMessage(socket, {
+    payloadType: $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_REQ,
+    payload: (() => {
+      const pbf = new Pbf();
+      $.ProtoOAAccountAuthReqUtils.write(
+        { accessToken, ctidTraderAccountId },
+        pbf
+      );
+      return pbf.finish();
+    })()
+  });
+}, 3000);
+setTimeout(() => {
+  writeProtoMessage(socket, {
+    payloadType: $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_REQ,
+    payload: (() => {
+      const pbf = new Pbf();
+      $.ProtoOASymbolsListReqUtils.write({ ctidTraderAccountId }, pbf);
+      return pbf.finish();
+    })()
+  });
+}, 4000);
+setTimeout(() => {
+  writeProtoMessage(socket, {
+    payloadType: $.ProtoOAPayloadType.PROTO_OA_SYMBOL_CATEGORY_REQ,
+    payload: (() => {
+      const pbf = new Pbf();
+      $.ProtoOASymbolCategoryListReqUtils.write({ ctidTraderAccountId }, pbf);
+      return pbf.finish();
+    })()
+  });
+}, 8000);
+setTimeout(() => {
+  writeProtoMessage(socket, {
+    payloadType: $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_REQ,
+    payload: (() => {
+      const pbf = new Pbf();
+      $.ProtoOASubscribeSpotsReqUtils.write(
+        { ctidTraderAccountId, symbolId },
+        pbf
+      );
+      return pbf.finish();
+    })()
+  });
+}, 15000);
