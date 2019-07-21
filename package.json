@@ -33,6 +33,8 @@
     "rimraf": "^2.6.3"
   },
   "dependencies": {
+    "@types/ms": "^0.7.30",
+    "ms": "^2.1.2",
     "pbf": "^3.2.0",
     "resolve-protobuf-schema": "^2.1.0"
   }

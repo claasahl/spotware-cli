@@ -1,6 +1,7 @@
 import tls from "tls";
 import Pbf from "pbf";
 import { EOL } from "os";
+import ms from "ms";
 
 import * as util from "./util";
 import * as $$ from "./OpenApiCommonMessages";
@@ -139,6 +140,56 @@ socket.on("PROTO_MESSAGE", message => {
         new Pbf(message.payload)
       );
       break;
+    case $.ProtoOAPayloadType.PROTO_OA_ASSET_LIST_REQ:
+      msg.payload = $.ProtoOAAssetListReqUtils.read(new Pbf(message.payload));
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_ASSET_LIST_RES:
+      msg.payload = $.ProtoOAAssetListResUtils.read(new Pbf(message.payload));
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_ASSET_CLASS_LIST_REQ:
+      msg.payload = $.ProtoOAAssetClassListReqUtils.read(
+        new Pbf(message.payload)
+      );
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_ASSET_CLASS_LIST_RES:
+      msg.payload = $.ProtoOAAssetClassListResUtils.read(
+        new Pbf(message.payload)
+      );
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_EXPECTED_MARGIN_REQ:
+      msg.payload = $.ProtoOAExpectedMarginReqUtils.read(
+        new Pbf(message.payload)
+      );
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_EXPECTED_MARGIN_RES:
+      msg.payload = $.ProtoOAExpectedMarginResUtils.read(
+        new Pbf(message.payload)
+      );
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_DEAL_LIST_REQ:
+      msg.payload = $.ProtoOADealListReqUtils.read(new Pbf(message.payload));
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_DEAL_LIST_RES:
+      msg.payload = $.ProtoOADealListResUtils.read(new Pbf(message.payload));
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_CASH_FLOW_HISTORY_LIST_REQ:
+      msg.payload = $.ProtoOACashFlowHistoryListReqUtils.read(
+        new Pbf(message.payload)
+      );
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_CASH_FLOW_HISTORY_LIST_RES:
+      msg.payload = $.ProtoOACashFlowHistoryListResUtils.read(
+        new Pbf(message.payload)
+      );
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_EXECUTION_EVENT:
+      msg.payload = $.ProtoOAExecutionEventUtils.read(new Pbf(message.payload));
+      break;
+    case $.ProtoOAPayloadType.PROTO_OA_TRAILING_SL_CHANGED_EVENT:
+      msg.payload = $.ProtoOATrailingSLChangedEventUtils.read(
+        new Pbf(message.payload)
+      );
+      break;
     case $.ProtoOAPayloadType.PROTO_OA_SPOT_EVENT:
       msg.payload = $.ProtoOASpotEventUtils.read(new Pbf(message.payload));
       break;
@@ -152,6 +203,7 @@ socket.on("close", () => process.exit(0));
 
 // {"payloadType":2104,"payload":{}}
 // {"payloadType":2105,"payload":{"version":"61"}}
+// {"payloadType":2127, "payload": { "ctidTraderAccountId": "5291983", "symbolId": [22395] }}
 process.stdin.on("data", data => {
   const message = JSON.parse(data);
   writeProtoMessage(socket, {
@@ -217,6 +269,42 @@ process.stdin.on("data", data => {
         case $.ProtoOAPayloadType.PROTO_OA_SYMBOL_CATEGORY_RES:
           $.ProtoOASymbolCategoryListResUtils.write(message.payload, pbf);
           break;
+        case $.ProtoOAPayloadType.PROTO_OA_ASSET_LIST_REQ:
+          $.ProtoOAAssetListReqUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_ASSET_LIST_RES:
+          $.ProtoOAAssetListResUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_ASSET_CLASS_LIST_REQ:
+          $.ProtoOAAssetClassListReqUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_ASSET_CLASS_LIST_RES:
+          $.ProtoOAAssetClassListResUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_EXPECTED_MARGIN_REQ:
+          $.ProtoOAExpectedMarginReqUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_EXPECTED_MARGIN_RES:
+          $.ProtoOAExpectedMarginResUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_DEAL_LIST_REQ:
+          $.ProtoOADealListReqUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_DEAL_LIST_RES:
+          $.ProtoOADealListResUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_CASH_FLOW_HISTORY_LIST_REQ:
+          $.ProtoOACashFlowHistoryListReqUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_CASH_FLOW_HISTORY_LIST_REQ:
+          $.ProtoOACashFlowHistoryListResUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_TRAILING_SL_CHANGED_EVENT:
+          $.ProtoOATrailingSLChangedEventUtils.write(message.payload, pbf);
+          break;
+        case $.ProtoOAPayloadType.PROTO_OA_EXECUTION_EVENT:
+          $.ProtoOAExecutionEventUtils.write(message.payload, pbf);
+          break;
         case $.ProtoOAPayloadType.PROTO_OA_SPOT_EVENT:
           $.ProtoOASpotEventUtils.write(message.payload, pbf);
           break;
@@ -244,6 +332,8 @@ const accessToken = "";
 const refreshToken = "";
 const ctidTraderAccountId = 0;
 const symbolId = [1]; //,47,22395];
+const toTimestamp = Date.now();
+const fromTimestamp = toTimestamp - ms("7d");
 writeProtoMessage(socket, {
   payloadType: $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_REQ,
   payload: (() => {
@@ -295,26 +385,91 @@ setTimeout(() => {
     })()
   });
 }, 3000);
+
 setTimeout(() => {
   writeProtoMessage(socket, {
-    payloadType: $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_REQ,
+    payloadType: $.ProtoOAPayloadType.PROTO_OA_EXPECTED_MARGIN_REQ,
     payload: (() => {
       const pbf = new Pbf();
-      $.ProtoOASymbolsListReqUtils.write({ ctidTraderAccountId }, pbf);
+      $.ProtoOAExpectedMarginReqUtils.write(
+        {
+          ctidTraderAccountId,
+          symbolId: symbolId[0],
+          volume: [100000, 50000, 1000]
+        },
+        pbf
+      );
       return pbf.finish();
     })()
   });
 }, 4000);
 setTimeout(() => {
   writeProtoMessage(socket, {
-    payloadType: $.ProtoOAPayloadType.PROTO_OA_SYMBOL_CATEGORY_REQ,
+    payloadType: $.ProtoOAPayloadType.PROTO_OA_DEAL_LIST_REQ,
     payload: (() => {
       const pbf = new Pbf();
-      $.ProtoOASymbolCategoryListReqUtils.write({ ctidTraderAccountId }, pbf);
+      $.ProtoOADealListReqUtils.write(
+        { ctidTraderAccountId, fromTimestamp, toTimestamp },
+        pbf
+      );
+      return pbf.finish();
+    })()
+  });
+}, 6000);
+setTimeout(() => {
+  writeProtoMessage(socket, {
+    payloadType: $.ProtoOAPayloadType.PROTO_OA_CASH_FLOW_HISTORY_LIST_REQ,
+    payload: (() => {
+      const pbf = new Pbf();
+      $.ProtoOACashFlowHistoryListReqUtils.write(
+        { ctidTraderAccountId, fromTimestamp, toTimestamp },
+        pbf
+      );
       return pbf.finish();
     })()
   });
 }, 8000);
+
+// setTimeout(() => {
+//   writeProtoMessage(socket, {
+//     payloadType: $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_REQ,
+//     payload: (() => {
+//       const pbf = new Pbf();
+//       $.ProtoOASymbolsListReqUtils.write({ ctidTraderAccountId }, pbf);
+//       return pbf.finish();
+//     })()
+//   });
+// }, 4000);
+// setTimeout(() => {
+//   writeProtoMessage(socket, {
+//     payloadType: $.ProtoOAPayloadType.PROTO_OA_SYMBOL_CATEGORY_REQ,
+//     payload: (() => {
+//       const pbf = new Pbf();
+//       $.ProtoOASymbolCategoryListReqUtils.write({ ctidTraderAccountId }, pbf);
+//       return pbf.finish();
+//     })()
+//   });
+// }, 8000);
+// setTimeout(() => {
+//   writeProtoMessage(socket, {
+//     payloadType: $.ProtoOAPayloadType.PROTO_OA_ASSET_LIST_REQ,
+//     payload: (() => {
+//       const pbf = new Pbf();
+//       $.ProtoOAAssetListReqUtils.write({ ctidTraderAccountId }, pbf);
+//       return pbf.finish();
+//     })()
+//   });
+// }, 11000);
+// setTimeout(() => {
+//   writeProtoMessage(socket, {
+//     payloadType: $.ProtoOAPayloadType.PROTO_OA_ASSET_CLASS_LIST_REQ,
+//     payload: (() => {
+//       const pbf = new Pbf();
+//       $.ProtoOAAssetClassListReqUtils.write({ ctidTraderAccountId }, pbf);
+//       return pbf.finish();
+//     })()
+//   });
+// }, 14000);
 setTimeout(() => {
   writeProtoMessage(socket, {
     payloadType: $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_REQ,
@@ -327,4 +482,4 @@ setTimeout(() => {
       return pbf.finish();
     })()
   });
-}, 15000);
+}, 18000);
