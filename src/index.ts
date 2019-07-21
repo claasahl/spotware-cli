@@ -6,6 +6,7 @@ import ms from "ms";
 import * as util from "./util";
 import * as $$ from "./OpenApiCommonMessages";
 import * as $ from "./OpenApiMessages";
+import readProtoMessages from "./readProtoMessages";
 
 // see compileRaw in compile.js
 // https://github.com/mapbox/pbf/blob/master/compile.js#L16
@@ -62,143 +63,10 @@ const socket = connect(
   5035,
   "demo.ctraderapi.com"
 );
-socket.on("PROTO_MESSAGE", message => {
-  const msg = {
-    clientMsgId: message.clientMsgId,
-    payloadType: message.payloadType,
-    payload: message.payload
-  };
-  switch (message.payloadType) {
-    case $.ProtoOAPayloadType.PROTO_OA_VERSION_REQ:
-      msg.payload = $.ProtoOAVersionReqUtils.read(new Pbf(message.payload));
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_VERSION_RES:
-      msg.payload = $.ProtoOAVersionResUtils.read(new Pbf(message.payload));
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_ERROR_RES:
-      msg.payload = $.ProtoOAErrorResUtils.read(new Pbf(message.payload));
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_REQ:
-      msg.payload = $.ProtoOAApplicationAuthReqUtils.read(
-        new Pbf(message.payload)
-      );
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_RES:
-      msg.payload = $.ProtoOAApplicationAuthResUtils.read(
-        new Pbf(message.payload)
-      );
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ:
-      msg.payload = $.ProtoOAGetAccountListByAccessTokenReqUtils.read(
-        new Pbf(message.payload)
-      );
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES:
-      msg.payload = $.ProtoOAGetAccountListByAccessTokenResUtils.read(
-        new Pbf(message.payload)
-      );
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_GET_CTID_PROFILE_BY_TOKEN_REQ:
-      msg.payload = $.ProtoOAGetCtidProfileByTokenReqUtils.read(
-        new Pbf(message.payload)
-      );
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_GET_CTID_PROFILE_BY_TOKEN_RES:
-      msg.payload = $.ProtoOAGetCtidProfileByTokenResUtils.read(
-        new Pbf(message.payload)
-      );
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_REQ:
-      msg.payload = $.ProtoOAAccountAuthReqUtils.read(new Pbf(message.payload));
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES:
-      msg.payload = $.ProtoOAAccountAuthResUtils.read(new Pbf(message.payload));
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_REQ:
-      msg.payload = $.ProtoOASymbolsListReqUtils.read(new Pbf(message.payload));
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_RES:
-      msg.payload = $.ProtoOASymbolsListResUtils.read(new Pbf(message.payload));
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_REQ:
-      msg.payload = $.ProtoOASubscribeSpotsReqUtils.read(
-        new Pbf(message.payload)
-      );
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_RES:
-      msg.payload = $.ProtoOASubscribeSpotsResUtils.read(
-        new Pbf(message.payload)
-      );
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_SYMBOL_CATEGORY_REQ:
-      msg.payload = $.ProtoOASymbolCategoryListReqUtils.read(
-        new Pbf(message.payload)
-      );
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_SYMBOL_CATEGORY_RES:
-      msg.payload = $.ProtoOASymbolCategoryListResUtils.read(
-        new Pbf(message.payload)
-      );
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_ASSET_LIST_REQ:
-      msg.payload = $.ProtoOAAssetListReqUtils.read(new Pbf(message.payload));
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_ASSET_LIST_RES:
-      msg.payload = $.ProtoOAAssetListResUtils.read(new Pbf(message.payload));
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_ASSET_CLASS_LIST_REQ:
-      msg.payload = $.ProtoOAAssetClassListReqUtils.read(
-        new Pbf(message.payload)
-      );
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_ASSET_CLASS_LIST_RES:
-      msg.payload = $.ProtoOAAssetClassListResUtils.read(
-        new Pbf(message.payload)
-      );
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_EXPECTED_MARGIN_REQ:
-      msg.payload = $.ProtoOAExpectedMarginReqUtils.read(
-        new Pbf(message.payload)
-      );
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_EXPECTED_MARGIN_RES:
-      msg.payload = $.ProtoOAExpectedMarginResUtils.read(
-        new Pbf(message.payload)
-      );
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_DEAL_LIST_REQ:
-      msg.payload = $.ProtoOADealListReqUtils.read(new Pbf(message.payload));
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_DEAL_LIST_RES:
-      msg.payload = $.ProtoOADealListResUtils.read(new Pbf(message.payload));
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_CASH_FLOW_HISTORY_LIST_REQ:
-      msg.payload = $.ProtoOACashFlowHistoryListReqUtils.read(
-        new Pbf(message.payload)
-      );
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_CASH_FLOW_HISTORY_LIST_RES:
-      msg.payload = $.ProtoOACashFlowHistoryListResUtils.read(
-        new Pbf(message.payload)
-      );
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_EXECUTION_EVENT:
-      msg.payload = $.ProtoOAExecutionEventUtils.read(new Pbf(message.payload));
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_TRAILING_SL_CHANGED_EVENT:
-      msg.payload = $.ProtoOATrailingSLChangedEventUtils.read(
-        new Pbf(message.payload)
-      );
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_SPOT_EVENT:
-      msg.payload = $.ProtoOASpotEventUtils.read(new Pbf(message.payload));
-      break;
-    case $$.ProtoPayloadType.HEARTBEAT_EVENT:
-      msg.payload = $$.ProtoHeartbeatEventUtils.read(new Pbf(message.payload));
-      break;
-  }
-  process.stdout.write(JSON.stringify(msg) + EOL);
-});
+socket.on("PROTO_MESSAGE", message => readProtoMessages(socket, message));
+socket.on("PROTO_MESSAGE.*", message =>
+  process.stdout.write(JSON.stringify(message) + EOL)
+);
 socket.on("close", () => process.exit(0));
 
 // {"payloadType":2104,"payload":{}}
