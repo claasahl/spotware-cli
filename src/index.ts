@@ -32,10 +32,7 @@ function readProtoMessage(this: tls.TLSSocket, data: string) {
   }
 }
 
-export function writeProtoMessage(
-  socket: tls.TLSSocket,
-  message: $$.ProtoMessage
-) {
+function writeProtoMessage(socket: tls.TLSSocket, message: $$.ProtoMessage) {
   const buffer = util.serialize(message);
   return socket.write(buffer, (err: Error) => {
     if (err) {
@@ -51,7 +48,7 @@ interface Message<P, T> {
   payload: P;
   clientMsgId?: string;
 }
-type ProtoMessages =
+export type ProtoMessages =
   | Message<$$.ProtoMessage, 5>
   | Message<$$.ProtoErrorRes, 50>
   | Message<$$.ProtoHeartbeatEvent, 51>

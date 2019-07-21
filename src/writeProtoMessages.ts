@@ -2,102 +2,214 @@ import Pbf from "pbf";
 
 import * as $$ from "./OpenApiCommonMessages";
 import * as $ from "./OpenApiMessages";
+import { ProtoMessages } from ".";
 
-export default function writeProtoMessages(message: any): Uint8Array {
+export default function writeProtoMessages(message: ProtoMessages): Uint8Array {
   const pbf = new Pbf();
   switch (message.payloadType) {
-    case $.ProtoOAPayloadType.PROTO_OA_VERSION_REQ:
-      $.ProtoOAVersionReqUtils.write(message.payload, pbf);
+    case 5:
+      $$.ProtoMessageUtils.write(message.payload, pbf);
       break;
-    case $.ProtoOAPayloadType.PROTO_OA_VERSION_RES:
-      $.ProtoOAVersionResUtils.write(message.payload, pbf);
+    case 50:
+      $$.ProtoErrorResUtils.write(message.payload, pbf);
       break;
-    case $.ProtoOAPayloadType.PROTO_OA_ERROR_RES:
-      $.ProtoOAErrorResUtils.write(message.payload, pbf);
+    case 51:
+      $$.ProtoHeartbeatEventUtils.write(message.payload, pbf);
       break;
-    case $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_REQ:
+    case 2100:
       $.ProtoOAApplicationAuthReqUtils.write(message.payload, pbf);
       break;
-    case $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_RES:
+    case 2101:
       $.ProtoOAApplicationAuthResUtils.write(message.payload, pbf);
       break;
-    case $.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ:
-      $.ProtoOAGetAccountListByAccessTokenReqUtils.write(message.payload, pbf);
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES:
-      $.ProtoOAGetAccountListByAccessTokenResUtils.write(message.payload, pbf);
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_GET_CTID_PROFILE_BY_TOKEN_REQ:
-      $.ProtoOAGetCtidProfileByTokenReqUtils.write(message.payload, pbf);
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_GET_CTID_PROFILE_BY_TOKEN_RES:
-      $.ProtoOAGetCtidProfileByTokenResUtils.write(message.payload, pbf);
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_REQ:
+    case 2102:
       $.ProtoOAAccountAuthReqUtils.write(message.payload, pbf);
       break;
-    case $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES:
+    case 2103:
       $.ProtoOAAccountAuthResUtils.write(message.payload, pbf);
       break;
-    case $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_REQ:
-      $.ProtoOASymbolsListReqUtils.write(message.payload, pbf);
+    case 2104:
+      $.ProtoOAVersionReqUtils.write(message.payload, pbf);
       break;
-    case $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_RES:
-      $.ProtoOASymbolsListResUtils.write(message.payload, pbf);
+    case 2105:
+      $.ProtoOAVersionResUtils.write(message.payload, pbf);
       break;
-    case $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_REQ:
-      $.ProtoOASubscribeSpotsReqUtils.write(message.payload, pbf);
+    case 2106:
+      $.ProtoOANewOrderReqUtils.write(message.payload, pbf);
       break;
-    case $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_RES:
-      $.ProtoOASubscribeSpotsResUtils.write(message.payload, pbf);
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_SYMBOL_CATEGORY_REQ:
-      $.ProtoOASymbolCategoryListReqUtils.write(message.payload, pbf);
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_SYMBOL_CATEGORY_RES:
-      $.ProtoOASymbolCategoryListResUtils.write(message.payload, pbf);
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_ASSET_LIST_REQ:
-      $.ProtoOAAssetListReqUtils.write(message.payload, pbf);
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_ASSET_LIST_RES:
-      $.ProtoOAAssetListResUtils.write(message.payload, pbf);
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_ASSET_CLASS_LIST_REQ:
-      $.ProtoOAAssetClassListReqUtils.write(message.payload, pbf);
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_ASSET_CLASS_LIST_RES:
-      $.ProtoOAAssetClassListResUtils.write(message.payload, pbf);
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_EXPECTED_MARGIN_REQ:
-      $.ProtoOAExpectedMarginReqUtils.write(message.payload, pbf);
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_EXPECTED_MARGIN_RES:
-      $.ProtoOAExpectedMarginResUtils.write(message.payload, pbf);
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_DEAL_LIST_REQ:
-      $.ProtoOADealListReqUtils.write(message.payload, pbf);
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_DEAL_LIST_RES:
-      $.ProtoOADealListResUtils.write(message.payload, pbf);
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_CASH_FLOW_HISTORY_LIST_REQ:
-      $.ProtoOACashFlowHistoryListReqUtils.write(message.payload, pbf);
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_CASH_FLOW_HISTORY_LIST_REQ:
-      $.ProtoOACashFlowHistoryListResUtils.write(message.payload, pbf);
-      break;
-    case $.ProtoOAPayloadType.PROTO_OA_TRAILING_SL_CHANGED_EVENT:
+    case 2107:
       $.ProtoOATrailingSLChangedEventUtils.write(message.payload, pbf);
       break;
-    case $.ProtoOAPayloadType.PROTO_OA_EXECUTION_EVENT:
+    case 2108:
+      $.ProtoOACancelOrderReqUtils.write(message.payload, pbf);
+      break;
+    case 2109:
+      $.ProtoOAAmendOrderReqUtils.write(message.payload, pbf);
+      break;
+    case 2110:
+      $.ProtoOAAmendPositionSLTPReqUtils.write(message.payload, pbf);
+      break;
+    case 2111:
+      $.ProtoOAClosePositionReqUtils.write(message.payload, pbf);
+      break;
+    case 2112:
+      $.ProtoOAAssetListReqUtils.write(message.payload, pbf);
+      break;
+    case 2113:
+      $.ProtoOAAssetListResUtils.write(message.payload, pbf);
+      break;
+    case 2114:
+      $.ProtoOASymbolsListReqUtils.write(message.payload, pbf);
+      break;
+    case 2115:
+      $.ProtoOASymbolsListResUtils.write(message.payload, pbf);
+      break;
+    case 2116:
+      $.ProtoOASymbolByIdReqUtils.write(message.payload, pbf);
+      break;
+    case 2117:
+      $.ProtoOASymbolByIdResUtils.write(message.payload, pbf);
+      break;
+    case 2118:
+      $.ProtoOASymbolsForConversionReqUtils.write(message.payload, pbf);
+      break;
+    case 2119:
+      $.ProtoOASymbolsForConversionResUtils.write(message.payload, pbf);
+      break;
+    case 2120:
+      $.ProtoOASymbolChangedEventUtils.write(message.payload, pbf);
+      break;
+    case 2121:
+      $.ProtoOATraderReqUtils.write(message.payload, pbf);
+      break;
+    case 2122:
+      $.ProtoOATraderResUtils.write(message.payload, pbf);
+      break;
+    case 2123:
+      $.ProtoOATraderUpdatedEventUtils.write(message.payload, pbf);
+      break;
+    case 2124:
+      $.ProtoOAReconcileReqUtils.write(message.payload, pbf);
+      break;
+    case 2125:
+      $.ProtoOAReconcileResUtils.write(message.payload, pbf);
+      break;
+    case 2126:
       $.ProtoOAExecutionEventUtils.write(message.payload, pbf);
       break;
-    case $.ProtoOAPayloadType.PROTO_OA_SPOT_EVENT:
+    case 2127:
+      $.ProtoOASubscribeSpotsReqUtils.write(message.payload, pbf);
+      break;
+    case 2128:
+      $.ProtoOASubscribeSpotsResUtils.write(message.payload, pbf);
+      break;
+    case 2129:
+      $.ProtoOAUnsubscribeSpotsReqUtils.write(message.payload, pbf);
+      break;
+    case 2130:
+      $.ProtoOAUnsubscribeSpotsResUtils.write(message.payload, pbf);
+      break;
+    case 2131:
       $.ProtoOASpotEventUtils.write(message.payload, pbf);
       break;
-    case $$.ProtoPayloadType.HEARTBEAT_EVENT:
-      $$.ProtoHeartbeatEventUtils.write(message.payload, pbf);
+    case 2132:
+      $.ProtoOAOrderErrorEventUtils.write(message.payload, pbf);
+      break;
+    case 2133:
+      $.ProtoOADealListReqUtils.write(message.payload, pbf);
+      break;
+    case 2134:
+      $.ProtoOADealListResUtils.write(message.payload, pbf);
+      break;
+    case 2135:
+      $.ProtoOASubscribeLiveTrendbarReqUtils.write(message.payload, pbf);
+      break;
+    case 2136:
+      $.ProtoOAUnsubscribeLiveTrendbarReqUtils.write(message.payload, pbf);
+      break;
+    case 2137:
+      $.ProtoOAGetTrendbarsReqUtils.write(message.payload, pbf);
+      break;
+    case 2138:
+      $.ProtoOAGetTrendbarsResUtils.write(message.payload, pbf);
+      break;
+    case 2139:
+      $.ProtoOAExpectedMarginReqUtils.write(message.payload, pbf);
+      break;
+    case 2140:
+      $.ProtoOAExpectedMarginResUtils.write(message.payload, pbf);
+      break;
+    case 2141:
+      $.ProtoOAMarginChangedEventUtils.write(message.payload, pbf);
+      break;
+    case 2142:
+      $.ProtoOAErrorResUtils.write(message.payload, pbf);
+      break;
+    case 2143:
+      $.ProtoOACashFlowHistoryListReqUtils.write(message.payload, pbf);
+      break;
+    case 2144:
+      $.ProtoOACashFlowHistoryListResUtils.write(message.payload, pbf);
+      break;
+    case 2145:
+      $.ProtoOAGetTickDataReqUtils.write(message.payload, pbf);
+      break;
+    case 2146:
+      $.ProtoOAGetTickDataResUtils.write(message.payload, pbf);
+      break;
+    case 2147:
+      $.ProtoOAAccountsTokenInvalidatedEventUtils.write(message.payload, pbf);
+      break;
+    case 2148:
+      $.ProtoOAClientDisconnectEventUtils.write(message.payload, pbf);
+      break;
+    case 2149:
+      $.ProtoOAGetAccountListByAccessTokenReqUtils.write(message.payload, pbf);
+      break;
+    case 2150:
+      $.ProtoOAGetAccountListByAccessTokenResUtils.write(message.payload, pbf);
+      break;
+    case 2151:
+      $.ProtoOAGetCtidProfileByTokenReqUtils.write(message.payload, pbf);
+      break;
+    case 2152:
+      $.ProtoOAGetCtidProfileByTokenResUtils.write(message.payload, pbf);
+      break;
+    case 2153:
+      $.ProtoOAAssetClassListReqUtils.write(message.payload, pbf);
+      break;
+    case 2154:
+      $.ProtoOAAssetClassListResUtils.write(message.payload, pbf);
+      break;
+    case 2155:
+      $.ProtoOADepthEventUtils.write(message.payload, pbf);
+      break;
+    case 2156:
+      $.ProtoOASubscribeDepthQuotesReqUtils.write(message.payload, pbf);
+      break;
+    case 2157:
+      $.ProtoOASubscribeDepthQuotesResUtils.write(message.payload, pbf);
+      break;
+    case 2158:
+      $.ProtoOAUnsubscribeDepthQuotesReqUtils.write(message.payload, pbf);
+      break;
+    case 2159:
+      $.ProtoOAUnsubscribeDepthQuotesResUtils.write(message.payload, pbf);
+      break;
+    case 2160:
+      $.ProtoOASymbolCategoryListReqUtils.write(message.payload, pbf);
+      break;
+    case 2161:
+      $.ProtoOASymbolCategoryListResUtils.write(message.payload, pbf);
+      break;
+    case 2162:
+      $.ProtoOAAccountLogoutReqUtils.write(message.payload, pbf);
+      break;
+    case 2163:
+      $.ProtoOAAccountLogoutResUtils.write(message.payload, pbf);
+      break;
+    case 2164:
+      $.ProtoOAAccountDisconnectEventUtils.write(message.payload, pbf);
       break;
   }
   return pbf.finish();
