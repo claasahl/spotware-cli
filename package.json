@@ -12,6 +12,7 @@
     "prepare": "npm run build",
     "build": "npm run import && tsc",
     "start": "ts-node ./src/index.ts",
+    "sample": "ts-node ./src/SampleMessages.ts",
     "compile": "ts-node src/compile.ts && npx prettier --write ./src/**"
   },
   "repository": {
