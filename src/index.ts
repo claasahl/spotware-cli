@@ -1,6 +1,7 @@
 import tls from "tls";
 import { EOL } from "os";
 import ms from "ms";
+import fs from "fs";
 
 import * as util from "./util";
 import * as $$ from "./OpenApiCommonMessages";
@@ -143,8 +144,24 @@ const socket = connect(
   "demo.ctraderapi.com"
 );
 socket.on("PROTO_MESSAGE", message => readProtoMessages(socket, message));
-socket.on("PROTO_MESSAGE.*", message =>
-  process.stdout.write(JSON.stringify(message) + EOL)
+socket.on("PROTO_MESSAGE.*", message => {
+  if ([2113, 2115, 2154, 2161].includes(message.payloadType)) {
+    process.stdout.write(JSON.stringify({ ...message, payload: "****" }) + EOL);
+  } else {
+    process.stdout.write(JSON.stringify(message) + EOL);
+  }
+});
+socket.on("PROTO_MESSAGE.2113", message =>
+  fs.writeFileSync("./assets.json", JSON.stringify(message, null, 2))
+);
+socket.on("PROTO_MESSAGE.2115", message =>
+  fs.writeFileSync("./symbols.json", JSON.stringify(message))
+);
+socket.on("PROTO_MESSAGE.2154", message =>
+  fs.writeFileSync("./assetClasses.json", JSON.stringify(message, null, 2))
+);
+socket.on("PROTO_MESSAGE.2161", message =>
+  fs.writeFileSync("./categories.json", JSON.stringify(message, null, 2))
 );
 socket.on("close", () => process.exit(0));
 
