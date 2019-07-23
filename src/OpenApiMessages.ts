@@ -314,9 +314,12 @@ export class ProtoOAApplicationAuthReqUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAApplicationAuthReq,
-    pbf: PBF
+    obj?: ProtoOAApplicationAuthReq,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.clientId = pbf.readString();
     if (tag === 3) obj.clientSecret = pbf.readString();
@@ -342,9 +345,12 @@ export class ProtoOAApplicationAuthResUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAApplicationAuthRes,
-    pbf: PBF
+    obj?: ProtoOAApplicationAuthRes,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
   }
 
@@ -373,7 +379,14 @@ export class ProtoOAAccountAuthReqUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOAAccountAuthReq, pbf: PBF) {
+  private static _readField(
+    tag: number,
+    obj?: ProtoOAAccountAuthReq,
+    pbf?: PBF
+  ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.accessToken = pbf.readString();
@@ -405,7 +418,14 @@ export class ProtoOAAccountAuthResUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOAAccountAuthRes, pbf: PBF) {
+  private static _readField(
+    tag: number,
+    obj?: ProtoOAAccountAuthRes,
+    pbf?: PBF
+  ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
   }
@@ -438,7 +458,10 @@ export class ProtoOAErrorResUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOAErrorRes, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOAErrorRes, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.errorCode = pbf.readString();
@@ -475,9 +498,12 @@ export class ProtoOAClientDisconnectEventUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAClientDisconnectEvent,
-    pbf: PBF
+    obj?: ProtoOAClientDisconnectEvent,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.reason = pbf.readString();
   }
@@ -509,9 +535,12 @@ export class ProtoOAAccountsTokenInvalidatedEventUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAAccountsTokenInvalidatedEvent,
-    pbf: PBF
+    obj?: ProtoOAAccountsTokenInvalidatedEvent,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountIds.push(pbf.readVarint64());
     if (tag === 3) obj.reason = pbf.readString();
@@ -541,7 +570,10 @@ export class ProtoOAVersionReqUtils {
     return pbf.readFields(ProtoOAVersionReqUtils._readField, {}, end);
   }
 
-  private static _readField(tag: number, obj: ProtoOAVersionReq, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOAVersionReq, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
   }
 
@@ -568,7 +600,10 @@ export class ProtoOAVersionResUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOAVersionRes, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOAVersionRes, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.version = pbf.readString();
   }
@@ -622,7 +657,10 @@ export class ProtoOANewOrderReqUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOANewOrderReq, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOANewOrderReq, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.symbolId = pbf.readVarint64();
@@ -706,7 +744,14 @@ export class ProtoOAExecutionEventUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOAExecutionEvent, pbf: PBF) {
+  private static _readField(
+    tag: number,
+    obj?: ProtoOAExecutionEvent,
+    pbf?: PBF
+  ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.executionType = pbf.readVarint();
@@ -776,7 +821,14 @@ export class ProtoOACancelOrderReqUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOACancelOrderReq, pbf: PBF) {
+  private static _readField(
+    tag: number,
+    obj?: ProtoOACancelOrderReq,
+    pbf?: PBF
+  ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.orderId = pbf.readVarint64();
@@ -822,7 +874,14 @@ export class ProtoOAAmendOrderReqUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOAAmendOrderReq, pbf: PBF) {
+  private static _readField(
+    tag: number,
+    obj?: ProtoOAAmendOrderReq,
+    pbf?: PBF
+  ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.orderId = pbf.readVarint64();
@@ -890,9 +949,12 @@ export class ProtoOAAmendPositionSLTPReqUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAAmendPositionSLTPReq,
-    pbf: PBF
+    obj?: ProtoOAAmendPositionSLTPReq,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.positionId = pbf.readVarint64();
@@ -942,9 +1004,12 @@ export class ProtoOAClosePositionReqUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAClosePositionReq,
-    pbf: PBF
+    obj?: ProtoOAClosePositionReq,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.positionId = pbf.readVarint64();
@@ -988,9 +1053,12 @@ export class ProtoOATrailingSLChangedEventUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOATrailingSLChangedEvent,
-    pbf: PBF
+    obj?: ProtoOATrailingSLChangedEvent,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.positionId = pbf.readVarint64();
@@ -1029,7 +1097,10 @@ export class ProtoOAAssetListReqUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOAAssetListReq, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOAAssetListReq, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
   }
@@ -1061,7 +1132,10 @@ export class ProtoOAAssetListResUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOAAssetListRes, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOAAssetListRes, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
@@ -1097,7 +1171,14 @@ export class ProtoOASymbolsListReqUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOASymbolsListReq, pbf: PBF) {
+  private static _readField(
+    tag: number,
+    obj?: ProtoOASymbolsListReq,
+    pbf?: PBF
+  ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
   }
@@ -1129,7 +1210,14 @@ export class ProtoOASymbolsListResUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOASymbolsListRes, pbf: PBF) {
+  private static _readField(
+    tag: number,
+    obj?: ProtoOASymbolsListRes,
+    pbf?: PBF
+  ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
@@ -1169,7 +1257,14 @@ export class ProtoOASymbolByIdReqUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOASymbolByIdReq, pbf: PBF) {
+  private static _readField(
+    tag: number,
+    obj?: ProtoOASymbolByIdReq,
+    pbf?: PBF
+  ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.symbolId.push(pbf.readVarint64());
@@ -1204,7 +1299,14 @@ export class ProtoOASymbolByIdResUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOASymbolByIdRes, pbf: PBF) {
+  private static _readField(
+    tag: number,
+    obj?: ProtoOASymbolByIdRes,
+    pbf?: PBF
+  ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
@@ -1246,9 +1348,12 @@ export class ProtoOASymbolsForConversionReqUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOASymbolsForConversionReq,
-    pbf: PBF
+    obj?: ProtoOASymbolsForConversionReq,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.firstAssetId = pbf.readVarint64();
@@ -1286,9 +1391,12 @@ export class ProtoOASymbolsForConversionResUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOASymbolsForConversionRes,
-    pbf: PBF
+    obj?: ProtoOASymbolsForConversionRes,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
@@ -1330,9 +1438,12 @@ export class ProtoOASymbolChangedEventUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOASymbolChangedEvent,
-    pbf: PBF
+    obj?: ProtoOASymbolChangedEvent,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.symbolId.push(pbf.readVarint64());
@@ -1367,9 +1478,12 @@ export class ProtoOAAssetClassListReqUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAAssetClassListReq,
-    pbf: PBF
+    obj?: ProtoOAAssetClassListReq,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
   }
@@ -1403,9 +1517,12 @@ export class ProtoOAAssetClassListResUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAAssetClassListRes,
-    pbf: PBF
+    obj?: ProtoOAAssetClassListRes,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
@@ -1443,7 +1560,10 @@ export class ProtoOATraderReqUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOATraderReq, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOATraderReq, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
   }
@@ -1475,7 +1595,10 @@ export class ProtoOATraderResUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOATraderRes, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOATraderRes, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
@@ -1512,9 +1635,12 @@ export class ProtoOATraderUpdatedEventUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOATraderUpdatedEvent,
-    pbf: PBF
+    obj?: ProtoOATraderUpdatedEvent,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
@@ -1547,7 +1673,10 @@ export class ProtoOAReconcileReqUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOAReconcileReq, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOAReconcileReq, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
   }
@@ -1581,7 +1710,10 @@ export class ProtoOAReconcileResUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOAReconcileRes, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOAReconcileRes, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
@@ -1632,9 +1764,12 @@ export class ProtoOAOrderErrorEventUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAOrderErrorEvent,
-    pbf: PBF
+    obj?: ProtoOAOrderErrorEvent,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 5) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 2) obj.errorCode = pbf.readString();
@@ -1677,7 +1812,10 @@ export class ProtoOADealListReqUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOADealListReq, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOADealListReq, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.fromTimestamp = pbf.readVarint64();
@@ -1717,7 +1855,10 @@ export class ProtoOADealListResUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOADealListRes, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOADealListRes, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
@@ -1761,9 +1902,12 @@ export class ProtoOAExpectedMarginReqUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAExpectedMarginReq,
-    pbf: PBF
+    obj?: ProtoOAExpectedMarginReq,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.symbolId = pbf.readVarint64();
@@ -1802,9 +1946,12 @@ export class ProtoOAExpectedMarginResUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAExpectedMarginRes,
-    pbf: PBF
+    obj?: ProtoOAExpectedMarginRes,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
@@ -1848,9 +1995,12 @@ export class ProtoOAMarginChangedEventUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAMarginChangedEvent,
-    pbf: PBF
+    obj?: ProtoOAMarginChangedEvent,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.positionId = pbf.readVarint64();
@@ -1890,9 +2040,12 @@ export class ProtoOACashFlowHistoryListReqUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOACashFlowHistoryListReq,
-    pbf: PBF
+    obj?: ProtoOACashFlowHistoryListReq,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.fromTimestamp = pbf.readVarint64();
@@ -1930,9 +2083,12 @@ export class ProtoOACashFlowHistoryListResUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOACashFlowHistoryListRes,
-    pbf: PBF
+    obj?: ProtoOACashFlowHistoryListRes,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
@@ -1972,9 +2128,12 @@ export class ProtoOAGetAccountListByAccessTokenReqUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAGetAccountListByAccessTokenReq,
-    pbf: PBF
+    obj?: ProtoOAGetAccountListByAccessTokenReq,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.accessToken = pbf.readString();
   }
@@ -2011,9 +2170,12 @@ export class ProtoOAGetAccountListByAccessTokenResUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAGetAccountListByAccessTokenRes,
-    pbf: PBF
+    obj?: ProtoOAGetAccountListByAccessTokenRes,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.accessToken = pbf.readString();
     if (tag === 3) obj.permissionScope = pbf.readVarint();
@@ -2063,9 +2225,12 @@ export class ProtoOASubscribeSpotsReqUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOASubscribeSpotsReq,
-    pbf: PBF
+    obj?: ProtoOASubscribeSpotsReq,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.symbolId.push(pbf.readVarint64());
@@ -2100,9 +2265,12 @@ export class ProtoOASubscribeSpotsResUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOASubscribeSpotsRes,
-    pbf: PBF
+    obj?: ProtoOASubscribeSpotsRes,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
   }
@@ -2136,9 +2304,12 @@ export class ProtoOAUnsubscribeSpotsReqUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAUnsubscribeSpotsReq,
-    pbf: PBF
+    obj?: ProtoOAUnsubscribeSpotsReq,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.symbolId.push(pbf.readVarint64());
@@ -2173,9 +2344,12 @@ export class ProtoOAUnsubscribeSpotsResUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAUnsubscribeSpotsRes,
-    pbf: PBF
+    obj?: ProtoOAUnsubscribeSpotsRes,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
   }
@@ -2211,7 +2385,10 @@ export class ProtoOASpotEventUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOASpotEvent, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOASpotEvent, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.symbolId = pbf.readVarint64();
@@ -2261,9 +2438,12 @@ export class ProtoOASubscribeLiveTrendbarReqUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOASubscribeLiveTrendbarReq,
-    pbf: PBF
+    obj?: ProtoOASubscribeLiveTrendbarReq,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.period = pbf.readVarint();
@@ -2303,9 +2483,12 @@ export class ProtoOAUnsubscribeLiveTrendbarReqUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAUnsubscribeLiveTrendbarReq,
-    pbf: PBF
+    obj?: ProtoOAUnsubscribeLiveTrendbarReq,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.period = pbf.readVarint();
@@ -2349,9 +2532,12 @@ export class ProtoOAGetTrendbarsReqUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAGetTrendbarsReq,
-    pbf: PBF
+    obj?: ProtoOAGetTrendbarsReq,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.fromTimestamp = pbf.readVarint64();
@@ -2398,9 +2584,12 @@ export class ProtoOAGetTrendbarsResUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAGetTrendbarsRes,
-    pbf: PBF
+    obj?: ProtoOAGetTrendbarsRes,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.period = pbf.readVarint();
@@ -2452,7 +2641,14 @@ export class ProtoOAGetTickDataReqUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOAGetTickDataReq, pbf: PBF) {
+  private static _readField(
+    tag: number,
+    obj?: ProtoOAGetTickDataReq,
+    pbf?: PBF
+  ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.symbolId = pbf.readVarint64();
@@ -2494,7 +2690,14 @@ export class ProtoOAGetTickDataResUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOAGetTickDataRes, pbf: PBF) {
+  private static _readField(
+    tag: number,
+    obj?: ProtoOAGetTickDataRes,
+    pbf?: PBF
+  ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
@@ -2536,9 +2739,12 @@ export class ProtoOAGetCtidProfileByTokenReqUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAGetCtidProfileByTokenReq,
-    pbf: PBF
+    obj?: ProtoOAGetCtidProfileByTokenReq,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.accessToken = pbf.readString();
   }
@@ -2569,9 +2775,12 @@ export class ProtoOAGetCtidProfileByTokenResUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAGetCtidProfileByTokenRes,
-    pbf: PBF
+    obj?: ProtoOAGetCtidProfileByTokenRes,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2)
       obj.profile = ProtoOACtidProfileUtils.read(
@@ -2611,7 +2820,10 @@ export class ProtoOADepthEventUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOADepthEvent, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOADepthEvent, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.symbolId = pbf.readVarint64();
@@ -2657,9 +2869,12 @@ export class ProtoOASubscribeDepthQuotesReqUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOASubscribeDepthQuotesReq,
-    pbf: PBF
+    obj?: ProtoOASubscribeDepthQuotesReq,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.symbolId.push(pbf.readVarint64());
@@ -2694,9 +2909,12 @@ export class ProtoOASubscribeDepthQuotesResUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOASubscribeDepthQuotesRes,
-    pbf: PBF
+    obj?: ProtoOASubscribeDepthQuotesRes,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
   }
@@ -2730,9 +2948,12 @@ export class ProtoOAUnsubscribeDepthQuotesReqUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAUnsubscribeDepthQuotesReq,
-    pbf: PBF
+    obj?: ProtoOAUnsubscribeDepthQuotesReq,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3) obj.symbolId.push(pbf.readVarint64());
@@ -2767,9 +2988,12 @@ export class ProtoOAUnsubscribeDepthQuotesResUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAUnsubscribeDepthQuotesRes,
-    pbf: PBF
+    obj?: ProtoOAUnsubscribeDepthQuotesRes,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
   }
@@ -2801,9 +3025,12 @@ export class ProtoOASymbolCategoryListReqUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOASymbolCategoryListReq,
-    pbf: PBF
+    obj?: ProtoOASymbolCategoryListReq,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
   }
@@ -2837,9 +3064,12 @@ export class ProtoOASymbolCategoryListResUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOASymbolCategoryListRes,
-    pbf: PBF
+    obj?: ProtoOASymbolCategoryListRes,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 3)
@@ -2879,9 +3109,12 @@ export class ProtoOAAccountLogoutReqUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAAccountLogoutReq,
-    pbf: PBF
+    obj?: ProtoOAAccountLogoutReq,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
   }
@@ -2913,9 +3146,12 @@ export class ProtoOAAccountLogoutResUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAAccountLogoutRes,
-    pbf: PBF
+    obj?: ProtoOAAccountLogoutRes,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
   }
@@ -2947,9 +3183,12 @@ export class ProtoOAAccountDisconnectEventUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAAccountDisconnectEvent,
-    pbf: PBF
+    obj?: ProtoOAAccountDisconnectEvent,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.ctidTraderAccountId = pbf.readVarint64();
   }
@@ -2981,7 +3220,10 @@ export class ProtoOAAssetUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOAAsset, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOAAsset, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.assetId = pbf.readVarint64();
     if (tag === 2) obj.name = pbf.readString();
     if (tag === 3) obj.displayName = pbf.readString();
@@ -3042,7 +3284,10 @@ export class ProtoOASymbolUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOASymbol, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOASymbol, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.symbolId = pbf.readVarint64();
     if (tag === 2) obj.digits = pbf.readVarint();
     if (tag === 3) obj.pipPosition = pbf.readVarint();
@@ -3139,7 +3384,10 @@ export class ProtoOALightSymbolUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOALightSymbol, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOALightSymbol, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.symbolId = pbf.readVarint64();
     if (tag === 2) obj.symbolName = pbf.readString();
     if (tag === 3) obj.enabled = pbf.readBoolean();
@@ -3181,7 +3429,14 @@ export class ProtoOASymbolCategoryUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOASymbolCategory, pbf: PBF) {
+  private static _readField(
+    tag: number,
+    obj?: ProtoOASymbolCategory,
+    pbf?: PBF
+  ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.id = pbf.readVarint64();
     if (tag === 2) obj.assetClassId = pbf.readVarint64();
     if (tag === 3) obj.name = pbf.readString();
@@ -3213,7 +3468,10 @@ export class ProtoOAIntervalUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOAInterval, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOAInterval, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 3) obj.startSecond = pbf.readVarint();
     if (tag === 4) obj.endSecond = pbf.readVarint();
   }
@@ -3259,7 +3517,10 @@ export class ProtoOATraderUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOATrader, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOATrader, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 2) obj.balance = pbf.readVarint64();
     if (tag === 3) obj.balanceVersion = pbf.readVarint64();
@@ -3337,7 +3598,10 @@ export class ProtoOAPositionUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOAPosition, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOAPosition, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.positionId = pbf.readVarint64();
     if (tag === 2)
       obj.tradeData = ProtoOATradeDataUtils.read(
@@ -3405,7 +3669,10 @@ export class ProtoOATradeDataUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOATradeData, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOATradeData, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.symbolId = pbf.readVarint64();
     if (tag === 2) obj.volume = pbf.readVarint64();
     if (tag === 3) obj.tradeSide = pbf.readVarint();
@@ -3467,7 +3734,10 @@ export class ProtoOAOrderUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOAOrder, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOAOrder, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.orderId = pbf.readVarint64();
     if (tag === 2)
       obj.tradeData = ProtoOATradeDataUtils.read(
@@ -3561,9 +3831,12 @@ export class ProtoOABonusDepositWithdrawUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOABonusDepositWithdraw,
-    pbf: PBF
+    obj?: ProtoOABonusDepositWithdraw,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.operationType = pbf.readVarint();
     if (tag === 2) obj.bonusHistoryId = pbf.readVarint64();
     if (tag === 3) obj.managerBonus = pbf.readVarint64();
@@ -3620,9 +3893,12 @@ export class ProtoOADepositWithdrawUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOADepositWithdraw,
-    pbf: PBF
+    obj?: ProtoOADepositWithdraw,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.operationType = pbf.readVarint();
     if (tag === 2) obj.balanceHistoryId = pbf.readVarint64();
     if (tag === 3) obj.balance = pbf.readVarint64();
@@ -3687,7 +3963,10 @@ export class ProtoOADealUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOADeal, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOADeal, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.dealId = pbf.readVarint64();
     if (tag === 2) obj.orderId = pbf.readVarint64();
     if (tag === 3) obj.positionId = pbf.readVarint64();
@@ -3767,9 +4046,12 @@ export class ProtoOAClosePositionDetailUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOAClosePositionDetail,
-    pbf: PBF
+    obj?: ProtoOAClosePositionDetail,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.entryPrice = pbf.readDouble();
     if (tag === 2) obj.grossProfit = pbf.readVarint64();
     if (tag === 3) obj.swap = pbf.readVarint64();
@@ -3816,7 +4098,10 @@ export class ProtoOATrendbarUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOATrendbar, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOATrendbar, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 3) obj.volume = pbf.readVarint64();
     if (tag === 4) obj.period = pbf.readVarint();
     if (tag === 5) obj.low = pbf.readVarint64();
@@ -3859,7 +4144,14 @@ export class ProtoOAExpectedMarginUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOAExpectedMargin, pbf: PBF) {
+  private static _readField(
+    tag: number,
+    obj?: ProtoOAExpectedMargin,
+    pbf?: PBF
+  ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.volume = pbf.readVarint64();
     if (tag === 2) obj.buyMargin = pbf.readVarint64();
     if (tag === 3) obj.sellMargin = pbf.readVarint64();
@@ -3891,7 +4183,10 @@ export class ProtoOATickDataUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOATickData, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOATickData, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.timestamp = pbf.readVarint64();
     if (tag === 2) obj.tick = pbf.readVarint64();
   }
@@ -3919,7 +4214,10 @@ export class ProtoOACtidProfileUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOACtidProfile, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOACtidProfile, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.userId = pbf.readVarint64();
   }
 
@@ -3949,9 +4247,12 @@ export class ProtoOACtidTraderAccountUtils {
 
   private static _readField(
     tag: number,
-    obj: ProtoOACtidTraderAccount,
-    pbf: PBF
+    obj?: ProtoOACtidTraderAccount,
+    pbf?: PBF
   ) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.ctidTraderAccountId = pbf.readVarint64();
     if (tag === 2) obj.isLive = pbf.readBoolean();
     if (tag === 3) obj.traderLogin = pbf.readVarint64();
@@ -3977,7 +4278,10 @@ export class ProtoOAAssetClassUtils {
     return pbf.readFields(ProtoOAAssetClassUtils._readField, {}, end);
   }
 
-  private static _readField(tag: number, obj: ProtoOAAssetClass, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOAAssetClass, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.id = pbf.readVarint64();
     if (tag === 2) obj.name = pbf.readString();
   }
@@ -4009,7 +4313,10 @@ export class ProtoOADepthQuoteUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoOADepthQuote, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoOADepthQuote, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.id = pbf.readVarint64();
     if (tag === 3) obj.size = pbf.readVarint64();
     if (tag === 4) obj.bid = pbf.readVarint64();

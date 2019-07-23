@@ -74,8 +74,11 @@ function compileReadMethod(protoMessage: Message): string[] {
   lines.push("  }", "");
 
   lines.push(
-    `private static _readField(tag: number, obj: ${protoMessage.name}, pbf: PBF) {`
+    `private static _readField(tag: number, obj?: ${protoMessage.name}, pbf?: PBF) {`
   );
+  lines.push("if(!obj || !pbf) {");
+  lines.push("return;");
+  lines.push("}");
   protoMessage.fields.forEach(field =>
     lines.push(`if (tag === ${field.tag}) ${mapReadMethod(field)};`)
   );

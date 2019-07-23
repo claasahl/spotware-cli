@@ -39,7 +39,10 @@ export class ProtoMessageUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoMessage, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoMessage, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.payload = pbf.readBytes();
     if (tag === 3) obj.clientMsgId = pbf.readString();
@@ -72,7 +75,10 @@ export class ProtoErrorResUtils {
     );
   }
 
-  private static _readField(tag: number, obj: ProtoErrorRes, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoErrorRes, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
     if (tag === 2) obj.errorCode = pbf.readString();
     if (tag === 3) obj.description = pbf.readString();
@@ -99,7 +105,10 @@ export class ProtoHeartbeatEventUtils {
     return pbf.readFields(ProtoHeartbeatEventUtils._readField, {}, end);
   }
 
-  private static _readField(tag: number, obj: ProtoHeartbeatEvent, pbf: PBF) {
+  private static _readField(tag: number, obj?: ProtoHeartbeatEvent, pbf?: PBF) {
+    if (!obj || !pbf) {
+      return;
+    }
     if (tag === 1) obj.payloadType = pbf.readVarint();
   }
 
