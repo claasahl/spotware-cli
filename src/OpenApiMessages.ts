@@ -2619,7 +2619,7 @@ export class ProtoOADepthEventUtils {
       obj.newQuotes.push(
         ProtoOADepthQuoteUtils.read(pbf, pbf.readVarint() + pbf.pos)
       );
-    if (tag === 5) obj.deletedQuotes.push(pbf.readVarint64());
+    if (tag === 5) pbf.readPackedVarint(obj.deletedQuotes);
   }
 
   static write(obj: ProtoOADepthEvent, pbf: PBF = new PBF()) {
@@ -2631,10 +2631,7 @@ export class ProtoOADepthEventUtils {
       obj.newQuotes.forEach(newQuotes =>
         pbf.writeMessage(4, ProtoOADepthQuoteUtils.write, newQuotes)
       );
-    if (obj.deletedQuotes)
-      obj.deletedQuotes.forEach(deletedQuotes =>
-        pbf.writeVarintField(5, deletedQuotes)
-      );
+    if (obj.deletedQuotes) pbf.writePackedVarint(5, obj.deletedQuotes);
   }
 }
 

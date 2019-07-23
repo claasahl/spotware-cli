@@ -140,6 +140,9 @@ function mapWriteMethod(field: Field): string {
     case "uint64":
     case "int32":
     case "int64":
+      if (field.options.packed) {
+        return `pbf.writePackedVarint(${field.tag}, obj.${field.name})`;
+      }
       return field.repeated
         ? `obj.${field.name}.forEach(${field.name} =>pbf.writeVarintField(${field.tag}, ${field.name}))`
         : `pbf.writeVarintField(${field.tag}, obj.${field.name})`;
@@ -181,6 +184,9 @@ function mapReadMethod(field: Field): string {
       return `obj.${field.name} = pbf.readVarint()`;
     case "uint64":
     case "int64":
+      if (field.options.packed) {
+        return `pbf.readPackedVarint(obj.${field.name})`;
+      }
       return field.repeated
         ? `obj.${field.name}.push(pbf.readVarint64())`
         : `obj.${field.name} = pbf.readVarint64()`;
