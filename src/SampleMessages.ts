@@ -32,18 +32,12 @@ export const PROTO_OA_APPLICATION_AUTH_REQ: ProtoMessages = {
   payloadType: 2100,
   payload: { clientId, clientSecret }
 };
-export const PROTO_OA_APPLICATION_AUTH_RES: ProtoMessages = {
-  payloadType: 2101,
-  payload: {}
-};
+//export const PROTO_OA_APPLICATION_AUTH_RES: ProtoMessages = {    payloadType: 2101,    payload: {}};
 export const PROTO_OA_ACCOUNT_AUTH_REQ: ProtoMessages = {
   payloadType: 2102,
   payload: { ctidTraderAccountId, accessToken }
 };
-export const PROTO_OA_ACCOUNT_AUTH_RES: ProtoMessages = {
-  payloadType: 2103,
-  payload: { ctidTraderAccountId }
-};
+//export const PROTO_OA_ACCOUNT_AUTH_RES: ProtoMessages = {    payloadType: 2103,    payload: { ctidTraderAccountId }};
 export const PROTO_OA_VERSION_REQ: ProtoMessages = {
   payloadType: 2104,
   payload: {}
@@ -55,7 +49,7 @@ export const PROTO_OA_NEW_ORDER_REQ: ProtoMessages = {
     ctidTraderAccountId,
     orderType: $.ProtoOAOrderType.MARKET,
     symbolId: BTCEUR,
-    tradeSide: $.ProtoOATradeSide.BUY,
+    tradeSide: $.ProtoOATradeSide.SELL,
     volume
   }
 };
@@ -93,7 +87,7 @@ export const PROTO_OA_SYMBOL_BY_ID_REQ: ProtoMessages = {
 //export const PROTO_OA_SYMBOL_BY_ID_RES: ProtoMessages = {payloadType: 2117, payload: {}}
 export const PROTO_OA_SYMBOLS_FOR_CONVERSION_REQ: ProtoMessages = {
   payloadType: 2118,
-  payload: { ctidTraderAccountId, firstAssetId: EURSEK, lastAssetId: BTCEUR }
+  payload: { ctidTraderAccountId, firstAssetId: 10, lastAssetId: 124651 }
 };
 //export const PROTO_OA_SYMBOLS_FOR_CONVERSION_RES: ProtoMessages = {payloadType: 2119, payload: {}}
 //export const PROTO_OA_SYMBOL_CHANGED_EVENT: ProtoMessages = {payloadType: 2120, payload: {}}
@@ -217,9 +211,9 @@ export const PROTO_OA_ACCOUNT_LOGOUT_REQ: ProtoMessages = {
 //export const PROTO_OA_ACCOUNT_DISCONNECT_EVENT: ProtoMessages = {payloadType: 2164, payload: {}}
 const samples: ProtoMessages[] = [
   PROTO_OA_APPLICATION_AUTH_REQ,
-  PROTO_OA_APPLICATION_AUTH_RES,
+  //PROTO_OA_APPLICATION_AUTH_RES,
   PROTO_OA_ACCOUNT_AUTH_REQ,
-  PROTO_OA_ACCOUNT_AUTH_RES,
+  //PROTO_OA_ACCOUNT_AUTH_RES,
   PROTO_OA_VERSION_REQ,
   //PROTO_OA_VERSION_RES,
   PROTO_OA_NEW_ORDER_REQ,
