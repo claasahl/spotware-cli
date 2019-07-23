@@ -146,9 +146,16 @@ const socket = connect(
 socket.on("PROTO_MESSAGE", message => readProtoMessages(socket, message));
 socket.on("PROTO_MESSAGE.*", message => {
   if ([2113, 2115, 2154, 2161].includes(message.payloadType)) {
-    process.stdout.write(JSON.stringify({ ...message, payload: "****" }) + EOL);
+    process.stdout.write(
+      JSON.stringify({
+        timestamp: new Date(),
+        msg: { ...message, payload: "****" }
+      }) + EOL
+    );
   } else {
-    process.stdout.write(JSON.stringify(message) + EOL);
+    process.stdout.write(
+      JSON.stringify({ timestamp: new Date(), msg: message }) + EOL
+    );
   }
 });
 socket.on("PROTO_MESSAGE.2113", message =>
