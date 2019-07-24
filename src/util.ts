@@ -1,6 +1,5 @@
 import Pbf from "pbf";
-
-import { ProtoMessage, ProtoMessageUtils } from "./OpenApiCommonMessages";
+import { ProtoMessage, ProtoMessageUtils } from "@claasahl/spotware-protobuf";
 
 const INT_SIZE = 4;
 function length(length: number): Buffer {

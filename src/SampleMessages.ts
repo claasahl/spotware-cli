@@ -1,6 +1,6 @@
 import ms from "ms";
+import * as $ from "@claasahl/spotware-protobuf";
 
-import * as $ from "./OpenApiMessages";
 import { ProtoMessages } from ".";
 
 const clientId = "";

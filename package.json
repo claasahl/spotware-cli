@@ -4,16 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "preimport": "rimraf ./protobuf",
-    "import": "isogit clone --url=https://github.com/spotware/Open-API-2.0-protobuf-messages.git --dir=./protobuf --singleBranch",
-    "postimport": "rimraf ./protobuf/.git",
     "test": "echo \"Error: no test specified\" && exit 1",
     "precommit": "pretty-quick --staged",
     "prepare": "npm run build",
-    "build": "npm run import && tsc",
+    "build": "tsc",
     "start": "ts-node ./src/index.ts",
-    "sample": "ts-node ./src/SampleMessages.ts",
-    "compile": "ts-node src/compile.ts && npx prettier --write ./src/**"
+    "sample": "ts-node ./src/SampleMessages.ts"
   },
   "repository": {
     "type": "git",
@@ -35,6 +31,7 @@
     "rimraf": "^2.6.3"
   },
   "dependencies": {
+    "@claasahl/spotware-protobuf": "^1.0.5",
     "@types/ms": "^0.7.30",
     "ms": "^2.1.2",
     "pbf": "^3.2.0",

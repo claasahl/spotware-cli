@@ -1,12 +1,10 @@
 import tls from "tls";
 import Pbf from "pbf";
-
-import * as $$ from "./OpenApiCommonMessages";
-import * as $ from "./OpenApiMessages";
+import * as $ from "@claasahl/spotware-protobuf";
 
 export default function readProtoMessage(
   socket: tls.TLSSocket,
-  message: $$.ProtoMessage
+  message: $.ProtoMessage
 ): void {
   const msg: {
     clientMsgId?: string;
@@ -19,13 +17,13 @@ export default function readProtoMessage(
   };
   switch (message.payloadType) {
     case 5:
-      msg.payload = $$.ProtoMessageUtils.read(new Pbf(message.payload));
+      msg.payload = $.ProtoMessageUtils.read(new Pbf(message.payload));
       break;
     case 50:
-      msg.payload = $$.ProtoErrorResUtils.read(new Pbf(message.payload));
+      msg.payload = $.ProtoErrorResUtils.read(new Pbf(message.payload));
       break;
     case 51:
-      msg.payload = $$.ProtoHeartbeatEventUtils.read(new Pbf(message.payload));
+      msg.payload = $.ProtoHeartbeatEventUtils.read(new Pbf(message.payload));
       break;
     case 2100:
       msg.payload = $.ProtoOAApplicationAuthReqUtils.read(

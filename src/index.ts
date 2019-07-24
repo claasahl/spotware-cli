@@ -2,10 +2,9 @@ import tls from "tls";
 import { EOL } from "os";
 import ms from "ms";
 import fs from "fs";
+import * as $ from "@claasahl/spotware-protobuf";
 
 import * as util from "./util";
-import * as $$ from "./OpenApiCommonMessages";
-import * as $ from "./OpenApiMessages";
 import readProtoMessages from "./readProtoMessages";
 import writeProtoMessages from "./writeProtoMessages";
 
@@ -33,7 +32,7 @@ function readProtoMessage(this: tls.TLSSocket, data: string) {
   }
 }
 
-function writeProtoMessage(socket: tls.TLSSocket, message: $$.ProtoMessage) {
+function writeProtoMessage(socket: tls.TLSSocket, message: $.ProtoMessage) {
   const buffer = util.serialize(message);
   return socket.write(buffer, (err: Error) => {
     if (err) {
@@ -50,9 +49,9 @@ interface Message<P, T> {
   clientMsgId?: string;
 }
 export type ProtoMessages =
-  | Message<$$.ProtoMessage, 5>
-  | Message<$$.ProtoErrorRes, 50>
-  | Message<$$.ProtoHeartbeatEvent, 51>
+  | Message<$.ProtoMessage, 5>
+  | Message<$.ProtoErrorRes, 50>
+  | Message<$.ProtoHeartbeatEvent, 51>
   | Message<$.ProtoOAApplicationAuthReq, 2100>
   | Message<$.ProtoOAApplicationAuthRes, 2101>
   | Message<$.ProtoOAAccountAuthReq, 2102>
@@ -195,7 +194,7 @@ write(socket, {
 });
 setInterval(() => {
   write(socket, {
-    payloadType: $$.ProtoPayloadType.HEARTBEAT_EVENT,
+    payloadType: $.ProtoPayloadType.HEARTBEAT_EVENT,
     payload: {}
   });
 }, 10000);

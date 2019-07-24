@@ -1,20 +1,19 @@
 import Pbf from "pbf";
+import * as $ from "@claasahl/spotware-protobuf";
 
-import * as $$ from "./OpenApiCommonMessages";
-import * as $ from "./OpenApiMessages";
 import { ProtoMessages } from ".";
 
 export default function writeProtoMessages(message: ProtoMessages): Uint8Array {
   const pbf = new Pbf();
   switch (message.payloadType) {
     case 5:
-      $$.ProtoMessageUtils.write(message.payload, pbf);
+      $.ProtoMessageUtils.write(message.payload, pbf);
       break;
     case 50:
-      $$.ProtoErrorResUtils.write(message.payload, pbf);
+      $.ProtoErrorResUtils.write(message.payload, pbf);
       break;
     case 51:
-      $$.ProtoHeartbeatEventUtils.write(message.payload, pbf);
+      $.ProtoHeartbeatEventUtils.write(message.payload, pbf);
       break;
     case 2100:
       $.ProtoOAApplicationAuthReqUtils.write(message.payload, pbf);
