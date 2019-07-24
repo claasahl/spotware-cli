@@ -1,5 +1,5 @@
 import ms from "ms";
-import * as $ from "@claasahl/spotware-protobuf";
+import {ProtoMessages, ProtoOAOrderType, ProtoOATradeSide, ProtoOATrendbarPeriod, ProtoOAQuoteType} from "@claasahl/spotware-adapter";
 
 import { ProtoMessages } from ".";
 
@@ -47,9 +47,9 @@ export const PROTO_OA_NEW_ORDER_REQ: ProtoMessages = {
   payloadType: 2106,
   payload: {
     ctidTraderAccountId,
-    orderType: $.ProtoOAOrderType.MARKET,
+    orderType: ProtoOAOrderType.MARKET,
     symbolId: BTCEUR,
-    tradeSide: $.ProtoOATradeSide.SELL,
+    tradeSide: ProtoOATradeSide.SELL,
     volume
   }
 };
@@ -125,7 +125,7 @@ export const PROTO_OA_SUBSCRIBE_LIVE_TRENDBAR_REQ: ProtoMessages = {
   payload: {
     ctidTraderAccountId,
     symbolId: 1,
-    period: $.ProtoOATrendbarPeriod.D1
+    period: ProtoOATrendbarPeriod.D1
   }
 };
 export const PROTO_OA_UNSUBSCRIBE_LIVE_TRENDBAR_REQ: ProtoMessages = {
@@ -133,7 +133,7 @@ export const PROTO_OA_UNSUBSCRIBE_LIVE_TRENDBAR_REQ: ProtoMessages = {
   payload: {
     ctidTraderAccountId,
     symbolId: 1,
-    period: $.ProtoOATrendbarPeriod.D1
+    period: ProtoOATrendbarPeriod.D1
   }
 };
 export const PROTO_OA_GET_TRENDBARS_REQ: ProtoMessages = {
@@ -143,7 +143,7 @@ export const PROTO_OA_GET_TRENDBARS_REQ: ProtoMessages = {
     fromTimestamp,
     toTimestamp,
     symbolId: BTCEUR,
-    period: $.ProtoOATrendbarPeriod.D1
+    period: ProtoOATrendbarPeriod.D1
   }
 };
 //export const PROTO_OA_GET_TRENDBARS_RES: ProtoMessages = {payloadType: 2138, payload: {}}
@@ -166,7 +166,7 @@ export const PROTO_OA_GET_TICKDATA_REQ: ProtoMessages = {
     fromTimestamp,
     toTimestamp,
     symbolId: BTCEUR,
-    type: $.ProtoOAQuoteType.ASK
+    type: ProtoOAQuoteType.ASK
   }
 };
 //export const PROTO_OA_GET_TICKDATA_RES: ProtoMessages = {payloadType: 2146, payload: {}}
