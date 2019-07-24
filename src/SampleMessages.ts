@@ -1,7 +1,11 @@
 import ms from "ms";
-import {ProtoMessages, ProtoOAOrderType, ProtoOATradeSide, ProtoOATrendbarPeriod, ProtoOAQuoteType} from "@claasahl/spotware-adapter";
-
-import { ProtoMessages } from ".";
+import {
+  ProtoMessages,
+  ProtoOAOrderType,
+  ProtoOATradeSide,
+  ProtoOATrendbarPeriod,
+  ProtoOAQuoteType
+} from "@claasahl/spotware-adapter";
 
 const clientId = "";
 const clientSecret = "";
