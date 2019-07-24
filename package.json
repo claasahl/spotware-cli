@@ -24,6 +24,7 @@
   "homepage": "https://github.com/claasahl/spotware-cli#readme",
   "devDependencies": {
     "@types/ms": "^0.7.30",
+    "@types/pbf": "^3.0.1",
     "create-typescript-project-dependencies": "^10.0.4"
   },
   "dependencies": {
