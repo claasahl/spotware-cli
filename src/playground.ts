@@ -24,7 +24,8 @@ import {
   min,
   multicast,
   takeUntil,
-  takeWhile
+  takeWhile,
+  delay
 } from "rxjs/operators";
 import * as $ from "@claasahl/spotware-adapter";
 
@@ -139,15 +140,17 @@ function requestRemaining(
         map(ticks => ticks.reverse()),
         flatMap(value => of(...value)),
         min((x, y) => x.timestamp - y.timestamp),
-        map(pm =>
-          UTIL.pm2145(
-            {
-              ...config,
-              ctidTraderAccountId,
-              toTimestamp: pm.timestamp
-            },
-            msgId
-          )
+        flatMap(pm =>
+          of(
+            UTIL.pm2145(
+              {
+                ...config,
+                ctidTraderAccountId,
+                toTimestamp: pm.timestamp
+              },
+              msgId
+            )
+          ).pipe(delay(300))
         )
       );
     })
@@ -199,21 +202,34 @@ function requestTickData(
 ) {
   return pipe(
     multicast(new Subject<ProtoMessages>(), shared => {
+      // ---------------- ASK
       const ASK = "ASK";
-      const BID = "BID";
-      const start = shared.pipe(
+      const startAsk = shared.pipe(
         requestInit(ASK, { ...config, type: ProtoOAQuoteType.ASK })
       );
-      const rest = shared.pipe(
+      const restAsk = shared.pipe(
         requestRemaining(ASK, { ...config, type: ProtoOAQuoteType.ASK })
       );
-      const ask = shared.pipe(
+      const ticksAsk = shared.pipe(
         tickData(ASK, { ...config, type: ProtoOAQuoteType.ASK })
       );
-      const bid = shared.pipe(
+      const ask = merge(startAsk, restAsk, ticksAsk);
+
+      // ---------------- BID
+      const BID = "BID";
+      const startBid = shared.pipe(
+        requestInit(BID, { ...config, type: ProtoOAQuoteType.BID })
+      );
+      const restBid = shared.pipe(
+        requestRemaining(BID, { ...config, type: ProtoOAQuoteType.BID })
+      );
+      const ticksBid = shared.pipe(
         tickData(BID, { ...config, type: ProtoOAQuoteType.BID })
       );
-      return merge(start, rest, ask, bid);
+      const bid = merge(startBid, restBid, ticksBid);
+
+      // ---------------- !!!
+      return merge(ask, bid);
     })
   );
 }
