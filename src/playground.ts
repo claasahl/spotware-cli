@@ -30,7 +30,7 @@ import * as $ from "@claasahl/spotware-adapter";
 
 import CONFIG from "./config";
 import UTIL from "./util";
-import { ProtoMessages } from "@claasahl/spotware-adapter";
+import { ProtoMessages, ProtoOAQuoteType } from "@claasahl/spotware-adapter";
 
 const {
   PROTO_OA_APPLICATION_AUTH_RES,
@@ -91,79 +91,129 @@ function authenticateAccounts() {
   );
 }
 
-function requestTickData(
+function requestInit(
+  msgId: string,
   config: Pick<
     $.ProtoOAGetTickDataReq,
     Exclude<keyof $.ProtoOAGetTickDataReq, "ctidTraderAccountId">
   >
 ) {
   return pipe(
-    multicast(new Subject<ProtoMessages>(), shared => {
-      const start = shared.pipe(
-        pmFilter(PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES),
-        filter2150(), // TODO find another way to "cast" values/events
-        first(),
-        flatMap(message => of(...message.payload.ctidTraderAccount)),
-        map(({ ctidTraderAccountId }) =>
-          UTIL.pm2145({ ...config, ctidTraderAccountId })
+    pmFilter(PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES),
+    filter2150(), // TODO find another way to "cast" values/events
+    first(),
+    flatMap(message => of(...message.payload.ctidTraderAccount)),
+    map(({ ctidTraderAccountId }) =>
+      UTIL.pm2145(
+        { ...config, type: ProtoOAQuoteType.ASK, ctidTraderAccountId },
+        msgId
+      )
+    )
+  );
+}
+function requestRemaining(
+  msgId: string,
+  config: Pick<
+    $.ProtoOAGetTickDataReq,
+    Exclude<keyof $.ProtoOAGetTickDataReq, "ctidTraderAccountId">
+  >
+) {
+  return pipe(
+    pmFilter(PROTO_OA_GET_TICKDATA_RES),
+    clientMsgId(msgId),
+    filter2146(), // TODO find another way to "cast" values/events
+    flatMap(pm => {
+      // tick data is in reverse order (i.e. timestamp DESC)
+      const { ctidTraderAccountId, hasMore, tickData } = pm.payload;
+      if (!hasMore) {
+        return EMPTY;
+      }
+      return of(...tickData).pipe(
+        scan((acc, value) => {
+          return {
+            timestamp: acc.timestamp + value.timestamp,
+            tick: acc.tick + value.tick
+          };
+        }),
+        toArray(),
+        map(ticks => ticks.reverse()),
+        flatMap(value => of(...value)),
+        min((x, y) => x.timestamp - y.timestamp),
+        map(pm =>
+          UTIL.pm2145(
+            {
+              ...config,
+              ctidTraderAccountId,
+              toTimestamp: pm.timestamp
+            },
+            msgId
+          )
         )
       );
-      const rest = shared.pipe(
-        pmFilter(PROTO_OA_GET_TICKDATA_RES),
-        filter2146(), // TODO find another way to "cast" values/events
-        flatMap(pm => {
-          // tick data is in reverse order (i.e. timestamp DESC)
-          const { ctidTraderAccountId, hasMore, tickData } = pm.payload;
-          if (!hasMore) {
-            return EMPTY;
-          }
-          return of(...tickData).pipe(
-            scan((acc, value) => {
-              return {
-                timestamp: acc.timestamp + value.timestamp,
-                tick: acc.tick + value.tick
-              };
-            }),
-            toArray(),
-            map(ticks => ticks.reverse()),
-            flatMap(value => of(...value)),
-            min((x, y) => x.timestamp - y.timestamp),
-            map(pm =>
-              UTIL.pm2145({
-                ...config,
-                ctidTraderAccountId,
-                toTimestamp: pm.timestamp
-              })
-            )
-          );
-        })
-      );
-      const ticks = shared.pipe(
-        pmFilter(PROTO_OA_GET_TICKDATA_RES),
-        filter2146(), // TODO find another way to "cast" values/events
-        takeWhile(pm => pm.payload.hasMore, true),
-        toArray(),
-        flatMap(value => of(...value.reverse())),
-        flatMap(pm => {
-          // tick data is in reverse order (i.e. timestamp DESC)
-          const { tickData } = pm.payload;
-          return of(...tickData).pipe(
-            scan((acc, value) => {
-              return {
-                timestamp: acc.timestamp + value.timestamp,
-                tick: acc.tick + value.tick
-              };
-            }),
-            toArray(),
-            map(ticks => ticks.reverse()),
-            flatMap(value => of(...value)),
-            map(tick => ({ ...tick, date: new Date(tick.timestamp) }))
-          );
+    })
+  );
+}
+function tickData(
+  msgId: string,
+  config: Pick<
+    $.ProtoOAGetTickDataReq,
+    Exclude<keyof $.ProtoOAGetTickDataReq, "ctidTraderAccountId">
+  >
+) {
+  return pipe(
+    pmFilter(PROTO_OA_GET_TICKDATA_RES),
+    clientMsgId(msgId),
+    filter2146(), // TODO find another way to "cast" values/events
+    takeWhile(pm => pm.payload.hasMore, true),
+    toArray(),
+    flatMap(value => of(...value.reverse())),
+    flatMap(pm => {
+      // tick data is in reverse order (i.e. timestamp DESC)
+      const { tickData } = pm.payload;
+      return of(...tickData).pipe(
+        scan((acc, value) => {
+          return {
+            timestamp: acc.timestamp + value.timestamp,
+            tick: acc.tick + value.tick
+          };
         }),
-        tap(tick => console.log(JSON.stringify(tick))),
-        flatMap(() => EMPTY)
+        toArray(),
+        map(ticks => ticks.reverse()),
+        flatMap(value => of(...value)),
+        map(tick => ({
+          ...tick,
+          date: new Date(tick.timestamp),
+          type: config.type
+        }))
       );
-      return merge(start, rest, ticks);
+    }),
+    tap(tick => console.log(JSON.stringify(tick))),
+    flatMap(() => EMPTY)
+  );
+}
+function requestTickData(
+  config: Pick<
+    $.ProtoOAGetTickDataReq,
+    Exclude<keyof $.ProtoOAGetTickDataReq, "ctidTraderAccountId" | "type">
+  >
+) {
+  return pipe(
+    multicast(new Subject<ProtoMessages>(), shared => {
+      const ASK = "ASK";
+      const BID = "BID";
+      const start = shared.pipe(
+        requestInit(ASK, { ...config, type: ProtoOAQuoteType.ASK })
+      );
+      const rest = shared.pipe(
+        requestRemaining(ASK, { ...config, type: ProtoOAQuoteType.ASK })
+      );
+      const ask = shared.pipe(
+        tickData(ASK, { ...config, type: ProtoOAQuoteType.ASK })
+      );
+      const bid = shared.pipe(
+        tickData(BID, { ...config, type: ProtoOAQuoteType.BID })
+      );
+      return merge(start, rest, ask, bid);
     })
   );
 }
@@ -203,6 +253,9 @@ function filter2150() {
 function pmFilter(payloadType: $.ProtoOAPayloadType | $.ProtoPayloadType) {
   return filter<$.ProtoMessages>(pm => pm.payloadType === payloadType);
 }
+function clientMsgId(clientMsgId: string) {
+  return filter<$.ProtoMessages>(pm => pm.clientMsgId === clientMsgId);
+}
 
 function output(pm: $.ProtoMessages) {
   outputProtoMessages.next(pm);
@@ -211,8 +264,7 @@ function output(pm: $.ProtoMessages) {
 const TICK_DATA_CONFIG = {
   fromTimestamp: new Date("2019-07-24T18:00:00.000Z").getTime(),
   toTimestamp: new Date("2019-07-25T18:00:00.000Z").getTime(),
-  symbolId: 1,
-  type: $.ProtoOAQuoteType.ASK
+  symbolId: 1
 };
 inputProtoMessages.pipe(requestAccounts()).subscribe(output);
 inputProtoMessages.pipe(authenticateAccounts()).subscribe(output);
