@@ -9,7 +9,8 @@
     "prepare": "npm run build",
     "build": "tsc",
     "start": "ts-node -r dotenv/config ./src/index.ts",
-    "sample": "ts-node -r dotenv/config ./src/SampleMessages.ts"
+    "sample": "ts-node -r dotenv/config ./src/SampleMessages.ts",
+    "play": "ts-node -r dotenv/config ./src/playground.ts"
   },
   "repository": {
     "type": "git",
