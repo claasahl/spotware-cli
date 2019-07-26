@@ -7,22 +7,13 @@ import {
   ProtoOAQuoteType
 } from "@claasahl/spotware-adapter";
 
-const clientId = "";
-const clientSecret = "";
+import CONFIG from "./config";
 
-const scopeAccount = {
-  accessToken: "",
-  refreshToken: ""
-};
-const scopeTrading = {
-  accessToken: "",
-  refreshToken: ""
-};
-const ctidTraderAccountId = 0;
+const { clientId, clientSecret, accessToken } = CONFIG;
+const ctidTraderAccountId = 5291983;
 
-const { accessToken, refreshToken } = scopeTrading;
-const toTimestamp = Date.now();
-const fromTimestamp = toTimestamp - ms("7d");
+const toTimestamp = new Date("2019-07-24T18:20:34.433Z").getTime(); //Date.now();
+const fromTimestamp = new Date("2019-07-24T18:20:01.361Z").getTime(); //toTimestamp - ms("1min");
 
 const orderId = 123;
 const positionId = 123;
@@ -169,8 +160,8 @@ export const PROTO_OA_GET_TICKDATA_REQ: ProtoMessages = {
     ctidTraderAccountId,
     fromTimestamp,
     toTimestamp,
-    symbolId: BTCEUR,
-    type: ProtoOAQuoteType.ASK
+    symbolId: 1,
+    type: ProtoOAQuoteType.BID
   }
 };
 //export const PROTO_OA_GET_TICKDATA_RES: ProtoMessages = {payloadType: 2146, payload: {}}

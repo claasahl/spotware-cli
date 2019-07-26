@@ -8,8 +8,8 @@
     "precommit": "pretty-quick --staged",
     "prepare": "npm run build",
     "build": "tsc",
-    "start": "ts-node ./src/index.ts",
-    "sample": "ts-node ./src/SampleMessages.ts"
+    "start": "ts-node -r dotenv/config ./src/index.ts",
+    "sample": "ts-node -r dotenv/config ./src/SampleMessages.ts"
   },
   "repository": {
     "type": "git",
@@ -25,7 +25,8 @@
   "devDependencies": {
     "@types/ms": "^0.7.30",
     "@types/pbf": "^3.0.1",
-    "create-typescript-project-dependencies": "^10.0.4"
+    "create-typescript-project-dependencies": "^10.0.4",
+    "dotenv": "^8.0.0"
   },
   "dependencies": {
     "@claasahl/spotware-adapter": "^1.0.2",

@@ -1,7 +1,6 @@
 import { EOL } from "os";
 import { fromEvent, of, pipe, EMPTY } from "rxjs";
 import { map, flatMap, scan, toArray } from "rxjs/operators";
-import ms from "ms";
 import fs from "fs";
 import {
   connect,
@@ -12,9 +11,13 @@ import {
   ProtoMessages
 } from "@claasahl/spotware-adapter";
 
+import CONFIG from "./config";
+
+const { host, port, clientId, clientSecret, accessToken } = CONFIG;
+
 const socket = connect(
-  5035,
-  "demo.ctraderapi.com"
+  port,
+  host
 );
 socket.on("PROTO_MESSAGE.*", message => {
   if ([2113, 2115, 2154, 2161, 2146].includes(message.payloadType)) {
@@ -61,11 +64,7 @@ process.stdin.on("data", data => {
 });
 write(socket, { payloadType: 2104, clientMsgId: "moin", payload: {} });
 
-const clientId = "";
-const clientSecret = "";
-const accessToken = "";
-const refreshToken = "";
-const ctidTraderAccountId = 0;
+const ctidTraderAccountId = 5291983;
 const symbolId = [1]; //,47,22395];
 // const toTimestamp = Date.now();
 // const fromTimestamp = toTimestamp - ms("7d");
