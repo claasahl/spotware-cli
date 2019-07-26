@@ -6,7 +6,9 @@ import {
   EMPTY,
   interval,
   asyncScheduler,
-  Observer
+  Observer,
+  concat,
+  merge
 } from "rxjs";
 import {
   tap,
@@ -26,6 +28,7 @@ import * as $ from "@claasahl/spotware-adapter";
 
 import CONFIG from "./config";
 import UTIL from "./util";
+import { ProtoMessages } from "@claasahl/spotware-adapter";
 
 const {
   PROTO_OA_APPLICATION_AUTH_RES,
@@ -93,13 +96,48 @@ function requestTickData(
   >
 ) {
   return pipe(
-    pmFilter(PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES),
-    filter2150(), // TODO find another way to "cast" values/events
-    first(),
-    flatMap(message => of(...message.payload.ctidTraderAccount)),
-    map(({ ctidTraderAccountId }) =>
-      UTIL.pm2145({ ...config, ctidTraderAccountId })
-    )
+    multicast(new Subject<ProtoMessages>(), shared => {
+      const start = shared.pipe(
+        pmFilter(PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES),
+        filter2150(), // TODO find another way to "cast" values/events
+        first(),
+        flatMap(message => of(...message.payload.ctidTraderAccount)),
+        map(({ ctidTraderAccountId }) =>
+          UTIL.pm2145({ ...config, ctidTraderAccountId })
+        )
+      );
+      const rest = shared.pipe(
+        pmFilter(PROTO_OA_GET_TICKDATA_RES),
+        filter2146(), // TODO find another way to "cast" values/events
+        flatMap(pm => {
+          // tick data is in reverse order (i.e. timestamp DESC)
+          const { ctidTraderAccountId, hasMore, tickData } = pm.payload;
+          if (!hasMore) {
+            return EMPTY;
+          }
+          return of(...tickData).pipe(
+            scan((acc, value) => {
+              return {
+                timestamp: acc.timestamp + value.timestamp,
+                tick: acc.tick + value.tick
+              };
+            }),
+            toArray(),
+            map(ticks => ticks.reverse()),
+            flatMap(value => of(...value)),
+            min((x, y) => x.timestamp - y.timestamp),
+            map(pm =>
+              UTIL.pm2145({
+                ...config,
+                ctidTraderAccountId,
+                toTimestamp: pm.timestamp
+              })
+            )
+          );
+        })
+      );
+      return merge(start, rest);
+    })
   );
 }
 function fetchTickData(
@@ -130,42 +168,6 @@ function fetchTickData(
       date: new Date(tick.timestamp),
       type: config.type
     }))
-  );
-}
-function fetchTickData2(
-  config: Pick<
-    $.ProtoOAGetTickDataReq,
-    Exclude<keyof $.ProtoOAGetTickDataReq, "ctidTraderAccountId">
-  >
-) {
-  return pipe(
-    pmFilter(PROTO_OA_GET_TICKDATA_RES),
-    filter2146(), // TODO find another way to "cast" values/events
-    flatMap(pm => {
-      const { ctidTraderAccountId, hasMore, tickData } = pm.payload;
-      if (!hasMore) {
-        return EMPTY;
-      }
-      return of(...tickData).pipe(
-        scan((acc, value) => {
-          return {
-            timestamp: acc.timestamp + value.timestamp,
-            tick: acc.tick + value.tick
-          };
-        }),
-        toArray(),
-        map(ticks => ticks.reverse()),
-        flatMap(value => of(...value)),
-        min((x, y) => x.timestamp - y.timestamp),
-        map(pm =>
-          UTIL.pm2145({
-            ...config,
-            ctidTraderAccountId,
-            toTimestamp: pm.timestamp
-          })
-        )
-      );
-    })
   );
 }
 
@@ -218,7 +220,6 @@ const TICK_DATA_CONFIG = {
 inputProtoMessages.pipe(requestAccounts()).subscribe(output);
 inputProtoMessages.pipe(authenticateAccounts()).subscribe(output);
 inputProtoMessages.pipe(requestTickData(TICK_DATA_CONFIG)).subscribe(output);
-inputProtoMessages.pipe(fetchTickData2(TICK_DATA_CONFIG)).subscribe(output);
 inputProtoMessages.pipe(fetchTickData(TICK_DATA_CONFIG)).subscribe(tick => {
   console.log(JSON.stringify(tick));
 });
