@@ -59,39 +59,45 @@ outputProtoMessages
     () => console.log("input", "completed")
   );
 
-const protoMessage2149: ProtoMessages = {
-  payloadType: ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ,
-  payload: { accessToken }
-};
-inputProtoMessages
-  .pipe(
-    filter2101(),
-    first(),
-    map(() => protoMessage2149)
-  )
-  .subscribe(message => outputProtoMessages.next(message));
-
-const accounts = inputProtoMessages.pipe(
-  filter2150(),
-  first(),
-  flatMap(message => of(...message.payload.ctidTraderAccount))
-);
-
-function protoMessage2102(ctidTraderAccountId: number): ProtoMessages {
-  return {
-    payloadType: ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_REQ,
-    payload: { accessToken, ctidTraderAccountId }
+function requestAccounts() {
+  const protoMessage2149: ProtoMessages = {
+    payloadType: ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ,
+    payload: { accessToken }
   };
+  inputProtoMessages
+    .pipe(
+      filter2101(),
+      first(),
+      map(() => protoMessage2149)
+    )
+    .subscribe(message => outputProtoMessages.next(message));
 }
-accounts
-  .pipe(map(account => protoMessage2102(account.ctidTraderAccountId)))
-  .subscribe(message => outputProtoMessages.next(message));
 
-const protoMessage2100: ProtoMessages = {
-  payloadType: ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_REQ,
-  payload: { clientId, clientSecret }
-};
-outputProtoMessages.next(protoMessage2100);
+function authenticateAccounts() {
+  const accounts = inputProtoMessages.pipe(
+    filter2150(),
+    first(),
+    flatMap(message => of(...message.payload.ctidTraderAccount))
+  );
+
+  function protoMessage2102(ctidTraderAccountId: number): ProtoMessages {
+    return {
+      payloadType: ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_REQ,
+      payload: { accessToken, ctidTraderAccountId }
+    };
+  }
+  accounts
+    .pipe(map(account => protoMessage2102(account.ctidTraderAccountId)))
+    .subscribe(message => outputProtoMessages.next(message));
+}
+
+function authenticateApplication() {
+  const protoMessage2100: ProtoMessages = {
+    payloadType: ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_REQ,
+    payload: { clientId, clientSecret }
+  };
+  outputProtoMessages.next(protoMessage2100);
+}
 
 function filter2101() {
   return pipe(
@@ -123,3 +129,7 @@ function probe<T>(prefix: string): Observer<T> {
     error: error => console.log(prefix, error)
   };
 }
+
+requestAccounts();
+authenticateAccounts();
+authenticateApplication();
