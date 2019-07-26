@@ -22,7 +22,9 @@ import {
   scan,
   toArray,
   min,
-  multicast
+  multicast,
+  takeUntil,
+  takeWhile
 } from "rxjs/operators";
 import * as $ from "@claasahl/spotware-adapter";
 
@@ -136,38 +138,33 @@ function requestTickData(
           );
         })
       );
-      return merge(start, rest);
-    })
-  );
-}
-function fetchTickData(
-  config: Pick<
-    $.ProtoOAGetTickDataReq,
-    Exclude<keyof $.ProtoOAGetTickDataReq, "ctidTraderAccountId">
-  >
-) {
-  return pipe(
-    pmFilter(PROTO_OA_GET_TICKDATA_RES),
-    filter2146(), // TODO find another way to "cast" values/events
-    flatMap(pm => {
-      const { tickData } = pm.payload;
-      return of(...tickData).pipe(
-        scan((acc, value) => {
-          return {
-            timestamp: acc.timestamp + value.timestamp,
-            tick: acc.tick + value.tick
-          };
-        }),
+      const ticks = shared.pipe(
+        pmFilter(PROTO_OA_GET_TICKDATA_RES),
+        filter2146(), // TODO find another way to "cast" values/events
+        takeWhile(pm => pm.payload.hasMore, true),
         toArray(),
-        map(ticks => ticks.reverse()),
-        flatMap(value => of(...value))
+        flatMap(value => of(...value.reverse())),
+        flatMap(pm => {
+          // tick data is in reverse order (i.e. timestamp DESC)
+          const { tickData } = pm.payload;
+          return of(...tickData).pipe(
+            scan((acc, value) => {
+              return {
+                timestamp: acc.timestamp + value.timestamp,
+                tick: acc.tick + value.tick
+              };
+            }),
+            toArray(),
+            map(ticks => ticks.reverse()),
+            flatMap(value => of(...value)),
+            map(tick => ({ ...tick, date: new Date(tick.timestamp) }))
+          );
+        }),
+        tap(tick => console.log(JSON.stringify(tick))),
+        flatMap(() => EMPTY)
       );
-    }),
-    map(tick => ({
-      ...tick,
-      date: new Date(tick.timestamp),
-      type: config.type
-    }))
+      return merge(start, rest, ticks);
+    })
   );
 }
 
@@ -220,9 +217,6 @@ const TICK_DATA_CONFIG = {
 inputProtoMessages.pipe(requestAccounts()).subscribe(output);
 inputProtoMessages.pipe(authenticateAccounts()).subscribe(output);
 inputProtoMessages.pipe(requestTickData(TICK_DATA_CONFIG)).subscribe(output);
-inputProtoMessages.pipe(fetchTickData(TICK_DATA_CONFIG)).subscribe(tick => {
-  console.log(JSON.stringify(tick));
-});
 
 authenticateApplication().subscribe(output);
 heartbeats().subscribe(output);
