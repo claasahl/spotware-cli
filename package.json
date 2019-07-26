@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@claasahl/spotware-adapter": "^1.0.2",
-    "ms": "^2.1.2"
+    "ms": "^2.1.2",
+    "rxjs": "^6.5.2"
   }
 }
