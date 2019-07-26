@@ -15,17 +15,24 @@ import {
   flatMap,
   map,
   publishReplay,
-  observeOn
+  observeOn,
+  filter
 } from "rxjs/operators";
 import {
   connect,
   ProtoMessages,
   write,
-  ProtoOAPayloadType
+  ProtoOAPayloadType,
+  ProtoPayloadType
 } from "@claasahl/spotware-adapter";
 
 import CONFIG from "./config";
 import UTIL from "./util";
+
+const {
+  PROTO_OA_APPLICATION_AUTH_RES,
+  PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES
+} = ProtoOAPayloadType;
 
 const { host, port, clientId, clientSecret, accessToken } = CONFIG;
 
@@ -62,29 +69,25 @@ outputProtoMessages
   );
 
 function requestAccounts() {
-  inputProtoMessages
-    .pipe(
-      filter2101(),
-      first(),
-      map(() => UTIL.pm2149({ accessToken }))
-    )
-    .subscribe(message => outputProtoMessages.next(message));
+  // request accounts after application was authenticated
+  return pipe(
+    pmFilter(PROTO_OA_APPLICATION_AUTH_RES),
+    first(),
+    map(() => UTIL.getAccountsByAccessToken({ accessToken }))
+  );
 }
 
 function authenticateAccounts() {
-  const accounts = inputProtoMessages.pipe(
-    filter2150(),
+  // authenticate accounts once they become available
+  return pipe(
+    pmFilter(PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES),
+    filter2150(), // TODO find another way to "cast" values/events
     first(),
-    flatMap(message => of(...message.payload.ctidTraderAccount))
-  );
-
-  accounts
-    .pipe(
-      map(({ ctidTraderAccountId }) =>
-        UTIL.pm2102({ accessToken, ctidTraderAccountId })
-      )
+    flatMap(message => of(...message.payload.ctidTraderAccount)),
+    map(({ ctidTraderAccountId }) =>
+      UTIL.pm2102({ accessToken, ctidTraderAccountId })
     )
-    .subscribe(message => outputProtoMessages.next(message));
+  );
 }
 
 function authenticateApplication() {
@@ -95,17 +98,6 @@ function heartbeats(period: number = 10000) {
   return interval(period).pipe(map(() => UTIL.pm51({})));
 }
 
-function filter2101() {
-  return pipe(
-    flatMap((value: ProtoMessages) => {
-      if (value.payloadType === 2101) {
-        return of(value);
-      }
-      return EMPTY;
-    })
-    // filter(value => value.payloadType === 2146),
-  );
-}
 function filter2150() {
   return pipe(
     flatMap((value: ProtoMessages) => {
@@ -118,7 +110,16 @@ function filter2150() {
   );
 }
 
-requestAccounts();
-authenticateAccounts();
-authenticateApplication().subscribe(pm => outputProtoMessages.next(pm));
-heartbeats().subscribe(pm => outputProtoMessages.next(pm));
+function pmFilter(payloadType: ProtoOAPayloadType | ProtoPayloadType) {
+  return filter<ProtoMessages>(pm => pm.payloadType === payloadType);
+}
+
+function output(pm: ProtoMessages) {
+  outputProtoMessages.next(pm);
+}
+
+inputProtoMessages.pipe(requestAccounts()).subscribe(output);
+inputProtoMessages.pipe(authenticateAccounts()).subscribe(output);
+
+authenticateApplication().subscribe(output);
+heartbeats().subscribe(output);
