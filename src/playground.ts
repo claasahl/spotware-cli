@@ -4,6 +4,7 @@ import {
   pipe,
   of,
   EMPTY,
+  interval,
   asyncScheduler,
   Observer
 } from "rxjs";
@@ -87,7 +88,11 @@ function authenticateAccounts() {
 }
 
 function authenticateApplication() {
-  outputProtoMessages.next(UTIL.pm2100({ clientId, clientSecret }));
+  return of(UTIL.pm2100({ clientId, clientSecret }));
+}
+
+function heartbeats(period: number = 10000) {
+  return interval(period).pipe(map(() => UTIL.pm51({})));
 }
 
 function filter2101() {
@@ -113,14 +118,7 @@ function filter2150() {
   );
 }
 
-function probe<T>(prefix: string): Observer<T> {
-  return {
-    next: value => console.log(prefix, JSON.stringify(value)),
-    complete: () => console.log(prefix, "completed"),
-    error: error => console.log(prefix, error)
-  };
-}
-
 requestAccounts();
 authenticateAccounts();
-authenticateApplication();
+authenticateApplication().subscribe(pm => outputProtoMessages.next(pm));
+heartbeats().subscribe(pm => outputProtoMessages.next(pm));
