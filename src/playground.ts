@@ -7,7 +7,9 @@ import {
   interval,
   combineLatest,
   merge,
-  ReplaySubject
+  ReplaySubject,
+  timer,
+  concat
 } from "rxjs";
 import {
   tap,
@@ -21,7 +23,8 @@ import {
   min,
   multicast,
   takeWhile,
-  delay
+  delay,
+  concatMap
 } from "rxjs/operators";
 import * as $ from "@claasahl/spotware-adapter";
 
@@ -59,7 +62,10 @@ inputProtoMessages
 
 const outputProtoMessages = new Subject<$.ProtoMessages>();
 outputProtoMessages
-  .pipe(tap(message => $.write(socket, message)))
+  .pipe(
+    concatMap(pm => concat(of(pm), timer(333).pipe(flatMap(() => EMPTY)))),
+    tap(message => $.write(socket, message))
+  )
   .subscribe(
     undefined,
     error => console.log("input", error),
@@ -146,7 +152,7 @@ function requestRemaining(
               },
               msgId
             )
-          ).pipe(delay(300))
+          )
         )
       );
     })
