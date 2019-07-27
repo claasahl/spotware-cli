@@ -5,10 +5,9 @@ import {
   of,
   EMPTY,
   interval,
-  asyncScheduler,
-  Observer,
-  concat,
-  merge
+  combineLatest,
+  merge,
+  ReplaySubject
 } from "rxjs";
 import {
   tap,
@@ -16,14 +15,11 @@ import {
   first,
   flatMap,
   map,
-  publishReplay,
-  observeOn,
   filter,
   scan,
   toArray,
   min,
   multicast,
-  takeUntil,
   takeWhile,
   delay
 } from "rxjs/operators";
@@ -190,8 +186,7 @@ function tickData(
         }))
       );
     }),
-    tap(tick => console.log(JSON.stringify(tick))),
-    flatMap(() => EMPTY)
+    toArray()
   );
 }
 function requestTickData(
@@ -210,10 +205,7 @@ function requestTickData(
       const restAsk = shared.pipe(
         requestRemaining(ASK, { ...config, type: ProtoOAQuoteType.ASK })
       );
-      const ticksAsk = shared.pipe(
-        tickData(ASK, { ...config, type: ProtoOAQuoteType.ASK })
-      );
-      const ask = merge(startAsk, restAsk, ticksAsk);
+      const ask = merge(startAsk, restAsk);
 
       // ---------------- BID
       const BID = "BID";
@@ -223,10 +215,65 @@ function requestTickData(
       const restBid = shared.pipe(
         requestRemaining(BID, { ...config, type: ProtoOAQuoteType.BID })
       );
+
+      const bid = merge(startBid, restBid);
+
+      // ---------------- ticks
+      const ticksAsk = shared.pipe(
+        tickData(ASK, { ...config, type: ProtoOAQuoteType.ASK })
+      );
       const ticksBid = shared.pipe(
         tickData(BID, { ...config, type: ProtoOAQuoteType.BID })
       );
-      const bid = merge(startBid, restBid, ticksBid);
+      combineLatest(ticksAsk, ticksBid, (ask, bid) => {
+        const subject = new ReplaySubject<{
+          timestamp: number;
+          ask?: number;
+          bid?: number;
+        }>();
+        let indexAsk = 0;
+        let indexBid = 0;
+        while (indexAsk <= ask.length && indexBid <= bid.length) {
+          const tickAsk = ask[indexAsk];
+          const tickBid = bid[indexBid];
+          if (tickAsk && tickBid && tickAsk.timestamp === tickBid.timestamp) {
+            subject.next({
+              timestamp: tickAsk.timestamp,
+              ask: tickAsk.tick,
+              bid: tickBid.tick
+            });
+            indexAsk++;
+            indexBid++;
+          } else if (
+            tickAsk &&
+            tickBid &&
+            tickAsk.timestamp < tickBid.timestamp
+          ) {
+            subject.next({ timestamp: tickAsk.timestamp, ask: tickAsk.tick });
+            indexAsk++;
+          } else if (
+            tickAsk &&
+            tickBid &&
+            tickAsk.timestamp > tickBid.timestamp
+          ) {
+            subject.next({ timestamp: tickBid.timestamp, bid: tickBid.tick });
+            indexBid++;
+          } else if (tickAsk && !tickBid) {
+            subject.next({ timestamp: tickAsk.timestamp, ask: tickAsk.tick });
+            indexAsk++;
+          } else if (!tickAsk && tickBid) {
+            subject.next({ timestamp: tickBid.timestamp, bid: tickBid.tick });
+            indexBid++;
+          } else {
+            indexAsk++;
+            indexBid++;
+          }
+        }
+        subject.complete();
+        return subject;
+      })
+        .pipe(flatMap(value => value))
+        .subscribe(tick => console.log(JSON.stringify(tick)));
 
       // ---------------- !!!
       return merge(ask, bid);
