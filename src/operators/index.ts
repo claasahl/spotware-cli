@@ -1,2 +1,3 @@
-export { when } from "./when";
-export { throttle } from "./throttle";
+export * from "./when";
+export * from "./throttle";
+export * from "./trendbar";
