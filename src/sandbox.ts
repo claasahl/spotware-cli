@@ -7,7 +7,8 @@ import {
   pipe,
   OperatorFunction,
   interval,
-  Observable
+  Observable,
+  concat
 } from "rxjs";
 import { map, tap, flatMap, share, first, timeoutWith } from "rxjs/operators";
 
@@ -152,6 +153,28 @@ function requestLastTrendbars(
   );
 }
 
+function requestLiveTrendbars(
+  period: $.ProtoOATrendbarPeriod,
+  symbolId: number
+): OperatorFunction<$.ProtoMessages, $.ProtoMessage2127 | $.ProtoMessage2135> {
+  return pipe(
+    when($.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES),
+    map(pm => pm.payload.ctidTraderAccountId),
+    flatMap(ctidTraderAccountId => {
+      const spots = util.subscribeSpots({
+        ctidTraderAccountId,
+        symbolId: [symbolId]
+      });
+      const trendbars = util.subscribeTrendbars({
+        ctidTraderAccountId,
+        period,
+        symbolId
+      });
+      return concat(of(spots), of(trendbars));
+    })
+  );
+}
+
 const BTCEUR = 22396;
 
 authenticateApplication().subscribe(output);
@@ -160,4 +183,7 @@ incomingProtoMessages.pipe(requestAccounts()).subscribe(output);
 incomingProtoMessages.pipe(authenticateAccounts()).subscribe(output);
 incomingProtoMessages
   .pipe(requestLastTrendbars(10, $.ProtoOATrendbarPeriod.M1, BTCEUR))
+  .subscribe(output);
+incomingProtoMessages
+  .pipe(requestLiveTrendbars($.ProtoOATrendbarPeriod.M1, BTCEUR))
   .subscribe(output);

@@ -30,6 +30,26 @@ function protoMessage2102(
     clientMsgId
   };
 }
+function protoMessage2127(
+  payload: $.ProtoOASubscribeSpotsReq,
+  clientMsgId?: string
+): $.ProtoMessage2127 {
+  return {
+    payloadType: $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_REQ,
+    payload,
+    clientMsgId
+  };
+}
+function protoMessage2135(
+  payload: $.ProtoOASubscribeLiveTrendbarReq,
+  clientMsgId?: string
+): $.ProtoMessage2135 {
+  return {
+    payloadType: $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_LIVE_TRENDBAR_REQ,
+    payload,
+    clientMsgId
+  };
+}
 function protoMessage2137(
   payload: $.ProtoOAGetTrendbarsReq,
   clientMsgId?: string
@@ -70,6 +90,12 @@ export default {
 
   pm2102: protoMessage2102,
   accountAuth: protoMessage2102,
+
+  pm2127: protoMessage2127,
+  subscribeSpots: protoMessage2127,
+
+  pm2135: protoMessage2135,
+  subscribeTrendbars: protoMessage2135,
 
   pm2137: protoMessage2137,
   getTrendbars: protoMessage2137,
