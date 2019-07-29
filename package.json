@@ -10,7 +10,7 @@
     "build": "tsc",
     "start": "ts-node -r dotenv/config ./src/index.ts",
     "sample": "ts-node -r dotenv/config ./src/SampleMessages.ts",
-    "play": "ts-node -r dotenv/config ./src/playground.ts"
+    "play": "ts-node -r dotenv/config ./src/sandbox.ts"
   },
   "repository": {
     "type": "git",
@@ -30,7 +30,7 @@
     "dotenv": "^8.0.0"
   },
   "dependencies": {
-    "@claasahl/spotware-adapter": "^1.0.2",
+    "@claasahl/spotware-adapter": "^1.0.3",
     "ms": "^2.1.2",
     "rxjs": "^6.5.2"
   }

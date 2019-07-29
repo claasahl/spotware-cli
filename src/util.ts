@@ -3,7 +3,7 @@ import * as $ from "@claasahl/spotware-adapter";
 function protoMessage51(
   payload: $.ProtoHeartbeatEvent,
   clientMsgId?: string
-): $.ProtoMessages {
+): $.ProtoMessage51 {
   return {
     payloadType: $.ProtoPayloadType.HEARTBEAT_EVENT,
     payload,
@@ -13,7 +13,7 @@ function protoMessage51(
 function protoMessage2100(
   payload: $.ProtoOAApplicationAuthReq,
   clientMsgId?: string
-): $.ProtoMessages {
+): $.ProtoMessage2100 {
   return {
     payloadType: $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_REQ,
     payload,
@@ -23,9 +23,19 @@ function protoMessage2100(
 function protoMessage2102(
   payload: $.ProtoOAAccountAuthReq,
   clientMsgId?: string
-): $.ProtoMessages {
+): $.ProtoMessage2102 {
   return {
     payloadType: $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_REQ,
+    payload,
+    clientMsgId
+  };
+}
+function protoMessage2137(
+  payload: $.ProtoOAGetTrendbarsReq,
+  clientMsgId?: string
+): $.ProtoMessage2137 {
+  return {
+    payloadType: $.ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_REQ,
     payload,
     clientMsgId
   };
@@ -33,7 +43,7 @@ function protoMessage2102(
 function protoMessage2145(
   payload: $.ProtoOAGetTickDataReq,
   clientMsgId?: string
-): $.ProtoMessages {
+): $.ProtoMessage2145 {
   return {
     payloadType: $.ProtoOAPayloadType.PROTO_OA_GET_TICKDATA_REQ,
     payload,
@@ -43,7 +53,7 @@ function protoMessage2145(
 function protoMessage2149(
   payload: $.ProtoOAGetAccountListByAccessTokenReq,
   clientMsgId?: string
-): $.ProtoMessages {
+): $.ProtoMessage2149 {
   return {
     payloadType: $.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ,
     payload,
@@ -60,6 +70,9 @@ export default {
 
   pm2102: protoMessage2102,
   accountAuth: protoMessage2102,
+
+  pm2137: protoMessage2137,
+  getTrendbars: protoMessage2137,
 
   pm2145: protoMessage2145,
   getTickdata: protoMessage2145,
