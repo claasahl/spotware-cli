@@ -8,7 +8,8 @@ import {
   OperatorFunction,
   interval,
   Observable,
-  concat
+  concat,
+  merge
 } from "rxjs";
 import {
   map,
@@ -17,7 +18,10 @@ import {
   share,
   first,
   timeoutWith,
-  filter
+  filter,
+  mergeMap,
+  pairwise,
+  distinctUntilChanged
 } from "rxjs/operators";
 
 import config from "./config";
@@ -196,25 +200,51 @@ incomingProtoMessages
   .pipe(requestLiveTrendbars($.ProtoOATrendbarPeriod.M1, BTCEUR))
   .subscribe(output);
 
-incomingProtoMessages
-  .pipe(
-    when($.ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES),
-    filter(pm => pm.payload.symbolId === BTCEUR),
-    flatMap(pm => pm.payload.trendbar),
-    trendbar()
-  )
+const historic = incomingProtoMessages.pipe(
+  when($.ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES),
+  filter(pm => pm.payload.symbolId === BTCEUR),
+  flatMap(pm => pm.payload.trendbar),
+  trendbar()
+);
+const live = incomingProtoMessages.pipe(
+  when($.ProtoOAPayloadType.PROTO_OA_SPOT_EVENT),
+  filter(pm => pm.payload.symbolId === BTCEUR),
+  flatMap(pm => pm.payload.trendbar),
+  trendbar()
+);
+const latestClosedTrendbar = live.pipe(
+  pairwise(),
+  filter(([a, b]) => a.timestamp !== b.timestamp),
+  flatMap(([a, _b]) => of(a))
+);
+merge(historic, latestClosedTrendbar)
+  .pipe(distinctUntilChanged((x, y) => x.timestamp === y.timestamp))
   .subscribe(value => {
     const date = new Date();
     console.log(date, JSON.stringify(value));
   });
+
 incomingProtoMessages
   .pipe(
-    when($.ProtoOAPayloadType.PROTO_OA_SPOT_EVENT),
-    filter(pm => pm.payload.symbolId === BTCEUR),
-    flatMap(pm => pm.payload.trendbar),
-    trendbar()
+    when($.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES),
+    map(pm => pm.payload.ctidTraderAccountId),
+    mergeMap(ctidTraderAccountId =>
+      interval(10000).pipe(
+        map(() => {
+          const date = new Date();
+          date.setMilliseconds(0);
+          date.setSeconds(0);
+          const toTimestamp = date.getTime();
+          const fromTimestamp = toTimestamp - 60000; // <<<<
+          return util.getTrendbars({
+            ctidTraderAccountId,
+            fromTimestamp,
+            toTimestamp,
+            period: $.ProtoOATrendbarPeriod.M1,
+            symbolId: BTCEUR
+          });
+        })
+      )
+    )
   )
-  .subscribe(value => {
-    const date = new Date();
-    console.log(date, JSON.stringify(value));
-  });
+  .subscribe(output);
