@@ -23,7 +23,6 @@ import {
   min,
   multicast,
   takeWhile,
-  delay,
   concatMap
 } from "rxjs/operators";
 import * as $ from "@claasahl/spotware-adapter";
