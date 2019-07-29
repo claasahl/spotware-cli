@@ -3,27 +3,17 @@ import {
   Subject,
   fromEvent,
   of,
-  timer,
   EMPTY,
-  concat,
   pipe,
   OperatorFunction,
   interval,
   Observable
 } from "rxjs";
-import {
-  map,
-  tap,
-  concatMap,
-  flatMap,
-  share,
-  first,
-  timeoutWith
-} from "rxjs/operators";
+import { map, tap, flatMap, share, first, timeoutWith } from "rxjs/operators";
 
 import config from "./config";
 import util from "./util";
-import { when } from "./operators";
+import { when, throttle } from "./operators";
 
 const { host, port, clientId, clientSecret, accessToken } = config;
 
@@ -50,18 +40,6 @@ outgoingProtoMessages
     tap(pm => $.write(socket, pm))
   )
   .subscribe();
-
-function throttle<T = $.ProtoMessages>(
-  duration: number
-): OperatorFunction<T, T> {
-  return pipe(
-    concatMap(pm => {
-      const head = of(pm);
-      const tail = timer(duration).pipe(flatMap(() => EMPTY));
-      return concat(head, tail);
-    })
-  );
-}
 
 function output(pm: $.ProtoMessages) {
   outgoingProtoMessages.next(pm);
