@@ -1,14 +1,10 @@
 import { EOL } from "os";
-import { fromEvent, of, pipe, EMPTY } from "rxjs";
-import { map, flatMap, scan, toArray } from "rxjs/operators";
 import fs from "fs";
 import {
   connect,
   write,
   ProtoOAPayloadType,
-  ProtoPayloadType,
-  ProtoOAQuoteType,
-  ProtoMessages
+  ProtoPayloadType
 } from "@claasahl/spotware-adapter";
 
 import CONFIG from "./config";
@@ -66,8 +62,6 @@ write(socket, { payloadType: 2104, clientMsgId: "moin", payload: {} });
 
 const ctidTraderAccountId = 5291983;
 const symbolId = [1]; //,47,22395];
-// const toTimestamp = Date.now();
-// const fromTimestamp = toTimestamp - ms("7d");
 write(socket, {
   payloadType: ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_REQ,
   payload: { clientId, clientSecret }
@@ -107,18 +101,6 @@ setTimeout(() => {
     }
   });
 }, 4000);
-setTimeout(() => {
-  write(socket, {
-    payloadType: ProtoOAPayloadType.PROTO_OA_DEAL_LIST_REQ,
-    payload: { ctidTraderAccountId, fromTimestamp, toTimestamp }
-  });
-}, 6000);
-setTimeout(() => {
-  write(socket, {
-    payloadType: ProtoOAPayloadType.PROTO_OA_CASH_FLOW_HISTORY_LIST_REQ,
-    payload: { ctidTraderAccountId, fromTimestamp, toTimestamp }
-  });
-}, 8000);
 
 setTimeout(() => {
   write(socket, {
@@ -145,76 +127,12 @@ setTimeout(() => {
   });
 }, 14000);
 setTimeout(() => {
+  // write(socket, {
+  //   payloadType: ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_REQ,
+  //   payload: { ctidTraderAccountId, symbolId }
+  // });
   write(socket, {
-    payloadType: ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_REQ,
-    payload: { ctidTraderAccountId, symbolId }
+    payloadType: ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_LIVE_TRENDBAR_REQ,
+    payload: { ctidTraderAccountId: 5291983, symbolId: 22396, period: 1 }
   });
 }, 18000);
-
-const ASK = "PROTO_OA_GET_TICKDATA_REQ ASK 1";
-const BID = "PROTO_OA_GET_TICKDATA_REQ BID 1";
-const toTimestamp = new Date("2019-07-24T18:20:34.433Z").getTime(); //Date.now();
-const fromTimestamp = new Date("2019-07-24T18:20:01.361Z").getTime(); //toTimestamp - ms("1min");
-setTimeout(() => {
-  write(socket, {
-    payloadType: ProtoOAPayloadType.PROTO_OA_GET_TICKDATA_REQ,
-    payload: {
-      ctidTraderAccountId,
-      fromTimestamp,
-      toTimestamp,
-      symbolId: 1,
-      type: ProtoOAQuoteType.ASK
-    },
-    clientMsgId: ASK
-  });
-  write(socket, {
-    payloadType: ProtoOAPayloadType.PROTO_OA_GET_TICKDATA_REQ,
-    payload: {
-      ctidTraderAccountId,
-      fromTimestamp,
-      toTimestamp,
-      symbolId: 1,
-      type: ProtoOAQuoteType.BID
-    },
-    clientMsgId: BID
-  });
-}, 5000);
-// socket.on("PROTO_MESSAGE.2146", abc)
-const observable = fromEvent<ProtoMessages>(socket, "PROTO_MESSAGE.2146");
-observable;
-const a = observable.pipe(
-  extrapolateTickData(),
-  map(value => ({ ...value, date: new Date(value.timestamp) }))
-);
-a.subscribe(console.log);
-
-function filter2146() {
-  return pipe(
-    flatMap((value: ProtoMessages) => {
-      if (value.payloadType === 2146) {
-        return of(value);
-      }
-      return EMPTY;
-    })
-    // filter(value => value.payloadType === 2146),
-  );
-}
-
-function extrapolateTickData() {
-  return pipe(
-    filter2146(),
-    flatMap(value =>
-      of(...value.payload.tickData).pipe(
-        scan((acc, value) => {
-          return {
-            timestamp: acc.timestamp + value.timestamp,
-            tick: acc.tick + value.tick
-          };
-        }),
-        toArray(),
-        map(ticks => ticks.reverse()),
-        flatMap(value => of(...value))
-      )
-    )
-  );
-}
