@@ -20,7 +20,8 @@ import {
   flatMap,
   share,
   filter,
-  first
+  first,
+  timeoutWith
 } from "rxjs/operators";
 import util from "./util";
 
@@ -113,7 +114,84 @@ function authenticateAccounts(): OperatorFunction<
   );
 }
 
+function requestTrendbars(
+  from: Date | string | number,
+  to: Date | string | number,
+  period: $.ProtoOATrendbarPeriod,
+  symbolId: number
+): OperatorFunction<$.ProtoMessages, $.ProtoMessage2137> {
+  const fromTimestamp = new Date(from).getTime();
+  const toTimestamp = new Date(to).getTime();
+  return pipe(
+    when<$.ProtoMessage2103>($.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES),
+    timeoutWith(5000, EMPTY),
+    map(pm => pm.payload.ctidTraderAccountId),
+    map(ctidTraderAccountId =>
+      util.getTrendbars({
+        ctidTraderAccountId,
+        fromTimestamp,
+        toTimestamp,
+        period,
+        symbolId
+      })
+    )
+  );
+}
+
+function requestLastTrendbars(
+  trendbars: number,
+  period: $.ProtoOATrendbarPeriod,
+  symbolId: number
+): OperatorFunction<$.ProtoMessages, $.ProtoMessage2137> {
+  function periodToMillis(period: $.ProtoOATrendbarPeriod): number {
+    const MIN = 60000;
+    switch (period) {
+      case $.ProtoOATrendbarPeriod.M1:
+        return MIN;
+      case $.ProtoOATrendbarPeriod.M2:
+        return 2 * MIN;
+      case $.ProtoOATrendbarPeriod.M3:
+        return 3 * MIN;
+      case $.ProtoOATrendbarPeriod.M4:
+        return 4 * MIN;
+      case $.ProtoOATrendbarPeriod.M5:
+        return 5 * MIN;
+      case $.ProtoOATrendbarPeriod.M10:
+        return 10 * MIN;
+      case $.ProtoOATrendbarPeriod.M15:
+        return 15 * MIN;
+      case $.ProtoOATrendbarPeriod.M30:
+        return 30 * MIN;
+      case $.ProtoOATrendbarPeriod.H1:
+        return 60 * MIN;
+      case $.ProtoOATrendbarPeriod.H4:
+        return 240 * MIN;
+      case $.ProtoOATrendbarPeriod.H12:
+        return 720 * MIN;
+      case $.ProtoOATrendbarPeriod.D1:
+        return 1440 * MIN;
+      case $.ProtoOATrendbarPeriod.W1:
+        return 10080 * MIN;
+      //case $.ProtoOATrendbarPeriod.MN1:
+      default:
+        return 1;
+    }
+  }
+  const to = new Date().getTime();
+  return requestTrendbars(
+    to - periodToMillis(period) * trendbars,
+    to,
+    period,
+    symbolId
+  );
+}
+
+const BTCEUR = 22396;
+
 authenticateApplication().subscribe(output);
 heartbeats().subscribe(output);
 incomingProtoMessages.pipe(requestAccounts()).subscribe(output);
 incomingProtoMessages.pipe(authenticateAccounts()).subscribe(output);
+incomingProtoMessages
+  .pipe(requestLastTrendbars(10, $.ProtoOATrendbarPeriod.M1, BTCEUR))
+  .subscribe(output);
