@@ -26,7 +26,7 @@ import {
 
 import config from "./config";
 import util from "./util";
-import { when, throttle, trendbar } from "./operators";
+import { when, throttle, trendbar, Trendbar } from "./operators";
 
 const { host, port, clientId, clientSecret, accessToken } = config;
 
@@ -93,35 +93,21 @@ function authenticateAccounts(): OperatorFunction<
   );
 }
 
-function requestTrendbars(
-  from: Date | string | number,
-  to: Date | string | number,
-  period: $.ProtoOATrendbarPeriod,
-  symbolId: number
-): OperatorFunction<$.ProtoMessages, $.ProtoMessage2137> {
-  const fromTimestamp = new Date(from).getTime();
-  const toTimestamp = new Date(to).getTime();
-  return pipe(
-    when($.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES),
-    timeoutWith(5000, EMPTY),
-    map(pm => pm.payload.ctidTraderAccountId),
-    map(ctidTraderAccountId =>
-      util.getTrendbars({
-        ctidTraderAccountId,
-        fromTimestamp,
-        toTimestamp,
-        period,
-        symbolId
-      })
-    )
-  );
-}
+const BTCEUR = 22396;
+const EURSEK = 47;
 
-function requestLastTrendbars(
+authenticateApplication().subscribe(output);
+heartbeats().subscribe(output);
+incomingProtoMessages.pipe(requestAccounts()).subscribe(output);
+incomingProtoMessages.pipe(authenticateAccounts()).subscribe(output);
+trendbars(incomingProtoMessages, 10, $.ProtoOATrendbarPeriod.M2, EURSEK);
+
+function trendbars(
+  incomingProtoMessages: Observable<$.ProtoMessages>,
   trendbars: number,
   period: $.ProtoOATrendbarPeriod,
   symbolId: number
-): OperatorFunction<$.ProtoMessages, $.ProtoMessage2137> {
+): void {
   function periodToMillis(period: $.ProtoOATrendbarPeriod): number {
     const MIN = 60000;
     switch (period) {
@@ -156,76 +142,77 @@ function requestLastTrendbars(
         return 1;
     }
   }
-  const to = new Date().getTime();
-  return requestTrendbars(
-    to - periodToMillis(period) * trendbars,
-    to,
-    period,
-    symbolId
+
+  function requestTrendbars(
+    from: Date | string | number,
+    to: Date | string | number,
+    period: $.ProtoOATrendbarPeriod,
+    symbolId: number
+  ): OperatorFunction<$.ProtoMessages, $.ProtoMessage2137> {
+    const fromTimestamp = new Date(from).getTime();
+    const toTimestamp = new Date(to).getTime();
+    return pipe(
+      when($.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES),
+      timeoutWith(5000, EMPTY),
+      map(pm => pm.payload.ctidTraderAccountId),
+      map(ctidTraderAccountId =>
+        util.getTrendbars({
+          ctidTraderAccountId,
+          fromTimestamp,
+          toTimestamp,
+          period,
+          symbolId
+        })
+      )
+    );
+  }
+
+  function requestLastTrendbars(
+    trendbars: number,
+    period: $.ProtoOATrendbarPeriod,
+    symbolId: number
+  ): OperatorFunction<$.ProtoMessages, $.ProtoMessage2137> {
+    const to = new Date().getTime();
+    return requestTrendbars(
+      to - periodToMillis(period) * trendbars,
+      to,
+      period,
+      symbolId
+    );
+  }
+
+  function requestLiveTrendbars(
+    period: $.ProtoOATrendbarPeriod,
+    symbolId: number
+  ): OperatorFunction<
+    $.ProtoMessages,
+    $.ProtoMessage2127 | $.ProtoMessage2135
+  > {
+    return pipe(
+      when($.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES),
+      map(pm => pm.payload.ctidTraderAccountId),
+      flatMap(ctidTraderAccountId => {
+        const spots = util.subscribeSpots({
+          ctidTraderAccountId,
+          symbolId: [symbolId]
+        });
+        const trendbars = util.subscribeTrendbars({
+          ctidTraderAccountId,
+          period,
+          symbolId
+        });
+        return concat(of(spots), of(trendbars));
+      })
+    );
+  }
+
+  const requestHistoric = incomingProtoMessages.pipe(
+    requestLastTrendbars(trendbars, period, symbolId)
   );
-}
-
-function requestLiveTrendbars(
-  period: $.ProtoOATrendbarPeriod,
-  symbolId: number
-): OperatorFunction<$.ProtoMessages, $.ProtoMessage2127 | $.ProtoMessage2135> {
-  return pipe(
-    when($.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES),
-    map(pm => pm.payload.ctidTraderAccountId),
-    flatMap(ctidTraderAccountId => {
-      const spots = util.subscribeSpots({
-        ctidTraderAccountId,
-        symbolId: [symbolId]
-      });
-      const trendbars = util.subscribeTrendbars({
-        ctidTraderAccountId,
-        period,
-        symbolId
-      });
-      return concat(of(spots), of(trendbars));
-    })
+  const requestLive = incomingProtoMessages.pipe(
+    requestLiveTrendbars(period, symbolId)
   );
-}
-
-const BTCEUR = 22396;
-
-authenticateApplication().subscribe(output);
-heartbeats().subscribe(output);
-incomingProtoMessages.pipe(requestAccounts()).subscribe(output);
-incomingProtoMessages.pipe(authenticateAccounts()).subscribe(output);
-incomingProtoMessages
-  .pipe(requestLastTrendbars(10, $.ProtoOATrendbarPeriod.M1, BTCEUR))
-  .subscribe(output);
-incomingProtoMessages
-  .pipe(requestLiveTrendbars($.ProtoOATrendbarPeriod.M1, BTCEUR))
-  .subscribe(output);
-
-const historic = incomingProtoMessages.pipe(
-  when($.ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES),
-  filter(pm => pm.payload.symbolId === BTCEUR),
-  flatMap(pm => pm.payload.trendbar),
-  trendbar()
-);
-const live = incomingProtoMessages.pipe(
-  when($.ProtoOAPayloadType.PROTO_OA_SPOT_EVENT),
-  filter(pm => pm.payload.symbolId === BTCEUR),
-  flatMap(pm => pm.payload.trendbar),
-  trendbar()
-);
-const latestClosedTrendbar = live.pipe(
-  pairwise(),
-  filter(([a, b]) => a.timestamp !== b.timestamp),
-  flatMap(([a, _b]) => of(a))
-);
-merge(historic, latestClosedTrendbar)
-  .pipe(distinctUntilChanged((x, y) => x.timestamp === y.timestamp))
-  .subscribe(value => {
-    const date = new Date();
-    console.log(date, JSON.stringify(value));
-  });
-
-incomingProtoMessages
-  .pipe(
+  const pollLatest = incomingProtoMessages.pipe(
     when($.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES),
     map(pm => pm.payload.ctidTraderAccountId),
     mergeMap(ctidTraderAccountId =>
@@ -235,16 +222,41 @@ incomingProtoMessages
           date.setMilliseconds(0);
           date.setSeconds(0);
           const toTimestamp = date.getTime();
-          const fromTimestamp = toTimestamp - 60000; // <<<<
+          const fromTimestamp = toTimestamp - periodToMillis(period);
           return util.getTrendbars({
             ctidTraderAccountId,
             fromTimestamp,
             toTimestamp,
-            period: $.ProtoOATrendbarPeriod.M1,
-            symbolId: BTCEUR
+            period,
+            symbolId
           });
         })
       )
     )
-  )
-  .subscribe(output);
+  );
+  merge(requestHistoric, requestLive, pollLatest).subscribe(output);
+
+  const historic = incomingProtoMessages.pipe(
+    when($.ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES),
+    filter(pm => pm.payload.symbolId === symbolId),
+    flatMap(pm => pm.payload.trendbar),
+    trendbar()
+  );
+  const live = incomingProtoMessages.pipe(
+    when($.ProtoOAPayloadType.PROTO_OA_SPOT_EVENT),
+    filter(pm => pm.payload.symbolId === symbolId),
+    flatMap(pm => pm.payload.trendbar),
+    trendbar()
+  );
+  const latestClosedTrendbar = live.pipe(
+    pairwise(),
+    filter(([a, b]) => a.timestamp !== b.timestamp),
+    flatMap(([a, _b]) => of(a))
+  );
+  merge(historic, latestClosedTrendbar)
+    .pipe(distinctUntilChanged((x, y) => x.timestamp === y.timestamp))
+    .subscribe(value => {
+      const date = new Date();
+      console.log(date, JSON.stringify(value));
+    });
+}
