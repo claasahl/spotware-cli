@@ -1,6 +1,6 @@
 import * as $ from "@claasahl/spotware-adapter";
 import { OperatorFunction, pipe, interval } from "rxjs";
-import { map, mergeMap } from "rxjs/operators";
+import { map, mergeMap, filter } from "rxjs/operators";
 
 import util from "../util";
 
@@ -27,6 +27,15 @@ export function requestLastTrendbars(
   return requestTrendbars({ ...payload, fromTimestamp, toTimestamp });
 }
 
+function newTrendbarExpected(
+  period: $.ProtoOATrendbarPeriod,
+  slack: number = 30000
+): boolean {
+  const millis = util.periodToMillis(period);
+  const now = Date.now();
+  return now % millis <= slack;
+}
+
 export function pollLatestTrendbar(
   payload: Omit<
     $.ProtoOAGetTrendbarsReq,
@@ -37,6 +46,7 @@ export function pollLatestTrendbar(
     map(pm => pm.payload.ctidTraderAccountId),
     mergeMap(ctidTraderAccountId =>
       interval(10000).pipe(
+        filter(() => newTrendbarExpected(payload.period)),
         map(() => {
           const date = new Date();
           date.setMilliseconds(0);
