@@ -68,10 +68,9 @@ function heartbeats(period: number = 10000): Observable<$.ProtoMessage51> {
   );
 }
 
-function requestAccounts(): OperatorFunction<
-  $.ProtoMessages,
-  $.ProtoMessage2149
-> {
+function requestAccounts(
+  accessToken: string
+): OperatorFunction<$.ProtoMessages, $.ProtoMessage2149> {
   return pipe(
     when($.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_RES),
     first(),
@@ -98,7 +97,7 @@ export const EURSEK = 47;
 
 authenticateApplication().subscribe(output);
 heartbeats().subscribe(output);
-incomingProtoMessages.pipe(requestAccounts()).subscribe(output);
+incomingProtoMessages.pipe(requestAccounts(accessToken)).subscribe(output);
 incomingProtoMessages.pipe(authenticateAccounts()).subscribe(output);
 trendbars(incomingProtoMessages, 10, $.ProtoOATrendbarPeriod.M2, EURSEK);
 
