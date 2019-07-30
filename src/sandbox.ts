@@ -1,9 +1,16 @@
 import * as $ from "@claasahl/spotware-adapter";
-import { Subject, fromEvent } from "rxjs";
-import { map, tap, share } from "rxjs/operators";
+import { Subject, fromEvent, combineLatest } from "rxjs";
+import {
+  map,
+  tap,
+  share,
+  filter,
+  debounceTime,
+  distinctUntilChanged
+} from "rxjs/operators";
 
 import config from "./config";
-import { when, throttle } from "./operators";
+import { when, throttle, SimpleMovingAverage } from "./operators";
 import {
   authenticateApplication,
   heartbeats,
@@ -64,23 +71,78 @@ GET_ACCOUNTS_BY_ACCESS_TOKEN_RES.pipe(
   authenticateAccounts({ accessToken })
 ).subscribe(output);
 
-trendbars(
+const M1 = trendbars(
   incomingProtoMessages,
   output,
   BTCEUR,
   $.ProtoOATrendbarPeriod.M1,
-  30
-).subscribe(value => {
-  const date = new Date();
-  console.log(date, "M1", JSON.stringify(value));
-});
-trendbars(
+  100
+).pipe(share());
+const M15 = trendbars(
+  incomingProtoMessages,
+  output,
+  BTCEUR,
+  $.ProtoOATrendbarPeriod.M15,
+  100
+).pipe(share());
+const H1 = trendbars(
   incomingProtoMessages,
   output,
   BTCEUR,
   $.ProtoOATrendbarPeriod.H1,
-  10
-).subscribe(value => {
+  100
+).pipe(share());
+
+M1.subscribe(value => {
+  const date = new Date();
+  console.log(date, "M1", JSON.stringify(value));
+});
+M15.subscribe(value => {
+  const date = new Date();
+  console.log(date, "M15", JSON.stringify(value));
+});
+H1.subscribe(value => {
   const date = new Date();
   console.log(date, "H1", JSON.stringify(value));
 });
+
+const symbolId = BTCEUR;
+const live = incomingProtoMessages.pipe(
+  when($.ProtoOAPayloadType.PROTO_OA_SPOT_EVENT),
+  filter(pm => pm.payload.symbolId === symbolId),
+  map(pm => pm.payload.bid),
+  filter((bid): bid is number => typeof bid === "number")
+);
+const smaM1 = M1.pipe(SimpleMovingAverage(60));
+const smaM15 = M15.pipe(SimpleMovingAverage(60));
+const smaH1 = H1.pipe(SimpleMovingAverage(60));
+combineLatest(smaH1, smaM15, smaM1, live, (h1, m15, m1, live) => {
+  console.log(
+    h1.close < live,
+    m15.close < live,
+    m1.close < live,
+    m1.high < live,
+    "||",
+    h1.close > live,
+    m15.close > live,
+    m1.close > live,
+    m1.low > live
+  );
+  if (h1.close < live && m15.close < live && m1.close < live) {
+    return m1.high < live ? "STRONGER BUY" : "BUY";
+  }
+  if (h1.close > live && m15.close > live && m1.close > live) {
+    return m1.low > live ? "STRONGER SELL" : "SELL";
+  }
+  return undefined;
+})
+  .pipe(
+    filter(result => typeof result === "string"),
+    debounceTime(500),
+    distinctUntilChanged((x, y) => x === y),
+    tap(result => {
+      const date = new Date();
+      console.log(date, "DUCKS", JSON.stringify(result));
+    })
+  )
+  .subscribe();
