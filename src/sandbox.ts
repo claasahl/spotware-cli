@@ -68,23 +68,24 @@ function heartbeats(period: number = 10000): Observable<$.ProtoMessage51> {
 }
 
 function requestAccounts(
-  accessToken: string
-): OperatorFunction<$.ProtoMessages, $.ProtoMessage2149> {
-  return pipe(
+  incomingProtoMessages: Observable<$.ProtoMessages>,
+  payload: $.ProtoOAGetAccountListByAccessTokenReq
+): Observable<$.ProtoMessage2149> {
+  return incomingProtoMessages.pipe(
     after($.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_RES),
-    flatMap(() => of(util.getAccountsByAccessToken({ accessToken })))
+    flatMap(() => of(util.getAccountsByAccessToken(payload)))
   );
 }
 
-function authenticateAccounts(): OperatorFunction<
-  $.ProtoMessages,
-  $.ProtoMessage2102
-> {
-  return pipe(
+function authenticateAccounts(
+  incomingProtoMessages: Observable<$.ProtoMessages>,
+  payload: Omit<$.ProtoOAAccountAuthReq, "ctidTraderAccountId">
+): Observable<$.ProtoMessage2102> {
+  return incomingProtoMessages.pipe(
     after($.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES),
     flatMap(pm => pm.payload.ctidTraderAccount),
     map(({ ctidTraderAccountId }) =>
-      util.accountAuth({ ctidTraderAccountId, accessToken })
+      util.accountAuth({ ...payload, ctidTraderAccountId })
     )
   );
 }
@@ -94,8 +95,8 @@ export const EURSEK = 47;
 
 authenticateApplication().subscribe(output);
 heartbeats().subscribe(output);
-incomingProtoMessages.pipe(requestAccounts(accessToken)).subscribe(output);
-incomingProtoMessages.pipe(authenticateAccounts()).subscribe(output);
+requestAccounts(incomingProtoMessages, { accessToken }).subscribe(output);
+authenticateAccounts(incomingProtoMessages, { accessToken }).subscribe(output);
 trendbars(incomingProtoMessages, 10, $.ProtoOATrendbarPeriod.M2, EURSEK);
 
 function trendbars(
@@ -256,3 +257,5 @@ function trendbars(
       console.log(date, JSON.stringify(value));
     });
 }
+
+type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
