@@ -1,4 +1,3 @@
-import ms from "ms";
 import {
   ProtoMessages,
   ProtoOAOrderType,
@@ -12,15 +11,13 @@ import CONFIG from "./config";
 const { clientId, clientSecret, accessToken } = CONFIG;
 const ctidTraderAccountId = 5291983;
 
-const toTimestamp = new Date("2019-07-24T18:20:34.433Z").getTime(); //Date.now();
-const fromTimestamp = new Date("2019-07-24T18:20:01.361Z").getTime(); //toTimestamp - ms("1min");
+const toTimestamp = new Date("2019-07-24T18:30:00.000Z").getTime(); //Date.now();
+const fromTimestamp = new Date("2019-07-24T18:20:00.000Z").getTime(); //toTimestamp - ms("1min");
 
 const orderId = 123;
 const positionId = 123;
 const volume = 100;
 // symbolIDs
-const EURUSD = 1;
-const EURSEK = 47;
 const BTCEUR = 22396;
 
 export const PROTO_OA_APPLICATION_AUTH_REQ: ProtoMessages = {
@@ -119,8 +116,8 @@ export const PROTO_OA_SUBSCRIBE_LIVE_TRENDBAR_REQ: ProtoMessages = {
   payloadType: 2135,
   payload: {
     ctidTraderAccountId,
-    symbolId: 1,
-    period: ProtoOATrendbarPeriod.D1
+    symbolId: BTCEUR,
+    period: ProtoOATrendbarPeriod.M1
   }
 };
 export const PROTO_OA_UNSUBSCRIBE_LIVE_TRENDBAR_REQ: ProtoMessages = {
@@ -138,7 +135,7 @@ export const PROTO_OA_GET_TRENDBARS_REQ: ProtoMessages = {
     fromTimestamp,
     toTimestamp,
     symbolId: BTCEUR,
-    period: ProtoOATrendbarPeriod.D1
+    period: ProtoOATrendbarPeriod.M1
   }
 };
 //export const PROTO_OA_GET_TRENDBARS_RES: ProtoMessages = {payloadType: 2138, payload: {}}
