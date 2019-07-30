@@ -26,7 +26,7 @@ import {
 
 import config from "./config";
 import util from "./util";
-import { when, throttle, trendbar, Trendbar } from "./operators";
+import { when, throttle, trendbar } from "./operators";
 
 const { host, port, clientId, clientSecret, accessToken } = config;
 
@@ -62,8 +62,8 @@ function authenticateApplication(): Observable<$.ProtoMessage2100> {
   return of(util.applicationAuth({ clientId, clientSecret }));
 }
 
-function heartbeats(): Observable<$.ProtoMessage51> {
-  return interval(10000).pipe(
+function heartbeats(period: number = 10000): Observable<$.ProtoMessage51> {
+  return interval(period).pipe(
     map(heartbeatNo => util.heartbeat({}, `HeartbeatNo${heartbeatNo}`))
   );
 }
@@ -93,8 +93,8 @@ function authenticateAccounts(): OperatorFunction<
   );
 }
 
-const BTCEUR = 22396;
-const EURSEK = 47;
+export const BTCEUR = 22396;
+export const EURSEK = 47;
 
 authenticateApplication().subscribe(output);
 heartbeats().subscribe(output);
