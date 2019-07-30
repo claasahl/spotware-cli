@@ -30,6 +30,16 @@ function protoMessage2102(
     clientMsgId
   };
 }
+function protoMessage2106(
+  payload: $.ProtoOANewOrderReq,
+  clientMsgId?: string
+): $.ProtoMessage2106 {
+  return {
+    payloadType: $.ProtoOAPayloadType.PROTO_OA_NEW_ORDER_REQ,
+    payload,
+    clientMsgId
+  };
+}
 function protoMessage2127(
   payload: $.ProtoOASubscribeSpotsReq,
   clientMsgId?: string
@@ -126,6 +136,9 @@ export default {
 
   pm2102: protoMessage2102,
   accountAuth: protoMessage2102,
+
+  pm2106: protoMessage2106,
+  newOrder: protoMessage2106,
 
   pm2127: protoMessage2127,
   subscribeSpots: protoMessage2127,
