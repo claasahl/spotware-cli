@@ -209,8 +209,5 @@ export function when(
 export function when(
   payloadType: $.ProtoOAPayloadType | $.ProtoPayloadType
 ): OperatorFunction<$.ProtoMessages, $.ProtoMessages> {
-  return filter(
-    (pm: $.ProtoMessages): pm is $.ProtoMessages =>
-      pm.payloadType === payloadType
-  );
+  return filter((pm): pm is $.ProtoMessages => pm.payloadType === payloadType);
 }
