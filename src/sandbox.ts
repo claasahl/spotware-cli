@@ -16,7 +16,6 @@ import {
   tap,
   flatMap,
   share,
-  first,
   timeoutWith,
   filter,
   mergeMap,
@@ -26,7 +25,7 @@ import {
 
 import config from "./config";
 import util from "./util";
-import { when, throttle, trendbar } from "./operators";
+import { when, throttle, trendbar, after } from "./operators";
 
 const { host, port, clientId, clientSecret, accessToken } = config;
 
@@ -72,8 +71,7 @@ function requestAccounts(
   accessToken: string
 ): OperatorFunction<$.ProtoMessages, $.ProtoMessage2149> {
   return pipe(
-    when($.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_RES),
-    first(),
+    after($.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_RES),
     flatMap(() => of(util.getAccountsByAccessToken({ accessToken })))
   );
 }
@@ -83,8 +81,7 @@ function authenticateAccounts(): OperatorFunction<
   $.ProtoMessage2102
 > {
   return pipe(
-    when($.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES),
-    first(),
+    after($.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES),
     flatMap(pm => pm.payload.ctidTraderAccount),
     map(({ ctidTraderAccountId }) =>
       util.accountAuth({ ctidTraderAccountId, accessToken })
