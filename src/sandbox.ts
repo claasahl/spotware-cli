@@ -154,14 +154,15 @@ combineLatest(
       console.log(date, "DUCKS", JSON.stringify(result));
     }),
     map(([result, ctidTraderAccountId]) => {
+      const MULTIPLIER = 10000;
       const order: $.ProtoOANewOrderReq = {
         ctidTraderAccountId,
         symbolId,
         orderType: $.ProtoOAOrderType.MARKET,
         tradeSide: $.ProtoOATradeSide.BUY,
         volume: 10,
-        relativeStopLoss: -500,
-        relativeTakeProfit: 1000,
+        relativeStopLoss: 300 * MULTIPLIER,
+        relativeTakeProfit: 600 * MULTIPLIER,
         trailingStopLoss: true
       };
       switch (result) {
