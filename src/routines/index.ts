@@ -1,3 +1,5 @@
+// helper functions without(!) side-effects
+
 export * from "./authenticateAccounts";
 export * from "./authenticateApplication";
 export * from "./heartbeats";
