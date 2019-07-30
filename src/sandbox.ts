@@ -69,8 +69,18 @@ trendbars(
   output,
   BTCEUR,
   $.ProtoOATrendbarPeriod.M1,
+  30
+).subscribe(value => {
+  const date = new Date();
+  console.log(date, "M1", JSON.stringify(value));
+});
+trendbars(
+  incomingProtoMessages,
+  output,
+  BTCEUR,
+  $.ProtoOATrendbarPeriod.H1,
   10
 ).subscribe(value => {
   const date = new Date();
-  console.log(date, JSON.stringify(value));
+  console.log(date, "H1", JSON.stringify(value));
 });

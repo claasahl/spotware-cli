@@ -46,6 +46,7 @@ export function trendbars(
   const historic = incomingProtoMessages.pipe(
     when($.ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES),
     filter(pm => pm.payload.symbolId === symbolId),
+    filter(pm => pm.payload.period === period),
     flatMap(pm => pm.payload.trendbar),
     trendbar()
   );
@@ -53,6 +54,7 @@ export function trendbars(
     when($.ProtoOAPayloadType.PROTO_OA_SPOT_EVENT),
     filter(pm => pm.payload.symbolId === symbolId),
     flatMap(pm => pm.payload.trendbar),
+    filter(trendbar => trendbar.period === period),
     trendbar()
   );
   const latestClosedTrendbar = live.pipe(
