@@ -108,17 +108,19 @@ export function threeDucks(
             console.log(date, "DUCKS", JSON.stringify(result));
           }),
           map(result => {
-            // BTCEUR:
-            // const MULTIPLIER = 10000;
-            const MULTIPLIER = 1;
+            // const volume = 1;
+            // const MULTIPLIER = 100000;
+
+            const volume = 100000;
+            const MULTIPLIER = 10;
             const order: $.ProtoOANewOrderReq = {
               ctidTraderAccountId: t.key,
               symbolId,
               orderType: $.ProtoOAOrderType.MARKET,
               tradeSide: $.ProtoOATradeSide.BUY,
-              volume: 100000,
-              relativeStopLoss: 300 * MULTIPLIER,
-              relativeTakeProfit: 600 * MULTIPLIER,
+              volume,
+              relativeStopLoss: 30 * MULTIPLIER,
+              relativeTakeProfit: 60 * MULTIPLIER,
               trailingStopLoss: true
             };
             switch (result) {
