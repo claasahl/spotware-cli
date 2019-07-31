@@ -25,7 +25,7 @@ function volume(symbolId: number, volume: number): number {
     case GBPSEK:
     case EURGBP:
     case EURSEK:
-      return volume * 1000000;
+      return volume * 10000000;
     case BTCEUR:
     default:
       return volume * 100;
