@@ -53,6 +53,8 @@ function output(pm: $.ProtoMessages) {
 }
 
 export const BTCEUR = 22396;
+export const GBPSEK = 10093;
+export const EURGBP = 9;
 export const EURSEK = 47;
 
 // 💥 -> PROTO_OA_APPLICATION_AUTH_REQ
@@ -74,24 +76,25 @@ GET_ACCOUNTS_BY_ACCESS_TOKEN_RES.pipe(
   authenticateAccounts({ accessToken })
 ).subscribe(output);
 
+const symbolId = GBPSEK;
 const M1 = trendbars(
   incomingProtoMessages,
   output,
-  BTCEUR,
+  symbolId,
   $.ProtoOATrendbarPeriod.M1,
   100
 ).pipe(share());
 const M15 = trendbars(
   incomingProtoMessages,
   output,
-  BTCEUR,
+  symbolId,
   $.ProtoOATrendbarPeriod.M15,
   100
 ).pipe(share());
 const H1 = trendbars(
   incomingProtoMessages,
   output,
-  BTCEUR,
+  symbolId,
   $.ProtoOATrendbarPeriod.H1,
   100
 ).pipe(share());
@@ -109,7 +112,6 @@ H1.subscribe(value => {
   console.log(date, "H1", JSON.stringify(value));
 });
 
-const symbolId = BTCEUR;
 const live = incomingProtoMessages.pipe(
   when($.ProtoOAPayloadType.PROTO_OA_SPOT_EVENT),
   filter(pm => pm.payload.symbolId === symbolId),
@@ -160,13 +162,15 @@ combineLatest(
           console.log(date, "DUCKS", JSON.stringify(result));
         }),
         map(result => {
-          const MULTIPLIER = 10000;
+          // BTCEUR:
+          // const MULTIPLIER = 10000;
+          const MULTIPLIER = 1;
           const order: $.ProtoOANewOrderReq = {
             ctidTraderAccountId: t.key,
             symbolId,
             orderType: $.ProtoOAOrderType.MARKET,
             tradeSide: $.ProtoOATradeSide.BUY,
-            volume: 10,
+            volume: 100000,
             relativeStopLoss: 300 * MULTIPLIER,
             relativeTakeProfit: 600 * MULTIPLIER,
             trailingStopLoss: true
@@ -180,8 +184,7 @@ combineLatest(
             case "STRONGER BUY":
               return util.newOrder({
                 ...order,
-                tradeSide: $.ProtoOATradeSide.BUY,
-                volume: 20
+                tradeSide: $.ProtoOATradeSide.BUY
               });
             case "SELL":
               return util.newOrder({
@@ -191,8 +194,7 @@ combineLatest(
             case "STRONGER SELL":
               return util.newOrder({
                 ...order,
-                tradeSide: $.ProtoOATradeSide.SELL,
-                volume: 20
+                tradeSide: $.ProtoOATradeSide.SELL
               });
             default:
               throw new Error(`unknown result: ${result}`);
