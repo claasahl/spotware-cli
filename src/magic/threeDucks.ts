@@ -15,10 +15,43 @@ import { trendbars } from "./trendbars";
 import { when, SimpleMovingAverage } from "../operators";
 import util from "../util";
 
+// FIXME hardcoded ids
+const BTCEUR = 22396;
+const GBPSEK = 10093;
+const EURGBP = 9;
+const EURSEK = 47;
+function volume(symbolId: number, volume: number): number {
+  switch (symbolId) {
+    case GBPSEK:
+    case EURGBP:
+    case EURSEK:
+      return volume * 1000000;
+    case BTCEUR:
+    default:
+      return volume * 100;
+  }
+}
+
+function pips(symbolId: number, pips: number): number {
+  switch (symbolId) {
+    case GBPSEK:
+    case EURGBP:
+    case EURSEK:
+      return pips * 10;
+    case BTCEUR:
+      return pips * 100000;
+    default:
+      return pips;
+  }
+}
+
 export function threeDucks(
   incomingProtoMessages: Observable<$.ProtoMessages>,
   output: (pm: $.ProtoMessages) => void,
   symbolId: number,
+  volumeInLots: number,
+  stopLossInPips: number,
+  takeProfitInPips: number,
   smaPeriod: number = 60
 ): void {
   const M5 = trendbars(
@@ -93,19 +126,14 @@ export function threeDucks(
             console.log(date, "DUCKS", JSON.stringify(result));
           }),
           map(result => {
-            // const volume = 1;
-            // const MULTIPLIER = 100000;
-
-            const volume = 100000;
-            const MULTIPLIER = 10;
             const order: $.ProtoOANewOrderReq = {
               ctidTraderAccountId: t.key,
               symbolId,
               orderType: $.ProtoOAOrderType.MARKET,
               tradeSide: $.ProtoOATradeSide.BUY,
-              volume,
-              relativeStopLoss: 30 * MULTIPLIER,
-              relativeTakeProfit: 60 * MULTIPLIER,
+              volume: volume(symbolId, volumeInLots),
+              relativeStopLoss: pips(symbolId, stopLossInPips),
+              relativeTakeProfit: pips(symbolId, takeProfitInPips),
               trailingStopLoss: true
             };
             switch (result) {
@@ -118,7 +146,7 @@ export function threeDucks(
                 return util.newOrder({
                   ...order,
                   tradeSide: $.ProtoOATradeSide.BUY,
-                  volume: volume * 2
+                  volume: order.volume * 2
                 });
               case "SELL":
                 return util.newOrder({
@@ -129,7 +157,7 @@ export function threeDucks(
                 return util.newOrder({
                   ...order,
                   tradeSide: $.ProtoOATradeSide.SELL,
-                  volume: volume * 2
+                  volume: order.volume * 2
                 });
               default:
                 throw new Error(`unknown result: ${result}`);

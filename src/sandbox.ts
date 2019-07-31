@@ -66,4 +66,7 @@ GET_ACCOUNTS_BY_ACCESS_TOKEN_RES.pipe(
   authenticateAccounts({ accessToken })
 ).subscribe(output);
 
-threeDucks(incomingProtoMessages, output, GBPSEK);
+// threeDucks(incomingProtoMessages, output, GBPSEK, 0.01, 30, 60);
+// threeDucks(incomingProtoMessages, output, EURGBP, 0.01, 30, 60);
+// threeDucks(incomingProtoMessages, output, EURSEK, 0.01, 30, 60);
+threeDucks(incomingProtoMessages, output, BTCEUR, 0.01, 30, 60);
