@@ -18,28 +18,29 @@ import util from "../util";
 export function threeDucks(
   incomingProtoMessages: Observable<$.ProtoMessages>,
   output: (pm: $.ProtoMessages) => void,
-  symbolId: number
+  symbolId: number,
+  smaPeriod: number = 60
 ): void {
   const M1 = trendbars(
     incomingProtoMessages,
     output,
     symbolId,
     $.ProtoOATrendbarPeriod.M1,
-    100
+    smaPeriod * 2
   ).pipe(share());
   const M15 = trendbars(
     incomingProtoMessages,
     output,
     symbolId,
     $.ProtoOATrendbarPeriod.M15,
-    100
+    smaPeriod * 2
   ).pipe(share());
   const H1 = trendbars(
     incomingProtoMessages,
     output,
     symbolId,
     $.ProtoOATrendbarPeriod.H1,
-    100
+    smaPeriod * 2
   ).pipe(share());
 
   M1.subscribe(value => {
@@ -61,9 +62,9 @@ export function threeDucks(
     map(pm => [pm.payload.bid, pm.payload.ctidTraderAccountId]),
     filter((data): data is number[] => typeof data[0] === "number")
   );
-  const smaM1 = M1.pipe(SimpleMovingAverage(60));
-  const smaM15 = M15.pipe(SimpleMovingAverage(60));
-  const smaH1 = H1.pipe(SimpleMovingAverage(60));
+  const smaM1 = M1.pipe(SimpleMovingAverage(smaPeriod));
+  const smaM15 = M15.pipe(SimpleMovingAverage(smaPeriod));
+  const smaH1 = H1.pipe(SimpleMovingAverage(smaPeriod));
   combineLatest(
     smaH1,
     smaM15,
