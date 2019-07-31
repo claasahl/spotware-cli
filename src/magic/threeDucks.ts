@@ -21,18 +21,11 @@ export function threeDucks(
   symbolId: number,
   smaPeriod: number = 60
 ): void {
-  const M1 = trendbars(
+  const M5 = trendbars(
     incomingProtoMessages,
     output,
     symbolId,
-    $.ProtoOATrendbarPeriod.M1,
-    smaPeriod * 2
-  ).pipe(share());
-  const M15 = trendbars(
-    incomingProtoMessages,
-    output,
-    symbolId,
-    $.ProtoOATrendbarPeriod.M15,
+    $.ProtoOATrendbarPeriod.M5,
     smaPeriod * 2
   ).pipe(share());
   const H1 = trendbars(
@@ -42,19 +35,13 @@ export function threeDucks(
     $.ProtoOATrendbarPeriod.H1,
     smaPeriod * 2
   ).pipe(share());
-
-  M1.subscribe(value => {
-    const date = new Date();
-    console.log(date, "M1", JSON.stringify(value));
-  });
-  M15.subscribe(value => {
-    const date = new Date();
-    console.log(date, "M15", JSON.stringify(value));
-  });
-  H1.subscribe(value => {
-    const date = new Date();
-    console.log(date, "H1", JSON.stringify(value));
-  });
+  const H4 = trendbars(
+    incomingProtoMessages,
+    output,
+    symbolId,
+    $.ProtoOATrendbarPeriod.H4,
+    smaPeriod * 2
+  ).pipe(share());
 
   const live = incomingProtoMessages.pipe(
     when($.ProtoOAPayloadType.PROTO_OA_SPOT_EVENT),
@@ -62,33 +49,31 @@ export function threeDucks(
     map(pm => [pm.payload.bid, pm.payload.ctidTraderAccountId]),
     filter((data): data is number[] => typeof data[0] === "number")
   );
-  const smaM1 = M1.pipe(SimpleMovingAverage(smaPeriod));
-  const smaM15 = M15.pipe(SimpleMovingAverage(smaPeriod));
+  const smaM5 = M5.pipe(SimpleMovingAverage(smaPeriod));
   const smaH1 = H1.pipe(SimpleMovingAverage(smaPeriod));
+  const smaH4 = H4.pipe(SimpleMovingAverage(smaPeriod));
   combineLatest(
+    smaH4,
     smaH1,
-    smaM15,
-    smaM1,
+    smaM5,
     live,
-    (h1, m15, m1, [live, ctidTraderAccountId]) => {
+    (h4, h1, m5, [live, ctidTraderAccountId]) => {
       console.log(
         symbolId,
         "||",
+        h4.close < live,
         h1.close < live,
-        m15.close < live,
-        m1.close < live,
-        m1.high < live,
+        m5.close < live,
         "||",
+        h4.close > live,
         h1.close > live,
-        m15.close > live,
-        m1.close > live,
-        m1.low > live
+        m5.close > live
       );
-      if (h1.close < live && m15.close < live && m1.close < live) {
-        return [m1.high < live ? "STRONGER BUY" : "BUY", ctidTraderAccountId];
+      if (h4.close < live && h1.close < live && m5.close < live) {
+        return [m5.high < live ? "STRONGER BUY" : "BUY", ctidTraderAccountId];
       }
-      if (h1.close > live && m15.close > live && m1.close > live) {
-        return [m1.low > live ? "STRONGER SELL" : "SELL", ctidTraderAccountId];
+      if (h4.close > live && h1.close > live && m5.close > live) {
+        return [m5.low > live ? "STRONGER SELL" : "SELL", ctidTraderAccountId];
       }
       return undefined;
     }
@@ -132,7 +117,8 @@ export function threeDucks(
               case "STRONGER BUY":
                 return util.newOrder({
                   ...order,
-                  tradeSide: $.ProtoOATradeSide.BUY
+                  tradeSide: $.ProtoOATradeSide.BUY,
+                  volume: volume * 2
                 });
               case "SELL":
                 return util.newOrder({
@@ -142,7 +128,8 @@ export function threeDucks(
               case "STRONGER SELL":
                 return util.newOrder({
                   ...order,
-                  tradeSide: $.ProtoOATradeSide.SELL
+                  tradeSide: $.ProtoOATradeSide.SELL,
+                  volume: volume * 2
                 });
               default:
                 throw new Error(`unknown result: ${result}`);
