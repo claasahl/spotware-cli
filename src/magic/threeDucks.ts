@@ -39,7 +39,7 @@ function pips(symbolId: number, pips: number): number {
     case EURSEK:
       return pips * 10;
     case BTCEUR:
-      return pips * 100000;
+      return pips * 10000;
     default:
       return pips;
   }
@@ -133,8 +133,7 @@ export function threeDucks(
               tradeSide: $.ProtoOATradeSide.BUY,
               volume: volume(symbolId, volumeInLots),
               relativeStopLoss: pips(symbolId, stopLossInPips),
-              relativeTakeProfit: pips(symbolId, takeProfitInPips),
-              trailingStopLoss: true
+              relativeTakeProfit: pips(symbolId, takeProfitInPips)
             };
             switch (result) {
               case "BUY":

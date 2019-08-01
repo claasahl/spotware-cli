@@ -64,4 +64,4 @@ GET_ACCOUNTS_BY_ACCESS_TOKEN_RES.pipe(
 threeDucks(incomingProtoMessages, output, 10093, 0.1, 50, 100); // GBPSEK
 threeDucks(incomingProtoMessages, output, 9, 0.1, 50, 100); // EURGBP
 threeDucks(incomingProtoMessages, output, 47, 0.1, 50, 100); // EURSEK
-threeDucks(incomingProtoMessages, output, 22396, 0.1, 50, 100); // BTCEUR
+threeDucks(incomingProtoMessages, output, 22396, 0.1, 500, 1000); // BTCEUR
