@@ -40,6 +40,16 @@ function protoMessage2106(
     clientMsgId
   };
 }
+function protoMessage2114(
+  payload: $.ProtoOASymbolsListReq,
+  clientMsgId?: string
+): $.ProtoMessage2114 {
+  return {
+    payloadType: $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_REQ,
+    payload,
+    clientMsgId
+  };
+}
 function protoMessage2127(
   payload: $.ProtoOASubscribeSpotsReq,
   clientMsgId?: string
@@ -139,6 +149,9 @@ export default {
 
   pm2106: protoMessage2106,
   newOrder: protoMessage2106,
+
+  pm2114: protoMessage2114,
+  symbolsList: protoMessage2114,
 
   pm2127: protoMessage2127,
   subscribeSpots: protoMessage2127,
