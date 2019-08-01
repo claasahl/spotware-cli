@@ -12,7 +12,7 @@ import {
 } from "rxjs/operators";
 
 import { trendbars } from "./trendbars";
-import { when, SimpleMovingAverage } from "../operators";
+import { when, SimpleMovingAverage, Trendbar } from "../operators";
 import util from "../util";
 
 // FIXME hardcoded ids
@@ -43,6 +43,30 @@ function pips(symbolId: number, pips: number): number {
     default:
       return pips;
   }
+}
+
+function base(
+  h4: Trendbar,
+  h1: Trendbar,
+  m5: Trendbar,
+  [live, ctidTraderAccountId]: number[]
+): [string, number] | undefined {
+  console.log(
+    h4.close < live,
+    h1.close < live,
+    m5.close < live,
+    "||",
+    h4.close > live,
+    h1.close > live,
+    m5.close > live
+  );
+  if (h4.close < live && h1.close < live && m5.close < live) {
+    return [m5.high < live ? "STRONGER BUY" : "BUY", ctidTraderAccountId];
+  }
+  if (h4.close > live && h1.close > live && m5.close > live) {
+    return [m5.low > live ? "STRONGER SELL" : "SELL", ctidTraderAccountId];
+  }
+  return undefined;
 }
 
 export function threeDucks(
@@ -85,32 +109,7 @@ export function threeDucks(
   const smaM5 = M5.pipe(SimpleMovingAverage(smaPeriod));
   const smaH1 = H1.pipe(SimpleMovingAverage(smaPeriod));
   const smaH4 = H4.pipe(SimpleMovingAverage(smaPeriod));
-  combineLatest(
-    smaH4,
-    smaH1,
-    smaM5,
-    live,
-    (h4, h1, m5, [live, ctidTraderAccountId]) => {
-      console.log(
-        symbolId,
-        "||",
-        h4.close < live,
-        h1.close < live,
-        m5.close < live,
-        "||",
-        h4.close > live,
-        h1.close > live,
-        m5.close > live
-      );
-      if (h4.close < live && h1.close < live && m5.close < live) {
-        return [m5.high < live ? "STRONGER BUY" : "BUY", ctidTraderAccountId];
-      }
-      if (h4.close > live && h1.close > live && m5.close > live) {
-        return [m5.low > live ? "STRONGER SELL" : "SELL", ctidTraderAccountId];
-      }
-      return undefined;
-    }
-  )
+  combineLatest(smaH4, smaH1, smaM5, live, base)
     .pipe(
       filter(
         (result): result is [string, number] => typeof result !== "undefined"
