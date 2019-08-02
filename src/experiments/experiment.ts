@@ -50,13 +50,11 @@ function intervals(
   const fromTimestamp = new Date(config.fromDate).getTime();
   const toTimestamp = new Date(config.toDate).getTime();
   const intervals: Interval[] = [
-    intervalFrom(fromTimestamp, fromTimestamp + periodOffset - 1)
+    intervalFrom(fromTimestamp, fromTimestamp + periodOffset)
   ];
   while (intervals[intervals.length - 1].toTimestamp < toTimestamp) {
     const { toTimestamp: lastTimestamp } = intervals[intervals.length - 1];
-    intervals.push(
-      intervalFrom(lastTimestamp, lastTimestamp + periodOffset - 1)
-    );
+    intervals.push(intervalFrom(lastTimestamp, lastTimestamp + periodOffset));
   }
   intervals[intervals.length - 1] = {
     ...intervals[intervals.length - 1],

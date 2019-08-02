@@ -10,7 +10,8 @@ import {
   toArray,
   groupBy,
   mergeMap,
-  timeoutWith
+  timeoutWith,
+  distinctUntilKeyChanged
 } from "rxjs/operators";
 
 import CONFIG from "../config";
@@ -176,6 +177,7 @@ incomingProtoMessages
       trendbars.pipe(
         flatMap(pm => pm.payload.trendbar),
         trendbar(),
+        distinctUntilKeyChanged("timestamp"),
         toArray(),
         tap(data => writeJsonSync(experiment, trendbars.key, data))
       )
