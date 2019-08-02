@@ -6,7 +6,7 @@ import { Experiment } from "./experiment";
 
 function experimentDir(experiment: Experiment) {
   return path.resolve(
-    path.resolve(path.join(experiment.config.dir, experiment.name))
+    path.resolve(path.join(experiment.config.dir, experiment.id))
   );
 }
 

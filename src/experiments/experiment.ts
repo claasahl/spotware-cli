@@ -1,5 +1,4 @@
 import * as $ from "@claasahl/spotware-adapter";
-import uuid from "uuid/v1";
 import ms from "ms";
 
 export interface ExperimentConfig {
@@ -23,8 +22,7 @@ export interface Interval {
 }
 
 export interface Experiment {
-  readonly uuid: string;
-  readonly name: string;
+  readonly id: string;
   readonly config: ExperimentConfig;
   readonly intervals: Interval[];
   readonly periods: $.ProtoOATrendbarPeriod[];
@@ -84,11 +82,10 @@ function periods(): $.ProtoOATrendbarPeriod[] {
 }
 
 export function create(config: ExperimentConfig): Experiment {
-  const id = uuid();
-  const name = `${uuid()}-${config.label}`;
+  const id =
+    new Date().toISOString().replace(/[:\.]/g, "") + "--" + config.label;
   return {
-    uuid: id,
-    name,
+    id,
     config,
     intervals: intervals(config),
     periods: periods()
