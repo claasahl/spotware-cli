@@ -1,17 +1,27 @@
 import * as $ from "@claasahl/spotware-adapter";
-import { fromEvent, Subject, of } from "rxjs";
-import { share, tap, map, shareReplay, flatMap, filter } from "rxjs/operators";
-import fs from "fs";
-import path from "path";
-import uuid from "uuid/v1";
+import { fromEvent, Subject, of, EMPTY } from "rxjs";
+import {
+  share,
+  tap,
+  map,
+  shareReplay,
+  flatMap,
+  filter,
+  toArray,
+  groupBy,
+  mergeMap,
+  timeoutWith
+} from "rxjs/operators";
 
 import CONFIG from "../config";
 import * as routines from "../routines";
-import { throttle, when } from "../operators";
+import { throttle, when, trendbar } from "../operators";
 import util from "../util";
+import { createDirSync, writeJsonSync, appendJsonSync } from "./files";
+import { create, ExperimentConfig } from "./experiment";
 
 // parameters / configs
-const config = {
+const config: ExperimentConfig = {
   ...CONFIG,
   symbolName: "EURSEK",
   fromDate: "2019-07-01T00:00:00.000Z",
@@ -20,18 +30,10 @@ const config = {
   dir: `./experiments/`
 };
 
-const fromTimestamp = new Date(config.fromDate).getTime();
-const toTimestamp = new Date(config.toDate).getTime();
-const experimentDir = path.resolve(
-  path.join(config.dir, `${uuid()}-${config.label}`)
-);
-
 // ----
-fs.mkdirSync(experimentDir);
-fs.writeFileSync(
-  path.join(experimentDir, "config.json"),
-  JSON.stringify(config, null, 2)
-);
+const experiment = create(config);
+createDirSync(experiment);
+writeJsonSync(experiment, "experiment.json", experiment);
 
 // ----
 
@@ -46,14 +48,14 @@ incomingProtoMessages
       const date = new Date();
       return { timestamp: date.getTime(), date, msg: pm };
     }),
-    tap(msg => console.log(JSON.stringify(msg)))
+    tap(msg => appendJsonSync(experiment, "proto-messages.json", msg))
   )
   .subscribe();
 
 const outgoingProtoMessages = new Subject<$.ProtoMessages>();
 outgoingProtoMessages
   .pipe(
-    throttle(300),
+    throttle(500),
     tap(pm => $.write(socket, pm))
   )
   .subscribe();
@@ -95,9 +97,9 @@ const ctidTraderAccountIds = incomingProtoMessages.pipe(
 
 ctidTraderAccountIds
   .pipe(
-    tap(ctidTraderAccountId =>
-      fs.mkdirSync(path.join(experimentDir, `${ctidTraderAccountId}`))
-    )
+    timeoutWith(5000, EMPTY),
+    toArray(),
+    tap(ids => writeJsonSync(experiment, "ctidTraderAccountIds.json", ids))
   )
   .subscribe();
 ctidTraderAccountIds
@@ -117,6 +119,13 @@ const symbols = incomingProtoMessages.pipe(
   filter(symbol => symbol.symbolName === config.symbolName),
   shareReplay()
 );
+symbols
+  .pipe(
+    timeoutWith(5000, EMPTY),
+    toArray(),
+    tap(symbols => writeJsonSync(experiment, "symbols.json", symbols))
+  )
+  .subscribe();
 
 const periods = of(
   $.ProtoOATrendbarPeriod.M1,
@@ -132,11 +141,16 @@ const periods = of(
   $.ProtoOATrendbarPeriod.H12,
   $.ProtoOATrendbarPeriod.D1
 );
+const intervals = periods.pipe(
+  flatMap(period =>
+    of(...experiment.intervals).pipe(map(interval => ({ ...interval, period })))
+  )
+);
 symbols
   .pipe(
     flatMap(({ ctidTraderAccountId, symbolId }) =>
-      periods.pipe(
-        map(period =>
+      intervals.pipe(
+        map(({ fromTimestamp, toTimestamp, period }) =>
           util.getTrendbars({
             ctidTraderAccountId,
             symbolId,
@@ -153,15 +167,19 @@ symbols
 incomingProtoMessages
   .pipe(
     when($.ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES),
-    tap(pm =>
-      fs.writeFileSync(
-        path.join(
-          experimentDir,
-          `${pm.payload.ctidTraderAccountId}`,
-          `trendbars-${$.ProtoOATrendbarPeriod[pm.payload.period]}.json`
-        ),
-        JSON.stringify(pm, null, 2)
+    timeoutWith(5000, EMPTY),
+    groupBy(
+      ({ payload: { ctidTraderAccountId, symbolId, period } }) =>
+        `trendbars-${ctidTraderAccountId}-${symbolId}-${$.ProtoOATrendbarPeriod[period]}.json`
+    ),
+    map(trendbars =>
+      trendbars.pipe(
+        flatMap(pm => pm.payload.trendbar),
+        trendbar(),
+        toArray(),
+        tap(data => writeJsonSync(experiment, trendbars.key, data))
       )
-    )
+    ),
+    mergeMap(value => value)
   )
   .subscribe();
