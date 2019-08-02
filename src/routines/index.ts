@@ -5,5 +5,6 @@ export * from "./authenticateApplication";
 export * from "./heartbeats";
 export * from "./requestAccounts";
 export * from "./requestTrendbars";
+export * from "./requestSymbols";
 export * from "./subscribeSpots";
 export * from "./subscribeTrendbars";

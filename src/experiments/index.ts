@@ -4,7 +4,6 @@ import {
   share,
   tap,
   map,
-  shareReplay,
   flatMap,
   filter,
   toArray,
@@ -15,11 +14,16 @@ import {
 } from "rxjs/operators";
 
 import CONFIG from "../config";
-import * as routines from "../routines";
 import { throttle, when, trendbar } from "../operators";
 import util from "../util";
 import { createDirSync, writeJsonSync, appendJsonSync } from "./files";
 import { create, ExperimentConfig } from "./experiment";
+import {
+  authenticateApplication,
+  requestAccounts,
+  authenticateAccounts,
+  requestSymbols
+} from "../routines";
 
 // parameters / configs
 const config: ExperimentConfig = {
@@ -33,12 +37,20 @@ const config: ExperimentConfig = {
 
 // ----
 const experiment = create(config);
-createDirSync(experiment);
-writeJsonSync(experiment, "experiment.json", experiment);
+const {
+  port,
+  host,
+  clientId,
+  clientSecret,
+  accessToken,
+  symbolName
+} = experiment.config;
+const intervals = of(...experiment.intervals);
+const periods = of(...experiment.periods);
 
 // ----
 
-const socket = $.connect(config.port, config.host);
+const socket = $.connect(port, host);
 const incomingProtoMessages = fromEvent<$.ProtoMessages>(
   socket,
   "PROTO_MESSAGE.*"
@@ -65,50 +77,69 @@ function output(pm: $.ProtoMessages): void {
   return outgoingProtoMessages.next(pm);
 }
 
-routines
-  .authenticateApplication({
-    clientId: config.clientId,
-    clientSecret: config.clientSecret
-  })
-  .subscribe(output);
+// 💥 -> PROTO_OA_APPLICATION_AUTH_REQ
+authenticateApplication({ clientId, clientSecret }).subscribe(output);
 
+// PROTO_OA_APPLICATION_AUTH_RES -> PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ
 const APPLICATION_AUTH_RES = incomingProtoMessages.pipe(
   when($.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_RES)
 );
-APPLICATION_AUTH_RES.pipe(
-  routines.requestAccounts({ accessToken: config.accessToken })
-).subscribe(output);
+APPLICATION_AUTH_RES.pipe(requestAccounts({ accessToken })).subscribe(output);
 
+// PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES -> PROTO_OA_ACCOUNT_AUTH_REQ
 const GET_ACCOUNTS_BY_ACCESS_TOKEN_RES = incomingProtoMessages.pipe(
   when($.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES)
 );
 GET_ACCOUNTS_BY_ACCESS_TOKEN_RES.pipe(
-  flatMap(pm => pm.payload.ctidTraderAccount),
-  map(({ ctidTraderAccountId }) => ctidTraderAccountId),
-  map(ctidTraderAccountId =>
-    util.accountAuth({ accessToken: config.accessToken, ctidTraderAccountId })
-  )
+  authenticateAccounts({ accessToken })
 ).subscribe(output);
 
-const ctidTraderAccountIds = incomingProtoMessages.pipe(
-  when($.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES),
-  map(pm => pm.payload.ctidTraderAccountId),
-  shareReplay()
+// PROTO_OA_ACCOUNT_AUTH_RES -> PROTO_OA_SYMBOLS_LIST_REQ
+const ACCOUNT_AUTH_RES = incomingProtoMessages.pipe(
+  when($.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES)
+);
+ACCOUNT_AUTH_RES.pipe(requestSymbols({})).subscribe(output);
+
+// PROTO_OA_SYMBOLS_LIST_RES -> PROTO_OA_GET_TRENDBARS_REQ
+const SYMBOLS_LIST_RES = incomingProtoMessages.pipe(
+  when($.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_RES)
+);
+SYMBOLS_LIST_RES.pipe(
+  groupBy(pm => pm.payload.ctidTraderAccountId),
+  mergeMap(symbols =>
+    symbols.pipe(
+      flatMap(pm => pm.payload.symbol),
+      filter(symbol => symbol.symbolName === symbolName),
+      map(({ symbolId }) => ({ symbolId, ctidTraderAccountId: symbols.key }))
+    )
+  ),
+  flatMap(value => periods.pipe(map(period => ({ ...value, period })))),
+  flatMap(value =>
+    intervals.pipe(
+      map(({ fromTimestamp, toTimestamp }) => ({
+        ...value,
+        fromTimestamp,
+        toTimestamp
+      }))
+    )
+  ),
+  map(value => util.getTrendbars(value))
+).subscribe(output);
+
+// PROTO_OA_GET_TRENDBARS_RES ->
+const GET_TRENDBARS_RES = incomingProtoMessages.pipe(
+  when($.ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES)
 );
 
-ctidTraderAccountIds
-  .pipe(
-    timeoutWith(5000, EMPTY),
-    toArray(),
-    tap(ids => writeJsonSync(experiment, "ctidTraderAccountIds.json", ids))
-  )
-  .subscribe();
-ctidTraderAccountIds
-  .pipe(map(ctidTraderAccountId => util.symbolsList({ ctidTraderAccountId })))
-  .subscribe(output);
-
-const symbols = incomingProtoMessages.pipe(
-  when($.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_RES),
+// -----
+createDirSync(experiment);
+writeJsonSync(experiment, "experiment.json", experiment);
+ACCOUNT_AUTH_RES.pipe(
+  map(pm => pm.payload.ctidTraderAccountId),
+  timeoutWith(5000, EMPTY),
+  toArray()
+).subscribe(ids => writeJsonSync(experiment, "ctidTraderAccountIds.json", ids));
+SYMBOLS_LIST_RES.pipe(
   flatMap(pm =>
     of(...pm.payload.symbol).pipe(
       map(symbol => ({
@@ -117,71 +148,23 @@ const symbols = incomingProtoMessages.pipe(
       }))
     )
   ),
-  filter(symbol => symbol.symbolName === config.symbolName),
-  shareReplay()
-);
-symbols
-  .pipe(
-    timeoutWith(5000, EMPTY),
-    toArray(),
-    tap(symbols => writeJsonSync(experiment, "symbols.json", symbols))
-  )
-  .subscribe();
-
-const periods = of(
-  $.ProtoOATrendbarPeriod.M1,
-  $.ProtoOATrendbarPeriod.M2,
-  $.ProtoOATrendbarPeriod.M3,
-  $.ProtoOATrendbarPeriod.M4,
-  $.ProtoOATrendbarPeriod.M5,
-  $.ProtoOATrendbarPeriod.M10,
-  $.ProtoOATrendbarPeriod.M15,
-  $.ProtoOATrendbarPeriod.M30,
-  $.ProtoOATrendbarPeriod.H1,
-  $.ProtoOATrendbarPeriod.H4,
-  $.ProtoOATrendbarPeriod.H12,
-  $.ProtoOATrendbarPeriod.D1
-);
-const intervals = periods.pipe(
-  flatMap(period =>
-    of(...experiment.intervals).pipe(map(interval => ({ ...interval, period })))
-  )
-);
-symbols
-  .pipe(
-    flatMap(({ ctidTraderAccountId, symbolId }) =>
-      intervals.pipe(
-        map(({ fromTimestamp, toTimestamp, period }) =>
-          util.getTrendbars({
-            ctidTraderAccountId,
-            symbolId,
-            fromTimestamp,
-            toTimestamp,
-            period
-          })
-        )
-      )
+  filter(symbol => symbol.symbolName === symbolName),
+  timeoutWith(5000, EMPTY),
+  toArray()
+).subscribe(symbols => writeJsonSync(experiment, "symbols.json", symbols));
+GET_TRENDBARS_RES.pipe(
+  timeoutWith(5000, EMPTY),
+  groupBy(
+    ({ payload: { ctidTraderAccountId, period } }) =>
+      `trendbars-${ctidTraderAccountId}-${symbolName}-${$.ProtoOATrendbarPeriod[period]}.json`
+  ),
+  mergeMap(trendbars =>
+    trendbars.pipe(
+      flatMap(pm => pm.payload.trendbar),
+      trendbar(),
+      distinctUntilKeyChanged("timestamp"),
+      toArray(),
+      tap(data => writeJsonSync(experiment, trendbars.key, data))
     )
   )
-  .subscribe(output);
-
-incomingProtoMessages
-  .pipe(
-    when($.ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES),
-    timeoutWith(5000, EMPTY),
-    groupBy(
-      ({ payload: { ctidTraderAccountId, symbolId, period } }) =>
-        `trendbars-${ctidTraderAccountId}-${symbolId}-${$.ProtoOATrendbarPeriod[period]}.json`
-    ),
-    map(trendbars =>
-      trendbars.pipe(
-        flatMap(pm => pm.payload.trendbar),
-        trendbar(),
-        distinctUntilKeyChanged("timestamp"),
-        toArray(),
-        tap(data => writeJsonSync(experiment, trendbars.key, data))
-      )
-    ),
-    mergeMap(value => value)
-  )
-  .subscribe();
+).subscribe();
