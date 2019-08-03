@@ -8,34 +8,41 @@ import {
 } from "rxjs/operators";
 
 import { Trendbar, when, trendbar } from "../operators";
-import { subscribeSpots } from "../routines/subscribeSpots";
-import {
-  requestLastTrendbars,
-  pollLatestTrendbar
-} from "../routines/requestTrendbars";
+import { pollLatestTrendbar } from "../routines/requestTrendbars";
 import { subscribeTrendbars } from "../routines/subscribeTrendbars";
+import util from "../util";
+
+function requestLastTrendbars(
+  payload: Omit<$.ProtoOAGetTrendbarsReq, "fromTimestamp" | "toTimestamp"> & {
+    trendbars: number;
+  }
+): $.ProtoMessage2137 {
+  const toTimestamp = new Date().getTime();
+  const fromTimestamp =
+    toTimestamp - util.periodToMillis(payload.period) * payload.trendbars;
+  return util.getTrendbars({ ...payload, fromTimestamp, toTimestamp });
+}
 
 export function trendbars(
   incomingProtoMessages: Observable<$.ProtoMessages>,
   output: (pm: $.ProtoMessages) => void,
+  ctidTraderAccountId: number,
   symbolId: number,
   period: $.ProtoOATrendbarPeriod,
   trendbars: number
 ): Observable<Trendbar> {
-  // PROTO_OA_ACCOUNT_AUTH_RES ->
-  const ACCOUNT_AUTH_RES = incomingProtoMessages.pipe(
-    when($.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES)
+  const subscribe = of(
+    util.subscribeSpots({ symbolId: [symbolId], ctidTraderAccountId })
   );
-  ACCOUNT_AUTH_RES.pipe(subscribeSpots({ symbolId: [symbolId] })).subscribe(
-    output
+  const fetchTrendbars = of(
+    requestLastTrendbars({ period, symbolId, ctidTraderAccountId, trendbars })
   );
-  ACCOUNT_AUTH_RES.pipe(
-    requestLastTrendbars({ period, symbolId, trendbars })
-  ).subscribe(output);
-  ACCOUNT_AUTH_RES.pipe(pollLatestTrendbar({ period, symbolId })).subscribe(
-    output
+  const pollTrendbars = of(ctidTraderAccountId).pipe(
+    pollLatestTrendbar({ period, symbolId })
   );
+  merge(subscribe, fetchTrendbars, pollTrendbars).subscribe(output);
 
+  // PROTO_OA_SUBSCRIBE_SPOTS_RES ->
   const SUBSCRIBE_SPOTS_RES = incomingProtoMessages.pipe(
     when($.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_RES)
   );

@@ -1,18 +1,16 @@
 import * as $ from "@claasahl/spotware-adapter";
-import { Observable, combineLatest } from "rxjs";
+import { Observable } from "rxjs";
 import {
   share,
   filter,
   map,
-  groupBy,
-  mergeMap,
+  tap,
   debounceTime,
-  distinctUntilChanged,
-  tap
+  distinctUntilChanged
 } from "rxjs/operators";
 
 import { trendbars } from "../trendbars";
-import { when, SimpleMovingAverage } from "../../operators";
+import { when } from "../../operators";
 import util from "../../util";
 import { strategy } from "./strategy";
 
@@ -49,6 +47,7 @@ function pips(symbolId: number, pips: number): number {
 export function threeDucks(
   incomingProtoMessages: Observable<$.ProtoMessages>,
   output: (pm: $.ProtoMessages) => void,
+  ctidTraderAccountId: number,
   symbolId: number,
   volumeInLots: number,
   stopLossInPips: number,
@@ -58,6 +57,7 @@ export function threeDucks(
   const M5 = trendbars(
     incomingProtoMessages,
     output,
+    ctidTraderAccountId,
     symbolId,
     $.ProtoOATrendbarPeriod.M5,
     smaPeriod * 2
@@ -65,6 +65,7 @@ export function threeDucks(
   const H1 = trendbars(
     incomingProtoMessages,
     output,
+    ctidTraderAccountId,
     symbolId,
     $.ProtoOATrendbarPeriod.H1,
     smaPeriod * 2
@@ -72,6 +73,7 @@ export function threeDucks(
   const H4 = trendbars(
     incomingProtoMessages,
     output,
+    ctidTraderAccountId,
     symbolId,
     $.ProtoOATrendbarPeriod.H4,
     smaPeriod * 2
@@ -80,70 +82,59 @@ export function threeDucks(
   const live = incomingProtoMessages.pipe(
     when($.ProtoOAPayloadType.PROTO_OA_SPOT_EVENT),
     filter(pm => pm.payload.symbolId === symbolId),
-    map(pm => [pm.payload.bid, pm.payload.ctidTraderAccountId]),
-    filter((data): data is number[] => typeof data[0] === "number")
+    map(pm => pm.payload.bid),
+    filter((data): data is number => typeof data === "number")
   );
-  const smaM5 = M5.pipe(SimpleMovingAverage(smaPeriod));
-  const smaH1 = H1.pipe(SimpleMovingAverage(smaPeriod));
-  const smaH4 = H4.pipe(SimpleMovingAverage(smaPeriod));
-  combineLatest(smaH4, smaH1, smaM5, live, strategy)
+  strategy(H4, H1, M5, live, smaPeriod)
     .pipe(
-      filter(
-        (result): result is [string, number] => typeof result !== "undefined"
-      ),
-      groupBy(([_result, ctidTraderAccountId]) => ctidTraderAccountId),
-      mergeMap(t =>
-        t.pipe(
-          map(([result, _]) => result),
-          debounceTime(500),
-          distinctUntilChanged((x, y) => x === y),
-          tap(result => {
-            const date = new Date();
-            console.log(date, "DUCKS", JSON.stringify(result));
-          }),
-          map(result => {
-            const order: $.ProtoOANewOrderReq = {
-              ctidTraderAccountId: t.key,
-              symbolId,
-              orderType: $.ProtoOAOrderType.MARKET,
+      debounceTime(500),
+      distinctUntilChanged((x, y) => x === y),
+      tap(result => {
+        const date = new Date();
+        console.log(date, "DUCKS", JSON.stringify(result));
+      }),
+      filter(result => result !== "NEUTRAL"),
+      map(result => {
+        const order: $.ProtoOANewOrderReq = {
+          ctidTraderAccountId,
+          symbolId,
+          orderType: $.ProtoOAOrderType.MARKET,
+          tradeSide: $.ProtoOATradeSide.BUY,
+          volume: volume(symbolId, volumeInLots),
+          relativeStopLoss: pips(symbolId, stopLossInPips),
+          relativeTakeProfit: pips(symbolId, takeProfitInPips)
+        };
+        switch (result) {
+          case "BUY":
+            return util.newOrder({
+              ...order,
+              tradeSide: $.ProtoOATradeSide.BUY
+            });
+          case "STRONGER BUY":
+            return util.newOrder({
+              ...order,
               tradeSide: $.ProtoOATradeSide.BUY,
-              volume: volume(symbolId, volumeInLots),
-              relativeStopLoss: pips(symbolId, stopLossInPips),
-              relativeTakeProfit: pips(symbolId, takeProfitInPips)
-            };
-            switch (result) {
-              case "BUY":
-                return util.newOrder({
-                  ...order,
-                  tradeSide: $.ProtoOATradeSide.BUY
-                });
-              case "STRONGER BUY":
-                return util.newOrder({
-                  ...order,
-                  tradeSide: $.ProtoOATradeSide.BUY,
-                  volume: order.volume * 2
-                });
-              case "SELL":
-                return util.newOrder({
-                  ...order,
-                  tradeSide: $.ProtoOATradeSide.SELL
-                });
-              case "STRONGER SELL":
-                return util.newOrder({
-                  ...order,
-                  tradeSide: $.ProtoOATradeSide.SELL,
-                  volume: order.volume * 2
-                });
-              default:
-                throw new Error(`unknown result: ${result}`);
-            }
-          }),
-          tap(result => {
-            const date = new Date();
-            console.log(date, "DUCKS", JSON.stringify(result));
-          })
-        )
-      )
+              volume: order.volume * 2
+            });
+          case "SELL":
+            return util.newOrder({
+              ...order,
+              tradeSide: $.ProtoOATradeSide.SELL
+            });
+          case "STRONGER SELL":
+            return util.newOrder({
+              ...order,
+              tradeSide: $.ProtoOATradeSide.SELL,
+              volume: order.volume * 2
+            });
+          default:
+            throw new Error(`unknown result: ${result}`);
+        }
+      }),
+      tap(result => {
+        const date = new Date();
+        console.log(date, "DUCKS", JSON.stringify(result));
+      })
     )
     .subscribe(output);
 }
