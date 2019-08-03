@@ -2,15 +2,13 @@ import * as $ from "@claasahl/spotware-adapter";
 import { OperatorFunction, pipe, interval } from "rxjs";
 import { map, mergeMap, filter } from "rxjs/operators";
 
-import util from "../util";
+import { pm2137, periodToMillis } from "../utils";
 
 export function requestTrendbars(
   payload: Omit<$.ProtoOAGetTrendbarsReq, "ctidTraderAccountId">
 ): OperatorFunction<number, $.ProtoMessage2137> {
   return pipe(
-    map(ctidTraderAccountId =>
-      util.getTrendbars({ ...payload, ctidTraderAccountId })
-    )
+    map(ctidTraderAccountId => pm2137({ ...payload, ctidTraderAccountId }))
   );
 }
 
@@ -22,7 +20,7 @@ export function requestLastTrendbars(
 ): OperatorFunction<number, $.ProtoMessage2137> {
   const toTimestamp = new Date().getTime();
   const fromTimestamp =
-    toTimestamp - util.periodToMillis(payload.period) * payload.trendbars;
+    toTimestamp - periodToMillis(payload.period) * payload.trendbars;
   return requestTrendbars({ ...payload, fromTimestamp, toTimestamp });
 }
 
@@ -30,7 +28,7 @@ function newTrendbarExpected(
   period: $.ProtoOATrendbarPeriod,
   slack: number = 30000
 ): boolean {
-  const millis = util.periodToMillis(period);
+  const millis = periodToMillis(period);
   const now = Date.now();
   return now % millis <= slack;
 }
@@ -50,9 +48,8 @@ export function pollLatestTrendbar(
           date.setMilliseconds(0);
           date.setSeconds(0);
           const toTimestamp = date.getTime();
-          const fromTimestamp =
-            toTimestamp - util.periodToMillis(payload.period);
-          return util.getTrendbars({
+          const fromTimestamp = toTimestamp - periodToMillis(payload.period);
+          return pm2137({
             ...payload,
             ctidTraderAccountId,
             fromTimestamp,

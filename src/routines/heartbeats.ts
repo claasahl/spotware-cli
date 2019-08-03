@@ -2,13 +2,13 @@ import * as $ from "@claasahl/spotware-adapter";
 import { interval, OperatorFunction, pipe } from "rxjs";
 import { map, switchMap } from "rxjs/operators";
 
-import util from "../util";
+import { pm51 } from "../utils";
 
 export function heartbeats(
   period: number = 10000
 ): OperatorFunction<$.ProtoMessage2101, $.ProtoMessage51> {
   const beats = interval(period).pipe(
-    map(heartbeatNo => util.heartbeat({}, `HeartbeatNo${heartbeatNo}`))
+    map(heartbeatNo => pm51({}, `HeartbeatNo${heartbeatNo}`))
   );
   return pipe(switchMap(() => beats));
 }

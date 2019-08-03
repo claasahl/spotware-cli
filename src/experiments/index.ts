@@ -15,7 +15,7 @@ import {
 
 import CONFIG from "../config";
 import { throttle, when, trendbar } from "../operators";
-import util from "../util";
+import { pm2137 } from "../utils";
 import { createDirSync, writeJsonSync, appendJsonSync } from "./files";
 import { create, ExperimentConfig } from "./experiment";
 import {
@@ -123,7 +123,7 @@ SYMBOLS_LIST_RES.pipe(
       }))
     )
   ),
-  map(value => util.getTrendbars(value))
+  map(value => pm2137(value))
 ).subscribe(output);
 
 // PROTO_OA_GET_TRENDBARS_RES ->

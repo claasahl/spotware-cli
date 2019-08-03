@@ -2,7 +2,7 @@ import * as $ from "@claasahl/spotware-adapter";
 import { OperatorFunction, pipe } from "rxjs";
 import { flatMap, map } from "rxjs/operators";
 
-import util from "../util";
+import { pm2102 } from "../utils";
 
 export function authenticateAccounts(
   payload: Omit<$.ProtoOAAccountAuthReq, "ctidTraderAccountId">
@@ -10,7 +10,7 @@ export function authenticateAccounts(
   return pipe(
     flatMap(pm => pm.payload.ctidTraderAccount),
     map(({ ctidTraderAccountId }) =>
-      util.accountAuth({ ...payload, ctidTraderAccountId })
+      pm2102({ ...payload, ctidTraderAccountId })
     )
   );
 }

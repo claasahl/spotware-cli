@@ -10,7 +10,7 @@ import {
 import { Trendbar, when, trendbar } from "../operators";
 import { pollLatestTrendbar } from "../routines/requestTrendbars";
 import { subscribeTrendbars } from "../routines/subscribeTrendbars";
-import util from "../util";
+import { periodToMillis, pm2127, pm2137 } from "../utils";
 
 function requestLastTrendbars(
   payload: Omit<$.ProtoOAGetTrendbarsReq, "fromTimestamp" | "toTimestamp"> & {
@@ -19,8 +19,8 @@ function requestLastTrendbars(
 ): $.ProtoMessage2137 {
   const toTimestamp = new Date().getTime();
   const fromTimestamp =
-    toTimestamp - util.periodToMillis(payload.period) * payload.trendbars;
-  return util.getTrendbars({ ...payload, fromTimestamp, toTimestamp });
+    toTimestamp - periodToMillis(payload.period) * payload.trendbars;
+  return pm2137({ ...payload, fromTimestamp, toTimestamp });
 }
 
 export function trendbars(
@@ -31,9 +31,7 @@ export function trendbars(
   period: $.ProtoOATrendbarPeriod,
   trendbars: number
 ): Observable<Trendbar> {
-  const subscribe = of(
-    util.subscribeSpots({ symbolId: [symbolId], ctidTraderAccountId })
-  );
+  const subscribe = of(pm2127({ symbolId: [symbolId], ctidTraderAccountId }));
   const fetchTrendbars = of(
     requestLastTrendbars({ period, symbolId, ctidTraderAccountId, trendbars })
   );

@@ -11,38 +11,8 @@ import {
 
 import { trendbars } from "../trendbars";
 import { when } from "../../operators";
-import util from "../../util";
 import { strategy } from "./strategy";
-
-// FIXME hardcoded ids
-const BTCEUR = 22396;
-const GBPSEK = 10093;
-const EURGBP = 9;
-const EURSEK = 47;
-function volume(symbolId: number, volume: number): number {
-  switch (symbolId) {
-    case GBPSEK:
-    case EURGBP:
-    case EURSEK:
-      return volume * 10000000;
-    case BTCEUR:
-    default:
-      return volume * 100;
-  }
-}
-
-function pips(symbolId: number, pips: number): number {
-  switch (symbolId) {
-    case GBPSEK:
-    case EURGBP:
-    case EURSEK:
-      return pips * 10;
-    case BTCEUR:
-      return pips * 10000;
-    default:
-      return pips;
-  }
-}
+import { volume, pips, pm2106 } from "../../utils";
 
 export function threeDucks(
   incomingProtoMessages: Observable<$.ProtoMessages>,
@@ -106,23 +76,23 @@ export function threeDucks(
         };
         switch (result) {
           case "BUY":
-            return util.newOrder({
+            return pm2106({
               ...order,
               tradeSide: $.ProtoOATradeSide.BUY
             });
           case "STRONGER BUY":
-            return util.newOrder({
+            return pm2106({
               ...order,
               tradeSide: $.ProtoOATradeSide.BUY,
               volume: order.volume * 2
             });
           case "SELL":
-            return util.newOrder({
+            return pm2106({
               ...order,
               tradeSide: $.ProtoOATradeSide.SELL
             });
           case "STRONGER SELL":
-            return util.newOrder({
+            return pm2106({
               ...order,
               tradeSide: $.ProtoOATradeSide.SELL,
               volume: order.volume * 2
