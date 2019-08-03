@@ -9,7 +9,7 @@ export type Recommendation =
   | "STRONGER SELL"
   | "NEUTRAL";
 
-function base(
+function signal(
   h4: Trendbar,
   h1: Trendbar,
   m5: Trendbar,
@@ -33,7 +33,7 @@ function base(
   return "NEUTRAL";
 }
 
-export function strategy(
+export function signals(
   h4: Observable<Trendbar>,
   h1: Observable<Trendbar>,
   m5: Observable<Trendbar>,
@@ -43,5 +43,5 @@ export function strategy(
   const smaH4 = h4.pipe(SimpleMovingAverage(period));
   const smaH1 = h1.pipe(SimpleMovingAverage(period));
   const smaM5 = m5.pipe(SimpleMovingAverage(period));
-  return combineLatest(smaH4, smaH1, smaM5, live, base);
+  return combineLatest(smaH4, smaH1, smaM5, live, signal);
 }

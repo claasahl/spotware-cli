@@ -11,7 +11,7 @@ import {
 
 import { trendbars } from "../trendbars";
 import { when } from "../../operators";
-import { strategy } from "./strategy";
+import { signals } from "./signals";
 import { volume, pips, pm2106 } from "../../utils";
 
 export function threeDucks(
@@ -55,7 +55,7 @@ export function threeDucks(
     map(pm => pm.payload.bid),
     filter((data): data is number => typeof data === "number")
   );
-  strategy(H4, H1, M5, live, smaPeriod)
+  signals(H4, H1, M5, live, smaPeriod)
     .pipe(
       debounceTime(500),
       distinctUntilChanged((x, y) => x === y),
