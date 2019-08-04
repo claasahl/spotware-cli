@@ -1,13 +1,7 @@
 import { Observable, combineLatest } from "rxjs";
 
 import { Trendbar, SimpleMovingAverage } from "../../operators";
-
-export type Recommendation =
-  | "BUY"
-  | "SELL"
-  | "STRONGER BUY"
-  | "STRONGER SELL"
-  | "NEUTRAL";
+import { Recommendation } from "../../types";
 
 function signal(
   h4: Trendbar,
