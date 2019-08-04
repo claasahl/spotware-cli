@@ -38,7 +38,7 @@ export function signals(
   h1: Observable<Trendbar>,
   m5: Observable<Trendbar>,
   live: Observable<number>,
-  period: number
+  period: number = 60
 ): Observable<Recommendation> {
   const smaH4 = h4.pipe(SimpleMovingAverage(period));
   const smaH1 = h1.pipe(SimpleMovingAverage(period));
