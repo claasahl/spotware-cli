@@ -32,7 +32,6 @@ const dataM5: Trendbar[] = readJsonSync(
 const iterH4 = dataH4[Symbol.iterator]();
 const iterH1 = dataH1[Symbol.iterator]();
 const iterM5 = dataM5[Symbol.iterator]();
-const iterLive = dataM5[Symbol.iterator]();
 
 const h4 = new Subject<Trendbar>();
 const h1 = new Subject<Trendbar>();
@@ -86,7 +85,6 @@ combineLatest(h4, h1, m5, (h4, h1, m5) => [h4, h1, m5])
   )
   .subscribe(a => console.log(JSON.stringify(a)));
 
-iterLive.next();
 const values = {
   h4: iterH4.next(),
   h1: iterH1.next(),
