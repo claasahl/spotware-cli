@@ -160,8 +160,9 @@ GET_TRENDBARS_RES.pipe(
   ),
   mergeMap(trendbars =>
     trendbars.pipe(
-      flatMap(pm => pm.payload.trendbar),
-      trendbar(),
+      flatMap(pm =>
+        of(...pm.payload.trendbar).pipe(trendbar(pm.payload.period))
+      ),
       distinctUntilKeyChanged("timestamp"),
       toArray(),
       tap(data => writeJsonSync(experiment, trendbars.key, data))

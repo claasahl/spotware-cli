@@ -12,12 +12,13 @@ export interface Trendbar {
   timestamp: number;
   date: Date;
 }
-export function trendbar(): OperatorFunction<$.ProtoOATrendbar, Trendbar> {
+export function trendbar(
+  period = $.ProtoOATrendbarPeriod.MN1
+): OperatorFunction<$.ProtoOATrendbar, Trendbar> {
   return map(
     ({
       volume,
       low = 0,
-      period = $.ProtoOATrendbarPeriod.MN1,
       deltaClose = 0,
       deltaHigh = 0,
       deltaOpen = 0,

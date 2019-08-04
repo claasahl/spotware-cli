@@ -53,14 +53,14 @@ export function trendbars(
     filter(pm => pm.payload.symbolId === symbolId),
     filter(pm => pm.payload.period === period),
     flatMap(pm => pm.payload.trendbar),
-    trendbar()
+    trendbar(period)
   );
   const live = incomingProtoMessages.pipe(
     when($.ProtoOAPayloadType.PROTO_OA_SPOT_EVENT),
     filter(pm => pm.payload.symbolId === symbolId),
     flatMap(pm => pm.payload.trendbar),
     filter(trendbar => trendbar.period === period),
-    trendbar()
+    trendbar(period)
   );
   const latestClosedTrendbar = live.pipe(
     pairwise(),
