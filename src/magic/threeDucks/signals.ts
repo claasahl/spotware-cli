@@ -4,25 +4,27 @@ import { Trendbar, SimpleMovingAverage } from "../../operators";
 import { Recommendation } from "../../types";
 
 function signal(
-  h4: Trendbar,
-  h1: Trendbar,
-  m5: Trendbar,
+  smaH4: number,
+  smaH1: number,
+  smaM5: number,
+  recentHigh: number,
+  recentLow: number,
   live: number
 ): Recommendation {
   console.log(
-    h4.close < live,
-    h1.close < live,
-    m5.close < live,
+    smaH4 < live,
+    smaH1 < live,
+    smaM5 < live,
     "||",
-    h4.close > live,
-    h1.close > live,
-    m5.close > live
+    smaH4 > live,
+    smaH1 > live,
+    smaM5 > live
   );
-  if (h4.close < live && h1.close < live && m5.close < live) {
-    return m5.high < live ? "STRONGER BUY" : "BUY";
+  if (smaH4 < live && smaH1 < live && smaM5 < live) {
+    return recentHigh < live ? "STRONGER BUY" : "BUY";
   }
-  if (h4.close > live && h1.close > live && m5.close > live) {
-    return m5.low > live ? "STRONGER SELL" : "SELL";
+  if (smaH4 > live && smaH1 > live && smaM5 > live) {
+    return recentLow > live ? "STRONGER SELL" : "SELL";
   }
   return "NEUTRAL";
 }
@@ -37,5 +39,20 @@ export function signals(
   const smaH4 = h4.pipe(SimpleMovingAverage(period));
   const smaH1 = h1.pipe(SimpleMovingAverage(period));
   const smaM5 = m5.pipe(SimpleMovingAverage(period));
-  return combineLatest(smaH4, smaH1, smaM5, live, signal);
+  return combineLatest(
+    smaH4,
+    smaH1,
+    smaM5,
+    live,
+    (smaH4, smaH1, smaM5, live) => {
+      return signal(
+        smaH4.close,
+        smaH1.close,
+        smaM5.close,
+        smaM5.high,
+        smaM5.low,
+        live
+      );
+    }
+  );
 }
