@@ -7,10 +7,11 @@ import {
   distinctUntilChanged
 } from "rxjs/operators";
 
-import { Trendbar, when, trendbar } from "../operators";
+import { when, trendbar } from "../operators";
 import { pollLatestTrendbar } from "../routines/requestTrendbars";
 import { subscribeTrendbars } from "../routines/subscribeTrendbars";
 import { periodToMillis, pm2127, pm2137 } from "../utils";
+import { Trendbar } from "../types";
 
 function requestLastTrendbars(
   payload: Omit<$.ProtoOAGetTrendbarsReq, "fromTimestamp" | "toTimestamp"> & {

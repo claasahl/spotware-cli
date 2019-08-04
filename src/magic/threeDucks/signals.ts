@@ -1,7 +1,8 @@
 import { Observable, combineLatest } from "rxjs";
 
-import { Trendbar, SimpleMovingAverage } from "../../operators";
-import { Recommendation } from "../../types";
+import { SimpleMovingAverage } from "../../operators";
+import { SimpleMovingAverage as SimpleMoving } from "../../indicators";
+import { Recommendation, Trendbar } from "../../types";
 
 function signal(
   smaH4: number,

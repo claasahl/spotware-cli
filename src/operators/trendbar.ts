@@ -2,16 +2,8 @@ import * as $ from "@claasahl/spotware-adapter";
 import { OperatorFunction } from "rxjs";
 import { map } from "rxjs/operators";
 
-export interface Trendbar {
-  volume: number;
-  period: $.ProtoOATrendbarPeriod;
-  low: number;
-  open: number;
-  close: number;
-  high: number;
-  timestamp: number;
-  date: Date;
-}
+import { Trendbar } from "../types";
+
 export function trendbar(
   period = $.ProtoOATrendbarPeriod.MN1
 ): OperatorFunction<$.ProtoOATrendbar, Trendbar> {

@@ -1,7 +1,6 @@
 import * as $ from "@claasahl/spotware-adapter";
 import { OperatorFunction, pipe } from "rxjs";
 
-import { Recommendation } from "./signals";
 import {
   debounceTime,
   distinctUntilChanged,
@@ -10,6 +9,7 @@ import {
   map
 } from "rxjs/operators";
 import { volume, pips, pm2106 } from "../../utils";
+import { Recommendation } from "../../types";
 
 export function tradeStrategy(
   ctidTraderAccountId: number,

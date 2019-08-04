@@ -1,7 +1,7 @@
 import { OperatorFunction, pipe } from "rxjs";
 import { bufferCount, map } from "rxjs/operators";
 
-import { Trendbar } from "./trendbar";
+import { Trendbar } from "../types";
 
 export function SimpleMovingAverage(
   period: number
