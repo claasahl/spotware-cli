@@ -11,7 +11,8 @@
     "start": "ts-node -r dotenv/config ./src/index.ts",
     "sample": "ts-node -r dotenv/config ./src/samples.ts",
     "play": "ts-node -r dotenv/config ./src/sandbox.ts",
-    "x": "ts-node -r dotenv/config ./src/experiments/index.ts"
+    "x": "ts-node -r dotenv/config ./src/experiments/index.ts",
+    "r": "ts-node -r dotenv/config ./src/experiments/run.ts"
   },
   "repository": {
     "type": "git",

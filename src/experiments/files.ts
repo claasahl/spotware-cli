@@ -34,3 +34,10 @@ export function appendJsonSync(
   const filename = path.join(dir, name);
   fs.appendFileSync(filename, JSON.stringify(value, null, 2) + EOL);
 }
+
+export function readJsonSync(experiment: Experiment, name: string): any {
+  const dir = experimentDir(experiment);
+  const filename = path.join(dir, name);
+  const content = fs.readFileSync(filename);
+  return JSON.parse(content.toString());
+}
