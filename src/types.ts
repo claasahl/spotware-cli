@@ -32,7 +32,7 @@ export interface Snapshot {
   m2: Trendbar;
   m1: Trendbar;
 }
-export interface Recommender {
-  update(snapshot: Snapshot): void;
+export interface Recommender<T extends keyof Snapshot> {
+  update(snapshot: Pick<Snapshot, T>): void;
   recommend(price: number): Recommendation;
 }

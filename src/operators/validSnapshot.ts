@@ -16,8 +16,11 @@ function engulfed(inner: Trendbar, outer: Trendbar): boolean {
   );
 }
 
-export function validSnapshot(): OperatorFunction<Snapshot, Snapshot> {
-  return filter(snapshot => {
+export function validSnapshot<T extends keyof Snapshot>(): OperatorFunction<
+  Pick<Snapshot, T>,
+  Pick<Snapshot, T>
+> {
+  return filter((snapshot: any) => {
     // FIXME
     const { m5, h1, h4 } = snapshot;
     return engulfed(m5, h1) && engulfed(h1, h4);

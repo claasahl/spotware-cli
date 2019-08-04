@@ -38,24 +38,8 @@ const h4 = new Subject<Trendbar>();
 const h1 = new Subject<Trendbar>();
 const m5 = new Subject<Trendbar>();
 
-const AAA: Trendbar = {} as any;
-const dummy = {
-  d1: AAA,
-  h12: AAA,
-  h4: AAA,
-  h1: AAA,
-  m30: AAA,
-  m20: AAA,
-  m15: AAA,
-  m10: AAA,
-  m5: AAA,
-  m4: AAA,
-  m3: AAA,
-  m2: AAA,
-  m1: AAA
-};
 const recommender = signals();
-combineLatest(h4, h1, m5, (h4, h1, m5) => ({ ...dummy, h4, h1, m5 }))
+combineLatest(h4, h1, m5, (h4, h1, m5) => ({ h4, h1, m5 }))
   .pipe(
     validSnapshot(),
     tap(snapshot => recommender.update(snapshot)),
