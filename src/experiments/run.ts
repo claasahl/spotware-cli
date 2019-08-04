@@ -6,13 +6,12 @@ import { Experiment } from "./experiment";
 import { readJsonSync } from "./files";
 import { Trendbar } from "../operators";
 import { periodToMillis } from "../utils";
-import { signals } from "../magic/threeDucks/signals";
-import { filter } from "rxjs/operators";
+import { filter, map } from "rxjs/operators";
 
 const experiment: Experiment = JSON.parse(
   fs
     .readFileSync(
-      "./experiments/2019-08-03T161816722Z--getting started/experiment.json"
+      "./experiments/2019-08-04T111422294Z--getting started/experiment.json"
     )
     .toString()
 );
@@ -37,38 +36,40 @@ const iterLive = dataM5[Symbol.iterator]();
 const h4 = new Subject<Trendbar>();
 const h1 = new Subject<Trendbar>();
 const m5 = new Subject<Trendbar>();
-const live = new Subject<number>();
-const recommendations = signals(h4, h1, m5, live);
-//merge(h4, h1, m5, live, recommendations).subscribe(console.log)
 
-combineLatest(
-  h4,
-  h1,
-  m5,
-  live,
-  recommendations,
-  (h4, h1, m5, live, recommendation) => {
-    return [h4, h1, m5, live, recommendation];
-  }
-)
-  .pipe(filter(data => data[4] !== "NEUTRAL"))
-  .subscribe(console.log);
+function engulfed(inner: Trendbar, outer: Trendbar): boolean {
+  const outerBegin = outer.timestamp;
+  const innerBegin = inner.timestamp;
+  const innerEnd = inner.timestamp + periodToMillis(inner.period);
+  const outerEnd = outer.timestamp + periodToMillis(outer.period);
+  return (
+    outerBegin <= innerBegin &&
+    innerBegin <= outerEnd &&
+    outerBegin <= innerEnd &&
+    innerEnd <= outerEnd
+  );
+}
+combineLatest(h4, h1, m5, (h4, h1, m5) => [h4, h1, m5])
+  .pipe(
+    filter(([h4, h1, m5]) => {
+      return engulfed(m5, h1) && engulfed(h1, h4);
+    }),
+    map(([h4, h1, m5]) => [h4.date, h1.date, m5.date])
+  )
+  .subscribe(a => console.log(JSON.stringify(a)));
 
 iterLive.next();
 const values = {
   h4: iterH4.next(),
   h1: iterH1.next(),
-  m5: iterM5.next(),
-
-  live: iterLive.next()
+  m5: iterM5.next()
 };
 
 function allDone(): boolean {
   const h4 = values.h4 ? values.h4.done : false;
   const h1 = values.h1 ? values.h1.done : false;
   const m5 = values.m5 ? values.m5.done : false;
-  const live = values.live ? values.live.done : false;
-  return h4 && h1 && m5 && live;
+  return h4 && h1 && m5;
 }
 function overlaps(
   timestampA: number,
@@ -99,13 +100,5 @@ while (!allDone()) {
       h4.next(values.h4.value);
       values.h4 = iterH4.next();
     }
-  }
-
-  if (!values.live.done) {
-    live.next(values.live.value.open);
-    live.next(values.live.value.high);
-    live.next(values.live.value.low);
-    live.next(values.live.value.close);
-    values.live = iterLive.next();
   }
 }
