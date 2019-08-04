@@ -16,3 +16,23 @@ export interface Trendbar {
   timestamp: number;
   date: Date;
 }
+
+export interface Snapshot {
+  d1: Trendbar;
+  h12: Trendbar;
+  h4: Trendbar;
+  h1: Trendbar;
+  m30: Trendbar;
+  m20: Trendbar;
+  m15: Trendbar;
+  m10: Trendbar;
+  m5: Trendbar;
+  m4: Trendbar;
+  m3: Trendbar;
+  m2: Trendbar;
+  m1: Trendbar;
+}
+export interface Recommender {
+  update(snapshot: Snapshot): void;
+  recommend(price: number): Recommendation;
+}

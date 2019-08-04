@@ -4,9 +4,10 @@ import fs from "fs";
 
 import { Experiment } from "./experiment";
 import { readJsonSync } from "./files";
-import { Trendbar } from "../operators";
 import { periodToMillis } from "../utils";
-import { filter, map } from "rxjs/operators";
+import { filter, tap, flatMap } from "rxjs/operators";
+import { signa1 } from "../magic/threeDucks/signals";
+import { Trendbar } from "../types";
 
 const experiment: Experiment = JSON.parse(
   fs
@@ -49,12 +50,39 @@ function engulfed(inner: Trendbar, outer: Trendbar): boolean {
     innerEnd <= outerEnd
   );
 }
+const AAA: Trendbar = {} as any;
+const dummy = {
+  d1: AAA,
+  h12: AAA,
+  h4: AAA,
+  h1: AAA,
+  m30: AAA,
+  m20: AAA,
+  m15: AAA,
+  m10: AAA,
+  m5: AAA,
+  m4: AAA,
+  m3: AAA,
+  m2: AAA,
+  m1: AAA
+};
+const recommender = signa1();
 combineLatest(h4, h1, m5, (h4, h1, m5) => [h4, h1, m5])
   .pipe(
     filter(([h4, h1, m5]) => {
       return engulfed(m5, h1) && engulfed(h1, h4);
     }),
-    map(([h4, h1, m5]) => [h4.date, h1.date, m5.date])
+    tap(([h4, h1, m5]) =>
+      console.log(JSON.stringify([h4.date, h1.date, m5.date]))
+    ),
+    tap(([h4, h1, m5]) => recommender.update({ ...dummy, h4, h1, m5 })),
+    flatMap(([h4, h1, m5]) => [
+      { h4, h1, m5, price: m5.open, signal: recommender.recommend(m5.open) },
+      { h4, h1, m5, price: m5.high, signal: recommender.recommend(m5.high) },
+      { h4, h1, m5, price: m5.low, signal: recommender.recommend(m5.low) },
+      { h4, h1, m5, price: m5.close, signal: recommender.recommend(m5.close) }
+    ]),
+    filter(value => value.signal !== "NEUTRAL")
   )
   .subscribe(a => console.log(JSON.stringify(a)));
 

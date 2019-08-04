@@ -2,7 +2,7 @@ import { Observable, combineLatest } from "rxjs";
 
 import { SimpleMovingAverage } from "../../operators";
 import { SimpleMovingAverage as SimpleMoving } from "../../indicators";
-import { Recommendation, Trendbar } from "../../types";
+import { Recommendation, Trendbar, Recommender } from "../../types";
 
 function signal(
   smaH4: number,
@@ -56,4 +56,34 @@ export function signals(
       );
     }
   );
+}
+
+export function signa1(period: number = 60): Recommender {
+  const smaH4 = SimpleMoving(period);
+  const smaH1 = SimpleMoving(period);
+  const smaM5 = SimpleMoving(period);
+  const context: {
+    h4Close?: number;
+    h1Close?: number;
+    m5Close?: number;
+    m5High?: number;
+    m5Low?: number;
+  } = {};
+  return {
+    update: snapshot => {
+      const { h4, h1, m5 } = snapshot;
+      context.h4Close = smaH4(h4.close);
+      context.h1Close = smaH1(h1.close);
+      context.m5Close = smaM5(m5.close);
+      context.m5High = smaH4(m5.high);
+      context.m5Low = smaH4(m5.low);
+    },
+    recommend: price => {
+      const { h4Close, h1Close, m5Close, m5High, m5Low } = context;
+      if (!h4Close || !h1Close || !m5Close || !m5High || !m5Low) {
+        return "NEUTRAL";
+      }
+      return signal(h4Close, h1Close, m5Close, m5High, m5Low, price);
+    }
+  };
 }
