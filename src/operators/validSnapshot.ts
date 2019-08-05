@@ -3,11 +3,11 @@ import { periodToMillis } from "../utils";
 import { OperatorFunction } from "rxjs";
 import { filter } from "rxjs/operators";
 
-function engulfed(inner: Trendbar, outer: Trendbar): boolean {
-  const outerBegin = outer.timestamp;
-  const innerBegin = inner.timestamp;
-  const innerEnd = inner.timestamp + periodToMillis(inner.period);
-  const outerEnd = outer.timestamp + periodToMillis(outer.period);
+function follows(head: Trendbar, tail: Trendbar): boolean {
+  const outerBegin = tail.timestamp + periodToMillis(tail.period);
+  const innerBegin = head.timestamp;
+  const innerEnd = head.timestamp + periodToMillis(head.period);
+  const outerEnd = tail.timestamp + 2 * periodToMillis(tail.period);
   return (
     outerBegin <= innerBegin &&
     innerBegin <= outerEnd &&
@@ -23,6 +23,6 @@ export function validSnapshot<T extends keyof Snapshot>(): OperatorFunction<
   return filter((snapshot: any) => {
     // FIXME
     const { m5, h1, h4 } = snapshot;
-    return engulfed(m5, h1) && engulfed(h1, h4);
+    return follows(m5, h1) && follows(h1, h4);
   });
 }
