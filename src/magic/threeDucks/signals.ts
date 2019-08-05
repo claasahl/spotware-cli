@@ -1,8 +1,5 @@
-import { Observable, combineLatest } from "rxjs";
-
-import { SimpleMovingAverage } from "../../operators";
-import { SimpleMovingAverage as SimpleMoving } from "../../indicators";
-import { Recommendation, Trendbar, Recommender } from "../../types";
+import { SimpleMovingAverage } from "../../indicators";
+import { Recommendation, Recommender } from "../../types";
 
 function signal(
   smaH4: number,
@@ -30,38 +27,10 @@ function signal(
   return "NEUTRAL";
 }
 
-export function signals(
-  h4: Observable<Trendbar>,
-  h1: Observable<Trendbar>,
-  m5: Observable<Trendbar>,
-  live: Observable<number>,
-  period: number = 60
-): Observable<Recommendation> {
-  const smaH4 = h4.pipe(SimpleMovingAverage(period));
-  const smaH1 = h1.pipe(SimpleMovingAverage(period));
-  const smaM5 = m5.pipe(SimpleMovingAverage(period));
-  return combineLatest(
-    smaH4,
-    smaH1,
-    smaM5,
-    live,
-    (smaH4, smaH1, smaM5, live) => {
-      return signal(
-        smaH4.close,
-        smaH1.close,
-        smaM5.close,
-        smaM5.high,
-        smaM5.low,
-        live
-      );
-    }
-  );
-}
-
-export function signa1(period: number = 60): Recommender {
-  const smaH4 = SimpleMoving(period);
-  const smaH1 = SimpleMoving(period);
-  const smaM5 = SimpleMoving(period);
+export function signals(period: number = 60): Recommender<"h4" | "h1" | "m5"> {
+  const smaH4 = SimpleMovingAverage(period);
+  const smaH1 = SimpleMovingAverage(period);
+  const smaM5 = SimpleMovingAverage(period);
   const context: {
     h4Close?: number;
     h1Close?: number;
