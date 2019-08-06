@@ -210,6 +210,8 @@ export function threeDucks(
     tap(output),
     flatMap(() =>
       combineLatest(recentH4, recentH1, recentM5, (h4, h1, m5) => ({
+        date: m5.date,
+        timestamp: m5.timestamp,
         h4,
         h1,
         m5
