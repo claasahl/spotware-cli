@@ -1,4 +1,4 @@
-import { SimpleMovingAverage } from "../../indicators";
+import { simpleMovingAverage } from "../../indicators";
 import { Recommendation, Recommender } from "../../types";
 
 function signal(
@@ -22,11 +22,11 @@ function signal(
 }
 
 export function signals(period: number = 60): Recommender {
-  const smaH4 = SimpleMovingAverage(period);
-  const smaH1 = SimpleMovingAverage(period);
-  const smaM5 = SimpleMovingAverage(period);
-  const smaM5High = SimpleMovingAverage(period);
-  const smaM5Low = SimpleMovingAverage(period);
+  const smaH4 = simpleMovingAverage(period);
+  const smaH1 = simpleMovingAverage(period);
+  const smaM5 = simpleMovingAverage(period);
+  const smaM5High = simpleMovingAverage(period);
+  const smaM5Low = simpleMovingAverage(period);
   const context: {
     h4Close?: number;
     h1Close?: number;

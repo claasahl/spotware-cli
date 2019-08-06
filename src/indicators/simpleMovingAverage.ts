@@ -1,4 +1,4 @@
-export function SimpleMovingAverage(
+export function simpleMovingAverage(
   period: number
 ): (item: number) => number | undefined {
   const context: {
