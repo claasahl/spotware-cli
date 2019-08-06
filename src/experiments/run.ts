@@ -3,7 +3,7 @@ import fs from "fs";
 
 import { Experiment } from "./experiment";
 import { readJsonSync, writeJsonSync } from "./files";
-import { Trendbar } from "../types";
+import { Trendbar, Snapshot } from "../types";
 import { snapshots } from "./snapshots";
 import { signals } from "../magic/threeDucks/signals";
 import {
@@ -25,37 +25,45 @@ import { EOL } from "os";
 const experiment: Experiment = JSON.parse(
   fs
     .readFileSync(
-      "./experiments/2019-08-04T111422294Z--getting started/experiment.json"
+      "./experiments/2019-08-06T105927773Z--getting started/experiment.json"
     )
     .toString()
 );
 
 const dataH4: Trendbar[] = readJsonSync(
   experiment,
-  "trendbars-5291983-EURSEK-H4.json"
+  "trendbars-5291983-H4.json"
 );
 const dataH1: Trendbar[] = readJsonSync(
   experiment,
-  "trendbars-5291983-EURSEK-H1.json"
+  "trendbars-5291983-H1.json"
 );
 const dataM5: Trendbar[] = readJsonSync(
   experiment,
-  "trendbars-5291983-EURSEK-M5.json"
+  "trendbars-5291983-M5.json"
 );
 const dataM1: Trendbar[] = readJsonSync(
   experiment,
-  "trendbars-5291983-EURSEK-M1.json"
+  "trendbars-5291983-M1.json"
 );
 
-const recommender = signals();
-const data = snapshots(dataH4, dataH1, dataM5).pipe(
-  tap(snapshot => recommender.update(snapshot)),
-  flatMap(({ h4, h1, m5 }) => [
+function recommendations(snaphot: Snapshot) {
+  const { h4, h1, m5 } = snaphot;
+  if (!m5) {
+    return [];
+  }
+  return [
     { signal: recommender.recommend(m5.open), price: m5.open, h4, h1, m5 },
     { signal: recommender.recommend(m5.high), price: m5.high, h4, h1, m5 },
     { signal: recommender.recommend(m5.low), price: m5.low, h4, h1, m5 },
     { signal: recommender.recommend(m5.close), price: m5.close, h4, h1, m5 }
-  ]),
+  ];
+}
+
+const recommender = signals();
+const data = snapshots(dataH4, dataH1, dataM5).pipe(
+  tap(snapshot => recommender.update(snapshot)),
+  flatMap(recommendations),
   filter(value => value.signal !== "NEUTRAL"),
   distinctUntilChanged(
     (x, y) => x.m5.timestamp === y.m5.timestamp && x.signal === y.signal

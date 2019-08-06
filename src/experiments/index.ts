@@ -28,8 +28,8 @@ import {
 // parameters / configs
 const config: ExperimentConfig = {
   ...CONFIG,
-  symbolName: "EURSEK",
-  fromDate: "2019-07-01T00:00:00.000Z",
+  symbolName: "BTC/EUR",
+  fromDate: "2019-02-01T00:00:00.000Z",
   toDate: "2019-08-01T00:00:00.000Z",
   label: "getting started",
   dir: `./experiments/`
@@ -156,7 +156,7 @@ GET_TRENDBARS_RES.pipe(
   timeoutWith(5000, EMPTY),
   groupBy(
     ({ payload: { ctidTraderAccountId, period } }) =>
-      `trendbars-${ctidTraderAccountId}-${symbolName}-${$.ProtoOATrendbarPeriod[period]}.json`
+      `trendbars-${ctidTraderAccountId}-${$.ProtoOATrendbarPeriod[period]}.json`
   ),
   mergeMap(trendbars =>
     trendbars.pipe(
