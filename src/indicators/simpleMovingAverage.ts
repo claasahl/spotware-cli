@@ -1,6 +1,10 @@
 export function simpleMovingAverage(
   period: number
 ): (item: number) => number | undefined {
+  if (period <= 0) {
+    return () => undefined;
+  }
+
   const context: {
     data: number[];
     sum: number;
