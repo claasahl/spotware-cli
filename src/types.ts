@@ -18,21 +18,23 @@ export interface Trendbar {
 }
 
 export interface Snapshot {
-  d1: Trendbar;
-  h12: Trendbar;
-  h4: Trendbar;
-  h1: Trendbar;
-  m30: Trendbar;
-  m20: Trendbar;
-  m15: Trendbar;
-  m10: Trendbar;
-  m5: Trendbar;
-  m4: Trendbar;
-  m3: Trendbar;
-  m2: Trendbar;
-  m1: Trendbar;
+  date: Date;
+  timestamp: number;
+  d1?: Trendbar;
+  h12?: Trendbar;
+  h4?: Trendbar;
+  h1?: Trendbar;
+  m30?: Trendbar;
+  m20?: Trendbar;
+  m15?: Trendbar;
+  m10?: Trendbar;
+  m5?: Trendbar;
+  m4?: Trendbar;
+  m3?: Trendbar;
+  m2?: Trendbar;
+  m1?: Trendbar;
 }
-export interface Recommender<T extends keyof Snapshot> {
-  update(snapshot: Pick<Snapshot, T>): void;
+export interface Recommender {
+  update(snapshot: Snapshot): void;
   recommend(price: number): Recommendation;
 }

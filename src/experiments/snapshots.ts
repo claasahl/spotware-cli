@@ -1,7 +1,6 @@
 import { Trendbar, Snapshot } from "../types";
 import { periodToMillis } from "../utils";
 import { from } from "rxjs";
-import { scan, filter, distinctUntilChanged } from "rxjs/operators";
 import { validSnapshot } from "../operators";
 
 function lowerBoundary(h4: Trendbar[], h1: Trendbar[], m5: Trendbar[]): number {
@@ -41,8 +40,8 @@ function snapshot(
   h4: Trendbar[],
   h1: Trendbar[],
   m5: Trendbar[]
-): Partial<Snapshot> {
-  const snapshot: Partial<Snapshot> = {};
+): Snapshot {
+  const snapshot: Snapshot = { date: new Date(time), timestamp: time };
   if (h4.length > 0 && expected(time, h4[0])) {
     snapshot.h4 = h4.shift() as Trendbar;
   }
@@ -59,7 +58,7 @@ export function* generator(
   h4: Trendbar[],
   h1: Trendbar[],
   m5: Trendbar[]
-): IterableIterator<Partial<Snapshot>> {
+): IterableIterator<Snapshot> {
   const MIN = 60000;
   const lower = lowerBoundary(h4, h1, m5);
   const upper = upperBoundary(h4, h1, m5);
@@ -71,18 +70,5 @@ export function* generator(
 }
 
 export function snapshots(h4: Trendbar[], h1: Trendbar[], m5: Trendbar[]) {
-  return from(generator(h4, h1, m5)).pipe(
-    scan((acc, value) => ({ ...acc, ...value })),
-    filter(
-      (snapshot): snapshot is Pick<Snapshot, "h4" | "h1" | "m5"> =>
-        !!snapshot.h4 && !!snapshot.h1 && !!snapshot.m5
-    ),
-    distinctUntilChanged(
-      (x, y) =>
-        x.h4.timestamp === y.h4.timestamp &&
-        x.h1.timestamp === y.h1.timestamp &&
-        x.m5.timestamp === y.m5.timestamp
-    ),
-    validSnapshot()
-  );
+  return from(generator(h4, h1, m5)).pipe(validSnapshot());
 }
