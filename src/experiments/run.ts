@@ -2,7 +2,7 @@ import * as $ from "@claasahl/spotware-adapter";
 import fs from "fs";
 
 import { Experiment } from "./experiment";
-import { readJsonSync } from "./files";
+import { readJsonSync, writeJsonSync } from "./files";
 import { Trendbar } from "../types";
 import { snapshots } from "./snapshots";
 import { signals } from "../magic/threeDucks/signals";
@@ -95,7 +95,12 @@ const data = snapshots(dataH4, dataH1, dataM5).pipe(
   shareReplay()
 );
 
-data.subscribe(a => console.log(JSON.stringify(a)));
+data
+  .pipe(
+    toArray(),
+    tap(values => writeJsonSync(experiment, "results_signals.json", values))
+  )
+  .subscribe();
 data
   .pipe(
     map(signal => {
@@ -105,9 +110,7 @@ data
       return { date, timestamp, recommendation, highLowRel };
     }),
     toArray(),
-    tap(values =>
-      fs.writeFileSync("./summary.json", JSON.stringify(values, null, 2))
-    ),
+    tap(values => writeJsonSync(experiment, "results_summary.json", values)),
     tap(values => {
       const header = "date;timestamp;signal;high;low";
       const data = values
@@ -146,8 +149,6 @@ data
       highAvg: data.highSum / data.count
     })),
     toArray(),
-    tap(values =>
-      fs.writeFileSync("./matrix.json", JSON.stringify(values, null, 2))
-    )
+    tap(values => writeJsonSync(experiment, "results_matrix.json", values))
   )
   .subscribe();
