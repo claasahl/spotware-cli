@@ -34,7 +34,7 @@
     "jest": "^24.8.0"
   },
   "dependencies": {
-    "@claasahl/spotware-adapter": "^1.0.4",
+    "@claasahl/spotware-adapter": "^1.0.5",
     "ms": "^2.1.2",
     "rxjs": "^6.5.2"
   }
