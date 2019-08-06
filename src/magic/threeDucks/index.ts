@@ -25,12 +25,6 @@ function historic(
   output: (pm: $.ProtoMessages) => void,
   payload: $.ProtoOAGetTrendbarsReq
 ) {
-  console.log(
-    payload.symbolId,
-    payload.period,
-    new Date(payload.fromTimestamp),
-    new Date(payload.toTimestamp)
-  );
   const request = of(pm2137(payload));
   const historic = incomingProtoMessages.pipe(
     when($.ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES),
@@ -46,20 +40,6 @@ function historic(
     toArray()
   );
 }
-
-// function liveBidPrices(incomingProtoMessages: Observable<$.ProtoMessages>,
-//   output: (pm: $.ProtoMessages) => void,
-//   ctidTraderAccountId: number,
-//   symbolId: number): Observable<number> {
-//   const request = of(pm2127({ symbolId: [symbolId], ctidTraderAccountId }));
-//   const live = incomingProtoMessages.pipe(
-//     when($.ProtoOAPayloadType.PROTO_OA_SPOT_EVENT),
-//     filter(pm => pm.payload.symbolId === symbolId),
-//     map(pm => pm.payload.bid),
-//     filter((data): data is number => typeof data === "number")
-//   );
-//   return request.pipe(tap(output), flatMap(() =>live))
-// }
 
 function liveTrendbars(
   incomingProtoMessages: Observable<$.ProtoMessages>,
@@ -239,9 +219,7 @@ export function threeDucks(
 
   const threeDucks = signals(smaPeriod);
   const snapshots = concat(historicSnapshots, recentSnapshots).pipe(
-    tap(({ h4, h1, m5 }) => console.log("AA", h4.date, h1.date, m5.date)),
     validSnapshot(),
-    tap(({ h4, h1, m5 }) => console.log("BB", h4.date, h1.date, m5.date)),
     tap(snapshot => threeDucks.update(snapshot))
   );
   combineLatest(snapshots, live, (_snapshots, live) =>

@@ -9,15 +9,6 @@ function signal(
   recentLow: number,
   live: number
 ): Recommendation {
-  console.log(
-    smaH4 < live,
-    smaH1 < live,
-    smaM5 < live,
-    "||",
-    smaH4 > live,
-    smaH1 > live,
-    smaM5 > live
-  );
   if (smaH4 < live && smaH1 < live && smaM5 < live) {
     return recentHigh < live ? "STRONGER BUY" : "BUY";
   }

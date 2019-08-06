@@ -62,10 +62,6 @@ export function tradeStrategy(
         default:
           throw new Error(`unknown result: ${result}`);
       }
-    }),
-    tap(result => {
-      const date = new Date();
-      console.log(date, "DUCKS", JSON.stringify(result));
     })
   );
 }
