@@ -5,3 +5,4 @@ export * from "./after";
 export * from "./throttle";
 export * from "./trendbar";
 export * from "./validSnapshot";
+export * from "./riskReward";
