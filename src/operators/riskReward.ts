@@ -7,9 +7,10 @@ import { Trendbar } from "../types";
 export interface RiskReward {
   duration: string;
   durationMS: number;
-  risk: number;
-  reward: number;
-  ratio: number;
+  low: number;
+  high: number;
+  ratio_buy: number;
+  ratio_sell: number;
 }
 
 export function riskReward(
@@ -20,21 +21,26 @@ export function riskReward(
     scan(
       (acc, curr) => ({
         timestamp: curr.timestamp,
-        reward: Math.max(acc.reward, curr.high),
-        risk: Math.min(acc.risk, curr.low)
+        high: Math.max(acc.high, curr.high),
+        low: Math.min(acc.low, curr.low)
       }),
       {
         timestamp: referenceTimestamp,
-        risk: referencePrice,
-        reward: referencePrice
+        low: referencePrice,
+        high: referencePrice
       }
     ),
-    map(value => ({
-      duration: ms(value.timestamp - referenceTimestamp),
-      durationMS: value.timestamp - referenceTimestamp,
-      risk: value.risk - referencePrice,
-      reward: value.reward - referencePrice
-    })),
-    map(value => ({ ...value, ratio: Math.abs(value.reward / value.risk) }))
+    map(value => {
+      const low = value.low - referencePrice;
+      const high = value.high - referencePrice;
+      return {
+        duration: ms(value.timestamp - referenceTimestamp),
+        durationMS: value.timestamp - referenceTimestamp,
+        low,
+        high,
+        ratio_buy: Math.abs(high / low),
+        ratio_sell: Math.abs(low / high)
+      };
+    })
   );
 }
