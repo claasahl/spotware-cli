@@ -25,8 +25,6 @@ export function signals(period: number = 60): Recommender {
   const smaH4 = simpleMovingAverage(period);
   const smaH1 = simpleMovingAverage(period);
   const smaM5 = simpleMovingAverage(period);
-  const smaM5High = simpleMovingAverage(period);
-  const smaM5Low = simpleMovingAverage(period);
   const context: {
     h4Close?: number;
     h1Close?: number;
@@ -45,8 +43,8 @@ export function signals(period: number = 60): Recommender {
       }
       if (m5) {
         context.m5Close = smaM5(m5.close);
-        context.m5High = smaM5High(m5.high);
-        context.m5Low = smaM5Low(m5.low);
+        context.m5High = m5.high;
+        context.m5Low = m5.low;
       }
     },
     recommend: price => {
