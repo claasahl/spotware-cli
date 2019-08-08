@@ -1,3 +1,10 @@
+interface ThreeDucksConfig {
+  symbolId: number;
+  volumeInLots: number;
+  stopLossInPips: number;
+  takeProfitInPips: number;
+  smaPeriod: number;
+}
 const config = {
   host: process.env.host || "configure env. variable 'host'",
   port: Number(process.env.port || "5035"),
@@ -7,6 +14,7 @@ const config = {
   accessToken:
     process.env.accessToken || "configure env. variable 'accessToken'",
   refreshToken:
-    process.env.refreshToken || "configure env. variable 'refreshToken'"
+    process.env.refreshToken || "configure env. variable 'refreshToken'",
+  threeDucks: JSON.parse(process.env.threeDucks || "[]") as ThreeDucksConfig[]
 };
 export default config;

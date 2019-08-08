@@ -1,6 +1,6 @@
 import * as $ from "@claasahl/spotware-adapter";
-import { Subject, fromEvent } from "rxjs";
-import { map, tap, share } from "rxjs/operators";
+import { Subject, fromEvent, from } from "rxjs";
+import { map, tap, share, flatMap } from "rxjs/operators";
 
 import config from "./config";
 import { when, throttle } from "./operators";
@@ -65,50 +65,32 @@ GET_ACCOUNTS_BY_ACCESS_TOKEN_RES.pipe(
 const ACCOUNT_AUTH_RES = incomingProtoMessages.pipe(
   when($.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES)
 );
-const threeDucksGBPSEK = (ctidTraderAccountId: number) =>
-  threeDucks(
-    incomingProtoMessages,
-    output,
-    ctidTraderAccountId,
-    10093,
-    0.1,
-    50,
-    100
-  );
-const threeDucksEURGBP = (ctidTraderAccountId: number) =>
-  threeDucks(
-    incomingProtoMessages,
-    output,
-    ctidTraderAccountId,
-    9,
-    0.1,
-    50,
-    100
-  );
-const threeDucksEURSEK = (ctidTraderAccountId: number) =>
-  threeDucks(
-    incomingProtoMessages,
-    output,
-    ctidTraderAccountId,
-    47,
-    0.1,
-    50,
-    100
-  );
-const threeDucksBTCEUR = (ctidTraderAccountId: number) =>
-  threeDucks(
-    incomingProtoMessages,
-    output,
-    ctidTraderAccountId,
-    22396,
-    0.1,
-    500,
-    1000
-  );
 ACCOUNT_AUTH_RES.pipe(
   map(pm => pm.payload.ctidTraderAccountId),
-  tap(threeDucksGBPSEK),
-  tap(threeDucksEURGBP),
-  tap(threeDucksEURSEK),
-  tap(threeDucksBTCEUR)
+  flatMap(ctidTraderAccountId =>
+    from(config.threeDucks).pipe(
+      map(value => ({ ...value, ctidTraderAccountId }))
+    )
+  ),
+  tap(
+    ({
+      ctidTraderAccountId,
+      symbolId,
+      volumeInLots,
+      stopLossInPips,
+      takeProfitInPips,
+      smaPeriod
+    }) => {
+      threeDucks(
+        incomingProtoMessages,
+        output,
+        ctidTraderAccountId,
+        symbolId,
+        volumeInLots,
+        stopLossInPips,
+        takeProfitInPips,
+        smaPeriod
+      );
+    }
+  )
 ).subscribe();
