@@ -42,22 +42,10 @@ export function tradeStrategy(
             ...order,
             tradeSide: $.ProtoOATradeSide.BUY
           });
-        case "STRONGER BUY":
-          return pm2106({
-            ...order,
-            tradeSide: $.ProtoOATradeSide.BUY,
-            volume: order.volume * 2
-          });
         case "SELL":
           return pm2106({
             ...order,
             tradeSide: $.ProtoOATradeSide.SELL
-          });
-        case "STRONGER SELL":
-          return pm2106({
-            ...order,
-            tradeSide: $.ProtoOATradeSide.SELL,
-            volume: order.volume * 2
           });
         default:
           throw new Error(`unknown result: ${result}`);

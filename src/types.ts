@@ -1,10 +1,5 @@
 import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
-export type Recommendation =
-  | "BUY"
-  | "SELL"
-  | "STRONGER BUY"
-  | "STRONGER SELL"
-  | "NEUTRAL";
+export type Recommendation = "BUY" | "SELL" | "NEUTRAL";
 
 export interface Trendbar {
   volume: number;

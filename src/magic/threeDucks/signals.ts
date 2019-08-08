@@ -12,11 +12,11 @@ function signal(
   if (!smaH4 || !smaH1 || !smaM5 || !recentHigh || !recentLow) {
     return "NEUTRAL";
   }
-  if (smaH4 < live && smaH1 < live && smaM5 < live) {
-    return recentHigh < live ? "STRONGER BUY" : "BUY";
+  if (smaH4 < live && smaH1 < live && smaM5 < live && recentHigh < live) {
+    return "BUY";
   }
-  if (smaH4 > live && smaH1 > live && smaM5 > live) {
-    return recentLow > live ? "STRONGER SELL" : "SELL";
+  if (smaH4 > live && smaH1 > live && smaM5 > live && recentLow > live) {
+    return "SELL";
   }
   return "NEUTRAL";
 }
