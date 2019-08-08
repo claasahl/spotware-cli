@@ -14,12 +14,11 @@ import {
   map,
   toArray,
   shareReplay,
-  groupBy,
-  scan,
-  mergeMap,
-  last
+  distinctUntilKeyChanged
 } from "rxjs/operators";
 import { periodToMillis } from "../utils";
+import { riskReward } from "../operators";
+import { from } from "rxjs";
 import { EOL } from "os";
 
 const experiment: Experiment = JSON.parse(
@@ -60,46 +59,73 @@ function recommendations(snaphot: Snapshot) {
   ];
 }
 
+const MIN = 60000;
+const LOOK_AHEAD = 30 * MIN;
+const INITIAL = { duration: "0ms", durationMS: 0, ratio: Number.MIN_VALUE };
+
 const recommender = signals();
-const data = snapshots(dataH4, dataH1, dataM5).pipe(
+const signalData = snapshots(dataH4, dataH1, dataM5).pipe(
   tap(snapshot => recommender.update(snapshot)),
   flatMap(recommendations),
   filter(value => value.signal !== "NEUTRAL"),
   distinctUntilChanged(
     (x, y) => x.m5.timestamp === y.m5.timestamp && x.signal === y.signal
-  ),
+  )
+);
+const futureData = signalData.pipe(
   map(signal => {
-    const MIN = 60000;
     const begin =
       signal.m5.timestamp + periodToMillis($.ProtoOATrendbarPeriod.M5);
-    const end = begin + 30 * MIN;
+    const end = begin + LOOK_AHEAD;
     const future = dataM1.filter(
       ({ timestamp }) => begin <= timestamp && timestamp < end
     );
     return { signal, future };
   }),
-  map(signal => {
-    const highLow = signal.future.reduce(
-      (prev, curr) => {
-        const next = { ...prev };
-        if (prev.low > curr.low) {
-          next.low = curr.low;
-        }
-        if (prev.high < curr.high) {
-          next.high = curr.high;
-        }
-        return next;
-      },
-      { low: Number.MAX_VALUE, high: Number.MIN_VALUE }
-    );
-    return { ...signal, highLow };
-  }),
-  map(signal => {
-    const reference = signal.signal.m5.close;
-    const { high, low } = signal.highLow;
-    const highLowRel = { low: low - reference, high: high - reference };
-    return { ...signal, highLowRel };
-  }),
+  filter(signal => signal.future.length > 0)
+);
+const riskRewardData = futureData.pipe(
+  flatMap(async signal => {
+    const { close, timestamp, period } = signal.signal.m5;
+    const referenceTimestamp = timestamp + periodToMillis(period);
+    const data = await from(signal.future)
+      .pipe(
+        map(bar => ({ ...bar, date: new Date(bar.date) })),
+        riskReward(close, referenceTimestamp),
+        filter(
+          value =>
+            Number.isFinite(value.ratio_buy) &&
+            Number.isFinite(value.ratio_sell)
+        ),
+        distinctUntilKeyChanged("ratio_buy"),
+        toArray()
+      )
+      .toPromise();
+    return { ...signal, riskReward: data };
+  })
+);
+const data = riskRewardData.pipe(
+  filter(value => value.riskReward.length > 0),
+  map(value => ({
+    ...value,
+    bestRiskRewardBuy: value.riskReward.reduce((acc, curr) => {
+      if (Math.max(acc.ratio, curr.ratio_buy) !== acc.ratio) {
+        const { duration, durationMS, ratio_buy: ratio } = curr;
+        return { duration, durationMS, ratio };
+      }
+      return acc;
+    }, INITIAL)
+  })),
+  map(value => ({
+    ...value,
+    bestRiskRewardSell: value.riskReward.reduce((acc, curr) => {
+      if (Math.max(acc.ratio, curr.ratio_sell) !== acc.ratio) {
+        const { duration, durationMS, ratio_sell: ratio } = curr;
+        return { duration, durationMS, ratio };
+      }
+      return acc;
+    }, INITIAL)
+  })),
   shareReplay()
 );
 
@@ -114,49 +140,51 @@ data
     map(signal => {
       const { date, timestamp } = signal.signal.m5;
       const recommendation = signal.signal.signal;
-      const { highLowRel } = signal;
-      return { date, timestamp, recommendation, highLowRel };
+      const {
+        duration: buy_duration,
+        durationMS: buy_durationMS,
+        ratio: buy_ratio
+      } = signal.bestRiskRewardBuy;
+      const {
+        duration: sell_duration,
+        durationMS: sell_durationMS,
+        ratio: sell_ratio
+      } = signal.bestRiskRewardSell;
+      return {
+        date,
+        timestamp,
+        recommendation,
+        buy_duration,
+        buy_durationMS,
+        buy_ratio,
+        sell_duration,
+        sell_durationMS,
+        sell_ratio
+      };
     }),
     toArray(),
-    tap(values => writeJsonSync(experiment, "results_summary.json", values)),
     tap(values => {
-      const header = "date;timestamp;signal;high;low";
-      const data = values
-        .map(
-          v =>
-            `${v.date};${v.timestamp};${v.recommendation};${v.highLowRel.high};${v.highLowRel.low}`
-        )
-        .join(EOL);
-      fs.writeFileSync("./summary.csv", header + EOL + data);
+      const stream = fs.createWriteStream("./signals.csv");
+      stream.write(
+        "date;timestamp;recommendation;buy_duration;buy_durationMS;buy_ratio;sell_duration;sell_durationMS;sell_ratio" +
+          EOL
+      );
+      values.forEach(value => {
+        const {
+          date,
+          timestamp,
+          recommendation,
+          buy_duration,
+          buy_durationMS,
+          buy_ratio,
+          sell_duration,
+          sell_durationMS,
+          sell_ratio
+        } = value;
+        const line = `${date};${timestamp};${recommendation};${buy_duration};${buy_durationMS};${buy_ratio};${sell_duration};${sell_durationMS};${sell_ratio};${EOL}`;
+        stream.write(line);
+      });
+      stream.close();
     })
-  )
-  .subscribe();
-data
-  .pipe(
-    groupBy(signal => signal.signal.signal),
-    mergeMap(data =>
-      data.pipe(
-        scan(
-          (acc, value) => {
-            const { low, high } = value.highLowRel;
-            return {
-              ...acc,
-              lowSum: acc.lowSum + low,
-              highSum: acc.highSum + high,
-              count: acc.count + 1
-            };
-          },
-          { signal: data.key, lowSum: 0, highSum: 0, count: 0 }
-        ),
-        last()
-      )
-    ),
-    map(data => ({
-      ...data,
-      lowAvg: data.lowSum / data.count,
-      highAvg: data.highSum / data.count
-    })),
-    toArray(),
-    tap(values => writeJsonSync(experiment, "results_matrix.json", values))
   )
   .subscribe();
