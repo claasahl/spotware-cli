@@ -15,7 +15,7 @@ import {
 
 import CONFIG from "../config";
 import { throttle, when, trendbar } from "../operators";
-import { pm2137 } from "../utils";
+import { pm2137, pm2116 } from "../utils";
 import { createDirSync, writeJsonSync, appendJsonSync } from "./files";
 import { create, ExperimentConfig } from "./experiment";
 import {
@@ -100,7 +100,7 @@ const ACCOUNT_AUTH_RES = incomingProtoMessages.pipe(
 );
 ACCOUNT_AUTH_RES.pipe(requestSymbols({})).subscribe(output);
 
-// PROTO_OA_SYMBOLS_LIST_RES -> PROTO_OA_GET_TRENDBARS_REQ
+// PROTO_OA_SYMBOLS_LIST_RES -> PROTO_OA_SYMBOL_BY_ID_REQ
 const SYMBOLS_LIST_RES = incomingProtoMessages.pipe(
   when($.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_RES)
 );
@@ -110,6 +110,23 @@ SYMBOLS_LIST_RES.pipe(
     symbols.pipe(
       flatMap(pm => pm.payload.symbol),
       filter(symbol => symbol.symbolName === symbolName),
+      map(({ symbolId }) => ({ symbolId, ctidTraderAccountId: symbols.key }))
+    )
+  ),
+  map(({ ctidTraderAccountId, symbolId }) =>
+    pm2116({ ctidTraderAccountId, symbolId: [symbolId] })
+  )
+).subscribe(output);
+
+// PROTO_OA_SYMBOL_BY_ID_RES -> PROTO_OA_GET_TRENDBARS_REQ
+const SYMBOL_BY_ID_RES = incomingProtoMessages.pipe(
+  when($.ProtoOAPayloadType.PROTO_OA_SYMBOL_BY_ID_RES)
+);
+SYMBOL_BY_ID_RES.pipe(
+  groupBy(pm => pm.payload.ctidTraderAccountId),
+  mergeMap(symbols =>
+    symbols.pipe(
+      flatMap(pm => pm.payload.symbol),
       map(({ symbolId }) => ({ symbolId, ctidTraderAccountId: symbols.key }))
     )
   ),
@@ -139,16 +156,7 @@ ACCOUNT_AUTH_RES.pipe(
   timeoutWith(5000, EMPTY),
   toArray()
 ).subscribe(ids => writeJsonSync(experiment, "ctidTraderAccountIds.json", ids));
-SYMBOLS_LIST_RES.pipe(
-  flatMap(pm =>
-    of(...pm.payload.symbol).pipe(
-      map(symbol => ({
-        ...symbol,
-        ctidTraderAccountId: pm.payload.ctidTraderAccountId
-      }))
-    )
-  ),
-  filter(symbol => symbol.symbolName === symbolName),
+SYMBOL_BY_ID_RES.pipe(
   timeoutWith(5000, EMPTY),
   toArray()
 ).subscribe(symbols => writeJsonSync(experiment, "symbols.json", symbols));
