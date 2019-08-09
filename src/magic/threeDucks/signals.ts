@@ -1,4 +1,4 @@
-import { simpleMovingAverage } from "../../indicators";
+import { simpleMovingAverage } from "indicators";
 import { Recommendation, Recommender } from "../../types";
 
 function signal(
