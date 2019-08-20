@@ -20,6 +20,10 @@ export function tradeStrategy(
 ): OperatorFunction<Recommendation, $.ProtoMessages> {
   return pipe(
     debounceTime(500),
+    tap(result => {
+      const date = new Date();
+      console.log(date, "DUCKZ", JSON.stringify(result));
+    }),
     distinctUntilChanged((x, y) => x === y),
     tap(result => {
       const date = new Date();
