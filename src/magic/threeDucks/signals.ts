@@ -9,6 +9,19 @@ function signal(
   recentLow: number | undefined,
   live: number
 ): Recommendation {
+  const date = new Date();
+  console.log(
+    date,
+    "DUCKLINGS",
+    JSON.stringify({
+      smaH4,
+      smaH1,
+      smaM5,
+      recentHigh,
+      recentLow,
+      live
+    })
+  );
   if (!smaH4 || !smaH1 || !smaM5 || !recentHigh || !recentLow) {
     return "NEUTRAL";
   }
