@@ -1,11 +1,11 @@
 import * as $ from "@claasahl/spotware-adapter";
 import fs from "fs";
+import { test } from "indicators";
 
 import { Experiment } from "./experiment";
 import { readJsonSync, writeJsonSync } from "./files";
 import { Trendbar, Snapshot } from "../types";
 import { snapshots } from "./snapshots";
-import { signals } from "../magic/threeDucks/signals";
 import {
   tap,
   flatMap,
@@ -51,27 +51,21 @@ function recommendations(snaphot: Snapshot) {
   if (!m5) {
     return [];
   }
-  return [
-    { signal: recommender.recommend(m5.open), price: m5.open, h4, h1, m5 },
-    { signal: recommender.recommend(m5.high), price: m5.high, h4, h1, m5 },
-    { signal: recommender.recommend(m5.low), price: m5.low, h4, h1, m5 },
-    { signal: recommender.recommend(m5.close), price: m5.close, h4, h1, m5 }
-  ];
+  return test([m5], "bullish").map(signal => ({ signal, h4, h1, m5 }));
 }
 
 const MIN = 60000;
 const LOOK_AHEAD = 30 * MIN;
 const INITIAL = { duration: "0ms", durationMS: 0, ratio: Number.MIN_VALUE };
 
-const recommender = signals();
 const signalData = snapshots(dataH4, dataH1, dataM5).pipe(
-  tap(snapshot => recommender.update(snapshot)),
   flatMap(recommendations),
   filter(value => value.signal !== "NEUTRAL"),
   distinctUntilChanged(
     (x, y) => x.m5.timestamp === y.m5.timestamp && x.signal === y.signal
   )
 );
+
 const futureData = signalData.pipe(
   map(signal => {
     const begin =
