@@ -35,11 +35,6 @@ export function output(pm: $.ProtoMessages) {
   outgoingProtoMessages.next(pm);
 }
 
-// fromEvent(socket, "error").subscribe(e => console.log("error1", e))
-
-// fromEvent(socket, "end").subscribe(e => console.log("end1", e))
-// fromEvent(socket, "close").subscribe(e => console.log("close1", e))
-
 const error = fromEvent<never>(socket, "error").pipe(
   first(),
   flatMap(error => throwError(error))
