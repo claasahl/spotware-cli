@@ -7,7 +7,7 @@ import {
   applicationAuth,
   getAccountsByAccessToken,
   accountAuth,
-  symbolById
+  cancelOrder
 } from "./requests";
 
 // https://youtu.be/8CNVYWiR5fg?t=378
@@ -37,7 +37,7 @@ const accAuth = accountAuth(subject, {
   accessToken: config.accessToken,
   ctidTraderAccountId
 });
-const v = symbolById(subject, { ctidTraderAccountId, symbolId: [22259] });
+const v = cancelOrder(subject, { ctidTraderAccountId, orderId: 6 });
 
 concat(appAuth, accounts, accAuth, v).subscribe(
   next => console.log("_next", next),

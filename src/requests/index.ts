@@ -11,8 +11,14 @@ export { accountAuth } from "./accountAuth";
 export { version } from "./version";
 
 // PROTO_OA_NEW_ORDER_REQ = 2106,
+export { newOrder } from "./newOrder";
+
 // PROTO_OA_TRAILING_SL_CHANGED_EVENT = 2107,
+// XXX
+
 // PROTO_OA_CANCEL_ORDER_REQ = 2108,
+export { cancelOrder } from "./cancelOrder";
+
 // PROTO_OA_AMEND_ORDER_REQ = 2109,
 // PROTO_OA_AMEND_POSITION_SLTP_REQ = 2110,
 // PROTO_OA_CLOSE_POSITION_REQ = 2111,
@@ -31,10 +37,18 @@ export { symbolById } from "./symbolById";
 
 // PROTO_OA_SYMBOLS_FOR_CONVERSION_REQ = 2118,
 // PROTO_OA_SYMBOLS_FOR_CONVERSION_RES = 2119,
+export { symbolsForConversion } from "./symbolsForConversion";
+
 // PROTO_OA_SYMBOL_CHANGED_EVENT = 2120,
+// XXX
+
 // PROTO_OA_TRADER_REQ = 2121,
 // PROTO_OA_TRADER_RES = 2122,
+export { trader } from "./trader";
+
 // PROTO_OA_TRADER_UPDATE_EVENT = 2123,
+// XXX
+
 // PROTO_OA_RECONCILE_REQ = 2124,
 // PROTO_OA_RECONCILE_RES = 2125,
 // PROTO_OA_EXECUTION_EVENT = 2126,
