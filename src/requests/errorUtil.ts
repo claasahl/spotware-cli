@@ -7,7 +7,7 @@ import { SpotwareSubject } from "../spotwareSubject";
 export function error(
   subject: SpotwareSubject,
   msgId: string,
-  timeout: number
+  timeout: number = 2000
 ) {
   const error = subject.pipe(
     filter(

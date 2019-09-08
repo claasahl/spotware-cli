@@ -1,5 +1,6 @@
 import {
   ProtoOAPayloadType,
+  ProtoOAGetAccountListByAccessTokenReq,
   ProtoMessage2150
 } from "@claasahl/spotware-adapter";
 import { of, EMPTY, concat, race } from "rxjs";
@@ -11,12 +12,12 @@ import { error } from "./errorUtil";
 
 export function getAccountsByAccessToken(
   subject: SpotwareSubject,
-  accessToken: string,
-  timeout: number = 2000
+  payload: ProtoOAGetAccountListByAccessTokenReq,
+  timeout?: number
 ) {
   const msgId = `${Date.now()}`;
 
-  const request = of(pm2149({ accessToken }, msgId)).pipe(
+  const request = of(pm2149(payload, msgId)).pipe(
     tap(pm => subject.next(pm)),
     flatMap(() => EMPTY)
   );

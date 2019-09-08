@@ -3,7 +3,12 @@ import { map } from "rxjs/operators";
 
 import config from "./config";
 import { SpotwareSubject } from "./spotwareSubject";
-import { applicationAuth, getAccountsByAccessToken } from "./requests";
+import {
+  applicationAuth,
+  getAccountsByAccessToken,
+  accountAuth,
+  symbolById
+} from "./requests";
 
 // https://youtu.be/8CNVYWiR5fg?t=378
 
@@ -20,15 +25,21 @@ subject
     error => console.log("error", error),
     () => console.log("complete")
   );
-const auth = applicationAuth(
-  subject,
-  config.clientId,
-  config.clientSecret,
-  2000
-);
-const accounts = getAccountsByAccessToken(subject, config.accessToken, 2000);
+const appAuth = applicationAuth(subject, {
+  clientId: config.clientId,
+  clientSecret: config.clientSecret
+});
+const accounts = getAccountsByAccessToken(subject, {
+  accessToken: config.accessToken
+});
+const ctidTraderAccountId = 5291983;
+const accAuth = accountAuth(subject, {
+  accessToken: config.accessToken,
+  ctidTraderAccountId
+});
+const v = symbolById(subject, { ctidTraderAccountId, symbolId: [22259] });
 
-concat(auth, accounts).subscribe(
+concat(appAuth, accounts, accAuth, v).subscribe(
   next => console.log("_next", next),
   error => console.log("_error", error),
   () => console.log("_complete")
