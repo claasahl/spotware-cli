@@ -1,16 +1,26 @@
-import { concat } from "rxjs";
-import { map } from "rxjs/operators";
+import { concat, timer, of } from "rxjs";
+import { map, mapTo, filter, flatMap, pairwise } from "rxjs/operators";
 
 import config from "./config";
 import { SpotwareSubject } from "./spotwareSubject";
 import {
   applicationAuth,
-  getAccountsByAccessToken,
   accountAuth,
-  cancelOrder
+  subscribeSpots,
+  subscribeLiveTrendbar
 } from "./requests";
+import {
+  ProtoOATrendbarPeriod,
+  ProtoOAPayloadType,
+  ProtoMessage2131
+} from "@claasahl/spotware-adapter";
+import { pm51 } from "./utils";
+import { trendbar } from "./operators";
 
 // https://youtu.be/8CNVYWiR5fg?t=378
+
+const symbolId = 22396;
+const period = ProtoOATrendbarPeriod.M1;
 
 const subject = new SpotwareSubject(config.port, config.host);
 subject
@@ -25,22 +35,43 @@ subject
     error => console.log("error", error),
     () => console.log("complete")
   );
-const appAuth = applicationAuth(subject, {
-  clientId: config.clientId,
-  clientSecret: config.clientSecret
-});
-const accounts = getAccountsByAccessToken(subject, {
-  accessToken: config.accessToken
-});
-const ctidTraderAccountId = 5291983;
-const accAuth = accountAuth(subject, {
-  accessToken: config.accessToken,
-  ctidTraderAccountId
-});
-const v = cancelOrder(subject, { ctidTraderAccountId, orderId: 6 });
 
-concat(appAuth, accounts, accAuth, v).subscribe(
-  next => console.log("_next", next),
-  error => console.log("_error", error),
-  () => console.log("_complete")
-);
+subject
+  .pipe(
+    filter(
+      (pm): pm is ProtoMessage2131 =>
+        pm.payloadType === ProtoOAPayloadType.PROTO_OA_SPOT_EVENT
+    ),
+    filter(pm => pm.payload.symbolId === symbolId),
+    flatMap(pm => pm.payload.trendbar),
+    filter(pm => pm.period === period),
+    trendbar(period),
+    pairwise(),
+    filter(([a, b]) => a.timestamp !== b.timestamp),
+    flatMap(([a, _b]) => of(a))
+  )
+  .subscribe(console.log);
+
+timer(10000, 10000)
+  .pipe(mapTo(pm51({})))
+  .subscribe(subject);
+
+concat(
+  applicationAuth(subject, {
+    clientId: config.clientId,
+    clientSecret: config.clientSecret
+  }),
+  accountAuth(subject, {
+    accessToken: config.accessToken,
+    ctidTraderAccountId: config.ctidTraderAccountId
+  }),
+  subscribeSpots(subject, {
+    ctidTraderAccountId: config.ctidTraderAccountId,
+    symbolId: [symbolId]
+  }),
+  subscribeLiveTrendbar(subject, {
+    ctidTraderAccountId: config.ctidTraderAccountId,
+    symbolId,
+    period
+  })
+).subscribe();

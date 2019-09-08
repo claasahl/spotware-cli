@@ -15,6 +15,10 @@ const config = {
     process.env.accessToken || "configure env. variable 'accessToken'",
   refreshToken:
     process.env.refreshToken || "configure env. variable 'refreshToken'",
+  ctidTraderAccountId: Number(
+    process.env.ctidTraderAccountId ||
+      "configure env. variable 'ctidTraderAccountId'"
+  ),
   threeDucks: JSON.parse(process.env.threeDucks || "[]") as ThreeDucksConfig[]
 };
 export default config;
