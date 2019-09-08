@@ -1,7 +1,7 @@
 import {
   ProtoOAPayloadType,
-  ProtoMessage2138,
-  ProtoOAGetTrendbarsReq
+  ProtoOAGetTrendbarsReq,
+  ProtoMessage2138
 } from "@claasahl/spotware-adapter";
 import { of, EMPTY, race, concat } from "rxjs";
 import { tap, flatMap, filter, take } from "rxjs/operators";
@@ -13,10 +13,9 @@ import { pm2137 } from "../utils";
 export function getTrendbars(
   subject: SpotwareSubject,
   payload: ProtoOAGetTrendbarsReq,
-  timeout?: number
+  timeout?: number,
+  msgId: string = `${Date.now()}`
 ) {
-  const msgId = `${Date.now()}`;
-
   const request = of(pm2137(payload, msgId)).pipe(
     tap(pm => subject.next(pm)),
     flatMap(() => EMPTY)

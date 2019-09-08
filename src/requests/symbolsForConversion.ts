@@ -13,10 +13,9 @@ import { pm2118 } from "../utils";
 export function symbolsForConversion(
   subject: SpotwareSubject,
   payloadType: ProtoOASymbolsForConversionReq,
-  timeout?: number
+  timeout?: number,
+  msgId: string = `${Date.now()}`
 ) {
-  const msgId = `${Date.now()}`;
-
   const request = of(pm2118(payloadType, msgId)).pipe(
     tap(pm => subject.next(pm)),
     flatMap(() => EMPTY)

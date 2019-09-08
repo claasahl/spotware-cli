@@ -1,7 +1,7 @@
 import {
   ProtoOAPayloadType,
-  ProtoMessage2161,
-  ProtoOASymbolCategoryListReq
+  ProtoOASymbolCategoryListReq,
+  ProtoMessage2161
 } from "@claasahl/spotware-adapter";
 import { of, EMPTY, race, concat } from "rxjs";
 import { tap, flatMap, filter, take } from "rxjs/operators";
@@ -13,10 +13,9 @@ import { pm2160 } from "../utils";
 export function symbolCategory(
   subject: SpotwareSubject,
   payload: ProtoOASymbolCategoryListReq,
-  timeout?: number
+  timeout?: number,
+  msgId: string = `${Date.now()}`
 ) {
-  const msgId = `${Date.now()}`;
-
   const request = of(pm2160(payload, msgId)).pipe(
     tap(pm => subject.next(pm)),
     flatMap(() => EMPTY)

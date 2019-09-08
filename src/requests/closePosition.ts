@@ -13,10 +13,9 @@ import { pm2111 } from "../utils";
 export function closePosition(
   subject: SpotwareSubject,
   payload: ProtoOAClosePositionReq,
-  timeout?: number
+  timeout?: number,
+  msgId: string = `${Date.now()}`
 ) {
-  const msgId = `${Date.now()}`;
-
   const request = of(pm2111(payload, msgId)).pipe(
     tap(pm => subject.next(pm)),
     flatMap(() => EMPTY)

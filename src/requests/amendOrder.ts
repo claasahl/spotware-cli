@@ -13,10 +13,9 @@ import { pm2109 } from "../utils";
 export function amendOrder(
   subject: SpotwareSubject,
   payload: ProtoOAAmendOrderReq,
-  timeout?: number
+  timeout?: number,
+  msgId: string = `${Date.now()}`
 ) {
-  const msgId = `${Date.now()}`;
-
   const request = of(pm2109(payload, msgId)).pipe(
     tap(pm => subject.next(pm)),
     flatMap(() => EMPTY)

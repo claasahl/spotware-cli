@@ -13,10 +13,9 @@ import { pm2112 } from "../utils";
 export function assetList(
   subject: SpotwareSubject,
   payload: ProtoOAAssetListReq,
-  timeout?: number
+  timeout?: number,
+  msgId: string = `${Date.now()}`
 ) {
-  const msgId = `${Date.now()}`;
-
   const request = of(pm2112(payload, msgId)).pipe(
     tap(pm => subject.next(pm)),
     flatMap(() => EMPTY)

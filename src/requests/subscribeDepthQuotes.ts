@@ -1,7 +1,7 @@
 import {
   ProtoOAPayloadType,
-  ProtoMessage2157,
-  ProtoOASubscribeDepthQuotesReq
+  ProtoOASubscribeDepthQuotesReq,
+  ProtoMessage2157
 } from "@claasahl/spotware-adapter";
 import { of, EMPTY, race, concat } from "rxjs";
 import { tap, flatMap, filter, take } from "rxjs/operators";
@@ -13,10 +13,9 @@ import { pm2156 } from "../utils";
 export function subscribeDepthQuotes(
   subject: SpotwareSubject,
   payload: ProtoOASubscribeDepthQuotesReq,
-  timeout?: number
+  timeout?: number,
+  msgId: string = `${Date.now()}`
 ) {
-  const msgId = `${Date.now()}`;
-
   const request = of(pm2156(payload, msgId)).pipe(
     tap(pm => subject.next(pm)),
     flatMap(() => EMPTY)

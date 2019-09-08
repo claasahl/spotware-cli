@@ -13,10 +13,9 @@ import { pm2110 } from "../utils";
 export function amendPositionSltp(
   subject: SpotwareSubject,
   payload: ProtoOAAmendPositionSLTPReq,
-  timeout?: number
+  timeout?: number,
+  msgId: string = `${Date.now()}`
 ) {
-  const msgId = `${Date.now()}`;
-
   const request = of(pm2110(payload, msgId)).pipe(
     tap(pm => subject.next(pm)),
     flatMap(() => EMPTY)

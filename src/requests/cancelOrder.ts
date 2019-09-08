@@ -13,10 +13,9 @@ import { pm2108 } from "../utils";
 export function cancelOrder(
   subject: SpotwareSubject,
   payload: ProtoOACancelOrderReq,
-  timeout?: number
+  timeout?: number,
+  msgId: string = `${Date.now()}`
 ) {
-  const msgId = `${Date.now()}`;
-
   const request = of(pm2108(payload, msgId)).pipe(
     tap(pm => subject.next(pm)),
     flatMap(() => EMPTY)

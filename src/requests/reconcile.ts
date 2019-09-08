@@ -1,7 +1,7 @@
 import {
   ProtoOAPayloadType,
-  ProtoMessage2125,
-  ProtoOAReconcileReq
+  ProtoOAReconcileReq,
+  ProtoMessage2125
 } from "@claasahl/spotware-adapter";
 import { of, EMPTY, race, concat } from "rxjs";
 import { tap, flatMap, filter, take } from "rxjs/operators";
@@ -13,10 +13,9 @@ import { pm2124 } from "../utils";
 export function reconcile(
   subject: SpotwareSubject,
   payload: ProtoOAReconcileReq,
-  timeout?: number
+  timeout?: number,
+  msgId: string = `${Date.now()}`
 ) {
-  const msgId = `${Date.now()}`;
-
   const request = of(pm2124(payload, msgId)).pipe(
     tap(pm => subject.next(pm)),
     flatMap(() => EMPTY)

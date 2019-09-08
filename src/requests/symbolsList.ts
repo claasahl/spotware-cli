@@ -13,10 +13,9 @@ import { pm2114 } from "../utils";
 export function symbolsList(
   subject: SpotwareSubject,
   payloadType: ProtoOASymbolsListReq,
-  timeout?: number
+  timeout?: number,
+  msgId: string = `${Date.now()}`
 ) {
-  const msgId = `${Date.now()}`;
-
   const request = of(pm2114(payloadType, msgId)).pipe(
     tap(pm => subject.next(pm)),
     flatMap(() => EMPTY)

@@ -13,10 +13,9 @@ import { pm2121 } from "../utils";
 export function trader(
   subject: SpotwareSubject,
   payloadType: ProtoOATraderReq,
-  timeout?: number
+  timeout?: number,
+  msgId: string = `${Date.now()}`
 ) {
-  const msgId = `${Date.now()}`;
-
   const request = of(pm2121(payloadType, msgId)).pipe(
     tap(pm => subject.next(pm)),
     flatMap(() => EMPTY)

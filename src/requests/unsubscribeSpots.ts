@@ -13,10 +13,9 @@ import { pm2129 } from "../utils";
 export function unsubscribeSpots(
   subject: SpotwareSubject,
   payload: ProtoOAUnsubscribeSpotsReq,
-  timeout?: number
+  timeout?: number,
+  msgId: string = `${Date.now()}`
 ) {
-  const msgId = `${Date.now()}`;
-
   const request = of(pm2129(payload, msgId)).pipe(
     tap(pm => subject.next(pm)),
     flatMap(() => EMPTY)
