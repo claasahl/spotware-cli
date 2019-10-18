@@ -6,6 +6,7 @@ import {
 import { concat, timer, of, Subject } from "rxjs";
 import { map, mapTo, filter, flatMap, pairwise } from "rxjs/operators";
 import { bullish, Candle, upper, lower, bearish } from "indicators";
+import simpleOauth2 from "simple-oauth2";
 
 import config from "./config";
 import { SpotwareSubject } from "./spotwareSubject";
@@ -105,3 +106,25 @@ function engulfed(candleA: Candle, candleB: Candle): boolean {
     (upperA < upperB && lowerA >= lowerB)
   );
 }
+
+async function refreshToken() {
+  const oauth2 = simpleOauth2.create({
+    client: { id: config.clientId, secret: config.clientSecret },
+    auth: {
+      tokenHost: "https://connect.spotware.com",
+      tokenPath: "/apps/token",
+      authorizePath: "/apps/auth"
+    }
+  });
+  const tokenObject = {
+    access_token: config.accessToken,
+    refresh_token: config.refreshToken,
+    expires_in: "7200"
+  };
+
+  // Create the access token wrapper
+  let accessToken = oauth2.accessToken.create(tokenObject);
+  const result = await accessToken.refresh({ scope: "accounts" });
+  console.log(result);
+}
+setTimeout(refreshToken, 5000);
