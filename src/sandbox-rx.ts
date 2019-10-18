@@ -4,7 +4,7 @@ import {
   ProtoMessage2131
 } from "@claasahl/spotware-adapter";
 import { concat, timer, of, Subject } from "rxjs";
-import { map, mapTo, filter, flatMap, pairwise } from "rxjs/operators";
+import { map, mapTo, filter, flatMap, pairwise, tap } from "rxjs/operators";
 import { bullish, Candle, upper, lower, bearish } from "indicators";
 
 import config from "./config";
@@ -59,17 +59,21 @@ liveTrendbars
   .pipe(
     pairwise(),
     filter(([first]) => bullish(first)),
-    map(([a, b]) => engulfed(a, b))
+    tap(trendbar => console.log("bullish trendbar", trendbar)),
+    filter(([a, b]) => engulfed(a, b)),
+    map(([first]) => first)
   )
-  .subscribe(trendbar => console.log("bullish trendbar", trendbar));
+  .subscribe(trendbar => console.log("engulfed bullish trendbar", trendbar));
 
 liveTrendbars
   .pipe(
     pairwise(),
     filter(([first]) => bearish(first)),
-    map(([a, b]) => engulfed(a, b))
+    tap(trendbar => console.log("bearish trendbar", trendbar)),
+    filter(([a, b]) => engulfed(a, b)),
+    map(([first]) => first)
   )
-  .subscribe(trendbar => console.log("bearish trendbar", trendbar));
+  .subscribe(trendbar => console.log("engulfed bearish trendbar", trendbar));
 
 timer(10000, 10000)
   .pipe(mapTo(pm51({})))
