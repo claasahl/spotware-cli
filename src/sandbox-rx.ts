@@ -1,5 +1,11 @@
-import { concat, timer, of } from "rxjs";
+import {
+  ProtoOATrendbarPeriod,
+  ProtoOAPayloadType,
+  ProtoMessage2131
+} from "@claasahl/spotware-adapter";
+import { concat, timer, of, Subject } from "rxjs";
 import { map, mapTo, filter, flatMap, pairwise } from "rxjs/operators";
+import { bullish, Candle, upper, lower, bearish } from "indicators";
 
 import config from "./config";
 import { SpotwareSubject } from "./spotwareSubject";
@@ -9,19 +15,16 @@ import {
   subscribeSpots,
   subscribeLiveTrendbar
 } from "./requests";
-import {
-  ProtoOATrendbarPeriod,
-  ProtoOAPayloadType,
-  ProtoMessage2131
-} from "@claasahl/spotware-adapter";
 import { pm51 } from "./utils";
 import { trendbar } from "./operators";
+import { Trendbar } from "./types";
 
 // https://youtu.be/8CNVYWiR5fg?t=378
 
 const symbolId = 22396;
 const period = ProtoOATrendbarPeriod.M1;
 
+const liveTrendbars = new Subject<Trendbar>();
 const subject = new SpotwareSubject(config.port, config.host);
 subject
   .pipe(
@@ -50,7 +53,23 @@ subject
     filter(([a, b]) => a.timestamp !== b.timestamp),
     flatMap(([a, _b]) => of(a))
   )
-  .subscribe(console.log);
+  .subscribe(liveTrendbars);
+
+liveTrendbars
+  .pipe(
+    pairwise(),
+    filter(([first]) => bullish(first)),
+    map(([a, b]) => engulfed(a, b))
+  )
+  .subscribe(console.error);
+
+liveTrendbars
+  .pipe(
+    pairwise(),
+    filter(([first]) => bearish(first)),
+    map(([a, b]) => engulfed(a, b))
+  )
+  .subscribe(console.error);
 
 timer(10000, 10000)
   .pipe(mapTo(pm51({})))
@@ -75,3 +94,14 @@ concat(
     period
   })
 ).subscribe();
+
+function engulfed(candleA: Candle, candleB: Candle): boolean {
+  const upperA = upper(candleA);
+  const lowerA = lower(candleA);
+  const upperB = upper(candleB);
+  const lowerB = lower(candleB);
+  return (
+    (upperA <= upperB && lowerA > lowerB) ||
+    (upperA < upperB && lowerA >= lowerB)
+  );
+}
