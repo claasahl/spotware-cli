@@ -5,7 +5,7 @@ import {
 } from "@claasahl/spotware-adapter";
 import { concat, timer, of, Subject } from "rxjs";
 import { map, mapTo, filter, flatMap, pairwise, tap } from "rxjs/operators";
-import { bullish, Candle, upper, lower, bearish } from "indicators";
+import { bullish, Candle, upper, lower, bearish, range } from "indicators";
 
 import config from "./config";
 import { SpotwareSubject } from "./spotwareSubject";
@@ -61,7 +61,16 @@ liveTrendbars
     filter(([first]) => bullish(first)),
     tap(trendbar => console.log("bullish trendbar", trendbar)),
     filter(([a, b]) => engulfed(a, b)),
-    map(([first]) => first)
+    map(([first]) => first),
+    map(candle => {
+      const r = range(candle);
+      return {
+        ...candle,
+        enter: candle.high + r * 0.1,
+        stopLoss: candle.high - r * 0.4,
+        takeProfit: candle.high + r * 0.8
+      };
+    })
   )
   .subscribe(trendbar => console.log("engulfed bullish trendbar", trendbar));
 
@@ -71,7 +80,16 @@ liveTrendbars
     filter(([first]) => bearish(first)),
     tap(trendbar => console.log("bearish trendbar", trendbar)),
     filter(([a, b]) => engulfed(a, b)),
-    map(([first]) => first)
+    map(([first]) => first),
+    map(candle => {
+      const r = range(candle);
+      return {
+        ...candle,
+        enter: candle.low - r * 0.1,
+        stopLoss: candle.low + r * 0.4,
+        takeProfit: candle.low - r * 0.8
+      };
+    })
   )
   .subscribe(trendbar => console.log("engulfed bearish trendbar", trendbar));
 
