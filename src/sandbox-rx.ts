@@ -105,7 +105,7 @@ function engulfed(candleA: Candle, candleB: Candle): boolean {
   const upperB = upper(candleB);
   const lowerB = lower(candleB);
   return (
-    (upperA <= upperB && lowerA > lowerB) ||
-    (upperA < upperB && lowerA >= lowerB)
+    (upperA >= upperB && lowerA < lowerB) ||
+    (upperA > upperB && lowerA <= lowerB)
   );
 }
