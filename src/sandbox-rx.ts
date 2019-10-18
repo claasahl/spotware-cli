@@ -23,6 +23,9 @@ import { Trendbar } from "./types";
 
 const symbolId = 22396;
 const period = ProtoOATrendbarPeriod.M1;
+const enterOffset = 0.1;
+const stopLossOffset = 0.4;
+const takeProfitOffset = 0.8;
 
 const liveTrendbars = new Subject<Trendbar>();
 const subject = new SpotwareSubject(config.port, config.host);
@@ -66,9 +69,9 @@ liveTrendbars
       const r = range(candle);
       return {
         ...candle,
-        enter: candle.high + r * 0.1,
-        stopLoss: candle.high - r * 0.4,
-        takeProfit: candle.high + r * 0.8
+        enter: candle.high + r * enterOffset,
+        stopLoss: candle.high - r * stopLossOffset,
+        takeProfit: candle.high + r * takeProfitOffset
       };
     })
   )
@@ -85,9 +88,9 @@ liveTrendbars
       const r = range(candle);
       return {
         ...candle,
-        enter: candle.low - r * 0.1,
-        stopLoss: candle.low + r * 0.4,
-        takeProfit: candle.low - r * 0.8
+        enter: candle.low - r * enterOffset,
+        stopLoss: candle.low + r * stopLossOffset,
+        takeProfit: candle.low - r * takeProfitOffset
       };
     })
   )
