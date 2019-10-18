@@ -61,7 +61,7 @@ liveTrendbars
     filter(([first]) => bullish(first)),
     map(([a, b]) => engulfed(a, b))
   )
-  .subscribe(console.error);
+  .subscribe(trendbar => console.log("bullish trendbar", trendbar));
 
 liveTrendbars
   .pipe(
@@ -69,7 +69,7 @@ liveTrendbars
     filter(([first]) => bearish(first)),
     map(([a, b]) => engulfed(a, b))
   )
-  .subscribe(console.error);
+  .subscribe(trendbar => console.log("bearish trendbar", trendbar));
 
 timer(10000, 10000)
   .pipe(mapTo(pm51({})))
@@ -93,7 +93,7 @@ concat(
     symbolId,
     period
   })
-).subscribe();
+).subscribe(null, console.error);
 
 function engulfed(candleA: Candle, candleB: Candle): boolean {
   const upperA = upper(candleA);
