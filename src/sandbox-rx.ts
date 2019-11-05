@@ -1,6 +1,6 @@
 import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
 import { concat, timer, of, Subject } from "rxjs";
-import { map, mapTo, filter, flatMap, pairwise, tap } from "rxjs/operators";
+import { map, mapTo, filter, flatMap, pairwise } from "rxjs/operators";
 import { bullish, Candle, upper, lower, bearish, range } from "indicators";
 
 import config from "./config";
@@ -53,8 +53,7 @@ timer(30000, 60000)
     trendbar(period),
     pairwise(),
     filter(([a, b]) => a.timestamp !== b.timestamp),
-    flatMap(([a, _b]) => of(a)),
-    tap(trendbar => console.log("trendbar", trendbar))
+    flatMap(([a, _b]) => of(a))
   )
   .subscribe(trendbars);
 
@@ -62,7 +61,6 @@ trendbars
   .pipe(
     pairwise(),
     filter(([first]) => bullish(first)),
-    tap(trendbar => console.log("bullish trendbar", trendbar)),
     filter(([a, b]) => engulfed(a, b)),
     map(([first]) => first),
     map(candle => {
@@ -81,7 +79,6 @@ trendbars
   .pipe(
     pairwise(),
     filter(([first]) => bearish(first)),
-    tap(trendbar => console.log("bearish trendbar", trendbar)),
     filter(([a, b]) => engulfed(a, b)),
     map(([first]) => first),
     map(candle => {
