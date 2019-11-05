@@ -1,20 +1,11 @@
-import {
-  ProtoOATrendbarPeriod,
-  ProtoOAPayloadType,
-  ProtoMessage2131
-} from "@claasahl/spotware-adapter";
+import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
 import { concat, timer, of, Subject } from "rxjs";
 import { map, mapTo, filter, flatMap, pairwise, tap } from "rxjs/operators";
 import { bullish, Candle, upper, lower, bearish, range } from "indicators";
 
 import config from "./config";
 import { SpotwareSubject } from "./spotwareSubject";
-import {
-  applicationAuth,
-  accountAuth,
-  subscribeSpots,
-  subscribeLiveTrendbar
-} from "./requests";
+import { applicationAuth, accountAuth, getTrendbars } from "./requests";
 import { pm51 } from "./utils";
 import { trendbar } from "./operators";
 import { Trendbar } from "./types";
@@ -27,7 +18,7 @@ const enterOffset = 0.1;
 const stopLossOffset = 0.4;
 const takeProfitOffset = 0.8;
 
-const liveTrendbars = new Subject<Trendbar>();
+const trendbars = new Subject<Trendbar>();
 const subject = new SpotwareSubject(config.port, config.host);
 subject
   .pipe(
@@ -42,23 +33,32 @@ subject
     () => console.log("complete")
   );
 
-subject
+timer(30000, 60000)
   .pipe(
-    filter(
-      (pm): pm is ProtoMessage2131 =>
-        pm.payloadType === ProtoOAPayloadType.PROTO_OA_SPOT_EVENT
-    ),
-    filter(pm => pm.payload.symbolId === symbolId),
+    flatMap(() => {
+      const date = new Date();
+      date.setMilliseconds(0);
+      date.setSeconds(0);
+      const toTimestamp = date.getTime();
+      const fromTimestamp = toTimestamp - 60 * 1000;
+      return getTrendbars(subject, {
+        ctidTraderAccountId: config.ctidTraderAccountId,
+        symbolId,
+        period,
+        fromTimestamp,
+        toTimestamp
+      });
+    }),
     flatMap(pm => pm.payload.trendbar),
-    filter(pm => pm.period === period),
     trendbar(period),
     pairwise(),
     filter(([a, b]) => a.timestamp !== b.timestamp),
-    flatMap(([a, _b]) => of(a))
+    flatMap(([a, _b]) => of(a)),
+    tap(trendbar => console.log("trendbar", trendbar))
   )
-  .subscribe(liveTrendbars);
+  .subscribe(trendbars);
 
-liveTrendbars
+trendbars
   .pipe(
     pairwise(),
     filter(([first]) => bullish(first)),
@@ -77,7 +77,7 @@ liveTrendbars
   )
   .subscribe(trendbar => console.log("engulfed bullish trendbar", trendbar));
 
-liveTrendbars
+trendbars
   .pipe(
     pairwise(),
     filter(([first]) => bearish(first)),
@@ -108,15 +108,6 @@ concat(
   accountAuth(subject, {
     accessToken: config.accessToken,
     ctidTraderAccountId: config.ctidTraderAccountId
-  }),
-  subscribeSpots(subject, {
-    ctidTraderAccountId: config.ctidTraderAccountId,
-    symbolId: [symbolId]
-  }),
-  subscribeLiveTrendbar(subject, {
-    ctidTraderAccountId: config.ctidTraderAccountId,
-    symbolId,
-    period
   })
 ).subscribe(null, console.error);
 
