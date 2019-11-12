@@ -127,7 +127,7 @@ newOrders
   .pipe(
     flatMap(({ stopLoss, takeProfit, enter, tradeSide }) =>
       newOrder(subject, {
-        orderType: ProtoOAOrderType.STOP_LOSS_TAKE_PROFIT,
+        orderType: ProtoOAOrderType.LIMIT,
         label: "123",
         comment: "456",
         ctidTraderAccountId: config.ctidTraderAccountId,
