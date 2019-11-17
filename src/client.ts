@@ -2,12 +2,14 @@ import { SpotwareSubject } from "./spotwareSubject";
 
 import config from "./config";
 import { applicationAuth, accountAuth, subscribeSpots } from "./requests";
-import { concat, Subject } from "rxjs";
-import { map, filter, pairwise } from "rxjs/operators";
+import { concat, Subject, timer } from "rxjs";
+import { map, filter, pairwise, mapTo, scan } from "rxjs/operators";
 import {
   ProtoOAPayloadType,
-  ProtoMessage2131
+  ProtoMessage2131,
+  ProtoOATrendbarPeriod
 } from "@claasahl/spotware-adapter";
+import { pm51, periodToMillis } from "./utils";
 
 const {
   port,
@@ -18,6 +20,7 @@ const {
   ctidTraderAccountId
 } = config;
 const BTCEUR = 22396;
+const period = ProtoOATrendbarPeriod.M1;
 const subject = new SpotwareSubject(port, host);
 
 subject
@@ -65,8 +68,57 @@ subject
     filter((spot): spot is Spot => !!(spot.ask && spot.bid))
   )
   .subscribe(spots);
+function periodStart(date: Date, period: ProtoOATrendbarPeriod): Date {
+  const timestamp = date.getTime();
+  const millis = periodToMillis(period);
+  const periodStart = Math.floor(timestamp / millis) * millis;
+  return new Date(periodStart);
+}
 
-spots.subscribe(console.log);
+spots
+  .pipe(
+    map(spot => ({ ...spot, periodStart: periodStart(spot.date, period) })),
+    scan(
+      (acc, curr) => {
+        const price = curr.bid;
+        if (acc.date.getTime() === curr.periodStart.getTime()) {
+          const trendbar = { ...acc };
+          trendbar.close = price;
+          if (trendbar.high < price) {
+            trendbar.high = price;
+          }
+          if (trendbar.low > price) {
+            trendbar.low = price;
+          }
+          return trendbar;
+        } else {
+          return {
+            date: curr.periodStart,
+            open: price,
+            high: price,
+            low: price,
+            close: price,
+            symbolId: curr.symbolId,
+            ctidTraderAccountId: curr.ctidTraderAccountId
+          };
+        }
+      },
+      {
+        date: new Date(0),
+        open: 0,
+        high: 0,
+        low: 0,
+        close: 0,
+        symbolId: BTCEUR,
+        ctidTraderAccountId
+      }
+    )
+  )
+  .subscribe(console.log);
+
+timer(10000, 10000)
+  .pipe(mapTo(pm51({})))
+  .subscribe(subject);
 
 concat(
   applicationAuth(subject, { clientId, clientSecret }),
