@@ -23,7 +23,7 @@ subject
   )
   .subscribe(console.log);
 
-const fromTimestamp = new Date("2019-11-10T00:00:00.0Z").getTime();
+const fromTimestamp = new Date("2019-11-11T00:00:00.0Z").getTime();
 const toTimestamp = fromTimestamp + ms("1w");
 concat(
   applicationAuth(subject, { clientId, clientSecret }),

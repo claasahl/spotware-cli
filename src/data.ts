@@ -48,11 +48,34 @@ const data = {
         balanceVersion: 1
       }
     }
+  ],
+  orders: [],
+  positions: [
+    {
+      dealId: 37623862,
+      orderId: 33007767,
+      positionId: 18674500,
+      volume: 10,
+      filledVolume: 10,
+      symbolId: 22396,
+      createTimestamp: 1573591695100,
+      executionTimestamp: 1573591695335,
+      tradeSide: 1,
+      dealStatus: 2,
+      utcLastUpdateTimestamp: 1573591695100,
+      executionPrice: 8000.39,
+      marginRate: 8000.39,
+      commission: 0,
+      baseToUsdConversionRate: 8798.19
+    }
   ]
 };
 
+//
+// HISTORY
+//
 const historyItem = data.history[0];
-console.log("history item -> position details");
+console.log("history item (DID37623205) -> position details");
 console.log(
   `OID${historyItem.position.orderId}`,
   new Date("2019-11-12T19:36:14.507Z")
@@ -96,7 +119,7 @@ console.log(
   ms(0)
 );
 
-console.log("history item -> order details (OID33006875)");
+console.log("history item (DID37623205) -> order details (OID33006875)");
 console.log(`EID${109395895}`, new Date("2019-11-12T19:36:14.507Z"));
 console.log(`SID${23761833}`, new Date("2019-11-12T19:36:59.422Z"));
 console.log(
@@ -113,7 +136,7 @@ console.log(
   ms(0)
 );
 
-console.log("history item -> order details (OID33006996)");
+console.log("history item (DID37623205) -> order details (OID33006996)");
 console.log(`EID${109396069}`, new Date(historyItem.createTimestamp));
 console.log(`SID${23761919}`, new Date(historyItem.createTimestamp));
 console.log(
@@ -126,3 +149,25 @@ console.log(
   new Date(historyItem.executionTimestamp),
   ms(0)
 );
+
+//
+// ORDERS
+//
+console.log("order item (OID33078947)");
+console.log(`EID${109487937}`, new Date("2019-11-17T08:15:53.709Z"));
+
+//
+// POSITIONS
+//
+const positionItem = data.positions[0];
+console.log("position item (PID18674500)");
+console.log(
+  `OID${positionItem.orderId}`,
+  new Date(positionItem.createTimestamp)
+);
+console.log(
+  `DID${positionItem.dealId}`,
+  new Date(positionItem.executionTimestamp),
+  ms(positionItem.executionTimestamp - positionItem.createTimestamp)
+);
+console.log(`PID${positionItem.positionId}`);
