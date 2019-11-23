@@ -10,11 +10,7 @@
     "prepare": "npm run build",
     "build": "tsc",
     "start": "ts-node -r dotenv/config ./src/index.ts",
-    "client": "ts-node -r dotenv/config ./src/client.ts",
-    "sample": "ts-node -r dotenv/config ./src/data.ts",
-    "play": "ts-node -r dotenv/config ./src/sandbox-rx.ts",
-    "x": "ts-node -r dotenv/config ./src/experiments/index.ts",
-    "r": "ts-node -r dotenv/config ./src/experiments/run.ts"
+    "client": "ts-node -r dotenv/config ./src/client.ts"
   },
   "repository": {
     "type": "git",
