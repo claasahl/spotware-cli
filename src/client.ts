@@ -22,13 +22,6 @@ const BTCEUR = 22396;
 const symbolId = BTCEUR;
 const subject = new SpotwareSubject(port, host);
 
-subject
-  .pipe(
-    map(pm => ({ date: new Date(), pm })),
-    map(msg => JSON.stringify(msg, null, 2))
-  )
-  .subscribe(console.log);
-
 interface Spot {
   ask: number;
   bid: number;
