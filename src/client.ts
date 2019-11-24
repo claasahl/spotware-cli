@@ -69,12 +69,7 @@ timer(10000, 10000)
   .pipe(mapTo(pm51({})))
   .subscribe(subject);
 
-concat(
-  subject.applicationAuth({}),
-  subject.getAccountsByAccessToken({}),
-  subject.accountAuth({ ctidTraderAccountId }),
-  spotz(subject, "BTC/EUR")
-).subscribe();
+concat(subject.authenticate(), spotz(subject, "BTC/EUR")).subscribe();
 
 function lookupSymbol(
   subject: SpotwareSubject,

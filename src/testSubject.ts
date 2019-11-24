@@ -5,11 +5,8 @@ import {
   getAccountsByAccessToken,
   accountAuth
 } from "./requests";
-import {
-  ProtoOAApplicationAuthReq,
-  ProtoOAGetAccountListByAccessTokenReq,
-  ProtoOAAccountAuthReq
-} from "@claasahl/spotware-adapter";
+import { concat, of, EMPTY, Observable } from "rxjs";
+import { flatMap } from "rxjs/operators";
 
 interface AuthenticationOptions {
   clientId: string;
@@ -33,47 +30,17 @@ export class TestSubject extends SpotwareSubject {
     this.authOptions = { ...authOptions };
   }
 
-  public applicationAuth(
-    payload: Omit<
-      ProtoOAApplicationAuthReq,
-      "payloadType" | "clientId" | "clientSecret"
-    >,
-    timeout?: number,
-    msgId?: string
-  ) {
-    const { clientId, clientSecret } = this.authOptions;
-    return applicationAuth(
-      this,
-      { ...payload, clientId, clientSecret },
-      timeout,
-      msgId
+  public authenticate(): Observable<void> {
+    const { clientId, clientSecret, accessToken } = this.authOptions;
+    const authApplication = applicationAuth(this, { clientId, clientSecret });
+    const authAccounts = of(1).pipe(
+      flatMap(() => getAccountsByAccessToken(this, { accessToken })),
+      flatMap(pm => pm.payload.ctidTraderAccount),
+      flatMap(({ ctidTraderAccountId }) =>
+        accountAuth(this, { accessToken, ctidTraderAccountId })
+      )
     );
-  }
-
-  public getAccountsByAccessToken(
-    payload: Omit<
-      ProtoOAGetAccountListByAccessTokenReq,
-      "payloadType" | "accessToken"
-    >,
-    timeout?: number,
-    msgId?: string
-  ) {
-    const { accessToken } = this.authOptions;
-    return getAccountsByAccessToken(
-      this,
-      { ...payload, accessToken },
-      timeout,
-      msgId
-    );
-  }
-
-  public accountAuth(
-    payload: Omit<ProtoOAAccountAuthReq, "payloadType" | "accessToken">,
-    timeout?: number,
-    msgId?: string
-  ) {
-    const { accessToken } = this.authOptions;
-    return accountAuth(this, { ...payload, accessToken }, timeout, msgId);
+    return concat(authApplication, authAccounts).pipe(flatMap(() => EMPTY));
   }
 }
 export default TestSubject;
