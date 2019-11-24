@@ -3,11 +3,15 @@ import { TlsOptions } from "tls";
 import {
   applicationAuth,
   getAccountsByAccessToken,
-  accountAuth
+  accountAuth,
+  trader
 } from "./requests";
 import { concat, of, EMPTY, Observable } from "rxjs";
-import { flatMap } from "rxjs/operators";
-import { ProtoOACtidTraderAccount } from "@claasahl/spotware-adapter";
+import { flatMap, map, shareReplay } from "rxjs/operators";
+import {
+  ProtoOATrader,
+  ProtoOACtidTraderAccount
+} from "@claasahl/spotware-adapter";
 
 interface AuthenticationOptions {
   clientId: string;
@@ -31,11 +35,19 @@ export class TestSubject extends SpotwareSubject {
     this.authOptions = { ...authOptions };
   }
 
+  private accountsBase(): Observable<ProtoOACtidTraderAccount> {
+    const { accessToken } = this.authOptions;
+    return getAccountsByAccessToken(this, { accessToken }).pipe(
+      flatMap(pm => pm.payload.ctidTraderAccount),
+      shareReplay()
+    );
+  }
+
   public authenticate(): Observable<void> {
     const { clientId, clientSecret, accessToken } = this.authOptions;
     const authApplication = applicationAuth(this, { clientId, clientSecret });
     const authAccounts = of(1).pipe(
-      flatMap(() => this.accounts()),
+      flatMap(() => this.accountsBase()),
       flatMap(({ ctidTraderAccountId }) =>
         accountAuth(this, { accessToken, ctidTraderAccountId })
       )
@@ -43,10 +55,12 @@ export class TestSubject extends SpotwareSubject {
     return concat(authApplication, authAccounts).pipe(flatMap(() => EMPTY));
   }
 
-  public accounts(): Observable<ProtoOACtidTraderAccount> {
-    const { accessToken } = this.authOptions;
-    return getAccountsByAccessToken(this, { accessToken }).pipe(
-      flatMap(pm => pm.payload.ctidTraderAccount)
+  public accounts(): Observable<ProtoOATrader> {
+    return this.accountsBase().pipe(
+      flatMap(({ ctidTraderAccountId }) =>
+        trader(this, { ctidTraderAccountId })
+      ),
+      map(pm => pm.payload.trader)
     );
   }
 }
