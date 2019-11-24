@@ -8,8 +8,6 @@ import debug, { Debugger } from "debug";
 export class SpotwareSubject extends AnonymousSubject<$.ProtoMessages> {
   constructor(port: number, host: string, options?: tls.TlsOptions) {
     const log = debug(`${host}:${port}`);
-    // log.log = console.log.bind(console);
-
     const socket = $.connect(port, host, options);
     const destination = SpotwareSubject.dst(socket, log.extend("output"));
     const source = SpotwareSubject.src(socket, log.extend("input"));
