@@ -36,7 +36,7 @@ export class SpotwareSubject extends AnonymousSubject<$.ProtoMessages> {
       tap(() => log(JSON.stringify({ closed: true })))
     );
     const endConditions = race(error, end, close).pipe(endWith("byebye"));
-    return fromEvent<$.ProtoMessages>(socket, "PROTO_MESSAGE.*").pipe(
+    return fromEvent<$.ProtoMessages>(socket, "PROTO_MESSAGE.INPUT.*").pipe(
       takeUntil(endConditions),
       tap(pm => log(JSON.stringify({ protoMessage: pm }))),
       share()
