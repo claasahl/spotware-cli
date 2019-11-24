@@ -7,6 +7,7 @@ import {
 } from "./requests";
 import { concat, of, EMPTY, Observable } from "rxjs";
 import { flatMap } from "rxjs/operators";
+import { ProtoOACtidTraderAccount } from "@claasahl/spotware-adapter";
 
 interface AuthenticationOptions {
   clientId: string;
@@ -34,13 +35,19 @@ export class TestSubject extends SpotwareSubject {
     const { clientId, clientSecret, accessToken } = this.authOptions;
     const authApplication = applicationAuth(this, { clientId, clientSecret });
     const authAccounts = of(1).pipe(
-      flatMap(() => getAccountsByAccessToken(this, { accessToken })),
-      flatMap(pm => pm.payload.ctidTraderAccount),
+      flatMap(() => this.accounts()),
       flatMap(({ ctidTraderAccountId }) =>
         accountAuth(this, { accessToken, ctidTraderAccountId })
       )
     );
     return concat(authApplication, authAccounts).pipe(flatMap(() => EMPTY));
+  }
+
+  public accounts(): Observable<ProtoOACtidTraderAccount> {
+    const { accessToken } = this.authOptions;
+    return getAccountsByAccessToken(this, { accessToken }).pipe(
+      flatMap(pm => pm.payload.ctidTraderAccount)
+    );
   }
 }
 export default TestSubject;
