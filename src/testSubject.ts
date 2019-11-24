@@ -117,21 +117,22 @@ export class TestSubject extends SpotwareSubject {
     );
   }
 
-  public symbol(
-    ctidTraderAccountId: number,
-    symbol: string
-  ): Observable<ProtoOASymbol> {
-    const lookupSymbolId = this.symbolsBase(ctidTraderAccountId).pipe(
-      filter(({ symbolName }) => symbolName === symbol),
-      map(symbol => symbol.symbolId),
-      first()
-    );
+  public symbol(symbol: string): Observable<ProtoOASymbol> {
+    return this.accounts().pipe(
+      flatMap(({ ctidTraderAccountId }) => {
+        const lookupSymbolId = this.symbolsBase(ctidTraderAccountId).pipe(
+          filter(({ symbolName }) => symbolName === symbol),
+          map(symbol => symbol.symbolId),
+          first()
+        );
 
-    const lookupSymbol = lookupSymbolId.pipe(
-      flatMap(symbolId => this.symbolBase(ctidTraderAccountId, symbolId)),
-      first()
+        const lookupSymbol = lookupSymbolId.pipe(
+          flatMap(symbolId => this.symbolBase(ctidTraderAccountId, symbolId)),
+          first()
+        );
+        return lookupSymbol;
+      })
     );
-    return lookupSymbol;
   }
 
   public spots(ctidTraderAccountId: number, symbol: string): Observable<Spot> {

@@ -12,19 +12,13 @@ const subject = new SpotwareSubject(
 
 concat(
   subject.authenticate(),
-  subject
-    .accounts()
-    .pipe(
-      flatMap(account => subject.symbol(account.ctidTraderAccountId, "BTC/EUR"))
-    ),
+  subject.symbol("BTC/EUR"),
   merge(
-    subject
-      .accounts()
-      .pipe(
-        flatMap(account =>
-          subject.spots(account.ctidTraderAccountId, "BTC/EUR")
-        )
-      ),
+    subject.accounts().pipe(
+      flatMap(
+        account => subject.spots(account.ctidTraderAccountId, "BTC/EUR") // simplify
+      )
+    ),
     subject.heartbeats()
   )
 ).subscribe();
