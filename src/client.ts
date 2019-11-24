@@ -1,9 +1,14 @@
 import { SpotwareSubject } from "./spotwareSubject";
 
 import config from "./config";
-import { applicationAuth, accountAuth, subscribeSpots } from "./requests";
+import {
+  applicationAuth,
+  accountAuth,
+  subscribeSpots,
+  symbolsList
+} from "./requests";
 import { concat, Subject, timer } from "rxjs";
-import { map, filter, pairwise, mapTo } from "rxjs/operators";
+import { map, filter, pairwise, mapTo, flatMap, first } from "rxjs/operators";
 import {
   ProtoOAPayloadType,
   ProtoMessage2131
@@ -68,5 +73,23 @@ timer(10000, 10000)
 concat(
   applicationAuth(subject, { clientId, clientSecret }),
   accountAuth(subject, { accessToken, ctidTraderAccountId }),
-  subscribeSpots(subject, { ctidTraderAccountId, symbolId: [symbolId] })
+  spotz(subject, "BTC/EUR")
 ).subscribe();
+
+function spotz(subject: SpotwareSubject, symbol: string) {
+  const lookupSymbolId = symbolsList(subject, { ctidTraderAccountId }).pipe(
+    flatMap(pm =>
+      pm.payload.symbol.filter(({ symbolName }) => symbol === symbolName)
+    ),
+    first(),
+    map(symbol => symbol.symbolId)
+  );
+
+  const subscribeToSymbol = lookupSymbolId.pipe(
+    flatMap(symbolId =>
+      subscribeSpots(subject, { ctidTraderAccountId, symbolId: [symbolId] })
+    )
+  );
+
+  return concat(subscribeToSymbol);
+}
