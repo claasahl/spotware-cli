@@ -4,13 +4,16 @@ import {
   applicationAuth,
   getAccountsByAccessToken,
   accountAuth,
-  trader
+  trader,
+  symbolsList,
+  symbolById
 } from "./requests";
 import { concat, of, EMPTY, Observable } from "rxjs";
-import { flatMap, map, shareReplay } from "rxjs/operators";
+import { flatMap, map, shareReplay, filter, first } from "rxjs/operators";
 import {
   ProtoOATrader,
-  ProtoOACtidTraderAccount
+  ProtoOACtidTraderAccount,
+  ProtoOASymbol
 } from "@claasahl/spotware-adapter";
 
 interface AuthenticationOptions {
@@ -62,6 +65,27 @@ export class TestSubject extends SpotwareSubject {
       ),
       map(pm => pm.payload.trader)
     );
+  }
+
+  public symbol(
+    ctidTraderAccountId: number,
+    symbol: string
+  ): Observable<ProtoOASymbol> {
+    const lookupSymbolId = symbolsList(this, { ctidTraderAccountId }).pipe(
+      flatMap(pm => pm.payload.symbol),
+      filter(({ symbolName }) => symbolName === symbol),
+      map(symbol => symbol.symbolId),
+      first()
+    );
+
+    const lookupSymbol = lookupSymbolId.pipe(
+      flatMap(symbolId =>
+        symbolById(this, { ctidTraderAccountId, symbolId: [symbolId] })
+      ),
+      flatMap(pm => pm.payload.symbol),
+      first()
+    );
+    return lookupSymbol;
   }
 }
 export default TestSubject;

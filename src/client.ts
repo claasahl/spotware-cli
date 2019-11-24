@@ -1,13 +1,11 @@
 import SpotwareSubject from "./testSubject";
 
 import config from "./config";
-import { subscribeSpots, symbolsList, symbolById } from "./requests";
-import { concat, Subject, timer, Observable } from "rxjs";
-import { map, filter, pairwise, mapTo, flatMap, first } from "rxjs/operators";
+import { concat, Subject, timer } from "rxjs";
+import { map, filter, pairwise, mapTo, flatMap } from "rxjs/operators";
 import {
   ProtoOAPayloadType,
-  ProtoMessage2131,
-  ProtoOASymbol
+  ProtoMessage2131
 } from "@claasahl/spotware-adapter";
 import { pm51 } from "./utils";
 
@@ -71,41 +69,9 @@ timer(10000, 10000)
 
 concat(
   subject.authenticate(),
-  subject.accounts(),
-  spotz(subject, "BTC/EUR")
-).subscribe();
-
-function lookupSymbol(
-  subject: SpotwareSubject,
-  symbol: string
-): Observable<ProtoOASymbol> {
-  const lookupSymbolId = symbolsList(subject, { ctidTraderAccountId }).pipe(
-    flatMap(pm => pm.payload.symbol),
-    filter(({ symbolName }) => symbolName === symbol),
-    map(symbol => symbol.symbolId),
-    first()
-  );
-
-  const lookupSymbol = lookupSymbolId.pipe(
-    flatMap(symbolId =>
-      symbolById(subject, { ctidTraderAccountId, symbolId: [symbolId] })
-    ),
-    flatMap(pm => pm.payload.symbol),
-    first()
-  );
-  return lookupSymbol;
-}
-
-function spotz(subject: SpotwareSubject, symbol: string) {
-  const lookupSymbolId = lookupSymbol(subject, symbol).pipe(
-    map(symbol => symbol.symbolId)
-  );
-
-  const subscribeToSymbol = lookupSymbolId.pipe(
-    flatMap(symbolId =>
-      subscribeSpots(subject, { ctidTraderAccountId, symbolId: [symbolId] })
+  subject
+    .accounts()
+    .pipe(
+      flatMap(account => subject.symbol(account.ctidTraderAccountId, "BTC/EUR"))
     )
-  );
-
-  return concat(subscribeToSymbol);
-}
+).subscribe();
