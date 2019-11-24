@@ -2,7 +2,7 @@ import * as $ from "@claasahl/spotware-adapter";
 import { AnonymousSubject } from "rxjs/internal/Subject";
 import tls from "tls";
 import { Observable, fromEvent, throwError, EMPTY, race, Observer } from "rxjs";
-import { first, flatMap, endWith, takeUntil, tap } from "rxjs/operators";
+import { first, flatMap, endWith, takeUntil, tap, share } from "rxjs/operators";
 import debug, { Debugger } from "debug";
 
 export class SpotwareSubject extends AnonymousSubject<$.ProtoMessages> {
@@ -38,7 +38,8 @@ export class SpotwareSubject extends AnonymousSubject<$.ProtoMessages> {
     const endConditions = race(error, end, close).pipe(endWith("byebye"));
     return fromEvent<$.ProtoMessages>(socket, "PROTO_MESSAGE.*").pipe(
       takeUntil(endConditions),
-      tap(pm => log(JSON.stringify({ protoMessage: pm })))
+      tap(pm => log(JSON.stringify({ protoMessage: pm }))),
+      share()
     );
   }
 
