@@ -13,7 +13,8 @@ import { flatMap, map, shareReplay, filter, first } from "rxjs/operators";
 import {
   ProtoOATrader,
   ProtoOACtidTraderAccount,
-  ProtoOASymbol
+  ProtoOASymbol,
+  ProtoOALightSymbol
 } from "@claasahl/spotware-adapter";
 
 interface AuthenticationOptions {
@@ -46,6 +47,25 @@ export class TestSubject extends SpotwareSubject {
     );
   }
 
+  private symbolsBase(
+    ctidTraderAccountId: number
+  ): Observable<ProtoOALightSymbol> {
+    return symbolsList(this, { ctidTraderAccountId }).pipe(
+      flatMap(pm => pm.payload.symbol),
+      shareReplay()
+    );
+  }
+
+  private symbolBase(
+    ctidTraderAccountId: number,
+    symbolId: number
+  ): Observable<ProtoOASymbol> {
+    return symbolById(this, { ctidTraderAccountId, symbolId: [symbolId] }).pipe(
+      flatMap(pm => pm.payload.symbol),
+      shareReplay()
+    );
+  }
+
   public authenticate(): Observable<void> {
     const { clientId, clientSecret, accessToken } = this.authOptions;
     const authApplication = applicationAuth(this, { clientId, clientSecret });
@@ -71,18 +91,14 @@ export class TestSubject extends SpotwareSubject {
     ctidTraderAccountId: number,
     symbol: string
   ): Observable<ProtoOASymbol> {
-    const lookupSymbolId = symbolsList(this, { ctidTraderAccountId }).pipe(
-      flatMap(pm => pm.payload.symbol),
+    const lookupSymbolId = this.symbolsBase(ctidTraderAccountId).pipe(
       filter(({ symbolName }) => symbolName === symbol),
       map(symbol => symbol.symbolId),
       first()
     );
 
     const lookupSymbol = lookupSymbolId.pipe(
-      flatMap(symbolId =>
-        symbolById(this, { ctidTraderAccountId, symbolId: [symbolId] })
-      ),
-      flatMap(pm => pm.payload.symbol),
+      flatMap(symbolId => this.symbolBase(ctidTraderAccountId, symbolId)),
       first()
     );
     return lookupSymbol;
