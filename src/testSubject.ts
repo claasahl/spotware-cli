@@ -8,14 +8,23 @@ import {
   symbolsList,
   symbolById
 } from "./requests";
-import { concat, of, EMPTY, Observable } from "rxjs";
-import { flatMap, map, shareReplay, filter, first } from "rxjs/operators";
+import { concat, of, EMPTY, Observable, timer } from "rxjs";
+import {
+  flatMap,
+  map,
+  shareReplay,
+  filter,
+  first,
+  mapTo,
+  tap
+} from "rxjs/operators";
 import {
   ProtoOATrader,
   ProtoOACtidTraderAccount,
   ProtoOASymbol,
   ProtoOALightSymbol
 } from "@claasahl/spotware-adapter";
+import { pm51 } from "./utils";
 
 interface AuthenticationOptions {
   clientId: string;
@@ -102,6 +111,14 @@ export class TestSubject extends SpotwareSubject {
       first()
     );
     return lookupSymbol;
+  }
+
+  public heartbeats(): Observable<void> {
+    return timer(10000, 10000).pipe(
+      mapTo(pm51({})),
+      tap(this),
+      mapTo(undefined)
+    );
   }
 }
 export default TestSubject;

@@ -1,13 +1,12 @@
 import SpotwareSubject from "./testSubject";
 
 import config from "./config";
-import { concat, Subject, timer } from "rxjs";
-import { map, filter, pairwise, mapTo, flatMap } from "rxjs/operators";
+import { concat, Subject } from "rxjs";
+import { map, filter, pairwise, flatMap } from "rxjs/operators";
 import {
   ProtoOAPayloadType,
   ProtoMessage2131
 } from "@claasahl/spotware-adapter";
-import { pm51 } from "./utils";
 
 const {
   port,
@@ -63,15 +62,12 @@ subject
   )
   .subscribe(spots);
 
-timer(10000, 10000)
-  .pipe(mapTo(pm51({})))
-  .subscribe(subject);
-
 concat(
   subject.authenticate(),
   subject
     .accounts()
     .pipe(
       flatMap(account => subject.symbol(account.ctidTraderAccountId, "BTC/EUR"))
-    )
+    ),
+  subject.heartbeats()
 ).subscribe();
