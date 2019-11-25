@@ -118,6 +118,7 @@ export class TestSubject extends SpotwareSubject {
   }
 
   public symbol(symbol: string): Observable<ProtoOASymbol> {
+    // TODO: this should be grouped
     return this.accounts().pipe(
       flatMap(({ ctidTraderAccountId }) => {
         const lookupSymbolId = this.symbolsBase(ctidTraderAccountId).pipe(
@@ -135,62 +136,67 @@ export class TestSubject extends SpotwareSubject {
     );
   }
 
-  public spots(ctidTraderAccountId: number, symbol: string): Observable<Spot> {
-    const symbolId = new Subject<number>();
-    this.symbolsBase(ctidTraderAccountId)
-      .pipe(
-        filter(({ symbolName }) => symbolName === symbol),
-        map(symbol => symbol.symbolId),
-        first()
-      )
-      .subscribe(symbolId);
+  public spots(symbol: string): Observable<Spot> {
+    // TODO: this should be grouped
+    return this.accounts().pipe(
+      flatMap(({ ctidTraderAccountId }) => {
+        const symbolId = new Subject<number>();
+        this.symbolsBase(ctidTraderAccountId)
+          .pipe(
+            filter(({ symbolName }) => symbolName === symbol),
+            map(symbol => symbol.symbolId),
+            first()
+          )
+          .subscribe(symbolId);
 
-    const subscribeToSymbol = symbolId.pipe(
-      flatMap(symbolId =>
-        subscribeSpots(this, { ctidTraderAccountId, symbolId: [symbolId] })
-      )
-    );
+        const subscribeToSymbol = symbolId.pipe(
+          flatMap(symbolId =>
+            subscribeSpots(this, { ctidTraderAccountId, symbolId: [symbolId] })
+          )
+        );
 
-    const spotEvents = this.pipe(
-      filter(
-        (pm): pm is ProtoMessage2131 =>
-          pm.payloadType === ProtoOAPayloadType.PROTO_OA_SPOT_EVENT
-      ),
-      map(pm => pm.payload)
-    );
-    const spotEventForSymbol = combineLatest(spotEvents, symbolId).pipe(
-      filter(([event, symbolId]) => event.symbolId === symbolId),
-      filter(
-        ([event, _symbolId]) =>
-          event.ctidTraderAccountId === ctidTraderAccountId
-      ),
-      map(([event, _symbolId]) => event)
-    );
+        const spotEvents = this.pipe(
+          filter(
+            (pm): pm is ProtoMessage2131 =>
+              pm.payloadType === ProtoOAPayloadType.PROTO_OA_SPOT_EVENT
+          ),
+          map(pm => pm.payload)
+        );
+        const spotEventForSymbol = combineLatest(spotEvents, symbolId).pipe(
+          filter(([event, symbolId]) => event.symbolId === symbolId),
+          filter(
+            ([event, _symbolId]) =>
+              event.ctidTraderAccountId === ctidTraderAccountId
+          ),
+          map(([event, _symbolId]) => event)
+        );
 
-    const spotsForSymbol = spotEventForSymbol.pipe(
-      filter(event => !!(event.ask || event.bid)),
-      map(({ ask, bid, ctidTraderAccountId, symbolId }) => ({
-        ask,
-        bid,
-        symbolId,
-        ctidTraderAccountId,
-        date: new Date()
-      })),
-      pairwise(),
-      map(([left, right]) => {
-        const spot = { ...right };
-        if (!spot.ask) {
-          spot.ask = left.ask;
-        }
-        if (!spot.bid) {
-          spot.bid = left.bid;
-        }
-        return spot;
-      }),
-      filter((spot): spot is Spot => !!(spot.ask && spot.bid))
-    );
+        const spotsForSymbol = spotEventForSymbol.pipe(
+          filter(event => !!(event.ask || event.bid)),
+          map(({ ask, bid, ctidTraderAccountId, symbolId }) => ({
+            ask,
+            bid,
+            symbolId,
+            ctidTraderAccountId,
+            date: new Date()
+          })),
+          pairwise(),
+          map(([left, right]) => {
+            const spot = { ...right };
+            if (!spot.ask) {
+              spot.ask = left.ask;
+            }
+            if (!spot.bid) {
+              spot.bid = left.bid;
+            }
+            return spot;
+          }),
+          filter((spot): spot is Spot => !!(spot.ask && spot.bid))
+        );
 
-    return subscribeToSymbol.pipe(flatMap(() => spotsForSymbol));
+        return subscribeToSymbol.pipe(flatMap(() => spotsForSymbol));
+      })
+    );
   }
 
   public heartbeats(): Observable<void> {
