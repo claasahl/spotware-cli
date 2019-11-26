@@ -89,9 +89,10 @@ export class TestSubject extends SpotwareSubject {
   private symbolBase(
     ctidTraderAccountId: number,
     symbolId: number
-  ): Observable<ProtoOASymbol> {
+  ): Observable<ProtoOASymbol & { ctidTraderAccountId: number }> {
     return symbolById(this, { ctidTraderAccountId, symbolId: [symbolId] }).pipe(
       flatMap(pm => pm.payload.symbol),
+      map(symbol => ({ ...symbol, ctidTraderAccountId })),
       shareReplay()
     );
   }
@@ -117,7 +118,9 @@ export class TestSubject extends SpotwareSubject {
     );
   }
 
-  public symbol(symbol: string): Observable<ProtoOASymbol> {
+  public symbol(
+    symbol: string
+  ): Observable<ProtoOASymbol & { ctidTraderAccountId: number }> {
     // TODO: this should be grouped
     return this.accounts().pipe(
       flatMap(({ ctidTraderAccountId }) => {
