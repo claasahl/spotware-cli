@@ -108,20 +108,21 @@ export class TestSubject extends SpotwareSubject {
     return concat(authApplication, authAccounts).pipe(flatMap(() => EMPTY));
   }
 
-  public accounts(): Observable<ProtoOATrader> {
+  public accounts: Observable<ProtoOATrader> = (() => {
     return this.accountsBase.pipe(
       flatMap(({ ctidTraderAccountId }) =>
         trader(this, { ctidTraderAccountId })
       ),
-      map(pm => pm.payload.trader)
+      map(pm => pm.payload.trader),
+      shareReplay()
     );
-  }
+  })();
 
   public symbol(
     symbol: string
   ): Observable<ProtoOASymbol & { ctidTraderAccountId: number }> {
     // TODO: this should be grouped
-    return this.accounts().pipe(
+    return this.accounts.pipe(
       flatMap(({ ctidTraderAccountId }) => {
         const lookupSymbolId = this.symbolsBase(ctidTraderAccountId).pipe(
           filter(({ symbolName }) => symbolName === symbol),
@@ -140,7 +141,7 @@ export class TestSubject extends SpotwareSubject {
 
   public spots(symbol: string): Observable<Spot> {
     // TODO: this should be grouped
-    return this.accounts().pipe(
+    return this.accounts.pipe(
       flatMap(({ ctidTraderAccountId }) => {
         const symbolId = new Subject<number>();
         this.symbolsBase(ctidTraderAccountId)
