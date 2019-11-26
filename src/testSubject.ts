@@ -16,7 +16,8 @@ import {
   Observable,
   timer,
   combineLatest,
-  Subject
+  Subject,
+  defer
 } from "rxjs";
 import {
   flatMap,
@@ -64,18 +65,17 @@ export class TestSubject extends SpotwareSubject {
     authOptions: AuthenticationOptions,
     connOptions: ConnectionOptions
   ) {
-    const { port, host, options } = connOptions;
-    super(port, host, options);
+    super(connOptions.port, connOptions.host, connOptions.options);
     this.authOptions = { ...authOptions };
   }
 
-  private accountsBase(): Observable<ProtoOACtidTraderAccount> {
-    const { accessToken } = this.authOptions;
-    return getAccountsByAccessToken(this, { accessToken }).pipe(
-      flatMap(pm => pm.payload.ctidTraderAccount),
-      shareReplay()
-    );
-  }
+  private accountsBase: Observable<ProtoOACtidTraderAccount> = defer(() =>
+    of(this.authOptions.accessToken)
+  ).pipe(
+    flatMap(accessToken => getAccountsByAccessToken(this, { accessToken })),
+    flatMap(pm => pm.payload.ctidTraderAccount),
+    shareReplay()
+  );
 
   private symbolsBase(
     ctidTraderAccountId: number
@@ -100,8 +100,7 @@ export class TestSubject extends SpotwareSubject {
   public authenticate(): Observable<void> {
     const { clientId, clientSecret, accessToken } = this.authOptions;
     const authApplication = applicationAuth(this, { clientId, clientSecret });
-    const authAccounts = of(1).pipe(
-      flatMap(() => this.accountsBase()),
+    const authAccounts = this.accountsBase.pipe(
       flatMap(({ ctidTraderAccountId }) =>
         accountAuth(this, { accessToken, ctidTraderAccountId })
       )
@@ -110,7 +109,7 @@ export class TestSubject extends SpotwareSubject {
   }
 
   public accounts(): Observable<ProtoOATrader> {
-    return this.accountsBase().pipe(
+    return this.accountsBase.pipe(
       flatMap(({ ctidTraderAccountId }) =>
         trader(this, { ctidTraderAccountId })
       ),
