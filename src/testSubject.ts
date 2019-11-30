@@ -152,16 +152,8 @@ export class TestSubject extends SpotwareSubject {
         );
 
         const lookupSymbol = lookupSymbolId.pipe(
-          tap(id =>
-            console.log(`1----> ${ctidTraderAccountId}:${symbol} => ${id}`)
-          ),
           flatMap(symbolId =>
             this.symbolById({ ctidTraderAccountId, symbolId: [symbolId] })
-          ),
-          tap(res =>
-            console.log(
-              `2----> ${ctidTraderAccountId}:${symbol} => ${res.symbol[0].symbolId} ${res.symbol.length}`
-            )
           ),
           flatMap(res => res.symbol),
           map(a => ({ ...a, ctidTraderAccountId })),
