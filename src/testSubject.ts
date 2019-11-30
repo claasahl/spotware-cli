@@ -29,7 +29,11 @@ import {
   ProtoOAGetAccountListByAccessTokenRes,
   ProtoOATraderRes,
   ProtoOASymbolsListRes,
-  ProtoOASymbolByIdRes
+  ProtoOASymbolByIdRes,
+  ProtoOATraderReq,
+  ProtoOASymbolByIdReq,
+  ProtoOASymbolsListReq,
+  ProtoOAGetAccountListByAccessTokenReq
 } from "@claasahl/spotware-adapter";
 import mem from "mem";
 
@@ -54,6 +58,7 @@ interface Spot {
   date: Date;
 }
 
+const cacheKey = (arguments_: any) => JSON.stringify(arguments_);
 export class TestSubject extends SpotwareSubject {
   private authOptions: AuthenticationOptions;
 
@@ -66,54 +71,55 @@ export class TestSubject extends SpotwareSubject {
   }
 
   private getAccountsByAccessToken = mem(
-    (): Observable<ProtoOAGetAccountListByAccessTokenRes> => {
+    (
+      payload: Omit<ProtoOAGetAccountListByAccessTokenReq, "accessToken">
+    ): Observable<ProtoOAGetAccountListByAccessTokenRes> => {
       return getAccountsByAccessToken(this, {
+        ...payload,
         accessToken: this.authOptions.accessToken
       }).pipe(
         publishReplay(1, 10000),
         refCount(),
         map(pm => pm.payload)
       );
-    }
+    },
+    { cacheKey }
   );
   private trader = mem(
-    (ctidTraderAccountId: number): Observable<ProtoOATraderRes> => {
-      return trader(this, { ctidTraderAccountId }).pipe(
+    (payload: ProtoOATraderReq): Observable<ProtoOATraderRes> => {
+      return trader(this, payload).pipe(
         publishReplay(1, 10000),
         refCount(),
         map(pm => pm.payload)
       );
-    }
+    },
+    { cacheKey }
   );
   private symbolsList = mem(
-    (ctidTraderAccountId: number): Observable<ProtoOASymbolsListRes> => {
-      return symbolsList(this, { ctidTraderAccountId }).pipe(
+    (payload: ProtoOASymbolsListReq): Observable<ProtoOASymbolsListRes> => {
+      return symbolsList(this, payload).pipe(
         publishReplay(1, 10000),
         refCount(),
         map(pm => pm.payload)
       );
-    }
+    },
+    { cacheKey }
   );
   private symbolById = mem(
-    (
-      symbolId: number,
-      ctidTraderAccountId: number
-    ): Observable<ProtoOASymbolByIdRes> => {
-      return symbolById(this, {
-        ctidTraderAccountId,
-        symbolId: [symbolId]
-      }).pipe(
+    (payload: ProtoOASymbolByIdReq): Observable<ProtoOASymbolByIdRes> => {
+      return symbolById(this, payload).pipe(
         publishReplay(1, 10000),
         refCount(),
         map(pm => pm.payload)
       );
-    }
+    },
+    { cacheKey }
   );
 
   public authenticate(): Observable<void> {
     const { clientId, clientSecret, accessToken } = this.authOptions;
     const authApplication = applicationAuth(this, { clientId, clientSecret });
-    const authAccounts = this.getAccountsByAccessToken().pipe(
+    const authAccounts = this.getAccountsByAccessToken({}).pipe(
       flatMap(res => res.ctidTraderAccount),
       flatMap(({ ctidTraderAccountId }) =>
         accountAuth(this, { accessToken, ctidTraderAccountId })
@@ -123,9 +129,11 @@ export class TestSubject extends SpotwareSubject {
   }
 
   public accounts(): Observable<ProtoOATrader> {
-    return this.getAccountsByAccessToken().pipe(
+    return this.getAccountsByAccessToken({}).pipe(
       flatMap(res => res.ctidTraderAccount),
-      flatMap(({ ctidTraderAccountId }) => this.trader(ctidTraderAccountId)),
+      flatMap(({ ctidTraderAccountId }) =>
+        this.trader({ ctidTraderAccountId })
+      ),
       map(pm => pm.trader)
     );
   }
@@ -136,7 +144,7 @@ export class TestSubject extends SpotwareSubject {
     // TODO: this should be grouped
     return this.accounts().pipe(
       flatMap(({ ctidTraderAccountId }) => {
-        const lookupSymbolId = this.symbolsList(ctidTraderAccountId).pipe(
+        const lookupSymbolId = this.symbolsList({ ctidTraderAccountId }).pipe(
           flatMap(res => res.symbol),
           filter(({ symbolName }) => symbolName === symbol),
           map(symbol => symbol.symbolId),
@@ -147,7 +155,9 @@ export class TestSubject extends SpotwareSubject {
           tap(id =>
             console.log(`1----> ${ctidTraderAccountId}:${symbol} => ${id}`)
           ),
-          flatMap(symbolId => this.symbolById(symbolId, ctidTraderAccountId)),
+          flatMap(symbolId =>
+            this.symbolById({ ctidTraderAccountId, symbolId: [symbolId] })
+          ),
           tap(res =>
             console.log(
               `2----> ${ctidTraderAccountId}:${symbol} => ${res.symbol[0].symbolId} ${res.symbol.length}`
@@ -167,7 +177,7 @@ export class TestSubject extends SpotwareSubject {
     return this.accounts().pipe(
       flatMap(({ ctidTraderAccountId }) => {
         const symbolId = new Subject<number>();
-        this.symbolsList(ctidTraderAccountId)
+        this.symbolsList({ ctidTraderAccountId })
           .pipe(
             flatMap(res => res.symbol),
             filter(({ symbolName }) => symbolName === symbol),
