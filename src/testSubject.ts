@@ -9,7 +9,7 @@ import {
   symbolById,
   subscribeSpots
 } from "./requests";
-import { concat, EMPTY, Observable, timer, combineLatest, Subject } from "rxjs";
+import { concat, EMPTY, Observable, timer, combineLatest } from "rxjs";
 import {
   flatMap,
   map,
@@ -218,18 +218,11 @@ export class TestSubject extends SpotwareSubject {
     // TODO: this should be grouped
     return this.accounts().pipe(
       flatMap(({ ctidTraderAccountId }) => {
-        const symbolId = new Subject<number>();
-        this.symbolsList({ ctidTraderAccountId })
-          .pipe(
-            flatMap(res => res.symbol),
-            filter(({ symbolName }) => symbolName === symbol),
-            map(symbol => symbol.symbolId),
-            first()
-          )
-          .subscribe(symbolId);
-
-        const subscribeToSymbol = symbolId.pipe(
-          flatMap(symbolId =>
+        const symbolId = this.symbol(symbol).pipe(
+          map(({ symbolId }) => symbolId)
+        );
+        const subscribeToSymbol = this.symbol(symbol).pipe(
+          flatMap(({ symbolId }) =>
             this.subscribeSpots({ ctidTraderAccountId, symbolId: [symbolId] })
           )
         );
