@@ -27,7 +27,9 @@ import {
   first,
   mapTo,
   tap,
-  pairwise
+  pairwise,
+  publishReplay,
+  refCount
 } from "rxjs/operators";
 import {
   ProtoOATrader,
@@ -73,8 +75,9 @@ export class TestSubject extends SpotwareSubject {
     of(this.authOptions.accessToken)
   ).pipe(
     flatMap(accessToken => getAccountsByAccessToken(this, { accessToken })),
-    flatMap(pm => pm.payload.ctidTraderAccount),
-    shareReplay()
+    publishReplay(1, 10000),
+    refCount(),
+    flatMap(pm => pm.payload.ctidTraderAccount)
   );
 
   private symbolsBase(
