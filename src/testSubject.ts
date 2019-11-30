@@ -19,7 +19,8 @@ import {
   tap,
   pairwise,
   publishReplay,
-  refCount
+  refCount,
+  scan
 } from "rxjs/operators";
 import {
   ProtoOATrader,
@@ -39,7 +40,8 @@ import {
   ProtoOAAccountAuthReq,
   ProtoOAAccountAuthRes,
   ProtoOASubscribeSpotsReq,
-  ProtoOASubscribeSpotsRes
+  ProtoOASubscribeSpotsRes,
+  ProtoMessage2126
 } from "@claasahl/spotware-adapter";
 import mem from "mem";
 
@@ -276,6 +278,31 @@ export class TestSubject extends SpotwareSubject {
       mapTo(pm51({})),
       tap(this),
       mapTo(undefined)
+    );
+  }
+
+  public ordersAndPositions(): Observable<any> {
+    return this.pipe(
+      filter(
+        (pm): pm is ProtoMessage2126 =>
+          pm.payloadType === ProtoOAPayloadType.PROTO_OA_EXECUTION_EVENT
+      ),
+      map(res => res.payload),
+      scan(
+        (acc, event) => {
+          const positions: any = { ...acc.positions };
+          if (event.position) {
+            positions[event.position.positionId] = event.position;
+          }
+          const orders: any = { ...acc.orders };
+          if (event.order) {
+            orders[event.order.orderId] = event.order;
+          }
+          return { positions, orders };
+        },
+        { positions: {}, orders: {} }
+      ),
+      tap(console.log)
     );
   }
 }
