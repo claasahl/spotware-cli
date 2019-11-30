@@ -6,6 +6,7 @@
   "scripts": {
     "pretest": "npm run build",
     "test": "jest",
+    "cache": "ts-node ./src/cache_sample.ts",
     "precommit": "pretty-quick --staged",
     "prepare": "npm run build",
     "build": "tsc",
