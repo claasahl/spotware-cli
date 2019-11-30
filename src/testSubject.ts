@@ -33,7 +33,13 @@ import {
   ProtoOATraderReq,
   ProtoOASymbolByIdReq,
   ProtoOASymbolsListReq,
-  ProtoOAGetAccountListByAccessTokenReq
+  ProtoOAGetAccountListByAccessTokenReq,
+  ProtoOAApplicationAuthReq,
+  ProtoOAApplicationAuthRes,
+  ProtoOAAccountAuthReq,
+  ProtoOAAccountAuthRes,
+  ProtoOASubscribeSpotsReq,
+  ProtoOASubscribeSpotsRes
 } from "@claasahl/spotware-adapter";
 import mem from "mem";
 
@@ -70,6 +76,37 @@ export class TestSubject extends SpotwareSubject {
     this.authOptions = { ...authOptions };
   }
 
+  private applicationAuth = mem(
+    (
+      payload: Omit<ProtoOAApplicationAuthReq, "clientId" | "clientSecret">
+    ): Observable<ProtoOAApplicationAuthRes> => {
+      return applicationAuth(this, {
+        ...payload,
+        clientId: this.authOptions.clientId,
+        clientSecret: this.authOptions.clientSecret
+      }).pipe(
+        publishReplay(1, 10000),
+        refCount(),
+        map(pm => pm.payload)
+      );
+    },
+    { cacheKey }
+  );
+  private accountAuth = mem(
+    (
+      payload: Omit<ProtoOAAccountAuthReq, "accessToken">
+    ): Observable<ProtoOAAccountAuthRes> => {
+      return accountAuth(this, {
+        ...payload,
+        accessToken: this.authOptions.accessToken
+      }).pipe(
+        publishReplay(1, 10000),
+        refCount(),
+        map(pm => pm.payload)
+      );
+    },
+    { cacheKey }
+  );
   private getAccountsByAccessToken = mem(
     (
       payload: Omit<ProtoOAGetAccountListByAccessTokenReq, "accessToken">
@@ -115,14 +152,25 @@ export class TestSubject extends SpotwareSubject {
     },
     { cacheKey }
   );
+  private subscribeSpots = mem(
+    (
+      payload: ProtoOASubscribeSpotsReq
+    ): Observable<ProtoOASubscribeSpotsRes> => {
+      return subscribeSpots(this, payload).pipe(
+        publishReplay(1, 10000),
+        refCount(),
+        map(pm => pm.payload)
+      );
+    },
+    { cacheKey }
+  );
 
   public authenticate(): Observable<void> {
-    const { clientId, clientSecret, accessToken } = this.authOptions;
-    const authApplication = applicationAuth(this, { clientId, clientSecret });
+    const authApplication = this.applicationAuth({});
     const authAccounts = this.getAccountsByAccessToken({}).pipe(
       flatMap(res => res.ctidTraderAccount),
       flatMap(({ ctidTraderAccountId }) =>
-        accountAuth(this, { accessToken, ctidTraderAccountId })
+        this.accountAuth({ ctidTraderAccountId })
       )
     );
     return concat(authApplication, authAccounts).pipe(flatMap(() => EMPTY));
@@ -182,7 +230,7 @@ export class TestSubject extends SpotwareSubject {
 
         const subscribeToSymbol = symbolId.pipe(
           flatMap(symbolId =>
-            subscribeSpots(this, { ctidTraderAccountId, symbolId: [symbolId] })
+            this.subscribeSpots({ ctidTraderAccountId, symbolId: [symbolId] })
           )
         );
 
