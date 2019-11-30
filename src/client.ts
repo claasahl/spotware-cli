@@ -11,7 +11,6 @@ const subject = new SpotwareSubject(
 
 concat(
   subject.authenticate(),
-  subject.symbol("BTC/USD"),
-  subject.symbol("BTC/EUR"),
+  subject.symbol("BTC/USD", "BTC/EUR"),
   merge(subject.spots("BTC/EUR"), subject.heartbeats())
 ).subscribe();
