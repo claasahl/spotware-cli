@@ -9,20 +9,10 @@ import {
   symbolById,
   subscribeSpots
 } from "./requests";
-import {
-  concat,
-  of,
-  EMPTY,
-  Observable,
-  timer,
-  combineLatest,
-  Subject,
-  defer
-} from "rxjs";
+import { concat, EMPTY, Observable, timer, combineLatest, Subject } from "rxjs";
 import {
   flatMap,
   map,
-  shareReplay,
   filter,
   first,
   mapTo,
@@ -33,12 +23,16 @@ import {
 } from "rxjs/operators";
 import {
   ProtoOATrader,
-  ProtoOACtidTraderAccount,
   ProtoOASymbol,
-  ProtoOALightSymbol,
   ProtoMessage2131,
-  ProtoOAPayloadType
+  ProtoOAPayloadType,
+  ProtoOAGetAccountListByAccessTokenRes,
+  ProtoOATraderRes,
+  ProtoOASymbolsListRes,
+  ProtoOASymbolByIdRes
 } from "@claasahl/spotware-adapter";
+import mem from "mem";
+
 import { pm51 } from "./utils";
 
 interface AuthenticationOptions {
@@ -71,39 +65,56 @@ export class TestSubject extends SpotwareSubject {
     this.authOptions = { ...authOptions };
   }
 
-  private accountsBase: Observable<ProtoOACtidTraderAccount> = defer(() =>
-    of(this.authOptions.accessToken)
-  ).pipe(
-    flatMap(accessToken => getAccountsByAccessToken(this, { accessToken })),
-    publishReplay(1, 10000),
-    refCount(),
-    flatMap(pm => pm.payload.ctidTraderAccount)
+  private getAccountsByAccessToken = mem(
+    (): Observable<ProtoOAGetAccountListByAccessTokenRes> => {
+      return getAccountsByAccessToken(this, {
+        accessToken: this.authOptions.accessToken
+      }).pipe(
+        publishReplay(1, 10000),
+        refCount(),
+        map(pm => pm.payload)
+      );
+    }
   );
-
-  private symbolsBase(
-    ctidTraderAccountId: number
-  ): Observable<ProtoOALightSymbol> {
-    return symbolsList(this, { ctidTraderAccountId }).pipe(
-      flatMap(pm => pm.payload.symbol),
-      shareReplay()
-    );
-  }
-
-  private symbolBase(
-    ctidTraderAccountId: number,
-    symbolId: number
-  ): Observable<ProtoOASymbol & { ctidTraderAccountId: number }> {
-    return symbolById(this, { ctidTraderAccountId, symbolId: [symbolId] }).pipe(
-      flatMap(pm => pm.payload.symbol),
-      map(symbol => ({ ...symbol, ctidTraderAccountId })),
-      shareReplay()
-    );
-  }
+  private trader = mem(
+    (ctidTraderAccountId: number): Observable<ProtoOATraderRes> => {
+      return trader(this, { ctidTraderAccountId }).pipe(
+        publishReplay(1, 10000),
+        refCount(),
+        map(pm => pm.payload)
+      );
+    }
+  );
+  private symbolsList = mem(
+    (ctidTraderAccountId: number): Observable<ProtoOASymbolsListRes> => {
+      return symbolsList(this, { ctidTraderAccountId }).pipe(
+        publishReplay(1, 10000),
+        refCount(),
+        map(pm => pm.payload)
+      );
+    }
+  );
+  private symbolById = mem(
+    (
+      symbolId: number,
+      ctidTraderAccountId: number
+    ): Observable<ProtoOASymbolByIdRes> => {
+      return symbolById(this, {
+        ctidTraderAccountId,
+        symbolId: [symbolId]
+      }).pipe(
+        publishReplay(1, 10000),
+        refCount(),
+        map(pm => pm.payload)
+      );
+    }
+  );
 
   public authenticate(): Observable<void> {
     const { clientId, clientSecret, accessToken } = this.authOptions;
     const authApplication = applicationAuth(this, { clientId, clientSecret });
-    const authAccounts = this.accountsBase.pipe(
+    const authAccounts = this.getAccountsByAccessToken().pipe(
+      flatMap(res => res.ctidTraderAccount),
       flatMap(({ ctidTraderAccountId }) =>
         accountAuth(this, { accessToken, ctidTraderAccountId })
       )
@@ -111,30 +122,39 @@ export class TestSubject extends SpotwareSubject {
     return concat(authApplication, authAccounts).pipe(flatMap(() => EMPTY));
   }
 
-  public accounts: Observable<ProtoOATrader> = (() => {
-    return this.accountsBase.pipe(
-      flatMap(({ ctidTraderAccountId }) =>
-        trader(this, { ctidTraderAccountId })
-      ),
-      map(pm => pm.payload.trader),
-      shareReplay()
+  public accounts(): Observable<ProtoOATrader> {
+    return this.getAccountsByAccessToken().pipe(
+      flatMap(res => res.ctidTraderAccount),
+      flatMap(({ ctidTraderAccountId }) => this.trader(ctidTraderAccountId)),
+      map(pm => pm.trader)
     );
-  })();
+  }
 
   public symbol(
     symbol: string
   ): Observable<ProtoOASymbol & { ctidTraderAccountId: number }> {
     // TODO: this should be grouped
-    return this.accounts.pipe(
+    return this.accounts().pipe(
       flatMap(({ ctidTraderAccountId }) => {
-        const lookupSymbolId = this.symbolsBase(ctidTraderAccountId).pipe(
+        const lookupSymbolId = this.symbolsList(ctidTraderAccountId).pipe(
+          flatMap(res => res.symbol),
           filter(({ symbolName }) => symbolName === symbol),
           map(symbol => symbol.symbolId),
           first()
         );
 
         const lookupSymbol = lookupSymbolId.pipe(
-          flatMap(symbolId => this.symbolBase(ctidTraderAccountId, symbolId)),
+          tap(id =>
+            console.log(`1----> ${ctidTraderAccountId}:${symbol} => ${id}`)
+          ),
+          flatMap(symbolId => this.symbolById(symbolId, ctidTraderAccountId)),
+          tap(res =>
+            console.log(
+              `2----> ${ctidTraderAccountId}:${symbol} => ${res.symbol[0].symbolId} ${res.symbol.length}`
+            )
+          ),
+          flatMap(res => res.symbol),
+          map(a => ({ ...a, ctidTraderAccountId })),
           first()
         );
         return lookupSymbol;
@@ -144,11 +164,12 @@ export class TestSubject extends SpotwareSubject {
 
   public spots(symbol: string): Observable<Spot> {
     // TODO: this should be grouped
-    return this.accounts.pipe(
+    return this.accounts().pipe(
       flatMap(({ ctidTraderAccountId }) => {
         const symbolId = new Subject<number>();
-        this.symbolsBase(ctidTraderAccountId)
+        this.symbolsList(ctidTraderAccountId)
           .pipe(
+            flatMap(res => res.symbol),
             filter(({ symbolName }) => symbolName === symbol),
             map(symbol => symbol.symbolId),
             first()
