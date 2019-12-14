@@ -20,17 +20,30 @@ concat(
     subject.spots("BTC/EUR"),
     subject.heartbeats(),
     subject.ordersAndPositions(),
-    subject.limitOrder(
-      "BTC/EUR",
-      0.01,
-      ProtoOATradeSide.BUY,
-      6375.12,
-      6400.0,
-      6300,
-      new Date().getTime() + 30000
-    )
-    // subject.closePositionn(18943584, "BTC/EUR", 0.01)
-    // subject.cancelOrderr(33532443)
+    // subject.limitOrder(
+    //   "BTC/EUR",
+    //   {volume: 0.01,
+    //   tradeSide: ProtoOATradeSide.BUY,
+    //   limitPrice: 6375.12,
+    //   takeProfit: 6400.0,
+    //   stopLoss: 6300,
+    //   expirationTimestamp: new Date().getTime() + 600000}
+    // ),
+    // subject.closePositionn("BTC/EUR", {positionId: 18943598, volume: 0.01}),
+    // subject.cancelOrderr({orderId:33532471})
+    // subject.amendOrderr("BTC/EUR", {orderId: 33532474,
+    //       volume: 0.01,
+    //   limitPrice: 6300.12,
+    //   takeProfit: 6400.0,
+    //   stopLoss: 6300,
+    //   expirationTimestamp: new Date().getTime() + 600000
+    // })
+    subject.amendPositionSltpp({
+      positionId: 18943604,
+      stopLoss: 6312,
+      takeProfit: 6400.0,
+      trailingStopLoss: true
+    })
   )
 ).subscribe();
 // {

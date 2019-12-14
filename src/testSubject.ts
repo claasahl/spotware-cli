@@ -10,7 +10,9 @@ import {
   subscribeSpots,
   newOrder,
   cancelOrder,
-  closePosition
+  closePosition,
+  amendPositionSltp,
+  amendOrder
 } from "./requests";
 import { concat, EMPTY, Observable, timer, combineLatest } from "rxjs";
 import {
@@ -47,9 +49,10 @@ import {
   ProtoMessage2126,
   ProtoOANewOrderReq,
   ProtoOAOrderType,
-  ProtoOATradeSide,
   ProtoOACancelOrderReq,
-  ProtoOAClosePositionReq
+  ProtoOAClosePositionReq,
+  ProtoOAAmendPositionSLTPReq,
+  ProtoOAAmendOrderReq
 } from "@claasahl/spotware-adapter";
 import mem from "mem";
 
@@ -207,6 +210,28 @@ export class TestSubject extends SpotwareSubject {
     },
     { cacheKey }
   );
+  private amendOrder = mem(
+    (payload: ProtoOAAmendOrderReq): Observable<void> => {
+      return amendOrder(this, payload).pipe(
+        publishReplay(1, 10000),
+        refCount(),
+        map(pm => pm.payload),
+        mapTo(undefined)
+      );
+    },
+    { cacheKey }
+  );
+  private amendPositionSltp = mem(
+    (payload: ProtoOAAmendPositionSLTPReq): Observable<void> => {
+      return amendPositionSltp(this, payload).pipe(
+        publishReplay(1, 10000),
+        refCount(),
+        map(pm => pm.payload),
+        mapTo(undefined)
+      );
+    },
+    { cacheKey }
+  );
 
   public authenticate(): Observable<void> {
     const authApplication = this.applicationAuth({});
@@ -322,19 +347,19 @@ export class TestSubject extends SpotwareSubject {
 
   public marketOrder(
     symbol: string,
-    volume: number,
-    tradeSide: ProtoOATradeSide
+    payload: Omit<
+      ProtoOANewOrderReq,
+      "payloadType" | "ctidTraderAccountId" | "symbolId" | "orderType"
+    >
   ): Observable<void> {
     return this.symbol(symbol).pipe(
       flatMap(symbol => {
         return this.newOrder({
-          comment: "comment",
-          label: "label",
+          ...payload,
           ctidTraderAccountId: symbol.ctidTraderAccountId,
           symbolId: symbol.symbolId,
           orderType: ProtoOAOrderType.MARKET,
-          tradeSide,
-          volume: volume * (symbol.lotSize || 1)
+          volume: payload.volume * (symbol.lotSize || 1)
         });
       })
     );
@@ -342,53 +367,81 @@ export class TestSubject extends SpotwareSubject {
 
   public limitOrder(
     symbol: string,
-    volume: number,
-    tradeSide: ProtoOATradeSide,
-    limitPrice: number,
-    takeProfit?: number,
-    stopLoss?: number,
-    expirationTimestamp?: number
+    payload: Omit<
+      ProtoOANewOrderReq,
+      "payloadType" | "ctidTraderAccountId" | "symbolId" | "orderType"
+    >
   ): Observable<void> {
     return this.symbol(symbol).pipe(
       flatMap(symbol => {
         return this.newOrder({
-          comment: "comment",
-          label: "label",
+          ...payload,
           ctidTraderAccountId: symbol.ctidTraderAccountId,
+          volume: payload.volume * (symbol.lotSize || 1),
           symbolId: symbol.symbolId,
-          orderType: ProtoOAOrderType.LIMIT,
-          tradeSide,
-          volume: volume * (symbol.lotSize || 1),
-          limitPrice,
-          takeProfit,
-          stopLoss,
-          expirationTimestamp
+          orderType: ProtoOAOrderType.LIMIT
         });
       })
     );
   }
 
-  public cancelOrderr(orderId: number): Observable<void> {
+  public cancelOrderr(
+    payload: Omit<ProtoOACancelOrderReq, "payloadType" | "ctidTraderAccountId">
+  ): Observable<void> {
     return this.accounts().pipe(
       flatMap(({ ctidTraderAccountId }) => {
-        return this.cancelOrder({ ctidTraderAccountId, orderId });
+        return this.cancelOrder({ ...payload, ctidTraderAccountId });
       })
     );
   }
 
   public closePositionn(
-    positionId: number,
     symbol: string,
-    volume: number
+    payload: Omit<
+      ProtoOAClosePositionReq,
+      "payloadType" | "ctidTraderAccountId"
+    >
   ): Observable<void> {
     // TODO get symbol from position
     // TODO close entire position if no volume specified
     return this.symbol(symbol).pipe(
       flatMap(symbol => {
         return this.closePosition({
+          ...payload,
           ctidTraderAccountId: symbol.ctidTraderAccountId,
-          positionId,
-          volume: volume * (symbol.lotSize || 1)
+          volume: payload.volume * (symbol.lotSize || 1)
+        });
+      })
+    );
+  }
+  public amendOrderr(
+    symbol: string,
+    payload: Omit<ProtoOAAmendOrderReq, "payloadType" | "ctidTraderAccountId">
+  ): Observable<void> {
+    // TODO get symbol from position
+    return this.symbol(symbol).pipe(
+      flatMap(symbol => {
+        return this.amendOrder({
+          ...payload,
+          ctidTraderAccountId: symbol.ctidTraderAccountId,
+          volume: payload.volume
+            ? payload.volume * (symbol.lotSize || 1)
+            : undefined
+        });
+      })
+    );
+  }
+  public amendPositionSltpp(
+    payload: Omit<
+      ProtoOAAmendPositionSLTPReq,
+      "payloadType" | "ctidTraderAccountId"
+    >
+  ): Observable<void> {
+    return this.accounts().pipe(
+      flatMap(({ ctidTraderAccountId }) => {
+        return this.amendPositionSltp({
+          ...payload,
+          ctidTraderAccountId
         });
       })
     );
