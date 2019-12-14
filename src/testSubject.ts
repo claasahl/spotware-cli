@@ -344,7 +344,10 @@ export class TestSubject extends SpotwareSubject {
     symbol: string,
     volume: number,
     tradeSide: ProtoOATradeSide,
-    limitPrice: number
+    limitPrice: number,
+    takeProfit?: number,
+    stopLoss?: number,
+    expirationTimestamp?: number
   ): Observable<void> {
     return this.symbol(symbol).pipe(
       flatMap(symbol => {
@@ -356,7 +359,10 @@ export class TestSubject extends SpotwareSubject {
           orderType: ProtoOAOrderType.LIMIT,
           tradeSide,
           volume: volume * (symbol.lotSize || 1),
-          limitPrice
+          limitPrice,
+          takeProfit,
+          stopLoss,
+          expirationTimestamp
         });
       })
     );

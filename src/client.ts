@@ -20,9 +20,17 @@ concat(
     subject.spots("BTC/EUR"),
     subject.heartbeats(),
     subject.ordersAndPositions(),
-    // subject.limitOrder("BTC/EUR", 0.01, ProtoOATradeSide.BUY, 6315.12),
+    subject.limitOrder(
+      "BTC/EUR",
+      0.01,
+      ProtoOATradeSide.BUY,
+      6375.12,
+      6400.0,
+      6300,
+      new Date().getTime() + 30000
+    )
     // subject.closePositionn(18943584, "BTC/EUR", 0.01)
-    subject.cancelOrderr(33532443)
+    // subject.cancelOrderr(33532443)
   )
 ).subscribe();
 // {
