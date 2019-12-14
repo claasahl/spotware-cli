@@ -189,16 +189,14 @@ export class TestSubject extends SpotwareSubject {
   }
 
   public symbol(
-    ...symbols: string[]
+    symbol: string
   ): Observable<ProtoOASymbol & { ctidTraderAccountId: number }> {
     // TODO: this should be grouped
     return this.accounts().pipe(
       flatMap(({ ctidTraderAccountId }) => {
         const lookupSymbolId = this.symbolsList({ ctidTraderAccountId }).pipe(
           map(res =>
-            res.symbol.filter(symbol =>
-              symbols.includes(symbol.symbolName || "")
-            )
+            res.symbol.filter(({ symbolName }) => symbol === symbolName)
           ),
           map(symbols => symbols.map(symbol => symbol.symbolId))
         );
