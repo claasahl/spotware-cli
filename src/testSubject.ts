@@ -1,18 +1,18 @@
 import { SpotwareSubject } from "./spotwareSubject";
 import { TlsOptions } from "tls";
 import {
-  applicationAuth,
-  getAccountsByAccessToken,
-  accountAuth,
-  trader,
-  symbolsList,
-  symbolById,
-  subscribeSpots,
-  newOrder,
-  cancelOrder,
-  closePosition,
-  amendPositionSltp,
-  amendOrder
+  applicationAuth as applicationAuthReq,
+  getAccountsByAccessToken as getAccountsByAccessTokenReq,
+  accountAuth as accountAuthReq,
+  trader as traderReq,
+  symbolsList as symbolsListReq,
+  symbolById as symbolByIdReq,
+  subscribeSpots as subscribeSpotsReq,
+  newOrder as newOrderReq,
+  cancelOrder as cancelOrderReq,
+  closePosition as closePositionReq,
+  amendPositionSltp as amendPositionSltpReq,
+  amendOrder as amendOrderReq
 } from "./requests";
 import { concat, EMPTY, Observable, timer, combineLatest } from "rxjs";
 import {
@@ -89,42 +89,36 @@ export class TestSubject extends SpotwareSubject {
     this.authOptions = { ...authOptions };
   }
 
-  private applicationAuth = mem(
-    (
-      payload: Omit<ProtoOAApplicationAuthReq, "clientId" | "clientSecret">
-    ): Observable<ProtoOAApplicationAuthRes> => {
-      return applicationAuth(this, {
-        ...payload,
-        clientId: this.authOptions.clientId,
-        clientSecret: this.authOptions.clientSecret
-      }).pipe(
-        publishReplay(1, 10000),
-        refCount(),
-        map(pm => pm.payload)
-      );
-    },
-    { cacheKey }
-  );
-  private accountAuth = mem(
-    (
-      payload: Omit<ProtoOAAccountAuthReq, "accessToken">
-    ): Observable<ProtoOAAccountAuthRes> => {
-      return accountAuth(this, {
-        ...payload,
-        accessToken: this.authOptions.accessToken
-      }).pipe(
-        publishReplay(1, 10000),
-        refCount(),
-        map(pm => pm.payload)
-      );
-    },
-    { cacheKey }
-  );
+  private applicationAuth(
+    payload: Omit<ProtoOAApplicationAuthReq, "clientId" | "clientSecret">
+  ): Observable<ProtoOAApplicationAuthRes> {
+    return applicationAuthReq(this, {
+      ...payload,
+      clientId: this.authOptions.clientId,
+      clientSecret: this.authOptions.clientSecret
+    }).pipe(
+      publishReplay(1, 10000),
+      refCount(),
+      map(pm => pm.payload)
+    );
+  }
+  private accountAuth(
+    payload: Omit<ProtoOAAccountAuthReq, "accessToken">
+  ): Observable<ProtoOAAccountAuthRes> {
+    return accountAuthReq(this, {
+      ...payload,
+      accessToken: this.authOptions.accessToken
+    }).pipe(
+      publishReplay(1, 10000),
+      refCount(),
+      map(pm => pm.payload)
+    );
+  }
   private getAccountsByAccessToken = mem(
     (
       payload: Omit<ProtoOAGetAccountListByAccessTokenReq, "accessToken">
     ): Observable<ProtoOAGetAccountListByAccessTokenRes> => {
-      return getAccountsByAccessToken(this, {
+      return getAccountsByAccessTokenReq(this, {
         ...payload,
         accessToken: this.authOptions.accessToken
       }).pipe(
@@ -137,7 +131,7 @@ export class TestSubject extends SpotwareSubject {
   );
   private trader = mem(
     (payload: ProtoOATraderReq): Observable<ProtoOATraderRes> => {
-      return trader(this, payload).pipe(
+      return traderReq(this, payload).pipe(
         publishReplay(1, 10000),
         refCount(),
         map(pm => pm.payload)
@@ -147,7 +141,7 @@ export class TestSubject extends SpotwareSubject {
   );
   private symbolsList = mem(
     (payload: ProtoOASymbolsListReq): Observable<ProtoOASymbolsListRes> => {
-      return symbolsList(this, payload).pipe(
+      return symbolsListReq(this, payload).pipe(
         publishReplay(1, 10000),
         refCount(),
         map(pm => pm.payload)
@@ -157,7 +151,7 @@ export class TestSubject extends SpotwareSubject {
   );
   private symbolById = mem(
     (payload: ProtoOASymbolByIdReq): Observable<ProtoOASymbolByIdRes> => {
-      return symbolById(this, payload).pipe(
+      return symbolByIdReq(this, payload).pipe(
         publishReplay(1, 10000),
         refCount(),
         map(pm => pm.payload)
@@ -165,73 +159,57 @@ export class TestSubject extends SpotwareSubject {
     },
     { cacheKey }
   );
-  private subscribeSpots = mem(
-    (
-      payload: ProtoOASubscribeSpotsReq
-    ): Observable<ProtoOASubscribeSpotsRes> => {
-      return subscribeSpots(this, payload).pipe(
-        publishReplay(1, 10000),
-        refCount(),
-        map(pm => pm.payload)
-      );
-    },
-    { cacheKey }
-  );
-  private newOrder = mem(
-    (payload: ProtoOANewOrderReq): Observable<void> => {
-      return newOrder(this, payload).pipe(
-        publishReplay(1, 10000),
-        refCount(),
-        map(pm => pm.payload),
-        mapTo(undefined)
-      );
-    },
-    { cacheKey }
-  );
-  private cancelOrder = mem(
-    (payload: ProtoOACancelOrderReq): Observable<void> => {
-      return cancelOrder(this, payload).pipe(
-        publishReplay(1, 10000),
-        refCount(),
-        map(pm => pm.payload),
-        mapTo(undefined)
-      );
-    },
-    { cacheKey }
-  );
-  private closePosition = mem(
-    (payload: ProtoOAClosePositionReq): Observable<void> => {
-      return closePosition(this, payload).pipe(
-        publishReplay(1, 10000),
-        refCount(),
-        map(pm => pm.payload),
-        mapTo(undefined)
-      );
-    },
-    { cacheKey }
-  );
-  private amendOrder = mem(
-    (payload: ProtoOAAmendOrderReq): Observable<void> => {
-      return amendOrder(this, payload).pipe(
-        publishReplay(1, 10000),
-        refCount(),
-        map(pm => pm.payload),
-        mapTo(undefined)
-      );
-    },
-    { cacheKey }
-  );
-  private amendPositionSltp = mem(
-    (payload: ProtoOAAmendPositionSLTPReq): Observable<void> => {
-      return amendPositionSltp(this, payload).pipe(
-        publishReplay(1, 10000),
-        refCount(),
-        map(pm => pm.payload),
-        mapTo(undefined)
-      );
-    },
-    { cacheKey }
-  );
+  private subscribeSpots(
+    payload: ProtoOASubscribeSpotsReq
+  ): Observable<ProtoOASubscribeSpotsRes> {
+    return subscribeSpotsReq(this, payload).pipe(
+      publishReplay(1, 10000),
+      refCount(),
+      map(pm => pm.payload)
+    );
+  }
+  private newOrder(payload: ProtoOANewOrderReq): Observable<void> {
+    return newOrderReq(this, payload).pipe(
+      publishReplay(1, 10000),
+      refCount(),
+      map(pm => pm.payload),
+      mapTo(undefined)
+    );
+  }
+  private cancelOrder(payload: ProtoOACancelOrderReq): Observable<void> {
+    return cancelOrderReq(this, payload).pipe(
+      publishReplay(1, 10000),
+      refCount(),
+      map(pm => pm.payload),
+      mapTo(undefined)
+    );
+  }
+  private closePosition(payload: ProtoOAClosePositionReq): Observable<void> {
+    return closePositionReq(this, payload).pipe(
+      publishReplay(1, 10000),
+      refCount(),
+      map(pm => pm.payload),
+      mapTo(undefined)
+    );
+  }
+  private amendOrder(payload: ProtoOAAmendOrderReq): Observable<void> {
+    return amendOrderReq(this, payload).pipe(
+      publishReplay(1, 10000),
+      refCount(),
+      map(pm => pm.payload),
+      mapTo(undefined)
+    );
+  }
+  private amendPositionSltp(
+    payload: ProtoOAAmendPositionSLTPReq
+  ): Observable<void> {
+    return amendPositionSltpReq(this, payload).pipe(
+      publishReplay(1, 10000),
+      refCount(),
+      map(pm => pm.payload),
+      mapTo(undefined)
+    );
+  }
 
   public authenticate(): Observable<void> {
     const authApplication = this.applicationAuth({});
