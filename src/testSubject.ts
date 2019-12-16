@@ -459,6 +459,7 @@ export class TestSubject extends SpotwareSubject {
   }
 
   public heartbeats(): Observable<void> {
+    // TODO complete when subject completes
     return timer(10000, 10000).pipe(
       mapTo(pm51({})),
       tap(this),
