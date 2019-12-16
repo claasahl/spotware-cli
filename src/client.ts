@@ -20,6 +20,7 @@ concat(
   subject.assets(),
   subject.symbols(),
   subject.profile(),
+  subject.protocolVersion(),
   merge(
     subject.spots("BTC/EUR"),
     subject.heartbeats(),

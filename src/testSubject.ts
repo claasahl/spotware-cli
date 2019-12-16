@@ -15,7 +15,8 @@ import {
   cancelOrder as cancelOrderReq,
   closePosition as closePositionReq,
   amendPositionSltp as amendPositionSltpReq,
-  amendOrder as amendOrderReq
+  amendOrder as amendOrderReq,
+  version as versionReq
 } from "./requests";
 import { concat, EMPTY, Observable, timer, combineLatest } from "rxjs";
 import {
@@ -64,7 +65,9 @@ import {
   ProtoOALightSymbol,
   ProtoOAGetCtidProfileByTokenReq,
   ProtoOAGetCtidProfileByTokenRes,
-  ProtoOACtidProfile
+  ProtoOACtidProfile,
+  ProtoOAVersionReq,
+  ProtoOAVersionRes
 } from "@claasahl/spotware-adapter";
 import mem from "mem";
 
@@ -149,6 +152,16 @@ export class TestSubject extends SpotwareSubject {
         ...payload,
         accessToken: this.authOptions.accessToken
       }).pipe(
+        publishReplay(1, 10000),
+        refCount(),
+        map(pm => pm.payload)
+      );
+    },
+    { cacheKey }
+  );
+  private version = mem(
+    (payload: ProtoOAVersionReq): Observable<ProtoOAVersionRes> => {
+      return versionReq(this, payload).pipe(
         publishReplay(1, 10000),
         refCount(),
         map(pm => pm.payload)
@@ -283,6 +296,10 @@ export class TestSubject extends SpotwareSubject {
 
   public profile(): Observable<ProtoOACtidProfile> {
     return this.getCtidProfileByToken({}).pipe(map(res => res.profile));
+  }
+
+  public protocolVersion(): Observable<string> {
+    return this.version({}).pipe(map(res => res.version));
   }
 
   public assetClasses(): Observable<
