@@ -20,18 +20,18 @@ export class SpotwareSubject extends AnonymousSubject<$.ProtoMessages> {
   ): Observable<$.ProtoMessages> {
     const error = fromEvent<never>(socket, "error").pipe(
       first(),
-      flatMap(error => throwError(error)),
-      tap(error => log(JSON.stringify({ error })))
+      tap(error => log(JSON.stringify({ error }))),
+      flatMap(error => throwError(error))
     );
     const end = fromEvent<never>(socket, "end").pipe(
       first(),
-      flatMap(() => EMPTY),
-      tap(() => log(JSON.stringify({ ended: true })))
+      tap(() => log(JSON.stringify({ ended: true }))),
+      flatMap(() => EMPTY)
     );
     const close = fromEvent<never>(socket, "close").pipe(
       first(),
-      flatMap(() => EMPTY),
-      tap(() => log(JSON.stringify({ closed: true })))
+      tap(() => log(JSON.stringify({ closed: true }))),
+      flatMap(() => EMPTY)
     );
     const endConditions = race(error, end, close).pipe(endWith("byebye"));
     return fromEvent<$.ProtoMessages>(socket, "PROTO_MESSAGE.INPUT.*").pipe(
