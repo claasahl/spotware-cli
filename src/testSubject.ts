@@ -3,6 +3,7 @@ import { TlsOptions } from "tls";
 import {
   applicationAuth as applicationAuthReq,
   getAccountsByAccessToken as getAccountsByAccessTokenReq,
+  getCtidProfileByToken as getCtidProfileByTokenReq,
   accountAuth as accountAuthReq,
   trader as traderReq,
   symbolsList as symbolsListReq,
@@ -60,7 +61,10 @@ import {
   ProtoOAAssetListRes,
   ProtoOAAssetClass,
   ProtoOAAsset,
-  ProtoOALightSymbol
+  ProtoOALightSymbol,
+  ProtoOAGetCtidProfileByTokenReq,
+  ProtoOAGetCtidProfileByTokenRes,
+  ProtoOACtidProfile
 } from "@claasahl/spotware-adapter";
 import mem from "mem";
 
@@ -127,6 +131,21 @@ export class TestSubject extends SpotwareSubject {
       payload: Omit<ProtoOAGetAccountListByAccessTokenReq, "accessToken">
     ): Observable<ProtoOAGetAccountListByAccessTokenRes> => {
       return getAccountsByAccessTokenReq(this, {
+        ...payload,
+        accessToken: this.authOptions.accessToken
+      }).pipe(
+        publishReplay(1, 10000),
+        refCount(),
+        map(pm => pm.payload)
+      );
+    },
+    { cacheKey }
+  );
+  private getCtidProfileByToken = mem(
+    (
+      payload: Omit<ProtoOAGetCtidProfileByTokenReq, "accessToken">
+    ): Observable<ProtoOAGetCtidProfileByTokenRes> => {
+      return getCtidProfileByTokenReq(this, {
         ...payload,
         accessToken: this.authOptions.accessToken
       }).pipe(
@@ -260,6 +279,10 @@ export class TestSubject extends SpotwareSubject {
       ),
       map(pm => pm.trader)
     );
+  }
+
+  public profile(): Observable<ProtoOACtidProfile> {
+    return this.getCtidProfileByToken({}).pipe(map(res => res.profile));
   }
 
   public assetClasses(): Observable<
