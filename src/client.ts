@@ -16,11 +16,10 @@ concat(
   subject.authenticate(),
   subject.symbol("BTC/USD"),
   subject.symbol("BTC/EUR"),
-  subject.assetClasses(),
-  subject.assets(),
-  subject.symbols(),
-  subject.profile(),
-  subject.protocolVersion(),
+  subject.deals(
+    new Date("2019-12-09T00:00:00.000Z"),
+    new Date("2019-12-16T00:00:00.000Z")
+  ),
   merge(
     subject.spots("BTC/EUR"),
     subject.heartbeats(),

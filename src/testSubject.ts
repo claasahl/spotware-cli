@@ -9,6 +9,7 @@ import {
   symbolsList as symbolsListReq,
   assetClassList as assetClassListReq,
   assetList as assetListReq,
+  dealList as dealListReq,
   symbolById as symbolByIdReq,
   subscribeSpots as subscribeSpotsReq,
   newOrder as newOrderReq,
@@ -67,7 +68,10 @@ import {
   ProtoOAGetCtidProfileByTokenRes,
   ProtoOACtidProfile,
   ProtoOAVersionReq,
-  ProtoOAVersionRes
+  ProtoOAVersionRes,
+  ProtoOADealListReq,
+  ProtoOADealListRes,
+  ProtoOADeal
 } from "@claasahl/spotware-adapter";
 import mem from "mem";
 
@@ -172,6 +176,16 @@ export class TestSubject extends SpotwareSubject {
   private trader = mem(
     (payload: ProtoOATraderReq): Observable<ProtoOATraderRes> => {
       return traderReq(this, payload).pipe(
+        publishReplay(1, 10000),
+        refCount(),
+        map(pm => pm.payload)
+      );
+    },
+    { cacheKey }
+  );
+  private dealList = mem(
+    (payload: ProtoOADealListReq): Observable<ProtoOADealListRes> => {
+      return dealListReq(this, payload).pipe(
         publishReplay(1, 10000),
         refCount(),
         map(pm => pm.payload)
@@ -546,6 +560,27 @@ export class TestSubject extends SpotwareSubject {
           ctidTraderAccountId
         });
       })
+    );
+  }
+
+  public deals(
+    from: Date,
+    to: Date
+  ): Observable<ProtoOADeal & { ctidTraderAccountId: number }> {
+    return this.accounts().pipe(
+      flatMap(({ ctidTraderAccountId }) =>
+        this.dealList({
+          ctidTraderAccountId,
+          fromTimestamp: from.getTime(),
+          toTimestamp: to.getTime()
+        })
+      ),
+      flatMap(res =>
+        res.deal.map(deal => ({
+          ...deal,
+          ctidTraderAccountId: res.ctidTraderAccountId
+        }))
+      )
     );
   }
 
