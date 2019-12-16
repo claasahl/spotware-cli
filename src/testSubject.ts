@@ -6,6 +6,8 @@ import {
   accountAuth as accountAuthReq,
   trader as traderReq,
   symbolsList as symbolsListReq,
+  assetClassList as assetClassListReq,
+  assetList as assetListReq,
   symbolById as symbolByIdReq,
   subscribeSpots as subscribeSpotsReq,
   newOrder as newOrderReq,
@@ -19,7 +21,6 @@ import {
   flatMap,
   map,
   filter,
-  first,
   mapTo,
   tap,
   pairwise,
@@ -52,7 +53,14 @@ import {
   ProtoOACancelOrderReq,
   ProtoOAClosePositionReq,
   ProtoOAAmendPositionSLTPReq,
-  ProtoOAAmendOrderReq
+  ProtoOAAmendOrderReq,
+  ProtoOAAssetClassListReq,
+  ProtoOAAssetClassListRes,
+  ProtoOAAssetListReq,
+  ProtoOAAssetListRes,
+  ProtoOAAssetClass,
+  ProtoOAAsset,
+  ProtoOALightSymbol
 } from "@claasahl/spotware-adapter";
 import mem from "mem";
 
@@ -132,6 +140,28 @@ export class TestSubject extends SpotwareSubject {
   private trader = mem(
     (payload: ProtoOATraderReq): Observable<ProtoOATraderRes> => {
       return traderReq(this, payload).pipe(
+        publishReplay(1, 10000),
+        refCount(),
+        map(pm => pm.payload)
+      );
+    },
+    { cacheKey }
+  );
+  private assetClassList = mem(
+    (
+      payload: ProtoOAAssetClassListReq
+    ): Observable<ProtoOAAssetClassListRes> => {
+      return assetClassListReq(this, payload).pipe(
+        publishReplay(1, 10000),
+        refCount(),
+        map(pm => pm.payload)
+      );
+    },
+    { cacheKey }
+  );
+  private assetList = mem(
+    (payload: ProtoOAAssetListReq): Observable<ProtoOAAssetListRes> => {
+      return assetListReq(this, payload).pipe(
         publishReplay(1, 10000),
         refCount(),
         map(pm => pm.payload)
@@ -232,29 +262,83 @@ export class TestSubject extends SpotwareSubject {
     );
   }
 
-  public symbol(
-    symbol: string
-  ): Observable<ProtoOASymbol & { ctidTraderAccountId: number }> {
-    // TODO: this should be grouped
+  public assetClasses(): Observable<
+    ProtoOAAssetClass & { ctidTraderAccountId: number }
+  > {
     return this.accounts().pipe(
-      flatMap(({ ctidTraderAccountId }) => {
-        const lookupSymbolId = this.symbolsList({ ctidTraderAccountId }).pipe(
-          map(res =>
-            res.symbol.filter(({ symbolName }) => symbol === symbolName)
-          ),
-          map(symbols => symbols.map(symbol => symbol.symbolId))
-        );
+      flatMap(({ ctidTraderAccountId }) =>
+        this.assetClassList({ ctidTraderAccountId })
+      ),
+      flatMap(res =>
+        res.assetClass.map(assetClass => ({
+          ...assetClass,
+          ctidTraderAccountId: res.ctidTraderAccountId
+        }))
+      )
+    );
+  }
 
-        const lookupSymbol = lookupSymbolId.pipe(
-          flatMap(symbolId =>
-            this.symbolById({ ctidTraderAccountId, symbolId })
-          ),
-          flatMap(res => res.symbol),
-          map(a => ({ ...a, ctidTraderAccountId })),
-          first()
-        );
-        return lookupSymbol;
-      })
+  public assetClass(
+    name: string
+  ): Observable<ProtoOAAssetClass & { ctidTraderAccountId: number }> {
+    return this.assetClasses().pipe(
+      filter(assetClass => assetClass.name === name)
+    );
+  }
+
+  public assets(): Observable<ProtoOAAsset & { ctidTraderAccountId: number }> {
+    return this.accounts().pipe(
+      flatMap(({ ctidTraderAccountId }) =>
+        this.assetList({ ctidTraderAccountId })
+      ),
+      flatMap(res =>
+        res.asset.map(asset => ({
+          ...asset,
+          ctidTraderAccountId: res.ctidTraderAccountId
+        }))
+      )
+    );
+  }
+
+  public asset(
+    name: string
+  ): Observable<ProtoOAAsset & { ctidTraderAccountId: number }> {
+    return this.assets().pipe(filter(asset => asset.name === name));
+  }
+
+  public symbols(): Observable<
+    ProtoOALightSymbol & { ctidTraderAccountId: number }
+  > {
+    return this.accounts().pipe(
+      flatMap(({ ctidTraderAccountId }) =>
+        this.symbolsList({ ctidTraderAccountId })
+      ),
+      flatMap(res =>
+        res.symbol.map(symbol => ({
+          ...symbol,
+          ctidTraderAccountId: res.ctidTraderAccountId
+        }))
+      )
+    );
+  }
+
+  public symbol(
+    name: string
+  ): Observable<ProtoOASymbol & { ctidTraderAccountId: number }> {
+    return this.symbols().pipe(
+      filter(symbol => symbol.symbolName === name),
+      flatMap(symbol =>
+        this.symbolById({
+          ctidTraderAccountId: symbol.ctidTraderAccountId,
+          symbolId: [symbol.symbolId]
+        })
+      ),
+      flatMap(res =>
+        res.symbol.map(symbol => ({
+          ...symbol,
+          ctidTraderAccountId: res.ctidTraderAccountId
+        }))
+      )
     );
   }
 

@@ -16,6 +16,9 @@ concat(
   subject.authenticate(),
   subject.symbol("BTC/USD"),
   subject.symbol("BTC/EUR"),
+  subject.assetClasses(),
+  subject.assets(),
+  subject.symbols(),
   merge(
     subject.spots("BTC/EUR"),
     subject.heartbeats(),
