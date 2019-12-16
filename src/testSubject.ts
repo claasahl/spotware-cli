@@ -1,5 +1,6 @@
 import { SpotwareSubject } from "./spotwareSubject";
 import { TlsOptions } from "tls";
+import fs from "fs";
 import {
   applicationAuth as applicationAuthReq,
   getAccountsByAccessToken as getAccountsByAccessTokenReq,
@@ -601,10 +602,25 @@ export class TestSubject extends SpotwareSubject {
           if (event.order) {
             orders[event.order.orderId] = event.order;
           }
-          return { positions, orders };
+          const deals: any = { ...acc.deals };
+          if (event.deal) {
+            deals[event.deal.dealId] = event.deal;
+          }
+          return { positions, orders, deals };
         },
-        { positions: {}, orders: {} }
+        { positions: {}, orders: {}, deals: {} }
       ),
+      tap(data => {
+        const now = new Date();
+        fs.writeFile(
+          `./store/${now.getTime()}-${now
+            .toISOString()
+            .replace(/:/g, "-")
+            .replace(".", "-")}.json`,
+          JSON.stringify(data, null, 2),
+          () => {}
+        );
+      }),
       tap(console.log)
     );
   }
