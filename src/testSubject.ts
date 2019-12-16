@@ -30,7 +30,9 @@ import {
   pairwise,
   publishReplay,
   refCount,
-  scan
+  scan,
+  takeUntil,
+  endWith
 } from "rxjs/operators";
 import {
   ProtoOATrader,
@@ -459,8 +461,12 @@ export class TestSubject extends SpotwareSubject {
   }
 
   public heartbeats(): Observable<void> {
-    // TODO complete when subject completes
+    const subjectCompleted = this.pipe(
+      flatMap(() => EMPTY),
+      endWith("completed")
+    );
     return timer(10000, 10000).pipe(
+      takeUntil(subjectCompleted),
       mapTo(pm51({})),
       tap(this),
       mapTo(undefined)
