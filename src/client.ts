@@ -19,17 +19,17 @@ concat(
   merge(
     subject.spots("BTC/EUR"),
     subject.heartbeats(),
-    subject.ordersAndPositions(),
+    subject.openOrdersAndPositions(),
     subject.limitOrder("BTC/EUR", {
       volume: 0.01,
-      tradeSide: ProtoOATradeSide.SELL,
+      tradeSide: ProtoOATradeSide.BUY,
       limitPrice: 6375.12,
-      takeProfit: 6300.0,
-      stopLoss: 6400,
+      takeProfit: 6400.0,
+      stopLoss: 6300,
       expirationTimestamp: new Date().getTime() + 60000
     })
-    // subject.closePositionn("BTC/EUR", {positionId: 18943598, volume: 0.01}),
-    // subject.cancelOrderr({orderId:33532471})
+    // subject.closePositionn("BTC/EUR", {positionId: 18946027, volume: 0.01}),
+    // subject.cancelOrderr({orderId:33537392})
     // subject.amendOrderr("BTC/EUR", {orderId: 33532474,
     //       volume: 0.01,
     //   limitPrice: 6300.12,

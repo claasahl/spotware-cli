@@ -72,7 +72,11 @@ import {
   ProtoOAVersionRes,
   ProtoOADealListReq,
   ProtoOADealListRes,
-  ProtoOADeal
+  ProtoOADeal,
+  ProtoOAOrder,
+  ProtoOAPosition,
+  ProtoOAOrderStatus,
+  ProtoOAPositionStatus
 } from "@claasahl/spotware-adapter";
 import mem from "mem";
 
@@ -585,44 +589,99 @@ export class TestSubject extends SpotwareSubject {
     );
   }
 
-  public ordersAndPositions(): Observable<any> {
+  public ordersAndPositions(): Observable<PositionsOrdersAndDeals> {
+    const seed: PositionsOrdersAndDeals = {
+      positions: {},
+      orders: {},
+      deals: {}
+    };
     return this.pipe(
       filter(
         (pm): pm is ProtoMessage2126 =>
           pm.payloadType === ProtoOAPayloadType.PROTO_OA_EXECUTION_EVENT
       ),
       map(res => res.payload),
-      scan(
-        (acc, event) => {
-          const positions: any = { ...acc.positions };
-          if (event.position) {
-            positions[event.position.positionId] = event.position;
+      scan((acc, event) => {
+        const positions = { ...acc.positions };
+        if (event.position) {
+          positions[event.position.positionId] = event.position;
+        }
+        const orders = { ...acc.orders };
+        if (event.order) {
+          orders[event.order.orderId] = event.order;
+        }
+        const deals = { ...acc.deals };
+        if (event.deal) {
+          deals[event.deal.dealId] = event.deal;
+        }
+        return { positions, orders, deals };
+      }, seed),
+      tap(data => {
+        eventCounter++;
+        const now = new Date();
+        const filename = `./store/${now
+          .toISOString()
+          .replace(/:/g, "-")
+          .replace(".", "-")}-${eventCounter}.json`;
+        fs.writeFile(filename, JSON.stringify(data, null, 2), () => {});
+      })
+    );
+  }
+
+  public openOrdersAndPositions(): Observable<PositionsOrdersAndDeals> {
+    return this.ordersAndPositions().pipe(
+      map(data => {
+        const positions = { ...data.positions };
+        Object.entries(positions).forEach(([_key, position]) => {
+          if (
+            position.positionStatus ===
+            ProtoOAPositionStatus.POSITION_STATUS_OPEN
+          ) {
+            // aka "open" position
+          } else {
+            delete positions[position.positionId];
           }
-          const orders: any = { ...acc.orders };
-          if (event.order) {
-            orders[event.order.orderId] = event.order;
+        });
+
+        const orders = { ...data.orders };
+        Object.entries(orders).forEach(([_key, order]) => {
+          if (
+            order.orderStatus === ProtoOAOrderStatus.ORDER_STATUS_ACCEPTED &&
+            !order.closingOrder
+          ) {
+            // aka "open" order
+          } else {
+            delete orders[order.orderId];
           }
-          const deals: any = { ...acc.deals };
-          if (event.deal) {
-            deals[event.deal.dealId] = event.deal;
-          }
-          return { positions, orders, deals };
-        },
-        { positions: {}, orders: {}, deals: {} }
-      ),
+        });
+        return {
+          positions,
+          orders,
+          deals: {}
+        };
+      }),
       tap(data => {
         const now = new Date();
-        fs.writeFile(
-          `./store/${now.getTime()}-${now
-            .toISOString()
-            .replace(/:/g, "-")
-            .replace(".", "-")}.json`,
-          JSON.stringify(data, null, 2),
-          () => {}
-        );
-      }),
-      tap(console.log)
+        const filename = `./store/${now
+          .toISOString()
+          .replace(/:/g, "-")
+          .replace(".", "-")}-${eventCounter}-open.json`;
+        fs.writeFile(filename, JSON.stringify(data, null, 2), () => {});
+      })
     );
   }
 }
 export default TestSubject;
+
+let eventCounter = 0;
+interface PositionsOrdersAndDeals {
+  positions: {
+    [dealId: number]: ProtoOAPosition;
+  };
+  orders: {
+    [dealId: number]: ProtoOAOrder;
+  };
+  deals: {
+    [dealId: number]: ProtoOADeal;
+  };
+}
