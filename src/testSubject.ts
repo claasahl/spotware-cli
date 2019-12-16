@@ -628,14 +628,20 @@ export class TestSubject extends SpotwareSubject {
     );
   }
 
-  public openOrdersAndPositions(): Observable<PositionsOrdersAndDeals> {
+  public openOrdersAndPositions(
+    label?: string
+  ): Observable<PositionsOrdersAndDeals> {
     return this.ordersAndPositions().pipe(
       map(data => {
         const positions = { ...data.positions };
         Object.entries(positions).forEach(([_key, position]) => {
+          const labelMatched = label
+            ? position.tradeData.label === label
+            : true;
           if (
             position.positionStatus ===
-            ProtoOAPositionStatus.POSITION_STATUS_OPEN
+              ProtoOAPositionStatus.POSITION_STATUS_OPEN &&
+            labelMatched
           ) {
             // aka "open" position
           } else {
@@ -645,8 +651,10 @@ export class TestSubject extends SpotwareSubject {
 
         const orders = { ...data.orders };
         Object.entries(orders).forEach(([_key, order]) => {
+          const labelMatched = label ? order.tradeData.label === label : true;
           if (
             order.orderStatus === ProtoOAOrderStatus.ORDER_STATUS_ACCEPTED &&
+            labelMatched &&
             !order.closingOrder
           ) {
             // aka "open" order
