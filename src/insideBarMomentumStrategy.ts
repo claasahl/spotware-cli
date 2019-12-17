@@ -15,10 +15,10 @@ import config from "./config";
 import SpotwareSubject from "./testSubject";
 import { Trendbar } from "./types";
 
-const log = debug("inside-bar");
-log("configuration is %s", JSON.stringify(config));
-
 function main() {
+  const log = debug("inside-bar");
+  log("configuration is %s", JSON.stringify(config));
+
   const { port, host, clientId, clientSecret, accessToken } = config;
   const {
     label,
@@ -150,7 +150,17 @@ function main() {
       placeOrders,
       closeOrders
     )
-  ).subscribe(undefined, undefined, main);
+  ).subscribe(
+    undefined,
+    err => {
+      log("restarting in 5s due to error: %s", err);
+      setTimeout(main, 5000);
+    },
+    () => {
+      log("restarting in 5s");
+      setTimeout(main, 5000);
+    }
+  );
 
   function engulfed(candleA: Trendbar, candleB: Trendbar): boolean {
     const upperA = candleA.high;
