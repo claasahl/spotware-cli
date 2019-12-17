@@ -1,6 +1,13 @@
 import { ProtoOATradeSide } from "@claasahl/spotware-adapter";
-import { concat, merge, Subject } from "rxjs";
-import { map, pairwise, filter, tap, flatMap } from "rxjs/operators";
+import { concat, merge, Subject, from } from "rxjs";
+import {
+  map,
+  pairwise,
+  filter,
+  tap,
+  flatMap,
+  withLatestFrom
+} from "rxjs/operators";
 import { bullish, bearish, range } from "indicators";
 
 import config from "./config";
@@ -71,6 +78,45 @@ function main() {
     tap(trendbar => console.log("engulfed bearish trendbar", trendbar)),
     tap(matches)
   );
+  const closeOrders = closeOrCancelOrders.pipe(
+    tap(d => console.log("------>a", JSON.stringify(d, null, 2))),
+    withLatestFrom(subject.openOrdersAndPositions(label)),
+    flatMap(([_match, ordersAndPositions]) => {
+      console.log("------>b", JSON.stringify(ordersAndPositions, null, 2));
+      const reference = Date.now() - 10000;
+      const { orders, positions } = ordersAndPositions;
+      const orderIds = Object.values(orders)
+        .filter(order => (order.utcLastUpdateTimestamp || 0) < reference)
+        .map(order => order.orderId);
+      Object.values(orders).forEach(order =>
+        console.log(
+          order.orderId,
+          new Date(order.utcLastUpdateTimestamp || 0),
+          new Date(reference)
+        )
+      );
+      const positionIds = Object.values(positions)
+        .filter(position => (position.utcLastUpdateTimestamp || 0) < reference)
+        .map(position => position.positionId);
+      Object.values(positions).forEach(position =>
+        console.log(
+          position.positionId,
+          new Date(position.utcLastUpdateTimestamp || 0),
+          new Date(reference)
+        )
+      );
+      return merge(
+        from(orderIds).pipe(
+          flatMap(orderId => subject.cancelOrderr({ orderId }))
+        ),
+        from(positionIds).pipe(
+          flatMap(positionId =>
+            subject.closePositionn(symbol, { positionId, volume })
+          )
+        )
+      );
+    })
+  );
 
   matches.subscribe(newOrders);
   matches
@@ -95,13 +141,12 @@ function main() {
 
   concat(
     subject.authenticate(),
-    subject.symbol(symbol),
     merge(
       subject.heartbeats(),
       bullishMatches,
       bearishMatches,
-      subject.openOrdersAndPositions(label),
-      placeOrders
+      placeOrders,
+      closeOrders
     )
   ).subscribe(undefined, undefined, main);
 
