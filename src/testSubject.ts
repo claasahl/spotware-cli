@@ -32,7 +32,8 @@ import {
   refCount,
   scan,
   takeUntil,
-  endWith
+  endWith,
+  take
 } from "rxjs/operators";
 import {
   ProtoOATrader,
@@ -127,6 +128,7 @@ export class TestSubject extends SpotwareSubject {
     }).pipe(
       publishReplay(1, 10000),
       refCount(),
+      take(1),
       map(pm => pm.payload)
     );
   }
@@ -139,6 +141,7 @@ export class TestSubject extends SpotwareSubject {
     }).pipe(
       publishReplay(1, 10000),
       refCount(),
+      take(1),
       map(pm => pm.payload)
     );
   }
@@ -150,8 +153,9 @@ export class TestSubject extends SpotwareSubject {
         ...payload,
         accessToken: this.authOptions.accessToken
       }).pipe(
-        publishReplay(1, 10000),
+        publishReplay(1),
         refCount(),
+        take(1),
         map(pm => pm.payload)
       );
     },
@@ -165,8 +169,9 @@ export class TestSubject extends SpotwareSubject {
         ...payload,
         accessToken: this.authOptions.accessToken
       }).pipe(
-        publishReplay(1, 10000),
+        publishReplay(1),
         refCount(),
+        take(1),
         map(pm => pm.payload)
       );
     },
@@ -175,8 +180,9 @@ export class TestSubject extends SpotwareSubject {
   private version = mem(
     (payload: ProtoOAVersionReq): Observable<ProtoOAVersionRes> => {
       return versionReq(this, payload).pipe(
-        publishReplay(1, 10000),
+        publishReplay(1),
         refCount(),
+        take(1),
         map(pm => pm.payload)
       );
     },
@@ -185,8 +191,9 @@ export class TestSubject extends SpotwareSubject {
   private trader = mem(
     (payload: ProtoOATraderReq): Observable<ProtoOATraderRes> => {
       return traderReq(this, payload).pipe(
-        publishReplay(1, 10000),
+        publishReplay(1),
         refCount(),
+        take(1),
         map(pm => pm.payload)
       );
     },
@@ -195,8 +202,9 @@ export class TestSubject extends SpotwareSubject {
   private dealList = mem(
     (payload: ProtoOADealListReq): Observable<ProtoOADealListRes> => {
       return dealListReq(this, payload).pipe(
-        publishReplay(1, 10000),
+        publishReplay(1),
         refCount(),
+        take(1),
         map(pm => pm.payload)
       );
     },
@@ -207,8 +215,9 @@ export class TestSubject extends SpotwareSubject {
       payload: ProtoOAAssetClassListReq
     ): Observable<ProtoOAAssetClassListRes> => {
       return assetClassListReq(this, payload).pipe(
-        publishReplay(1, 10000),
+        publishReplay(1),
         refCount(),
+        take(1),
         map(pm => pm.payload)
       );
     },
@@ -217,8 +226,9 @@ export class TestSubject extends SpotwareSubject {
   private assetList = mem(
     (payload: ProtoOAAssetListReq): Observable<ProtoOAAssetListRes> => {
       return assetListReq(this, payload).pipe(
-        publishReplay(1, 10000),
+        publishReplay(1),
         refCount(),
+        take(1),
         map(pm => pm.payload)
       );
     },
@@ -227,8 +237,9 @@ export class TestSubject extends SpotwareSubject {
   private symbolsList = mem(
     (payload: ProtoOASymbolsListReq): Observable<ProtoOASymbolsListRes> => {
       return symbolsListReq(this, payload).pipe(
-        publishReplay(1, 10000),
+        publishReplay(1),
         refCount(),
+        take(1),
         map(pm => pm.payload)
       );
     },
@@ -237,8 +248,9 @@ export class TestSubject extends SpotwareSubject {
   private symbolById = mem(
     (payload: ProtoOASymbolByIdReq): Observable<ProtoOASymbolByIdRes> => {
       return symbolByIdReq(this, payload).pipe(
-        publishReplay(1, 10000),
+        publishReplay(1),
         refCount(),
+        take(1),
         map(pm => pm.payload)
       );
     },
@@ -251,6 +263,7 @@ export class TestSubject extends SpotwareSubject {
       return subscribeSpotsReq(this, payload).pipe(
         publishReplay(1, 10000),
         refCount(),
+        take(1),
         map(pm => pm.payload)
       );
     },
@@ -260,6 +273,7 @@ export class TestSubject extends SpotwareSubject {
     return newOrderReq(this, payload).pipe(
       publishReplay(1, 10000),
       refCount(),
+      take(1),
       map(pm => pm.payload),
       mapTo(undefined)
     );
@@ -268,6 +282,7 @@ export class TestSubject extends SpotwareSubject {
     return cancelOrderReq(this, payload).pipe(
       publishReplay(1, 10000),
       refCount(),
+      take(1),
       map(pm => pm.payload),
       mapTo(undefined)
     );
@@ -276,6 +291,7 @@ export class TestSubject extends SpotwareSubject {
     return closePositionReq(this, payload).pipe(
       publishReplay(1, 10000),
       refCount(),
+      take(1),
       map(pm => pm.payload),
       mapTo(undefined)
     );
@@ -284,6 +300,7 @@ export class TestSubject extends SpotwareSubject {
     return amendOrderReq(this, payload).pipe(
       publishReplay(1, 10000),
       refCount(),
+      take(1),
       map(pm => pm.payload),
       mapTo(undefined)
     );
@@ -294,6 +311,7 @@ export class TestSubject extends SpotwareSubject {
     return amendPositionSltpReq(this, payload).pipe(
       publishReplay(1, 10000),
       refCount(),
+      take(1),
       map(pm => pm.payload),
       mapTo(undefined)
     );
