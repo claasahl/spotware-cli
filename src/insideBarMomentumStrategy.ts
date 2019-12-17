@@ -9,10 +9,14 @@ import {
   withLatestFrom
 } from "rxjs/operators";
 import { bullish, bearish, range } from "indicators";
+import debug from "debug";
 
 import config from "./config";
 import SpotwareSubject from "./testSubject";
 import { Trendbar } from "./types";
+
+const log = debug("inside-bar");
+log("configuration is %s", JSON.stringify(config));
 
 function main() {
   const { port, host, clientId, clientSecret, accessToken } = config;
@@ -24,7 +28,9 @@ function main() {
     expirationOffset,
     enterOffset,
     stopLossOffset,
-    takeProfitOffset
+    takeProfitOffset,
+    minOffsetToStopLoss,
+    minOffsetToTakeProfit
   } = config;
   const subject = new SpotwareSubject(
     { clientId, clientSecret, accessToken },
@@ -56,7 +62,7 @@ function main() {
         takeProfit: roundPrice(candle.high + r * takeProfitOffset)
       };
     }),
-    tap(trendbar => console.log("engulfed bullish trendbar", trendbar)),
+    tap(trendbar => log("engulfed bullish trendbar: %s", trendbar)),
     tap(matches)
   );
 
@@ -75,7 +81,7 @@ function main() {
         takeProfit: roundPrice(candle.low - r * takeProfitOffset)
       };
     }),
-    tap(trendbar => console.log("engulfed bearish trendbar", trendbar)),
+    tap(trendbar => log("engulfed bearish trendbar: %s", trendbar)),
     tap(matches)
   );
   const closeOrders = closeOrCancelOrders.pipe(
@@ -91,9 +97,11 @@ function main() {
         .map(position => position.positionId);
       return merge(
         from(orderIds).pipe(
+          tap(orderId => log(`cancel "lingering" order: ${orderId}`)),
           flatMap(orderId => subject.cancelOrderr({ orderId }))
         ),
         from(positionIds).pipe(
+          tap(positionId => log(`close "lingering" position: ${positionId}`)),
           flatMap(positionId =>
             subject.closePositionn(symbol, { positionId, volume })
           )
@@ -110,6 +118,16 @@ function main() {
     )
     .subscribe(closeOrCancelOrders);
   const placeOrders = newOrders.pipe(
+    tap(match => log("new order: %s", match)),
+    filter(
+      ({ takeProfit, enter }) =>
+        Math.abs(enter - takeProfit) >= minOffsetToTakeProfit
+    ),
+    tap(match => log("TP is far enough from limit price: %s", match)),
+    filter(
+      ({ stopLoss, enter }) => Math.abs(enter - stopLoss) >= minOffsetToStopLoss
+    ),
+    tap(match => log("SL is far enough from limit price: %s", match)),
     flatMap(({ stopLoss, takeProfit, enter, tradeSide }) =>
       subject.limitOrder(symbol, {
         label,

@@ -29,6 +29,14 @@ const config = {
   ),
   takeProfitOffset: Number(
     process.env.takeProfitOffset || "configure env. variable 'takeProfitOffset'"
+  ),
+  minOffsetToStopLoss: Number(
+    process.env.minOffsetToStopLoss ||
+      "configure env. variable 'minOffsetToStopLoss'"
+  ),
+  minOffsetToTakeProfit: Number(
+    process.env.minOffsetToTakeProfit ||
+      "configure env. variable 'minOffsetToTakeProfit'"
   )
 };
 export default config;
