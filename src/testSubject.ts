@@ -78,11 +78,13 @@ import {
   ProtoOAOrder,
   ProtoOAPosition,
   ProtoOAOrderStatus,
-  ProtoOAPositionStatus
+  ProtoOAPositionStatus,
+  ProtoOATrendbarPeriod
 } from "@claasahl/spotware-adapter";
 import mem from "mem";
 
-import { pm51 } from "./utils";
+import { pm51, periodToMillis, price as readablePrice } from "./utils";
+import { Trendbar } from "./types";
 
 interface AuthenticationOptions {
   clientId: string;
@@ -242,15 +244,18 @@ export class TestSubject extends SpotwareSubject {
     },
     { cacheKey }
   );
-  private subscribeSpots(
-    payload: ProtoOASubscribeSpotsReq
-  ): Observable<ProtoOASubscribeSpotsRes> {
-    return subscribeSpotsReq(this, payload).pipe(
-      publishReplay(1, 10000),
-      refCount(),
-      map(pm => pm.payload)
-    );
-  }
+  private subscribeSpots = mem(
+    (
+      payload: ProtoOASubscribeSpotsReq
+    ): Observable<ProtoOASubscribeSpotsRes> => {
+      return subscribeSpotsReq(this, payload).pipe(
+        publishReplay(1, 10000),
+        refCount(),
+        map(pm => pm.payload)
+      );
+    },
+    { cacheKey }
+  );
   private newOrder(payload: ProtoOANewOrderReq): Observable<void> {
     return newOrderReq(this, payload).pipe(
       publishReplay(1, 10000),
@@ -457,6 +462,59 @@ export class TestSubject extends SpotwareSubject {
 
         return subscribeToSymbol.pipe(flatMap(() => spotsForSymbol));
       })
+    );
+  }
+
+  public trendbars(
+    symbol: string,
+    period: ProtoOATrendbarPeriod
+  ): Observable<Trendbar> {
+    return this.spots(symbol).pipe(
+      map(spot => ({ ...spot, periodStart: periodStart(spot.date, period) })),
+      scan(
+        (acc, curr) => {
+          const price = readablePrice(curr.symbolId, curr.bid); // <<-----
+          if (acc.date.getTime() === curr.periodStart.getTime()) {
+            const trendbar = { ...acc };
+            trendbar.close = price;
+            if (trendbar.high < price) {
+              trendbar.high = price;
+            }
+            if (trendbar.low > price) {
+              trendbar.low = price;
+            }
+            return trendbar;
+          } else {
+            return {
+              date: curr.periodStart,
+              timestamp: curr.periodStart.getTime(),
+              open: price,
+              high: price,
+              low: price,
+              close: price,
+              symbolId: curr.symbolId,
+              ctidTraderAccountId: curr.ctidTraderAccountId,
+              volume: 0,
+              period
+            };
+          }
+        },
+        {
+          date: new Date(0),
+          timestamp: 0,
+          open: 0,
+          high: 0,
+          low: 0,
+          close: 0,
+          symbolId: 0,
+          ctidTraderAccountId: 0,
+          volume: 0,
+          period
+        }
+      ),
+      pairwise(),
+      filter(([left, right]) => left.timestamp !== right.timestamp),
+      map(([left, _right]) => left)
     );
   }
 
@@ -732,4 +790,11 @@ interface PositionsOrdersAndDeals {
   deals: {
     [dealId: number]: ProtoOADeal;
   };
+}
+
+function periodStart(date: Date, period: ProtoOATrendbarPeriod): Date {
+  const timestamp = date.getTime();
+  const millis = periodToMillis(period);
+  const periodStart = Math.floor(timestamp / millis) * millis;
+  return new Date(periodStart);
 }
