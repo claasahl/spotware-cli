@@ -101,6 +101,7 @@ interface ConnectionOptions {
 interface Spot {
   ask: number;
   bid: number;
+  spread: number;
   symbolId: number;
   ctidTraderAccountId: number;
   date: Date;
@@ -460,6 +461,7 @@ export class TestSubject extends SpotwareSubject {
           map(({ ask, bid, ctidTraderAccountId, symbolId }) => ({
             ask,
             bid,
+            spread: 0,
             symbolId,
             ctidTraderAccountId,
             date: new Date()
@@ -473,9 +475,18 @@ export class TestSubject extends SpotwareSubject {
             if (!spot.bid) {
               spot.bid = left.bid;
             }
+            if (spot.bid && spot.ask) {
+              spot.spread = spot.ask - spot.bid;
+            }
             return spot;
           }),
-          filter((spot): spot is Spot => !!(spot.ask && spot.bid))
+          filter((spot): spot is Spot => !!(spot.ask && spot.bid)),
+          map(spot => ({
+            ...spot,
+            ask: readablePrice(spot.symbolId, spot.ask),
+            bid: readablePrice(spot.symbolId, spot.bid),
+            spread: readablePrice(spot.symbolId, spot.spread)
+          }))
         );
 
         return subscribeToSymbol.pipe(flatMap(() => spotsForSymbol));
@@ -491,7 +502,7 @@ export class TestSubject extends SpotwareSubject {
       map(spot => ({ ...spot, periodStart: periodStart(spot.date, period) })),
       scan(
         (acc, curr) => {
-          const price = readablePrice(curr.symbolId, curr.bid); // <<-----
+          const price = curr.bid;
           if (acc.date.getTime() === curr.periodStart.getTime()) {
             const trendbar = { ...acc };
             trendbar.close = price;
