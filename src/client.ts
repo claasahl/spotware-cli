@@ -10,7 +10,6 @@ function main() {
     { clientId, clientSecret, accessToken },
     { port, host }
   );
-  subject.subscribe(undefined, undefined, main);
 
   ProtoOATradeSide.BUY;
 
@@ -22,14 +21,13 @@ function main() {
       subject.spots("BTC/EUR"),
       subject.heartbeats(),
       subject.openOrdersAndPositions("labeled"),
-      subject.limitOrder("BTC/EUR", {
+      subject.stopOrder("BTC/EUR", {
         volume: 0.01,
         tradeSide: ProtoOATradeSide.BUY,
-        limitPrice: 6375.12,
-        takeProfit: 6400.0,
-        stopLoss: 6300,
-        expirationTimestamp: new Date().getTime() + 60000,
-        label: "labeled"
+        stopPrice: 6300.12,
+        takeProfit: 6400,
+        stopLoss: 6200,
+        expirationTimestamp: new Date().getTime() + 600000
       })
       // subject.closePositionn("BTC/EUR", {positionId: 18946027, volume: 0.01}),
       // subject.cancelOrderr({orderId:33537392})
@@ -47,7 +45,7 @@ function main() {
       //   trailingStopLoss: true
       // })
     )
-  ).subscribe();
+  ).subscribe(undefined, undefined, main);
   // {
   //   ctidTraderAccountId: number;
   //   symbolId: number;

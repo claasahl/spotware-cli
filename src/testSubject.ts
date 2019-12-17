@@ -477,7 +477,12 @@ export class TestSubject extends SpotwareSubject {
     symbol: string,
     payload: Omit<
       ProtoOANewOrderReq,
-      "payloadType" | "ctidTraderAccountId" | "symbolId" | "orderType"
+      | "payloadType"
+      | "ctidTraderAccountId"
+      | "symbolId"
+      | "orderType"
+      | "stopPrice"
+      | "limitPrice"
     >
   ): Observable<void> {
     return this.symbol(symbol).pipe(
@@ -497,7 +502,11 @@ export class TestSubject extends SpotwareSubject {
     symbol: string,
     payload: Omit<
       ProtoOANewOrderReq,
-      "payloadType" | "ctidTraderAccountId" | "symbolId" | "orderType"
+      | "payloadType"
+      | "ctidTraderAccountId"
+      | "symbolId"
+      | "orderType"
+      | "stopPrice"
     >
   ): Observable<void> {
     return this.symbol(symbol).pipe(
@@ -508,6 +517,30 @@ export class TestSubject extends SpotwareSubject {
           volume: payload.volume * (symbol.lotSize || 1),
           symbolId: symbol.symbolId,
           orderType: ProtoOAOrderType.LIMIT
+        });
+      })
+    );
+  }
+
+  public stopOrder(
+    symbol: string,
+    payload: Omit<
+      ProtoOANewOrderReq,
+      | "payloadType"
+      | "ctidTraderAccountId"
+      | "symbolId"
+      | "orderType"
+      | "limitPrice"
+    >
+  ): Observable<void> {
+    return this.symbol(symbol).pipe(
+      flatMap(symbol => {
+        return this.newOrder({
+          ...payload,
+          ctidTraderAccountId: symbol.ctidTraderAccountId,
+          volume: payload.volume * (symbol.lotSize || 1),
+          symbolId: symbol.symbolId,
+          orderType: ProtoOAOrderType.STOP
         });
       })
     );
