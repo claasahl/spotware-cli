@@ -79,32 +79,16 @@ function main() {
     tap(matches)
   );
   const closeOrders = closeOrCancelOrders.pipe(
-    tap(d => console.log("------>a", JSON.stringify(d, null, 2))),
     withLatestFrom(subject.openOrdersAndPositions(label)),
     flatMap(([_match, ordersAndPositions]) => {
-      console.log("------>b", JSON.stringify(ordersAndPositions, null, 2));
       const reference = Date.now() - 10000;
       const { orders, positions } = ordersAndPositions;
       const orderIds = Object.values(orders)
         .filter(order => (order.utcLastUpdateTimestamp || 0) < reference)
         .map(order => order.orderId);
-      Object.values(orders).forEach(order =>
-        console.log(
-          order.orderId,
-          new Date(order.utcLastUpdateTimestamp || 0),
-          new Date(reference)
-        )
-      );
       const positionIds = Object.values(positions)
         .filter(position => (position.utcLastUpdateTimestamp || 0) < reference)
         .map(position => position.positionId);
-      Object.values(positions).forEach(position =>
-        console.log(
-          position.positionId,
-          new Date(position.utcLastUpdateTimestamp || 0),
-          new Date(reference)
-        )
-      );
       return merge(
         from(orderIds).pipe(
           flatMap(orderId => subject.cancelOrderr({ orderId }))
