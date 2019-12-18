@@ -145,9 +145,9 @@ function main() {
       )
     ),
     flatMap(({ stopLoss, takeProfit, enter, tradeSide }) =>
-      subject.limitOrder(symbol, {
+      subject.stopOrder(symbol, {
         label,
-        limitPrice: enter,
+        stopPrice: enter,
         stopLoss,
         takeProfit,
         volume,
