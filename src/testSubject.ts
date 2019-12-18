@@ -574,14 +574,6 @@ export class TestSubject extends SpotwareSubject {
       const lowerBound = Date.now() - millis * 2;
       const upperBound = Date.now() - millis * 1;
       const timestamp = spot.date.getTime();
-      console.log(
-        "----->",
-        timestamp >= lowerBound,
-        timestamp < upperBound,
-        new Date(lowerBound),
-        new Date(timestamp),
-        new Date(upperBound)
-      );
       return timestamp >= lowerBound && timestamp < upperBound;
     }
     function withinBucket2(spot: Spot) {
@@ -639,12 +631,10 @@ export class TestSubject extends SpotwareSubject {
     );
     const bucket1 = spots.pipe(
       map(spots => spots.filter(withinBucket1)),
-      tap(a => console.log("bucket1 -->", a.length)),
       flatMap(spots => from(spots).pipe(spotToTrendbar()))
     );
     const bucket2 = spots.pipe(
       map(spots => spots.filter(withinBucket2)),
-      tap(a => console.log("bucket2 -->", a.length)),
       flatMap(spots => from(spots).pipe(spotToTrendbar()))
     );
     return bucket1.pipe(withLatestFrom(bucket2), skipUntil(timer(timeframe)));
