@@ -6,7 +6,8 @@ import {
   filter,
   tap,
   flatMap,
-  withLatestFrom
+  withLatestFrom,
+  throttleTime
 } from "rxjs/operators";
 import { bullish, bearish, range } from "indicators";
 import debug from "debug";
@@ -112,9 +113,10 @@ function main() {
     })
   );
 
-  matches.subscribe(newOrders);
+  matches.pipe(throttleTime(1000)).subscribe(newOrders);
   matches
     .pipe(
+      throttleTime(1000),
       pairwise(),
       map(([prevMatch, _currMatch]) => prevMatch)
     )
