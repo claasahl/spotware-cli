@@ -47,8 +47,7 @@ function main() {
   const closeOrCancelOrders = new Subject<Match>();
   const newOrders = new Subject<Match>();
 
-  const bullishMatches = subject.trendbars(symbol, period).pipe(
-    pairwise(),
+  const bullishMatches = subject.slidingTrendbars(symbol, period).pipe(
     filter(([first]) => bullish(first)),
     filter(([a, b]) => engulfed(a, b)),
     map(([first]) => first),
@@ -68,8 +67,7 @@ function main() {
     tap(matches)
   );
 
-  const bearishMatches = subject.trendbars(symbol, period).pipe(
-    pairwise(),
+  const bearishMatches = subject.slidingTrendbars(symbol, period).pipe(
     filter(([first]) => bearish(first)),
     filter(([a, b]) => engulfed(a, b)),
     map(([first]) => first),
