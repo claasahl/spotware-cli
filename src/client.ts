@@ -1,10 +1,13 @@
 import SpotwareSubject from "./testSubject";
+import debug from "debug";
 
 import config from "./config";
 import { concat, merge } from "rxjs";
 import { ProtoOATradeSide } from "@claasahl/spotware-adapter";
+import { tap } from "rxjs/operators";
 
 function main() {
+  const log = debug("client");
   const { port, host, clientId, clientSecret, accessToken } = config;
   const subject = new SpotwareSubject(
     { clientId, clientSecret, accessToken },
@@ -18,17 +21,24 @@ function main() {
     subject.symbol("BTC/USD"),
     subject.symbol("BTC/EUR"),
     merge(
-      subject.spots("BTC/EUR"),
+      // subject.spots("BTC/EUR"),
       subject.heartbeats(),
-      subject.openOrdersAndPositions("labeled"),
-      subject.stopOrder("BTC/EUR", {
-        volume: 0.01,
-        tradeSide: ProtoOATradeSide.BUY,
-        stopPrice: 6300.12,
-        takeProfit: 6400,
-        stopLoss: 6200,
-        expirationTimestamp: new Date().getTime() + 600000
-      })
+      subject
+        .tickData(
+          "BTC/EUR",
+          new Date("2019-12-28T00:00:00.000Z"),
+          new Date("2019-12-29T00:00:00.000Z")
+        )
+        .pipe(tap(a => log(`-- ` + JSON.stringify(a, null, 2))))
+      // subject.openOrdersAndPositions("labeled"),
+      // subject.stopOrder("BTC/EUR", {
+      //   volume: 0.01,
+      //   tradeSide: ProtoOATradeSide.BUY,
+      //   stopPrice: 6300.12,
+      //   takeProfit: 6400,
+      //   stopLoss: 6200,
+      //   expirationTimestamp: new Date().getTime() + 60000
+      // })
       // subject.closePositionn("BTC/EUR", {positionId: 18946027, volume: 0.01}),
       // subject.cancelOrderr({orderId:33537392})
       // subject.amendOrderr("BTC/EUR", {orderId: 33532474,
@@ -36,7 +46,7 @@ function main() {
       //   limitPrice: 6300.12,
       //   takeProfit: 6400.0,
       //   stopLoss: 6300,
-      //   expirationTimestamp: new Date().getTime() + 600000
+      //   expirationTimestamp: new Date().getTime() + 60000
       // })
       // subject.amendPositionSltpp({
       //   positionId: 18943604,
@@ -45,7 +55,7 @@ function main() {
       //   trailingStopLoss: true
       // })
     )
-  ).subscribe(undefined, undefined, main);
+  ).subscribe(undefined, console.log, main);
   // {
   //   ctidTraderAccountId: number;
   //   symbolId: number;

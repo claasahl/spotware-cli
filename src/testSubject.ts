@@ -18,7 +18,8 @@ import {
   closePosition as closePositionReq,
   amendPositionSltp as amendPositionSltpReq,
   amendOrder as amendOrderReq,
-  version as versionReq
+  version as versionReq,
+  getTickdata
 } from "./requests";
 import {
   concat,
@@ -45,7 +46,8 @@ import {
   take,
   withLatestFrom,
   reduce,
-  skipUntil
+  skipUntil,
+  expand
 } from "rxjs/operators";
 import {
   ProtoOATrader,
@@ -92,7 +94,8 @@ import {
   ProtoOAPosition,
   ProtoOAOrderStatus,
   ProtoOAPositionStatus,
-  ProtoOATrendbarPeriod
+  ProtoOATrendbarPeriod,
+  ProtoOAQuoteType
 } from "@claasahl/spotware-adapter";
 import mem from "mem";
 
@@ -436,6 +439,107 @@ export class TestSubject extends SpotwareSubject {
           ctidTraderAccountId: res.ctidTraderAccountId
         }))
       )
+    );
+  }
+
+  public tickData(symbol: string, from: Date, to: Date): Observable<Spot> {
+    return this.symbol(symbol).pipe(
+      flatMap(symbol => {
+        const bid = getTickdata(this, {
+          ctidTraderAccountId: symbol.ctidTraderAccountId,
+          symbolId: symbol.symbolId,
+          type: ProtoOAQuoteType.BID,
+          fromTimestamp: from.getTime(),
+          toTimestamp: to.getTime()
+        });
+        return bid.pipe(
+          tap(res => console.log("---->", res.payload.hasMore)),
+          map(res => res.payload),
+          map(res => {
+            const tickData: {
+              tick: number;
+              timestamp: number;
+              symbolId: number;
+              ctidTraderAccountId: number;
+            }[] = [];
+            res.tickData.map((tick, index) => {
+              if (index === 0) {
+                tickData.push({
+                  ...tick,
+                  symbolId: symbol.symbolId,
+                  ctidTraderAccountId: symbol.ctidTraderAccountId
+                });
+              } else {
+                tickData.push({
+                  tick: tickData[index - 1].tick + tick.tick,
+                  timestamp: tickData[index - 1].timestamp + tick.timestamp,
+                  symbolId: symbol.symbolId,
+                  ctidTraderAccountId: symbol.ctidTraderAccountId
+                });
+              }
+            });
+            return { ...res, tickData };
+          })
+        );
+      }),
+      expand(res => {
+        console.log("---->", res.hasMore);
+        if (res.hasMore) {
+          res.hasMore = false;
+          const { length } = res.tickData;
+          const {
+            symbolId,
+            ctidTraderAccountId,
+            timestamp: toTimestamp
+          } = res.tickData[length - 1];
+          const bid = getTickdata(this, {
+            ctidTraderAccountId: ctidTraderAccountId,
+            symbolId: symbolId,
+            type: ProtoOAQuoteType.BID,
+            fromTimestamp: from.getTime(),
+            toTimestamp: toTimestamp
+          });
+          return bid.pipe(
+            map(res => res.payload),
+            map(res => {
+              const tickData: {
+                tick: number;
+                timestamp: number;
+                symbolId: number;
+                ctidTraderAccountId: number;
+              }[] = [];
+              res.tickData.map((tick, index) => {
+                if (index === 0) {
+                  tickData.push({
+                    ...tick,
+                    symbolId: symbolId,
+                    ctidTraderAccountId: ctidTraderAccountId
+                  });
+                } else {
+                  tickData.push({
+                    tick: tickData[index - 1].tick + tick.tick,
+                    timestamp: tickData[index - 1].timestamp + tick.timestamp,
+                    symbolId: symbolId,
+                    ctidTraderAccountId: ctidTraderAccountId
+                  });
+                }
+              });
+              return { ...res, tickData };
+            })
+          );
+        } else {
+          return EMPTY;
+        }
+      }),
+      flatMap(res => res.tickData),
+      map(tick => ({
+        ask: 0,
+        bid: readablePrice(tick.symbolId, tick.tick),
+        spread: 0,
+        symbolId: tick.symbolId,
+        ctidTraderAccountId: tick.ctidTraderAccountId,
+        date: new Date(tick.timestamp)
+      }))
     );
   }
 
