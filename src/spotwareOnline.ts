@@ -9,10 +9,13 @@ import {
 import debug from "debug";
 import { TlsOptions } from "tls";
 
-import { Spot, Trendbar, Trader } from "./types";
+import { Spot, Trendbar, Trader, Order, Position } from "./types";
 import TestSubject from "./testSubject";
 import { map, mapTo, flatMap, publish, refCount } from "rxjs/operators";
-import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
+import {
+  ProtoOATrendbarPeriod,
+  ProtoOATradeSide
+} from "@claasahl/spotware-adapter";
 import { toTrendbars, toSlidingTrendbars } from "./utils";
 
 interface AuthenticationOptions {
@@ -54,63 +57,83 @@ export class SpotwareOnline implements Trader {
     this.subject.heartbeats().subscribe();
   }
 
-  spots(): Observable<Spot>;
-  spots(from: Date | number, to: Date | number): Observable<Spot>;
-  spots(from?: Date | number, to?: Date | number): Observable<Spot> {
-    if (typeof from === "undefined" || typeof to === "undefined") {
-      return concat(this.auth, this.liveSpots());
-    }
-    const fromDate = typeof from === "number" ? new Date(from) : from;
-    const toDate = typeof to === "number" ? new Date(to) : to;
-    return concat(this.auth, this.historicSpots(fromDate, toDate));
-  }
-
-  private liveSpots(): Observable<Spot> {
-    return this.subject
+  spots(): Observable<Spot> {
+    const liveSpots = this.subject
       .spots(this.symbol)
       .pipe(map(spot => ({ ...spot, timestamp: spot.date.getTime() })));
+    return concat(this.auth, liveSpots);
   }
 
-  private historicSpots(from: Date, to: Date): Observable<Spot> {
-    return this.subject
-      .tickData(this.symbol, from, to)
-      .pipe(map(spot => ({ ...spot, timestamp: spot.date.getTime() })));
-  }
-
-  trendbars(period: ProtoOATrendbarPeriod): Observable<Trendbar[]>;
-  trendbars(
-    period: ProtoOATrendbarPeriod,
-    from: Date | number,
-    to: Date | number
-  ): Observable<Trendbar[]>;
-  trendbars(
-    period: ProtoOATrendbarPeriod,
-    from?: Date | number,
-    to?: Date | number
-  ): Observable<Trendbar[]> {
+  trendbars(period: ProtoOATrendbarPeriod): Observable<Trendbar[]> {
     const toBars: OperatorFunction<Spot, Trendbar[]> = this.slidingTrendbars
       ? toSlidingTrendbars(period)
       : pipe(
           toTrendbars(period),
           map(trendbar => [trendbar])
         );
-    if (typeof from === "undefined" || typeof to === "undefined") {
-      return concat(this.auth, this.spots().pipe(toBars));
-    }
-    const fromDate = typeof from === "number" ? new Date(from) : from;
-    const toDate = typeof to === "number" ? new Date(to) : to;
-    return concat(this.auth, this.spots(fromDate, toDate).pipe(toBars));
+    return concat(this.auth, this.spots().pipe(toBars));
   }
 
-  positions(): Observable<any>;
-  positions(from: number | Date, to: number | Date): Observable<any>;
-  positions(_from?: any, _to?: any): Observable<any> {
+  positions(): Observable<Position> {
     throw new Error("Method not implemented.");
   }
-  stopOrder(): Observable<void> {
-    throw new Error("Method not implemented.");
+
+  stopOrder({
+    price,
+    volume,
+    tradeSide,
+    expirationTimestamp,
+    stopLoss,
+    takeProfit,
+    trailingStopLoss
+  }: Order): Observable<Position> {
+    return concat(
+      this.auth,
+      this.subject.stopOrder(this.symbol, {
+        stopPrice: price,
+        volume,
+        tradeSide: (() => {
+          switch (tradeSide) {
+            case "BUY":
+              return ProtoOATradeSide.BUY;
+            case "SELL":
+              return ProtoOATradeSide.SELL;
+          }
+        })(),
+        expirationTimestamp,
+        stopLoss,
+        takeProfit,
+        trailingStopLoss
+      })
+    ).pipe(flatMap(() => EMPTY));
   }
-  limitOrder(): Observable<void> {
-    throw new Error("Method not implemented.");
+  limitOrder({
+    price,
+    volume,
+    tradeSide,
+    expirationTimestamp,
+    stopLoss,
+    takeProfit,
+    trailingStopLoss
+  }: Order): Observable<Position> {
+    return concat(
+      this.auth,
+      this.subject.limitOrder(this.symbol, {
+        limitPrice: price,
+        volume,
+        tradeSide: (() => {
+          switch (tradeSide) {
+            case "BUY":
+              return ProtoOATradeSide.BUY;
+            case "SELL":
+              return ProtoOATradeSide.SELL;
+          }
+        })(),
+        expirationTimestamp,
+        stopLoss,
+        takeProfit,
+        trailingStopLoss
+      })
+    ).pipe(flatMap(() => EMPTY));
   }
 }

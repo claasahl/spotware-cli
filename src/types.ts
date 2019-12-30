@@ -21,19 +21,27 @@ export interface Spot {
   date: Date;
 }
 
+export interface Order {
+  tradeSide: "BUY" | "SELL";
+  price: number;
+  volume: number;
+  expirationTimestamp?: number;
+  stopLoss?: number;
+  takeProfit?: number;
+  trailingStopLoss?: boolean;
+}
+
+export interface Position extends Order {
+  id: string;
+  status: "PENDING" | "OPEN" | "CLOSED" | "CANCELLED";
+}
+
 export interface Trader {
   spots(): Observable<Spot>;
-  spots(from: Date | number, to: Date | number): Observable<Spot>;
   trendbars(period: ProtoOATrendbarPeriod): Observable<Trendbar[]>;
-  trendbars(
-    period: ProtoOATrendbarPeriod,
-    from: Date | number,
-    to: Date | number
-  ): Observable<Trendbar[]>;
-  positions(): Observable<any>;
-  positions(from: Date | number, to: Date | number): Observable<any>;
-  stopOrder(): Observable<void>;
-  limitOrder(): Observable<void>;
+  positions(): Observable<Position>;
+  stopOrder(order: Order): Observable<Position>;
+  limitOrder(order: Order): Observable<Position>;
 }
 
 export interface Snapshot {
