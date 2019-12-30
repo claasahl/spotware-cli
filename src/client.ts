@@ -2,7 +2,8 @@ import debug from "debug";
 
 import config from "./config";
 import { SpotwareOnline } from "./spotwareOnline";
-import { concat } from "rxjs";
+import { concat, merge } from "rxjs";
+import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
 
 function main() {
   const log = debug("client");
@@ -18,9 +19,14 @@ function main() {
       new Date("2019-12-29T00:00:00.000Z"),
       new Date("2019-12-30T00:00:00.000Z")
     ),
-    a.spots()
+    a.trendbars(
+      ProtoOATrendbarPeriod.H1,
+      new Date("2019-12-29T00:00:00.000Z"),
+      new Date("2019-12-30T00:00:00.000Z")
+    ),
+    merge(a.spots(), a.trendbars(ProtoOATrendbarPeriod.M1))
   ).subscribe(
-    spot => log("%j", spot),
+    spotOrTrendbar => log("%j", spotOrTrendbar),
     err => log("error: %j", err),
     main
   );

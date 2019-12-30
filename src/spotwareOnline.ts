@@ -1,11 +1,28 @@
-import { Observable, EMPTY, concat, identity } from "rxjs";
+import {
+  Observable,
+  EMPTY,
+  concat,
+  identity,
+  OperatorFunction,
+  pipe
+} from "rxjs";
 import debug from "debug";
 import { TlsOptions } from "tls";
 
 import { Spot, Trendbar, Trader } from "./types";
 import TestSubject from "./testSubject";
-import { map, mapTo, flatMap, publish, refCount } from "rxjs/operators";
+import {
+  map,
+  mapTo,
+  flatMap,
+  publish,
+  refCount,
+  scan,
+  pairwise,
+  filter
+} from "rxjs/operators";
 import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
+import { periodToMillis } from "./utils";
 
 interface AuthenticationOptions {
   clientId: string;
@@ -83,16 +100,16 @@ export class SpotwareOnline implements Trader {
     return concat(this.auth, this.historicTrendbars(period, fromDate, toDate));
   }
 
-  private liveTrendbars(_period: ProtoOATrendbarPeriod): Observable<Trendbar> {
-    return EMPTY;
+  private liveTrendbars(period: ProtoOATrendbarPeriod): Observable<Trendbar> {
+    return this.spots().pipe(spotsToTrendbars(period));
   }
 
   private historicTrendbars(
-    _period: ProtoOATrendbarPeriod,
-    _from: Date | number,
-    _to: Date | number
+    period: ProtoOATrendbarPeriod,
+    from: Date | number,
+    to: Date | number
   ): Observable<Trendbar> {
-    return EMPTY;
+    return this.spots(from, to).pipe(spotsToTrendbars(period));
   }
 
   positions(): Observable<any>;
@@ -106,4 +123,59 @@ export class SpotwareOnline implements Trader {
   limitOrder(): Observable<void> {
     throw new Error("Method not implemented.");
   }
+}
+
+function spotsToTrendbars(
+  period: ProtoOATrendbarPeriod
+): OperatorFunction<Spot, Trendbar> {
+  return pipe(
+    map(spot => ({ ...spot, periodStart: periodStart(spot.date, period) })),
+    scan(
+      (acc, curr) => {
+        const price = curr.bid;
+        if (acc.date.getTime() === curr.periodStart.getTime()) {
+          const trendbar = { ...acc };
+          trendbar.close = price;
+          if (trendbar.high < price) {
+            trendbar.high = price;
+          }
+          if (trendbar.low > price) {
+            trendbar.low = price;
+          }
+          return trendbar;
+        } else {
+          return {
+            date: curr.periodStart,
+            timestamp: curr.periodStart.getTime(),
+            open: price,
+            high: price,
+            low: price,
+            close: price,
+            volume: 0,
+            period
+          };
+        }
+      },
+      {
+        date: new Date(0),
+        timestamp: 0,
+        open: 0,
+        high: 0,
+        low: 0,
+        close: 0,
+        volume: 0,
+        period
+      }
+    ),
+    pairwise(),
+    filter(([left, right]) => left.timestamp !== right.timestamp),
+    map(([left, _right]) => left)
+  );
+}
+
+function periodStart(date: Date, period: ProtoOATrendbarPeriod): Date {
+  const timestamp = date.getTime();
+  const millis = periodToMillis(period);
+  const periodStart = Math.floor(timestamp / millis) * millis;
+  return new Date(periodStart);
 }
