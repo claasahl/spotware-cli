@@ -24,12 +24,12 @@ export interface Spot {
 export interface Trader {
   spots(): Observable<Spot>;
   spots(from: Date | number, to: Date | number): Observable<Spot>;
-  trendbars(period: ProtoOATrendbarPeriod): Observable<Trendbar>;
+  trendbars(period: ProtoOATrendbarPeriod): Observable<Trendbar[]>;
   trendbars(
     period: ProtoOATrendbarPeriod,
     from: Date | number,
     to: Date | number
-  ): Observable<Trendbar>;
+  ): Observable<Trendbar[]>;
   positions(): Observable<any>;
   positions(from: Date | number, to: Date | number): Observable<any>;
   stopOrder(): Observable<void>;

@@ -21,16 +21,7 @@ import {
   version as versionReq,
   getTickdata
 } from "./requests";
-import {
-  concat,
-  EMPTY,
-  Observable,
-  timer,
-  combineLatest,
-  pipe,
-  OperatorFunction,
-  from
-} from "rxjs";
+import { concat, EMPTY, Observable, timer, combineLatest } from "rxjs";
 import {
   flatMap,
   map,
@@ -44,9 +35,6 @@ import {
   takeUntil,
   endWith,
   take,
-  withLatestFrom,
-  reduce,
-  skipUntil,
   expand
 } from "rxjs/operators";
 import {
@@ -101,9 +89,9 @@ import mem from "mem";
 
 import {
   pm51,
-  periodToMillis,
   price as readablePrice,
-  toTrendbars
+  toTrendbars,
+  toSlidingTrendbars
 } from "./utils";
 import { Trendbar, Spot } from "./types";
 
@@ -619,77 +607,7 @@ export class TestSubject extends SpotwareSubject {
     symbol: string,
     period: ProtoOATrendbarPeriod
   ): Observable<Trendbar[]> {
-    const millis = periodToMillis(period);
-    const timeframe = millis * 2;
-    function withinTimeframe(spot: Spot) {
-      const lowerBound = Date.now() - timeframe;
-      const timestamp = spot.date.getTime();
-      return timestamp >= lowerBound;
-    }
-    function withinBucket1(spot: Spot) {
-      const lowerBound = Date.now() - millis * 2;
-      const upperBound = Date.now() - millis * 1;
-      const timestamp = spot.date.getTime();
-      return timestamp >= lowerBound && timestamp < upperBound;
-    }
-    function withinBucket2(spot: Spot) {
-      const lowerBound = Date.now() - millis;
-      const timestamp = spot.date.getTime();
-      return timestamp >= lowerBound;
-    }
-    function spotToTrendbar(): OperatorFunction<Spot, Trendbar> {
-      return pipe(
-        reduce(
-          (acc, curr) => {
-            const price = curr.bid;
-            if (acc.timestamp) {
-              const trendbar = { ...acc };
-              trendbar.close = price;
-              if (trendbar.high < price) {
-                trendbar.high = price;
-              }
-              if (trendbar.low > price) {
-                trendbar.low = price;
-              }
-              return trendbar;
-            } else {
-              return {
-                date: curr.date,
-                timestamp: curr.date.getTime(),
-                open: price,
-                high: price,
-                low: price,
-                close: price,
-                volume: 0,
-                period
-              };
-            }
-          },
-          {
-            date: new Date(0),
-            timestamp: 0,
-            open: 0,
-            high: 0,
-            low: 0,
-            close: 0,
-            volume: 0,
-            period
-          }
-        )
-      );
-    }
-    const spots = this.spots(symbol).pipe(
-      scan((acc, curr) => [...acc, curr].filter(withinTimeframe), [] as Spot[])
-    );
-    const bucket1 = spots.pipe(
-      map(spots => spots.filter(withinBucket1)),
-      flatMap(spots => from(spots).pipe(spotToTrendbar()))
-    );
-    const bucket2 = spots.pipe(
-      map(spots => spots.filter(withinBucket2)),
-      flatMap(spots => from(spots).pipe(spotToTrendbar()))
-    );
-    return bucket1.pipe(withLatestFrom(bucket2), skipUntil(timer(timeframe)));
+    return this.spots(symbol).pipe(toSlidingTrendbars(period));
   }
 
   public heartbeats(): Observable<void> {
