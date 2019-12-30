@@ -99,8 +99,13 @@ import {
 } from "@claasahl/spotware-adapter";
 import mem from "mem";
 
-import { pm51, periodToMillis, price as readablePrice } from "./utils";
-import { Trendbar } from "./types";
+import {
+  pm51,
+  periodToMillis,
+  price as readablePrice,
+  toTrendbars
+} from "./utils";
+import { Trendbar, Spot } from "./types";
 
 interface AuthenticationOptions {
   clientId: string;
@@ -111,15 +116,6 @@ interface ConnectionOptions {
   port: number;
   host: string;
   options?: TlsOptions;
-}
-
-interface Spot {
-  ask: number;
-  bid: number;
-  spread: number;
-  symbolId: number;
-  ctidTraderAccountId: number;
-  date: Date;
 }
 
 const cacheKey = (arguments_: any) => JSON.stringify(arguments_);
@@ -536,9 +532,8 @@ export class TestSubject extends SpotwareSubject {
         ask: 0,
         bid: readablePrice(tick.symbolId, tick.tick),
         spread: 0,
-        symbolId: tick.symbolId,
-        ctidTraderAccountId: tick.ctidTraderAccountId,
-        date: new Date(tick.timestamp)
+        date: new Date(tick.timestamp),
+        timestamp: tick.timestamp
       }))
     );
   }
@@ -574,12 +569,11 @@ export class TestSubject extends SpotwareSubject {
 
         const spotsForSymbol = spotEventForSymbol.pipe(
           filter(event => !!(event.ask || event.bid)),
-          map(({ ask, bid, ctidTraderAccountId, symbolId }) => ({
+          map(({ ask, bid, symbolId }) => ({
             ask,
             bid,
             spread: 0,
             symbolId,
-            ctidTraderAccountId,
             date: new Date()
           })),
           pairwise(),
@@ -596,9 +590,13 @@ export class TestSubject extends SpotwareSubject {
             }
             return spot;
           }),
-          filter((spot): spot is Spot => !!(spot.ask && spot.bid)),
+          filter(
+            (spot): spot is Spot & { symbolId: number } =>
+              !!(spot.ask && spot.bid)
+          ),
           map(spot => ({
             ...spot,
+            timestamp: spot.date.getTime(),
             ask: readablePrice(spot.symbolId, spot.ask),
             bid: readablePrice(spot.symbolId, spot.bid),
             spread: readablePrice(spot.symbolId, spot.spread)
@@ -614,53 +612,7 @@ export class TestSubject extends SpotwareSubject {
     symbol: string,
     period: ProtoOATrendbarPeriod
   ): Observable<Trendbar> {
-    return this.spots(symbol).pipe(
-      map(spot => ({ ...spot, periodStart: periodStart(spot.date, period) })),
-      scan(
-        (acc, curr) => {
-          const price = curr.bid;
-          if (acc.date.getTime() === curr.periodStart.getTime()) {
-            const trendbar = { ...acc };
-            trendbar.close = price;
-            if (trendbar.high < price) {
-              trendbar.high = price;
-            }
-            if (trendbar.low > price) {
-              trendbar.low = price;
-            }
-            return trendbar;
-          } else {
-            return {
-              date: curr.periodStart,
-              timestamp: curr.periodStart.getTime(),
-              open: price,
-              high: price,
-              low: price,
-              close: price,
-              symbolId: curr.symbolId,
-              ctidTraderAccountId: curr.ctidTraderAccountId,
-              volume: 0,
-              period
-            };
-          }
-        },
-        {
-          date: new Date(0),
-          timestamp: 0,
-          open: 0,
-          high: 0,
-          low: 0,
-          close: 0,
-          symbolId: 0,
-          ctidTraderAccountId: 0,
-          volume: 0,
-          period
-        }
-      ),
-      pairwise(),
-      filter(([left, right]) => left.timestamp !== right.timestamp),
-      map(([left, _right]) => left)
-    );
+    return this.spots(symbol).pipe(toTrendbars(period));
   }
 
   public slidingTrendbars(
@@ -708,8 +660,6 @@ export class TestSubject extends SpotwareSubject {
                 high: price,
                 low: price,
                 close: price,
-                symbolId: curr.symbolId,
-                ctidTraderAccountId: curr.ctidTraderAccountId,
                 volume: 0,
                 period
               };
@@ -722,8 +672,6 @@ export class TestSubject extends SpotwareSubject {
             high: 0,
             low: 0,
             close: 0,
-            symbolId: 0,
-            ctidTraderAccountId: 0,
             volume: 0,
             period
           }
@@ -1016,11 +964,4 @@ interface PositionsOrdersAndDeals {
   deals: {
     [dealId: number]: ProtoOADeal;
   };
-}
-
-function periodStart(date: Date, period: ProtoOATrendbarPeriod): Date {
-  const timestamp = date.getTime();
-  const millis = periodToMillis(period);
-  const periodStart = Math.floor(timestamp / millis) * millis;
-  return new Date(periodStart);
 }
