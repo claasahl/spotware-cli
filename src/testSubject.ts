@@ -1,6 +1,5 @@
 import { SpotwareSubject } from "./spotwareSubject";
 import { TlsOptions } from "tls";
-import fs from "fs";
 import {
   applicationAuth as applicationAuthReq,
   getAccountsByAccessToken as getAccountsByAccessTokenReq,
@@ -805,16 +804,7 @@ export class TestSubject extends SpotwareSubject {
           deals[event.deal.dealId] = event.deal;
         }
         return { positions, orders, deals };
-      }, seed),
-      tap(data => {
-        eventCounter++;
-        const now = new Date();
-        const filename = `./store/${now
-          .toISOString()
-          .replace(/:/g, "-")
-          .replace(".", "-")}-${eventCounter}.json`;
-        fs.writeFile(filename, JSON.stringify(data, null, 2), () => {});
-      })
+      }, seed)
     );
   }
 
@@ -857,21 +847,12 @@ export class TestSubject extends SpotwareSubject {
           orders,
           deals: {}
         };
-      }),
-      tap(data => {
-        const now = new Date();
-        const filename = `./store/${now
-          .toISOString()
-          .replace(/:/g, "-")
-          .replace(".", "-")}-${eventCounter}-open.json`;
-        fs.writeFile(filename, JSON.stringify(data, null, 2), () => {});
       })
     );
   }
 }
 export default TestSubject;
 
-let eventCounter = 0;
 interface PositionsOrdersAndDeals {
   positions: {
     [dealId: number]: ProtoOAPosition;
