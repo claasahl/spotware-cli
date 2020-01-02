@@ -1,11 +1,5 @@
 import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
-import {
-  Observable,
-  OperatorFunction,
-  pipe,
-  defer,
-  from as rxFrom
-} from "rxjs";
+import { Observable, defer, from as rxFrom } from "rxjs";
 import { map, filter } from "rxjs/operators";
 import fs from "fs";
 
@@ -14,17 +8,9 @@ import { toSlidingTrendbars, toTrendbars } from "./utils";
 
 export class SpotwareOffline implements Trader {
   private readonly file: fs.PathLike;
-  private readonly slidingTrendbars: boolean;
 
-  constructor({
-    file,
-    slidingTrendbars = false
-  }: {
-    file: fs.PathLike;
-    slidingTrendbars?: boolean;
-  }) {
+  constructor({ file }: { file: fs.PathLike }) {
     this.file = file;
-    this.slidingTrendbars = slidingTrendbars;
   }
 
   spots(): Observable<Spot> {
@@ -46,14 +32,12 @@ export class SpotwareOffline implements Trader {
     });
   }
 
-  trendbars(period: ProtoOATrendbarPeriod): Observable<Trendbar[]> {
-    const toBars: OperatorFunction<Spot, Trendbar[]> = this.slidingTrendbars
-      ? toSlidingTrendbars(period)
-      : pipe(
-          toTrendbars(period),
-          map(trendbar => [trendbar])
-        );
-    return this.spots().pipe(toBars);
+  trendbars(period: ProtoOATrendbarPeriod): Observable<Trendbar> {
+    return this.spots().pipe(toTrendbars(period));
+  }
+
+  slidingTrendbars(period: ProtoOATrendbarPeriod): Observable<Trendbar[]> {
+    return this.spots().pipe(toSlidingTrendbars(period));
   }
 
   positions(): Observable<Position> {

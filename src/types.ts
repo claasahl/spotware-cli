@@ -38,7 +38,8 @@ export interface Position extends Order {
 
 export interface Trader {
   spots(): Observable<Spot>;
-  trendbars(period: ProtoOATrendbarPeriod): Observable<Trendbar[]>;
+  trendbars(period: ProtoOATrendbarPeriod): Observable<Trendbar>;
+  slidingTrendbars(period: ProtoOATrendbarPeriod): Observable<Trendbar[]>;
   positions(): Observable<Position>;
   stopOrder(order: Order): Observable<Position>;
   limitOrder(order: Order): Observable<Position>;
