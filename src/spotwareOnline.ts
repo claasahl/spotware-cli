@@ -2,14 +2,11 @@ import { Observable, EMPTY, concat, identity } from "rxjs";
 import debug from "debug";
 import { TlsOptions } from "tls";
 
-import { Spot, Trendbar, Trader, Order, Position } from "./types";
+import { Spot, Trader, Order, Position } from "./types";
 import TestSubject from "./testSubject";
 import { map, mapTo, flatMap, publish, refCount } from "rxjs/operators";
-import {
-  ProtoOATrendbarPeriod,
-  ProtoOATradeSide
-} from "@claasahl/spotware-adapter";
-import { toTrendbars, toSlidingTrendbars } from "./utils";
+import { ProtoOATradeSide } from "@claasahl/spotware-adapter";
+import { BaseTrader } from "./baseTrader";
 
 interface AuthenticationOptions {
   clientId: string;
@@ -22,7 +19,7 @@ interface ConnectionOptions {
   options?: TlsOptions;
 }
 
-export class SpotwareOnline implements Trader {
+export class SpotwareOnline extends BaseTrader implements Trader {
   private log = debug("spotware-online");
   private subject: TestSubject;
   private symbol: string;
@@ -37,6 +34,7 @@ export class SpotwareOnline implements Trader {
     conn: ConnectionOptions;
     symbol: string;
   }) {
+    super();
     this.log("options: %j", { auth, conn, symbol });
     this.subject = new TestSubject(auth, conn);
     this.symbol = symbol;
@@ -51,14 +49,6 @@ export class SpotwareOnline implements Trader {
       .spots(this.symbol)
       .pipe(map(spot => ({ ...spot, timestamp: spot.date.getTime() })));
     return concat(this.auth, liveSpots);
-  }
-
-  trendbars(period: ProtoOATrendbarPeriod): Observable<Trendbar> {
-    return concat(this.auth, this.spots().pipe(toTrendbars(period)));
-  }
-
-  slidingTrendbars(period: ProtoOATrendbarPeriod): Observable<Trendbar[]> {
-    return concat(this.auth, this.spots().pipe(toSlidingTrendbars(period)));
   }
 
   positions(): Observable<Position> {
