@@ -36,7 +36,9 @@ import {
   take,
   expand,
   repeat,
-  concatMap
+  concatMap,
+  withLatestFrom,
+  toArray
 } from "rxjs/operators";
 import {
   ProtoOATrader,
@@ -544,6 +546,77 @@ export class TestSubject extends SpotwareSubject {
         date: new Date(tick.timestamp),
         timestamp: tick.timestamp
       }))
+    );
+  }
+
+  public spotData(
+    symbol: string,
+    from: Date,
+    to: Date,
+    type: ProtoOAQuoteType
+  ): Observable<Spot> {
+    const symbolData = this.symbol(symbol);
+    return symbolData.pipe(
+      flatMap(({ ctidTraderAccountId, symbolId }) =>
+        getTickdata(this, {
+          ctidTraderAccountId,
+          symbolId,
+          type,
+          fromTimestamp: from.getTime(),
+          toTimestamp: to.getTime()
+        })
+      ),
+      withLatestFrom(symbolData),
+      expand(([res, symbol]) => {
+        if (res.payload.hasMore) {
+          const [initialTimestamp, ...offsets] = res.payload.tickData.map(
+            ({ timestamp }) => timestamp
+          );
+          const latestTimestamp = offsets.reduce(
+            (acc, curr) => acc + curr,
+            initialTimestamp
+          );
+          const { ctidTraderAccountId, symbolId } = symbol;
+          return getTickdata(this, {
+            ctidTraderAccountId,
+            symbolId,
+            type,
+            fromTimestamp: from.getTime(),
+            toTimestamp: latestTimestamp
+          }).pipe(withLatestFrom(of(symbol)));
+        } else {
+          return EMPTY;
+        }
+      }),
+      map(([res, _symbol]) => res.payload),
+      concatMap(res => {
+        const tickData: {
+          price: number;
+          timestamp: number;
+        }[] = [];
+        res.tickData.map((tick, index) => {
+          if (index === 0) {
+            tickData.push({ price: tick.tick, timestamp: tick.timestamp });
+          } else {
+            tickData.push({
+              price: tickData[index - 1].price + tick.tick,
+              timestamp: tickData[index - 1].timestamp + tick.timestamp
+            });
+          }
+        });
+        return tickData;
+      }),
+      toArray(),
+      withLatestFrom(symbolData),
+      flatMap(([ticks, symbol]) =>
+        ticks.reverse().map(tick => ({
+          ask: readablePrice(symbol.symbolId, tick.price),
+          bid: readablePrice(symbol.symbolId, tick.price),
+          timestamp: tick.timestamp,
+          spread: 0,
+          date: new Date(tick.timestamp)
+        }))
+      )
     );
   }
 
