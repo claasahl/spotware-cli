@@ -1,8 +1,27 @@
 import * as $ from "@claasahl/spotware-adapter";
-import { AnonymousSubject } from "rxjs/internal/Subject";
+import { AnonymousSubject, Subject } from "rxjs/internal/Subject";
 import tls from "tls";
-import { Observable, fromEvent, throwError, EMPTY, race, Observer } from "rxjs";
-import { first, flatMap, endWith, takeUntil, tap, share } from "rxjs/operators";
+import {
+  Observable,
+  fromEvent,
+  throwError,
+  EMPTY,
+  race,
+  Observer,
+  of,
+  timer,
+  concat
+} from "rxjs";
+import {
+  first,
+  flatMap,
+  endWith,
+  takeUntil,
+  tap,
+  share,
+  take,
+  concatMap
+} from "rxjs/operators";
 import debug, { Debugger } from "debug";
 
 export class SpotwareSubject extends AnonymousSubject<$.ProtoMessages> {
@@ -45,19 +64,31 @@ export class SpotwareSubject extends AnonymousSubject<$.ProtoMessages> {
     socket: tls.TLSSocket,
     log: Debugger
   ): Observer<$.ProtoMessages> {
-    return {
-      next: value => {
+    const s = new Subject<$.ProtoMessages>();
+    s.pipe(
+      concatMap(value =>
+        concat(
+          of(value),
+          timer(300).pipe(
+            take(1),
+            flatMap(() => EMPTY)
+          )
+        )
+      )
+    ).subscribe(
+      value => {
         $.write(socket, value);
         log(JSON.stringify({ protoMessage: value }));
       },
-      error: error => {
+      error => {
         socket.end();
         log(JSON.stringify({ error }));
       },
-      complete: () => {
+      () => {
         socket.end();
         log(JSON.stringify({ closed: true }));
       }
-    };
+    );
+    return s;
   }
 }

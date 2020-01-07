@@ -20,7 +20,7 @@ import {
   version as versionReq,
   getTickdata
 } from "./requests";
-import { concat, EMPTY, Observable, timer, combineLatest } from "rxjs";
+import { concat, EMPTY, Observable, timer, combineLatest, of } from "rxjs";
 import {
   flatMap,
   map,
@@ -34,7 +34,9 @@ import {
   takeUntil,
   endWith,
   take,
-  expand
+  expand,
+  repeat,
+  concatMap
 } from "rxjs/operators";
 import {
   ProtoOATrader,
@@ -85,6 +87,7 @@ import {
   ProtoOAQuoteType
 } from "@claasahl/spotware-adapter";
 import mem from "mem";
+import ms from "ms";
 
 import {
   pm51,
@@ -426,6 +429,25 @@ export class TestSubject extends SpotwareSubject {
   }
 
   public tickData(symbol: string, from: Date, to: Date): Observable<Spot> {
+    const oneWeek = ms("1w");
+    const timeframe = to.getTime() - from.getTime();
+    if (timeframe > oneWeek) {
+      return of(1).pipe(
+        repeat(Math.floor(timeframe / oneWeek)),
+        scan((acc, curr) => acc + curr),
+        map(week => ({
+          symbol,
+          from: new Date(to.getTime() - oneWeek * week + 1),
+          to: new Date(to.getTime() - oneWeek * (week - 1))
+        })),
+        endWith({
+          symbol,
+          from,
+          to: new Date(to.getTime() - oneWeek * Math.floor(timeframe / oneWeek))
+        }),
+        concatMap(({ symbol, from, to }) => this.tickData(symbol, from, to))
+      );
+    }
     return this.symbol(symbol).pipe(
       flatMap(symbol => {
         const bid = getTickdata(this, {

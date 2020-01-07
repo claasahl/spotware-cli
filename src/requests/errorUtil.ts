@@ -38,7 +38,9 @@ export function error(
   );
   const noResponse = timer(timeout).pipe(
     take(1),
-    flatMap(() => throwError(new Error("no timely response")))
+    flatMap(() =>
+      throwError(new Error(`no timely response (msg.id: ${msgId})`))
+    )
   );
   return race(error, protoOaError, protoOaOrderError, noResponse);
 }
