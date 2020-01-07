@@ -31,8 +31,8 @@ function main(create: () => Trader) {
   );
 }
 
-const file = "./store/spots-2019-12.json";
-const action: string = "update";
+const file = "./store/spots-market-order.json";
+const action: string = "test";
 
 if (action === "offline") {
   main(() => createOfflineTrader(file));
@@ -49,8 +49,8 @@ if (action === "offline") {
     online
       .tickData(
         "BTC/EUR",
-        new Date("2019-12-01T00:00:00.000Z"),
-        new Date("2020-01-01T00:00:00.000Z")
+        new Date("2020-01-07T09:40:00.000Z"),
+        new Date("2020-01-07T10:35:00.000Z")
       )
       .pipe(
         map(({ ask, bid, timestamp }) => ({ ask, bid, timestamp })),
@@ -60,4 +60,19 @@ if (action === "offline") {
         })
       )
   ).subscribe();
+} else if (action === "test") {
+  const log = debug("test");
+  const { port, host, clientId, clientSecret, accessToken } = config;
+  const online = new TestSubject(
+    { accessToken, clientId, clientSecret },
+    { host, port }
+  );
+  concat(
+    online.authenticate(),
+    online.spotz(
+      "BTC/EUR",
+      new Date("2020-01-07T09:40:00.000Z"),
+      new Date("2020-01-07T10:35:00.000Z")
+    )
+  ).subscribe(log);
 }

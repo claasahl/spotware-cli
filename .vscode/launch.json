@@ -5,15 +5,14 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Current TS File",
       "type": "node",
       "request": "launch",
-      "args": ["${relativeFile}"],
-      "runtimeArgs": ["--nolazy", "-r", "ts-node/register"],
-      "sourceMaps": true,
-      "cwd": "${workspaceRoot}",
-      "protocol": "inspector",
-      "envFile": "${workspaceFolder}/.env"
+      "name": "Launch Program",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}\\build\\client.js",
+      "outFiles": ["${workspaceFolder}/**/*.js"],
+      "envFile": "${workspaceFolder}/.env",
+      "preLaunchTask": "build!"
     }
   ]
 }

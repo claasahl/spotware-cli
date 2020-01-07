@@ -20,7 +20,7 @@ import {
   version as versionReq,
   getTickdata
 } from "./requests";
-import { concat, EMPTY, Observable, timer, combineLatest, of } from "rxjs";
+import { concat, EMPTY, Observable, timer, combineLatest, of, zip } from "rxjs";
 import {
   flatMap,
   map,
@@ -549,12 +549,71 @@ export class TestSubject extends SpotwareSubject {
     );
   }
 
+  public spotz(symbol: string, from: Date, to: Date): Observable<Spot> {
+    return zip(
+      this.spotData(symbol, from, to, ProtoOAQuoteType.ASK),
+      this.spotData(symbol, from, to, ProtoOAQuoteType.BID)
+    ).pipe(
+      concatMap(([asks2, bids2]) => {
+        console.log(asks2[0], bids2[0]);
+        const seed: Spot = {
+          ask: 0,
+          bid: 0,
+          spread: 0,
+          timestamp: 0,
+          date: new Date(0)
+        };
+        const spots: Spot[] = [seed];
+        let askIndex = 0;
+        let bidIndex = 0;
+        const asks = asks2.slice(0, 5);
+        const bids = bids2.slice(0, 5);
+        while (askIndex < asks.length || bidIndex < bids.length) {
+          if (bidIndex === bids.length) {
+            const { ask, timestamp, date } = asks[askIndex];
+            const { bid, spread } = spots[spots.length - 1];
+            spots.push({ ask, bid, spread, timestamp, date });
+            askIndex += 1;
+          } else if (askIndex === asks.length) {
+            const { bid, timestamp, date } = bids[bidIndex];
+            const { ask, spread } = spots[spots.length - 1];
+            spots.push({ ask, bid, spread, timestamp, date });
+            bidIndex += 1;
+          } else if (asks[askIndex].timestamp < bids[bidIndex].timestamp) {
+            const { ask, timestamp, date } = asks[askIndex];
+            const { bid, spread } = spots[spots.length - 1];
+            spots.push({ ask, bid, spread, timestamp, date });
+            askIndex += 1;
+          } else if (asks[askIndex].timestamp > bids[bidIndex].timestamp) {
+            const { bid, timestamp, date } = bids[bidIndex];
+            const { ask, spread } = spots[spots.length - 1];
+            spots.push({ ask, bid, spread, timestamp, date });
+            bidIndex += 1;
+          } else {
+            const { ask, timestamp, date } = asks[askIndex];
+            const { bid, spread } = bids[bidIndex];
+            spots.push({ ask, bid, spread, timestamp, date });
+            askIndex += 1;
+            bidIndex += 1;
+          }
+          console.log(
+            askIndex,
+            bidIndex,
+            spots.length,
+            spots[spots.length - 1]
+          );
+        }
+        return spots;
+      })
+    );
+  }
+
   public spotData(
     symbol: string,
     from: Date,
     to: Date,
     type: ProtoOAQuoteType
-  ): Observable<Spot> {
+  ): Observable<Spot[]> {
     const symbolData = this.symbol(symbol);
     return symbolData.pipe(
       flatMap(({ ctidTraderAccountId, symbolId }) =>
@@ -608,10 +667,16 @@ export class TestSubject extends SpotwareSubject {
       }),
       toArray(),
       withLatestFrom(symbolData),
-      flatMap(([ticks, symbol]) =>
+      map(([ticks, symbol]) =>
         ticks.reverse().map(tick => ({
-          ask: readablePrice(symbol.symbolId, tick.price),
-          bid: readablePrice(symbol.symbolId, tick.price),
+          ask:
+            type === ProtoOAQuoteType.ASK
+              ? readablePrice(symbol.symbolId, tick.price)
+              : 0,
+          bid:
+            type === ProtoOAQuoteType.BID
+              ? readablePrice(symbol.symbolId, tick.price)
+              : 0,
           timestamp: tick.timestamp,
           spread: 0,
           date: new Date(tick.timestamp)
