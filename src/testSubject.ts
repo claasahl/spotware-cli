@@ -554,8 +554,7 @@ export class TestSubject extends SpotwareSubject {
       this.spotData(symbol, from, to, ProtoOAQuoteType.ASK),
       this.spotData(symbol, from, to, ProtoOAQuoteType.BID)
     ).pipe(
-      concatMap(([asks2, bids2]) => {
-        console.log(asks2[0], bids2[0]);
+      concatMap(([asks, bids]) => {
         const seed: Spot = {
           ask: 0,
           bid: 0,
@@ -566,8 +565,6 @@ export class TestSubject extends SpotwareSubject {
         const spots: Spot[] = [seed];
         let askIndex = 0;
         let bidIndex = 0;
-        const asks = asks2.slice(0, 5);
-        const bids = bids2.slice(0, 5);
         while (askIndex < asks.length || bidIndex < bids.length) {
           if (bidIndex === bids.length) {
             const { ask, timestamp, date } = asks[askIndex];
@@ -596,12 +593,6 @@ export class TestSubject extends SpotwareSubject {
             askIndex += 1;
             bidIndex += 1;
           }
-          console.log(
-            askIndex,
-            bidIndex,
-            spots.length,
-            spots[spots.length - 1]
-          );
         }
         return spots;
       })
@@ -617,13 +608,18 @@ export class TestSubject extends SpotwareSubject {
     const symbolData = this.symbol(symbol);
     return symbolData.pipe(
       flatMap(({ ctidTraderAccountId, symbolId }) =>
-        getTickdata(this, {
-          ctidTraderAccountId,
-          symbolId,
-          type,
-          fromTimestamp: from.getTime(),
-          toTimestamp: to.getTime()
-        })
+        getTickdata(
+          this,
+          {
+            ctidTraderAccountId,
+            symbolId,
+            type,
+            fromTimestamp: from.getTime(),
+            toTimestamp: to.getTime()
+          },
+          undefined,
+          `${Date.now()}-${ProtoOAQuoteType[type]}`
+        )
       ),
       withLatestFrom(symbolData),
       expand(([res, symbol]) => {
@@ -636,13 +632,18 @@ export class TestSubject extends SpotwareSubject {
             initialTimestamp
           );
           const { ctidTraderAccountId, symbolId } = symbol;
-          return getTickdata(this, {
-            ctidTraderAccountId,
-            symbolId,
-            type,
-            fromTimestamp: from.getTime(),
-            toTimestamp: latestTimestamp
-          }).pipe(withLatestFrom(of(symbol)));
+          return getTickdata(
+            this,
+            {
+              ctidTraderAccountId,
+              symbolId,
+              type,
+              fromTimestamp: from.getTime(),
+              toTimestamp: latestTimestamp
+            },
+            undefined,
+            `${Date.now()}-${ProtoOAQuoteType[type]}`
+          ).pipe(withLatestFrom(of(symbol)));
         } else {
           return EMPTY;
         }
