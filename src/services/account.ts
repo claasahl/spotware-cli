@@ -44,10 +44,15 @@ export class Service {
 
   constructor(emitter: EventEmitter) {
     this.emitter = emitter;
+    if (this.logger.enabled) {
+      emitter.on("account:balance:changed", e => this.logger("%j", e));
+      emitter.on("account:equity:changed", e => this.logger("%j", e));
+      emitter.on("account:margin:changed", e => this.logger("%j", e));
+      emitter.on("account:snapshot:computed", e => this.logger("%j", e));
+    }
     emitter.on("account:balance:changed", this._onBalanceChanged.bind(this));
     emitter.on("account:equity:changed", this._onEquityChanged.bind(this));
     emitter.on("account:margin:changed", this._onMarginChanged.bind(this));
-    emitter.on("account:snapshot:computed", this._onSnapshot.bind(this));
   }
 
   /**
@@ -123,24 +128,17 @@ export class Service {
   }
 
   private _onBalanceChanged(event: BalanceChangedEvent) {
-    this.logger("%j", event);
     this.snapshot.balance += event.amount;
     this.emitter.emit(this.snapshot.type, { ...this.snapshot });
   }
 
   private _onEquityChanged(event: EquityChangedEvent) {
-    this.logger("%j", event);
     this.snapshot.equity += event.amount;
     this.emitter.emit(this.snapshot.type, { ...this.snapshot });
   }
 
   private _onMarginChanged(event: MarginChangedEvent) {
-    this.logger("%j", event);
     this.snapshot.margin += event.amount;
     this.emitter.emit(this.snapshot.type, { ...this.snapshot });
-  }
-
-  private _onSnapshot(event: SnapshotEvent) {
-    this.logger("%j", event);
   }
 }

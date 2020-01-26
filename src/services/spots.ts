@@ -24,9 +24,13 @@ export class Service {
   };
   constructor(emitter: EventEmitter) {
     this.emitter = emitter;
+    if (this.logger.enabled) {
+      emitter.on("spots:ask:changed", e => this.logger("%j", e));
+      emitter.on("spots:bid:changed", e => this.logger("%j", e));
+      emitter.on("spots:snapshot:computed", e => this.logger("%j", e));
+    }
     emitter.on("spots:ask:changed", this._onAskPriceChanged.bind(this));
     emitter.on("spots:bid:changed", this._onBidPriceChanged.bind(this));
-    emitter.on("spots:snapshot:computed", this._onSnapshotEvent.bind(this));
   }
 
   public askPriceChanged(price: number): AskPriceChangedEvent {
@@ -83,20 +87,15 @@ export class Service {
   }
 
   private _onAskPriceChanged(event: AskPriceChangedEvent) {
-    this.logger("%j", event);
     this.snapshot.ask = event.price;
     if (this.snapshot.ask && this.snapshot.bid) {
       this.emitter.emit(this.snapshot.type, { ...this.snapshot });
     }
   }
   private _onBidPriceChanged(event: BidPriceChangedEvent) {
-    this.logger("%j", event);
     this.snapshot.bid = event.price;
     if (this.snapshot.ask && this.snapshot.bid) {
       this.emitter.emit(this.snapshot.type, { ...this.snapshot });
     }
-  }
-  private _onSnapshotEvent(event: SnapshotEvent) {
-    this.logger("%j", event);
   }
 }
