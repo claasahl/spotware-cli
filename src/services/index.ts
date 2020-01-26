@@ -8,3 +8,7 @@ accountService.balanceChanged(10);
 accountService.balanceChanged(-1);
 accountService.balanceChanged(5);
 accountService.balanceChanged(-0.5);
+accountService.equityChanged(4);
+accountService.equityChanged(-7);
+accountService.marginChanged(4);
+accountService.marginChanged(-1);
