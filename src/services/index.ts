@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 
 import * as Account from "./account";
-import * as Spots from "./spots";
+import * as Spots from "./spot";
 
 export default {
   Account,

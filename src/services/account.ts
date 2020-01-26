@@ -32,8 +32,11 @@ export interface MarginChangedEvent {
 /**
  * Event containing a complete snapshot of an account.
  */
-export interface SnapshotEvent {
+export interface SnapshotEvent extends Account {
   type: Events.ACCOUNT;
+}
+
+export interface Account {
   balance: number;
   equity: number;
   margin: number;
@@ -42,110 +45,84 @@ export interface SnapshotEvent {
 export class Service {
   private readonly logger = debug("account");
   private readonly emitter: EventEmitter;
-  private readonly snapshot: SnapshotEvent = {
-    type: Events.ACCOUNT,
-    balance: 0,
-    equity: 0,
-    margin: 0
-  };
+  private readonly account: Account;
 
-  constructor(emitter: EventEmitter) {
+  constructor(emitter: EventEmitter, seed?: Account) {
     this.emitter = emitter;
+    this.account = { balance: 0, equity: 0, margin: 0, ...seed };
     if (this.logger.enabled) {
-      emitter.on(Events.BALANCE, e => this.logger("%j", e));
-      emitter.on(Events.EQUITY, e => this.logger("%j", e));
-      emitter.on(Events.MARGIN, e => this.logger("%j", e));
-      emitter.on(Events.ACCOUNT, e => this.logger("%j", e));
+      this.on(Events.BALANCE, e => this.logger("%j", e));
+      this.on(Events.EQUITY, e => this.logger("%j", e));
+      this.on(Events.MARGIN, e => this.logger("%j", e));
+      this.on(Events.ACCOUNT, e => this.logger("%j", e));
     }
-    emitter.on(Events.BALANCE, this._onBalanceChanged.bind(this));
-    emitter.on(Events.EQUITY, this._onEquityChanged.bind(this));
-    emitter.on(Events.MARGIN, this._onMarginChanged.bind(this));
+    this.on(Events.BALANCE, this.onBalanceChanged.bind(this));
+    this.on(Events.EQUITY, this.onEquityChanged.bind(this));
+    this.on(Events.MARGIN, this.onMarginChanged.bind(this));
   }
 
-  /**
-   * Change account's balance by specified amount
-   * @param amount amount by which the account's balance is to be changed
-   */
-  public balanceChanged(amount: number): BalanceChangedEvent {
-    const event: BalanceChangedEvent = {
-      type: Events.BALANCE,
-      amount
-    };
-    this.emitter.emit(event.type, event);
-    return event;
-  }
-
-  /**
-   * Change account's equity by specified amount
-   * @param amount amount by which the account's equity is to be changed
-   */
-  public equityChanged(amount: number): EquityChangedEvent {
-    const event: EquityChangedEvent = {
-      type: Events.EQUITY,
-      amount
-    };
-    this.emitter.emit(event.type, event);
-    return event;
-  }
-
-  /**
-   * Change account's margin by specified amount
-   * @param amount amount by which the account's margin is to be changed
-   */
-  public marginChanged(amount: number): MarginChangedEvent {
-    const event: MarginChangedEvent = {
-      type: Events.MARGIN,
-      amount
-    };
-    this.emitter.emit(event.type, event);
-    return event;
-  }
-
-  /**
-   * Registers _listener_ and
-   * @param listener the listener to be registered
-   */
-  public onBalanceChanged(
-    listener: (event: BalanceChangedEvent) => void
+  protected emit(
+    event:
+      | BalanceChangedEvent
+      | EquityChangedEvent
+      | MarginChangedEvent
+      | SnapshotEvent
   ): void {
-    this.emitter.on(Events.BALANCE, listener);
-  }
-  public offBalanceChanged(
-    listener: (event: BalanceChangedEvent) => void
-  ): void {
-    this.emitter.off(Events.BALANCE, listener);
-  }
-  public onEquityChanged(listener: (event: EquityChangedEvent) => void): void {
-    this.emitter.on(Events.EQUITY, listener);
-  }
-  public offEquityChanged(listener: (event: EquityChangedEvent) => void): void {
-    this.emitter.off(Events.EQUITY, listener);
-  }
-  public onMarginChanged(listener: (event: MarginChangedEvent) => void): void {
-    this.emitter.on(Events.MARGIN, listener);
-  }
-  public offMarginChanged(listener: (event: MarginChangedEvent) => void): void {
-    this.emitter.off(Events.MARGIN, listener);
-  }
-  public onSnapshot(listener: (event: MarginChangedEvent) => void): void {
-    this.emitter.on(Events.ACCOUNT, listener);
-  }
-  public offShotshot(listener: (event: MarginChangedEvent) => void): void {
-    this.emitter.off(Events.ACCOUNT, listener);
+    this.emitter.emit(event.type, event);
   }
 
-  private _onBalanceChanged(event: BalanceChangedEvent) {
-    this.snapshot.balance += event.amount;
-    this.emitter.emit(this.snapshot.type, { ...this.snapshot });
+  public on(
+    event: Events.BALANCE,
+    listener: (e: BalanceChangedEvent) => void
+  ): void;
+  public on(
+    event: Events.EQUITY,
+    listener: (e: EquityChangedEvent) => void
+  ): void;
+  public on(
+    event: Events.MARGIN,
+    listener: (e: MarginChangedEvent) => void
+  ): void;
+  public on(event: Events.ACCOUNT, listener: (e: SnapshotEvent) => void): void;
+  public on(event: Events, listener: (e: any) => void): void {
+    this.emitter.on(event, listener);
+  }
+  public off(
+    event: Events.BALANCE,
+    listener: (e: BalanceChangedEvent) => void
+  ): void;
+  public off(
+    event: Events.EQUITY,
+    listener: (e: EquityChangedEvent) => void
+  ): void;
+  public off(
+    event: Events.MARGIN,
+    listener: (e: MarginChangedEvent) => void
+  ): void;
+  public off(event: Events.ACCOUNT, listener: (e: SnapshotEvent) => void): void;
+  public off(event: Events, listener: (e: any) => void): void {
+    this.emitter.off(event, listener);
   }
 
-  private _onEquityChanged(event: EquityChangedEvent) {
-    this.snapshot.equity += event.amount;
-    this.emitter.emit(this.snapshot.type, { ...this.snapshot });
+  private onBalanceChanged(event: BalanceChangedEvent) {
+    this.account.balance += event.amount;
+    this.validateAndEmit();
   }
 
-  private _onMarginChanged(event: MarginChangedEvent) {
-    this.snapshot.margin += event.amount;
-    this.emitter.emit(this.snapshot.type, { ...this.snapshot });
+  private onEquityChanged(event: EquityChangedEvent) {
+    this.account.equity += event.amount;
+    this.validateAndEmit();
+  }
+
+  private onMarginChanged(event: MarginChangedEvent) {
+    this.account.margin += event.amount;
+    this.validateAndEmit();
+  }
+  private validateAndEmit() {
+    const event: SnapshotEvent = {
+      type: Events.ACCOUNT,
+      ...this.account
+    };
+    this.emitter.emit(event.type, event);
   }
 }
