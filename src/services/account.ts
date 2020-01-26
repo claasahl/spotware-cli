@@ -42,7 +42,7 @@ export interface Account {
   margin: number;
 }
 
-export class Service {
+class Service {
   private readonly logger = debug("account");
   private readonly emitter: EventEmitter;
   private readonly account: Account;
@@ -124,5 +124,29 @@ export class Service {
       ...this.account
     };
     this.emitter.emit(event.type, event);
+  }
+}
+
+export class Debug extends Service {
+  public balanceChanged(amount: number) {
+    const event: BalanceChangedEvent = {
+      type: Events.BALANCE,
+      amount
+    };
+    this.emit(event);
+  }
+  public equityChanged(amount: number) {
+    const event: EquityChangedEvent = {
+      type: Events.EQUITY,
+      amount
+    };
+    this.emit(event);
+  }
+  public marginChanged(amount: number) {
+    const event: MarginChangedEvent = {
+      type: Events.MARGIN,
+      amount
+    };
+    this.emit(event);
   }
 }
