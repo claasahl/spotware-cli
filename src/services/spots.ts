@@ -1,16 +1,21 @@
 import { EventEmitter } from "events";
 import debug from "debug";
 
+export enum Events {
+  ASK = "spots:ask:changed",
+  BID = "spots:bid:changed",
+  SPOT = "spots:snapshot:computed"
+}
 export interface AskPriceChangedEvent {
-  type: "spots:ask:changed";
+  type: Events.ASK;
   price: number;
 }
 export interface BidPriceChangedEvent {
-  type: "spots:bid:changed";
+  type: Events.BID;
   price: number;
 }
 export interface SnapshotEvent {
-  type: "spots:snapshot:computed";
+  type: Events.SPOT;
   ask: number;
   bid: number;
 }
@@ -20,22 +25,22 @@ export class Service {
   private readonly emitter: EventEmitter;
   private readonly snapshot: Partial<SnapshotEvent> &
     Pick<SnapshotEvent, "type"> = {
-    type: "spots:snapshot:computed"
+    type: Events.SPOT
   };
   constructor(emitter: EventEmitter) {
     this.emitter = emitter;
     if (this.logger.enabled) {
-      emitter.on("spots:ask:changed", e => this.logger("%j", e));
-      emitter.on("spots:bid:changed", e => this.logger("%j", e));
-      emitter.on("spots:snapshot:computed", e => this.logger("%j", e));
+      emitter.on(Events.ASK, e => this.logger("%j", e));
+      emitter.on(Events.BID, e => this.logger("%j", e));
+      emitter.on(Events.SPOT, e => this.logger("%j", e));
     }
-    emitter.on("spots:ask:changed", this._onAskPriceChanged.bind(this));
-    emitter.on("spots:bid:changed", this._onBidPriceChanged.bind(this));
+    emitter.on(Events.ASK, this._onAskPriceChanged.bind(this));
+    emitter.on(Events.BID, this._onBidPriceChanged.bind(this));
   }
 
   public askPriceChanged(price: number): AskPriceChangedEvent {
     const event: AskPriceChangedEvent = {
-      type: "spots:ask:changed",
+      type: Events.ASK,
       price
     };
     this.emitter.emit(event.type, event);
@@ -43,7 +48,7 @@ export class Service {
   }
   public bidPriceChanged(price: number): BidPriceChangedEvent {
     const event: BidPriceChangedEvent = {
-      type: "spots:bid:changed",
+      type: Events.BID,
       price
     };
     this.emitter.emit(event.type, event);
@@ -51,7 +56,7 @@ export class Service {
   }
   public spotPriceChanged(ask: number, bid: number): SnapshotEvent {
     const event: SnapshotEvent = {
-      type: "spots:snapshot:computed",
+      type: Events.SPOT,
       ask,
       bid
     };
@@ -62,28 +67,28 @@ export class Service {
   public onAskPriceChanged(
     listener: (event: AskPriceChangedEvent) => void
   ): void {
-    this.emitter.on("spots:ask:changed", listener);
+    this.emitter.on(Events.ASK, listener);
   }
   public offAskPriceChanged(
     listener: (event: AskPriceChangedEvent) => void
   ): void {
-    this.emitter.off("spots:ask:changed", listener);
+    this.emitter.off(Events.ASK, listener);
   }
   public onBidPriceChanged(
     listener: (event: BidPriceChangedEvent) => void
   ): void {
-    this.emitter.on("spots:bid:changed", listener);
+    this.emitter.on(Events.BID, listener);
   }
   public offBidPriceChanged(
     listener: (event: BidPriceChangedEvent) => void
   ): void {
-    this.emitter.off("spots:bid:changed", listener);
+    this.emitter.off(Events.BID, listener);
   }
   public onSnapshot(listener: (event: SnapshotEvent) => void): void {
-    this.emitter.on("spots:snapshot:computed", listener);
+    this.emitter.on(Events.SPOT, listener);
   }
   public offSnapshot(listener: (event: SnapshotEvent) => void): void {
-    this.emitter.off("spots:snapshot:computed", listener);
+    this.emitter.off(Events.SPOT, listener);
   }
 
   private _onAskPriceChanged(event: AskPriceChangedEvent) {
