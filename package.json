@@ -11,7 +11,7 @@
     "build": "tsc",
     "prestart": "npm run build",
     "start": "node -r dotenv/config ./build/insideBarMomentumStrategy.js > debug.log 2>&1",
-    "dev": "ts-node -r dotenv/config ./src/client.ts > debug.log 2>&1"
+    "dev": "ts-node -r dotenv/config ./src/services/index.ts > debug.log 2>&1"
   },
   "repository": {
     "type": "git",
