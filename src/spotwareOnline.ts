@@ -4,8 +4,13 @@ import { TlsOptions } from "tls";
 
 import { Spot, Trader, Order, Position } from "./types";
 import TestSubject from "./testSubject";
-import { map, mapTo, flatMap, publish, refCount } from "rxjs/operators";
-import { ProtoOATradeSide } from "@claasahl/spotware-adapter";
+import { map, mapTo, flatMap, publish, refCount, filter } from "rxjs/operators";
+import {
+  ProtoOATradeSide,
+  ProtoMessage2126,
+  ProtoOAPayloadType,
+  ProtoOAPosition
+} from "@claasahl/spotware-adapter";
 import { BaseTrader } from "./baseTrader";
 
 interface AuthenticationOptions {
@@ -51,8 +56,39 @@ export class SpotwareOnline extends BaseTrader implements Trader {
     return concat(this.auth, liveSpots);
   }
 
+  orders(): Observable<Order> {
+    return EMPTY;
+  }
+
   positions(): Observable<Position> {
-    throw new Error("Method not implemented.");
+    return this.subject.pipe(
+      filter(
+        (pm): pm is ProtoMessage2126 =>
+          pm.payloadType === ProtoOAPayloadType.PROTO_OA_EXECUTION_EVENT
+      ),
+      // TODO filter symbolId
+      map(res => res.payload.position),
+      filter((position): position is ProtoOAPosition => !!position),
+      map(
+        ({
+          positionId,
+          stopLoss,
+          takeProfit,
+          price = 0,
+          tradeData: { volume }
+        }) => {
+          return {
+            id: `${positionId}`,
+            status: "CLOSED",
+            tradeSide: "BUY",
+            price,
+            volume,
+            stopLoss,
+            takeProfit
+          };
+        }
+      )
+    );
   }
 
   stopOrder({
@@ -63,7 +99,7 @@ export class SpotwareOnline extends BaseTrader implements Trader {
     stopLoss,
     takeProfit,
     trailingStopLoss
-  }: Order): Observable<Position> {
+  }: Omit<Order, "id">): Observable<Order> {
     return concat(
       this.auth,
       this.subject.stopOrder(this.symbol, {
@@ -92,7 +128,7 @@ export class SpotwareOnline extends BaseTrader implements Trader {
     stopLoss,
     takeProfit,
     trailingStopLoss
-  }: Order): Observable<Position> {
+  }: Omit<Order, "id">): Observable<Order> {
     return concat(
       this.auth,
       this.subject.limitOrder(this.symbol, {

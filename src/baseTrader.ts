@@ -15,9 +15,11 @@ export abstract class BaseTrader implements Trader {
     return this.spots().pipe(toSlidingTrendbars(period));
   }
 
+  abstract orders(): Observable<Order>;
+
   abstract positions(): Observable<Position>;
 
-  abstract stopOrder(order: Order): Observable<Position>;
+  abstract stopOrder(order: Omit<Order, "id">): Observable<Order>;
 
-  abstract limitOrder(order: Order): Observable<Position>;
+  abstract limitOrder(order: Omit<Order, "id">): Observable<Order>;
 }

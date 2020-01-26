@@ -22,6 +22,8 @@ export interface Spot {
 }
 
 export interface Order {
+  id: string;
+  status: "PENDING" | "OPEN" | "CLOSED" | "CANCELLED";
   tradeSide: "BUY" | "SELL";
   price: number;
   volume: number;
@@ -34,15 +36,22 @@ export interface Order {
 export interface Position extends Order {
   id: string;
   status: "PENDING" | "OPEN" | "CLOSED" | "CANCELLED";
+  tradeSide: "BUY" | "SELL";
+  price: number;
+  volume: number;
+  stopLoss?: number;
+  takeProfit?: number;
+  trailingStopLoss?: boolean;
 }
 
 export interface Trader {
   spots(): Observable<Spot>;
   trendbars(period: ProtoOATrendbarPeriod): Observable<Trendbar>;
   slidingTrendbars(period: ProtoOATrendbarPeriod): Observable<Trendbar[]>;
+  orders(): Observable<Order>;
   positions(): Observable<Position>;
-  stopOrder(order: Order): Observable<Position>;
-  limitOrder(order: Order): Observable<Position>;
+  stopOrder(order: Omit<Order, "id">): Observable<Order>;
+  limitOrder(order: Omit<Order, "id">): Observable<Order>;
 }
 
 export interface Snapshot {

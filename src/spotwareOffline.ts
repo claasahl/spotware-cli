@@ -1,4 +1,4 @@
-import { Observable, defer, from as rxFrom } from "rxjs";
+import { Observable, defer, from as rxFrom, of } from "rxjs";
 import { map, filter } from "rxjs/operators";
 import fs from "fs";
 
@@ -32,14 +32,24 @@ export class SpotwareOffline extends BaseTrader implements Trader {
     });
   }
 
+  orders(): Observable<Order> {
+    throw new Error("Method not implemented.");
+  }
+
   positions(): Observable<Position> {
     throw new Error("Method not implemented.");
   }
 
-  stopOrder(_order: Order): Observable<Position> {
-    throw new Error("Method not implemented.");
+  stopOrder(order: Omit<Order, "id">): Observable<Order> {
+    return of({
+      ...order,
+      id: ""
+    });
   }
-  limitOrder(_order: Order): Observable<Position> {
-    throw new Error("Method not implemented.");
+  limitOrder(order: Omit<Order, "id">): Observable<Order> {
+    return of({
+      ...order,
+      id: ""
+    });
   }
 }
