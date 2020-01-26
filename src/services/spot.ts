@@ -102,3 +102,22 @@ export class Service {
     }
   }
 }
+
+export class Debug extends Service {
+  public askPriceChanged(price: number, timestamp: number = Date.now()) {
+    const event: AskPriceChangedEvent = {
+      type: Events.ASK,
+      price,
+      timestamp
+    };
+    this.emit(event);
+  }
+  public bidPriceChanged(price: number, timestamp: number = Date.now()) {
+    const event: BidPriceChangedEvent = {
+      type: Events.BID,
+      price,
+      timestamp
+    };
+    this.emit(event);
+  }
+}
