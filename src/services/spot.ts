@@ -22,6 +22,16 @@ export interface SpotPriceChangedEvent extends Spot {
   type: SpotEvents.SPOT;
 }
 
+function log<T>(logger: debug.Debugger): OperatorFunction<T, T> {
+  return pipe(
+    tap({
+      complete: () => logger("completed"),
+      error: err => logger("%j", err),
+      next: (e: T) => logger("%j", e)
+    })
+  );
+}
+
 function increasingTimestamps(): OperatorFunction<
   AskPriceChangedEvent | BidPriceChangedEvent,
   AskPriceChangedEvent | BidPriceChangedEvent
@@ -48,13 +58,11 @@ function combineAskBidPrices(
 export function service(
   events: Observable<AskPriceChangedEvent | BidPriceChangedEvent>
 ): Observable<SpotPriceChangedEvent> {
-  const logger = debug("spot");
+  const logger = debug("spots");
+  const inputs = logger.extend("inputs");
+  const outputs = logger.extend("outputs");
 
-  const a = events.pipe(
-    tap(e => logger("%j", e)),
-    increasingTimestamps(),
-    share()
-  );
+  const a = events.pipe(log(inputs), increasingTimestamps(), share());
 
   const askChangeEvents: Observable<AskPriceChangedEvent> = a.pipe(
     filter((e): e is AskPriceChangedEvent => e.type === SpotEvents.ASK)
@@ -63,5 +71,9 @@ export function service(
     filter((e): e is BidPriceChangedEvent => e.type === SpotEvents.BID)
   );
 
-  return combineLatest(askChangeEvents, bidChangeEvents, combineAskBidPrices);
+  return combineLatest(
+    askChangeEvents,
+    bidChangeEvents,
+    combineAskBidPrices
+  ).pipe(log(outputs));
 }

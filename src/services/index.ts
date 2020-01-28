@@ -1,13 +1,16 @@
 import { EventEmitter } from "events";
+import debug from "debug";
+import { Subject } from "rxjs";
 
 import * as Account from "./account";
 import * as Spots from "./spot";
-import { Subject } from "rxjs";
 
 export default {
   Account,
   Spots
 };
+
+const logger = debug("main");
 
 // Idea: Write services which consume events (from other services) and produce events (for other services to consume).
 
@@ -29,7 +32,8 @@ accountService.marginChanged(-1);
 const sub = new Subject<
   Spots.AskPriceChangedEvent | Spots.BidPriceChangedEvent
 >();
-Spots.service(sub).subscribe(console.log);
+const spots = Spots.service(sub);
+spots.subscribe(spot => logger("%j", spot));
 sub.next({ type: Spots.SpotEvents.ASK, price: 1, timestamp: 1 });
 sub.next({ type: Spots.SpotEvents.BID, price: 2, timestamp: 2 });
 sub.next({ type: Spots.SpotEvents.ASK, price: 3, timestamp: 3 });
