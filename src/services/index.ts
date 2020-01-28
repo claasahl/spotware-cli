@@ -2,6 +2,7 @@ import { EventEmitter } from "events";
 
 import * as Account from "./account";
 import * as Spots from "./spot";
+import { Subject } from "rxjs";
 
 export default {
   Account,
@@ -25,7 +26,16 @@ accountService.equityChanged(-7);
 accountService.marginChanged(4);
 accountService.marginChanged(-1);
 
-const spotsService = new Spots.Debug(emitter);
-spotsService.askPriceChanged(6.76);
-spotsService.bidPriceChanged(55.6);
-spotsService.askPriceChanged(33);
+const sub = new Subject<
+  Spots.AskPriceChangedEvent | Spots.BidPriceChangedEvent
+>();
+Spots.service(sub).subscribe(console.log);
+sub.next({ type: Spots.SpotEvents.ASK, price: 1, timestamp: 1 });
+sub.next({ type: Spots.SpotEvents.BID, price: 2, timestamp: 2 });
+sub.next({ type: Spots.SpotEvents.ASK, price: 3, timestamp: 3 });
+sub.next({ type: Spots.SpotEvents.ASK, price: 4, timestamp: 4 });
+sub.next({ type: Spots.SpotEvents.ASK, price: 5, timestamp: 5 });
+sub.next({ type: Spots.SpotEvents.ASK, price: 6, timestamp: 4 });
+sub.next({ type: Spots.SpotEvents.ASK, price: 7, timestamp: 7 });
+sub.next({ type: Spots.SpotEvents.ASK, price: 8, timestamp: 8 });
+sub.next({ type: Spots.SpotEvents.ASK, price: 9, timestamp: 9 });
