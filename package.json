@@ -11,7 +11,7 @@
     "build": "tsc",
     "prestart": "npm run build",
     "start": "node -r dotenv/config ./build/insideBarMomentumStrategy.js > debug.log 2>&1",
-    "dev": "ts-node -r dotenv/config ./src/services/index.ts > debug.log 2>&1"
+    "dev": "ts-node -r dotenv/config ./src/services/index.ts"
   },
   "repository": {
     "type": "git",
@@ -34,11 +34,11 @@
     "jest": "^24.9.0"
   },
   "dependencies": {
-    "@claasahl/spotware-adapter": "^1.0.7",
+    "@claasahl/spotware-adapter": "^1.1.0",
     "debug": "^4.1.1",
     "indicators": "^0.1.4",
     "mem": "^6.0.1",
     "ms": "^2.1.2",
-    "rxjs": "^6.5.2"
+    "rxjs": "^6.5.4"
   }
 }
