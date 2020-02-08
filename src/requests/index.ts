@@ -161,5 +161,9 @@ export { marginCallUpdate } from "./marginCallUpdate";
 // PROTO_OA_MARGIN_CALL_UPDATE_EVENT = 2171,
 // XXX
 
-// PROTO_OA_MARGIN_CALL_TRIGGER_EVENT = 2172
+// PROTO_OA_MARGIN_CALL_TRIGGER_EVENT = 2172,
 // XXX
+
+// PROTO_OA_REFRESH_TOKEN_REQ = 2173,
+// PROTO_OA_REFRESH_TOKEN_RES = 2174,
+export { refreshToken } from "./refreshToken";

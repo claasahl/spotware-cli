@@ -756,3 +756,23 @@ export function pm2172(
     clientMsgId
   };
 }
+export function pm2173(
+  payload: $.ProtoOARefreshTokenReq,
+  clientMsgId?: string
+): $.ProtoMessage2173 {
+  return {
+    payloadType: $.ProtoOAPayloadType.PROTO_OA_REFRESH_TOKEN_REQ,
+    payload,
+    clientMsgId
+  };
+}
+export function pm2174(
+  payload: $.ProtoOARefreshTokenRes,
+  clientMsgId?: string
+): $.ProtoMessage2174 {
+  return {
+    payloadType: $.ProtoOAPayloadType.PROTO_OA_REFRESH_TOKEN_RES,
+    payload,
+    clientMsgId
+  };
+}
