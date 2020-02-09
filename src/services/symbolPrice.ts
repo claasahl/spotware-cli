@@ -1,60 +1,126 @@
-import {EventEmitter} from "events";
+import { EventEmitter } from "events";
 
-interface AskPriceChangedEvent {
+type Price = number;
+type Volume = number;
+type Period = "M1" | "M5" | "M10" | "M15"
+type Timestamp = number;
+type Symbol = symbol;
 
+// API should be async, stream of events
+// an Order has a lifecyle which can be represented through events (e.g. a "mini stream")
+// a Symbol (e.g. "EURUSD") experiences price changes, which can be represented through events
+
+export namespace SpotPriceStream {
+    export interface AskPriceChangedEvent {
+        symbol: Symbol,
+        price: Price,
+        timestamp: Timestamp
+    }
+    export interface BidPriceChangedEvent {
+        symbol: Symbol,
+        price: Price,
+        timestamp: Timestamp
+    }
+    export interface PriceChangedEvent {
+        symbol: Symbol,
+        ask: Price,
+        bid: Price,
+        timestamp: Timestamp
+    }
+    export interface SpotPriceStream extends EventEmitter {
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        addListener(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
+        addListener(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
+        addListener(event: "price", listener: (e: PriceChangedEvent) => void): this;
+
+        on(event: string, listener: (...args: any[]) => void): this;
+        on(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
+        on(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
+        on(event: "price", listener: (e: PriceChangedEvent) => void): this;
+
+        once(event: string, listener: (...args: any[]) => void): this;
+        once(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
+        once(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
+        once(event: "price", listener: (e: PriceChangedEvent) => void): this;
+
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+        prependListener(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
+        prependListener(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
+        prependListener(event: "price", listener: (e: PriceChangedEvent) => void): this;
+
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
+        prependOnceListener(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
+        prependOnceListener(event: "price", listener: (e: PriceChangedEvent) => void): this;
+    }
 }
-interface BidPriceChangedEvent {
+export namespace TrendbarStream {
+    export interface TrendbarEvent {
+        symbol: Symbol,
+        open: Price,
+        high: Price,
+        low: Price,
+        close: Price,
+        volume: Volume,
+        period: Period
+        timestamp: Timestamp
+    }
 
+    export interface TrendbarStream extends EventEmitter {
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        addListener(event: "trendbar", listener: (e: TrendbarEvent) => void): this;
+
+        on(event: string, listener: (...args: any[]) => void): this;
+        on(event: "trendbar", listener: (e: TrendbarEvent) => void): this;
+
+        once(event: string, listener: (...args: any[]) => void): this;
+        once(event: "trendbar", listener: (e: TrendbarEvent) => void): this;
+
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+        prependListener(event: "trendbar", listener: (e: TrendbarEvent) => void): this;
+
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: "trendbar", listener: (e: TrendbarEvent) => void): this;
+    }
 }
-interface PriceChangedEvent {
 
-}
-enum Events {
-    //
-    askPriceChanged="askPriceChanged",
-    bidPriceChanged="bidPriceChanged",
-    priceChanged="priceChanged"   ,
-    error="error"   ,
+export namespace OrderStream {
+    export interface OrderAcceptedEvent {
+        symbol: Symbol,
+        timestamp: Timestamp
+    }
+    export interface OrderFilledEvent {
+        symbol: Symbol,
+        timestamp: Timestamp
+    }
+    export interface OrderClosedEvent {
+        symbol: Symbol,
+        timestamp: Timestamp
+    }
+    export interface OrderStream extends EventEmitter {
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        addListener(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
+        addListener(event: "filled", listener: (e: OrderFilledEvent) => void): this;
+        addListener(event: "closed", listener: (e: OrderClosedEvent) => void): this;
 
-    // 
+        on(event: string, listener: (...args: any[]) => void): this;
+        on(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
+        on(event: "filled", listener: (e: OrderFilledEvent) => void): this;
+        on(event: "closed", listener: (e: OrderClosedEvent) => void): this;
 
-}
+        once(event: string, listener: (...args: any[]) => void): this;
+        once(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
+        once(event: "filled", listener: (e: OrderFilledEvent) => void): this;
+        once(event: "closed", listener: (e: OrderClosedEvent) => void): this;
 
-interface SymbolPriceService extends EventEmitter {
-    addListener(event: Events.askPriceChanged, listener: (event: AskPriceChangedEvent) => void): this;
-    addListener(event: Events.bidPriceChanged, listener: (event: BidPriceChangedEvent) => void): this;
-    addListener(event: Events.priceChanged, listener: (event: PriceChangedEvent) => void): this;
-    addListener(event: Events.error, listener: (error: Error) => void): this;
-    on(event: Events.askPriceChanged, listener: (event: AskPriceChangedEvent) => void): this;
-    on(event: Events.bidPriceChanged, listener: (event: BidPriceChangedEvent) => void): this;
-    on(event: Events.priceChanged, listener: (event: PriceChangedEvent) => void): this;
-    on(event: Events.error, listener: (error: Error) => void): this;
-    once(event: Events.askPriceChanged, listener: (event: AskPriceChangedEvent) => void): this;
-    once(event: Events.bidPriceChanged, listener: (event: BidPriceChangedEvent) => void): this;
-    once(event: Events.priceChanged, listener: (event: PriceChangedEvent) => void): this;
-    once(event: Events.error, listener: (error: Error) => void): this;
-    removeListener(event: Events.askPriceChanged, listener: (event: AskPriceChangedEvent) => void): this;
-    removeListener(event: Events.bidPriceChanged, listener: (event: BidPriceChangedEvent) => void): this;
-    removeListener(event: Events.priceChanged, listener: (event: PriceChangedEvent) => void): this;
-    removeListener(event: Events.error, listener: (error: Error) => void): this;
-    off(event: Events.askPriceChanged, listener: (event: AskPriceChangedEvent) => void): this;
-    off(event: Events.bidPriceChanged, listener: (event: BidPriceChangedEvent) => void): this;
-    off(event: Events.priceChanged   , listener: (event: PriceChangedEvent) => void   ): this;
-    off(event: Events.error          , listener: (error: Error) => void               ): this;
-    removeAllListeners(event?: Events): this;
-    listeners(event: Events): Function[];
-    rawListeners(event: Events): Function[];
-    emit(event: Events.askPriceChanged, arg: AskPriceChangedEvent): boolean;
-    emit(event: Events.bidPriceChanged, arg: BidPriceChangedEvent): boolean;
-    emit(event: Events.priceChanged   , arg: PriceChangedEvent   ): boolean;
-    emit(event: Events.error          , arg: Error               ): boolean;
-    listenerCount(type: Events.askPriceChanged | Events.bidPriceChanged | Events.priceChanged | Events.error          ): number;
-    prependListener(event: Events.askPriceChanged, listener: (event: AskPriceChangedEvent) => void): this;
-    prependListener(event: Events.bidPriceChanged, listener: (event: BidPriceChangedEvent) => void): this;
-    prependListener(event: Events.priceChanged   , listener: (event: PriceChangedEvent   ) => void   ): this;
-    prependListener(event: Events.error          , listener: (error: Error               ) => void               ): this;
-    prependOnceListener(event: Events.askPriceChanged, listener: (event: AskPriceChangedEvent) => void): this;
-    prependOnceListener(event: Events.bidPriceChanged, listener: (event: BidPriceChangedEvent) => void): this;
-    prependOnceListener(event: Events.priceChanged   , listener: (event: PriceChangedEvent) => void   ): this;
-    prependOnceListener(event: Events.error          , listener: (error: Error) => void               ): this;
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+        prependListener(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
+        prependListener(event: "filled", listener: (e: OrderFilledEvent) => void): this;
+        prependListener(event: "closed", listener: (e: OrderClosedEvent) => void): this;
+
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
+        prependOnceListener(event: "filled", listener: (e: OrderFilledEvent) => void): this;
+        prependOnceListener(event: "closed", listener: (e: OrderClosedEvent) => void): this;
+    }
 }
