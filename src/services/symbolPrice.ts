@@ -53,6 +53,10 @@ export namespace SpotPriceStream {
         prependOnceListener(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
         prependOnceListener(event: "price", listener: (e: PriceChangedEvent) => void): this;
     }
+
+    export function from(_stream: AccountStream.AccountStream, _symbol: Symbol): SpotPriceStream {
+        return new EventEmitter();
+    }
 }
 export namespace TrendbarStream {
     export interface TrendbarEvent {
@@ -81,6 +85,12 @@ export namespace TrendbarStream {
 
         prependOnceListener(event: string, listener: (...args: any[]) => void): this;
         prependOnceListener(event: "trendbar", listener: (e: TrendbarEvent) => void): this;
+    }
+
+    export function from(_stream: AccountStream.AccountStream, _symbol: Symbol): TrendbarStream;
+    export function from(_stream: SpotPriceStream.SpotPriceStream): TrendbarStream;
+    export function from(_stream: AccountStream.AccountStream | SpotPriceStream.SpotPriceStream, _symbol?: Symbol): TrendbarStream {
+        return new EventEmitter();
     }
 }
 
@@ -124,3 +134,39 @@ export namespace OrderStream {
         prependOnceListener(event: "closed", listener: (e: OrderClosedEvent) => void): this;
     }
 }
+
+export namespace AccountStream {
+    export interface BalanceChangedEvent {
+        balance: Price
+        timestamp: Timestamp
+    }
+    export interface EquityChangedEvent {
+        equity: Price
+        timestamp: Timestamp
+    }
+    export interface AccountStream extends EventEmitter {
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        addListener(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
+        addListener(event: "equity", listener: (e: EquityChangedEvent) => void): this;
+
+        on(event: string, listener: (...args: any[]) => void): this;
+        on(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
+        on(event: "equity", listener: (e: EquityChangedEvent) => void): this;
+
+        once(event: string, listener: (...args: any[]) => void): this;
+        once(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
+        once(event: "equity", listener: (e: EquityChangedEvent) => void): this;
+
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+        prependListener(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
+        prependListener(event: "equity", listener: (e: EquityChangedEvent) => void): this;
+
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
+        prependOnceListener(event: "equity", listener: (e: EquityChangedEvent) => void): this;
+    }
+
+}
+const a: SpotPriceStream.SpotPriceStream = new EventEmitter();
+const b = TrendbarStream.from(a)
+b.on("trendbar", _bar => {})
