@@ -12,7 +12,7 @@
     "prestart": "npm run build",
     "start": "node -r dotenv/config ./build/insideBarMomentumStrategy.js > debug.log 2>&1",
     "refresh": "ts-node -r dotenv/config ./src/refresh.ts",
-    "dev": "ts-node -r dotenv/config ./src/services/index.ts"
+    "dev": "ts-node -r dotenv/config ./src/services/symbolPrice.ts"
   },
   "repository": {
     "type": "git",

@@ -1,10 +1,14 @@
 import { EventEmitter } from "events";
+import { bearish, bullish, range } from "indicators";
+
+const EURUSD = Symbol.for("EURUSD")
 
 type Price = number;
 type Volume = number;
-type Period = "M1" | "M5" | "M10" | "M15"
+type Period = number;
 type Timestamp = number;
 type Symbol = symbol;
+type TradeSide = "BUY" | "SELL"
 
 // API should be async, stream of events
 // an Order has a lifecyle which can be represented through events (e.g. a "mini stream")
@@ -167,6 +171,113 @@ export namespace AccountStream {
     }
 
 }
-const a: SpotPriceStream.SpotPriceStream = new EventEmitter();
-const b = TrendbarStream.from(a)
-b.on("trendbar", _bar => {})
+
+export namespace InsideBarMomentumStrategyStream {
+    export interface EngulfedTrenbarEvent {
+        symbol: Symbol
+        tradeSide: TradeSide
+        enter: Price
+        takeProfit: Price
+        stopLoss: Price
+        timestamp: Timestamp
+    }
+
+    export interface Options {
+        enterOffset: number
+        stopLossOffset: number
+        takeProfitOffset: number
+    }
+
+    export const DEFAULT_OPTIONS: Options = {
+        enterOffset: 0.1,
+        stopLossOffset: 0.4,
+        takeProfitOffset: 0.8
+    }
+    export interface InsideBarMomentumStrategyStream extends EventEmitter {
+        addListener(event: string, listener: (...args: any[]) => void): this;
+        addListener(event: "bearish", listener: (e: EngulfedTrenbarEvent) => void): this;
+        addListener(event: "bullish", listener: (e: EngulfedTrenbarEvent) => void): this;
+
+        on(event: string, listener: (...args: any[]) => void): this;
+        on(event: "bearish", listener: (e: EngulfedTrenbarEvent) => void): this;
+        on(event: "bullish", listener: (e: EngulfedTrenbarEvent) => void): this;
+
+        once(event: string, listener: (...args: any[]) => void): this;
+        once(event: "bearish", listener: (e: EngulfedTrenbarEvent) => void): this;
+        once(event: "bullish", listener: (e: EngulfedTrenbarEvent) => void): this;
+
+        prependListener(event: string, listener: (...args: any[]) => void): this;
+        prependListener(event: "bearish", listener: (e: EngulfedTrenbarEvent) => void): this;
+        prependListener(event: "bullish", listener: (e: EngulfedTrenbarEvent) => void): this;
+
+        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+        prependOnceListener(event: "bearish", listener: (e: EngulfedTrenbarEvent) => void): this;
+        prependOnceListener(event: "bullish", listener: (e: EngulfedTrenbarEvent) => void): this;
+    }
+
+    function engulfed(barPrev: TrendbarStream.TrendbarEvent, barCurr: TrendbarStream.TrendbarEvent): boolean {
+        const upperPrev = barPrev.high;
+        const lowerPrev = barPrev.low;
+        const upperCurr = barCurr.high;
+        const lowerCurr = barCurr.low;
+        return (
+            (upperPrev >= upperCurr && lowerPrev < lowerCurr) ||
+            (upperPrev > upperCurr && lowerPrev <= lowerCurr)
+        );
+    }
+
+    function roundPrice(price: number): number {
+        return Math.round(price * 100) / 100;
+    }
+
+    export function from(stream: TrendbarStream.TrendbarStream, options: Partial<Options> = {}): InsideBarMomentumStrategyStream {
+        const emitter = new EventEmitter();
+        const { enterOffset, stopLossOffset, takeProfitOffset } = Object.assign(options, DEFAULT_OPTIONS)
+        let prevBar: TrendbarStream.TrendbarEvent | null = null
+        stream.on("trendbar", currBar => {
+            const prev = prevBar;
+            prevBar = currBar
+            if (prev && engulfed(prev, currBar)) {
+                const timestamp = Date.now();
+                const r = range(currBar);
+                if (bearish(prev)) {
+                    const event: EngulfedTrenbarEvent = {
+                        symbol: currBar.symbol,
+                        tradeSide: "SELL",
+                        enter: roundPrice(currBar.low - r * enterOffset),
+                        stopLoss: roundPrice(currBar.low + r * stopLossOffset),
+                        takeProfit: roundPrice(currBar.low - r * takeProfitOffset),
+                        timestamp
+                    }
+                    emitter.emit("bearish", event)
+                }
+                if (bullish(prev)) {
+                    const event: EngulfedTrenbarEvent = {
+                        symbol: currBar.symbol,
+                        tradeSide: "BUY",
+                        enter: roundPrice(currBar.high + r * enterOffset),
+                        stopLoss: roundPrice(currBar.high - r * stopLossOffset),
+                        takeProfit: roundPrice(currBar.high + r * takeProfitOffset),
+                        timestamp
+                    }
+                    emitter.emit("bullish", event)
+                }
+            }
+        })
+        return emitter;
+    }
+}
+
+
+const bars: TrendbarStream.TrendbarStream = new EventEmitter();
+setImmediate(() => {
+    const samples: Array<TrendbarStream.TrendbarEvent> = [
+        { symbol: EURUSD, open: 20, high: 80, low: 10, close: 70, period: 0, volume: 0, timestamp: 0 },
+        { symbol: EURUSD, open: 30, high: 70, low: 30, close: 70, period: 0, volume: 0, timestamp: 0 },
+    ]
+    samples.forEach(bar => bars.emit("trendbar", bar))
+})
+bars.on("trendbar", console.log)
+
+const strategy = InsideBarMomentumStrategyStream.from(bars);
+strategy.on("bearish", console.log).on("bullish", console.log)
