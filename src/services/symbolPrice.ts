@@ -234,6 +234,7 @@ export namespace InsideBarMomentumStrategyStream {
         const emitter = new EventEmitter();
         const { enterOffset, stopLossOffset, takeProfitOffset } = Object.assign(options, DEFAULT_OPTIONS)
         let prevBar: TrendbarStream.TrendbarEvent | null = null
+        const orders: EngulfedTrenbarEvent[] = []
         stream.on("trendbar", currBar => {
             const prev = prevBar;
             prevBar = currBar
@@ -249,7 +250,7 @@ export namespace InsideBarMomentumStrategyStream {
                         takeProfit: roundPrice(currBar.low - r * takeProfitOffset),
                         timestamp
                     }
-                    emitter.emit("bearish", event)
+                    setImmediate(() => emitter.emit("bearish", event))
                 }
                 if (bullish(prev)) {
                     const event: EngulfedTrenbarEvent = {
@@ -260,9 +261,24 @@ export namespace InsideBarMomentumStrategyStream {
                         takeProfit: roundPrice(currBar.high + r * takeProfitOffset),
                         timestamp
                     }
-                    emitter.emit("bullish", event)
+                    setImmediate(() => emitter.emit("bullish", event))
                 }
             }
+        })
+        emitter.on("bearish", (e: EngulfedTrenbarEvent) => {
+            console.log("---")
+            orders.push(e)
+            const toBeCancelledOrClosed = orders.slice(0, -1)
+            
+            // place new order
+        // cancel existing orders
+        })
+        emitter.on("bullish", (e: EngulfedTrenbarEvent) => {
+            console.log("+++")
+            orders.push(e)
+            const toBeCancelledOrClosed = orders.slice(0, -1)
+            // place new order
+        // cancel existing orders
         })
         return emitter;
     }
@@ -273,11 +289,12 @@ const bars: TrendbarStream.TrendbarStream = new EventEmitter();
 setImmediate(() => {
     const samples: Array<TrendbarStream.TrendbarEvent> = [
         { symbol: EURUSD, open: 20, high: 80, low: 10, close: 70, period: 0, volume: 0, timestamp: 0 },
-        { symbol: EURUSD, open: 30, high: 70, low: 30, close: 70, period: 0, volume: 0, timestamp: 0 },
+        { symbol: EURUSD, open: 21, high: 79, low: 21, close: 79, period: 0, volume: 0, timestamp: 0 },
     ]
     samples.forEach(bar => bars.emit("trendbar", bar))
 })
-bars.on("trendbar", console.log)
 
 const strategy = InsideBarMomentumStrategyStream.from(bars);
-strategy.on("bearish", console.log).on("bullish", console.log)
+strategy
+    .on("bearish", console.log)
+    .on("bullish", console.log)
