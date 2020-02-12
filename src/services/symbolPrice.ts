@@ -263,6 +263,9 @@ export namespace InsideBarMomentumStrategyStream {
                 { symbol: EURUSD, open: 20, high: 80, low: 10, close: 70, period: 0, volume: 0, timestamp: 0 },
                 { symbol: EURUSD, open: 21, high: 79, low: 21, close: 79, period: 0, volume: 0, timestamp: 0 },
                 { symbol: EURUSD, open: 22, high: 78, low: 22, close: 78, period: 0, volume: 0, timestamp: 0 },
+                { symbol: EURUSD, open: 77, high: 77, low: 23, close: 23, period: 0, volume: 0, timestamp: 0 },
+                { symbol: EURUSD, open: 76, high: 76, low: 24, close: 24, period: 0, volume: 0, timestamp: 0 },
+                { symbol: EURUSD, open: 75, high: 75, low: 25, close: 25, period: 0, volume: 0, timestamp: 0 },
             ]
             samples.forEach(bar => stream.emit("trendbar", bar))
         })
@@ -302,27 +305,24 @@ export namespace InsideBarMomentumStrategyStream {
         })
 
         const orders: Map<string, OrderStream.OrderStream> = new Map();
+        function signal(e: EngulfedTrenbarEvent): void {
+                orders.forEach(o => o.end())
+
+                const order = account.order(e.symbol);
+                orders.set(order.id, order);
+                    order.on("end", e => {
+                        console.log("bye", order.id, e)
+                        orders.delete(order.id);
+                    })
+        }
+
         emitter.on("bearish", (e: EngulfedTrenbarEvent) => {
                 console.log("---")
-            orders.forEach(o => o.end())
-
-            const order = account.order(e.symbol);
-            orders.set(order.id, order);
-                order.on("end", () => {
-                    console.log("bye", order.id)
-                    orders.delete(order.id);
-                })
+                signal(e)
         })
         emitter.on("bullish", (e: EngulfedTrenbarEvent) => {
             console.log("+++")
-            orders.forEach(o => o.end())
-
-            const order = account.order(e.symbol);
-            orders.set(order.id, order);
-                order.on("end", () => {
-                    console.log("bye", order.id)
-                    orders.delete(order.id);
-                })
+            signal(e);
         })
         return emitter;
     }
