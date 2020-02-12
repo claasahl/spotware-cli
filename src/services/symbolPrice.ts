@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import { bearish, bullish, range } from "indicators";
 import {Price, Volume, Period, Timestamp, TradeSide} from "./types"
-import { SpotPriceStream } from "./spot";
+import { SpotPriceStream } from "./spotPrice";
 
 const EURUSD = Symbol.for("EURUSD")
 

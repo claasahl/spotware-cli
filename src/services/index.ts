@@ -3,7 +3,7 @@ import debug from "debug";
 import { Subject } from "rxjs";
 
 import * as Account from "./account";
-import * as Spots from "./spot";
+import * as Spots from "./spotPrice";
 
 export default {
   Account,
