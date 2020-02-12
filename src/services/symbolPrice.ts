@@ -1,67 +1,14 @@
 import { EventEmitter } from "events";
 import { bearish, bullish, range } from "indicators";
+import {Price, Volume, Period, Timestamp, TradeSide} from "./types"
+import { SpotPriceStream } from "./spot";
 
 const EURUSD = Symbol.for("EURUSD")
-
-type Price = number;
-type Volume = number;
-type Period = number;
-type Timestamp = number;
-type Symbol = symbol;
-type TradeSide = "BUY" | "SELL"
 
 // API should be async, stream of events
 // an Order has a lifecyle which can be represented through events (e.g. a "mini stream")
 // a Symbol (e.g. "EURUSD") experiences price changes, which can be represented through events
 
-export namespace SpotPriceStream {
-    export interface AskPriceChangedEvent {
-        symbol: Symbol,
-        price: Price,
-        timestamp: Timestamp
-    }
-    export interface BidPriceChangedEvent {
-        symbol: Symbol,
-        price: Price,
-        timestamp: Timestamp
-    }
-    export interface PriceChangedEvent {
-        symbol: Symbol,
-        ask: Price,
-        bid: Price,
-        timestamp: Timestamp
-    }
-    export interface SpotPriceStream extends EventEmitter {
-        addListener(event: string, listener: (...args: any[]) => void): this;
-        addListener(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
-        addListener(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
-        addListener(event: "price", listener: (e: PriceChangedEvent) => void): this;
-
-        on(event: string, listener: (...args: any[]) => void): this;
-        on(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
-        on(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
-        on(event: "price", listener: (e: PriceChangedEvent) => void): this;
-
-        once(event: string, listener: (...args: any[]) => void): this;
-        once(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
-        once(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
-        once(event: "price", listener: (e: PriceChangedEvent) => void): this;
-
-        prependListener(event: string, listener: (...args: any[]) => void): this;
-        prependListener(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
-        prependListener(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
-        prependListener(event: "price", listener: (e: PriceChangedEvent) => void): this;
-
-        prependOnceListener(event: string, listener: (...args: any[]) => void): this;
-        prependOnceListener(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
-        prependOnceListener(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
-        prependOnceListener(event: "price", listener: (e: PriceChangedEvent) => void): this;
-    }
-
-    export function from(_stream: AccountStream.AccountStream, _symbol: Symbol): SpotPriceStream {
-        return new EventEmitter();
-    }
-}
 export namespace TrendbarStream {
     export interface TrendbarEvent {
         symbol: Symbol,
@@ -92,8 +39,8 @@ export namespace TrendbarStream {
     }
 
     export function from(_stream: AccountStream.AccountStream, _symbol: Symbol): TrendbarStream;
-    export function from(_stream: SpotPriceStream.SpotPriceStream): TrendbarStream;
-    export function from(_stream: AccountStream.AccountStream | SpotPriceStream.SpotPriceStream, _symbol?: Symbol): TrendbarStream {
+    export function from(_stream: SpotPriceStream): TrendbarStream;
+    export function from(_stream: AccountStream.AccountStream | SpotPriceStream, _symbol?: Symbol): TrendbarStream {
         const emitter = new EventEmitter();
         setImmediate(() => {
             const samples: Array<TrendbarStream.TrendbarEvent> = [
@@ -326,6 +273,10 @@ export namespace InsideBarMomentumStrategyStream {
         })
         return emitter;
     }
+}
+
+export function spotPriceStreamFrom(_stream: AccountStream.AccountStream, _symbol: Symbol): SpotPriceStream {
+    return new EventEmitter();
 }
 
 let ids = 0;

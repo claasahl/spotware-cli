@@ -1,98 +1,46 @@
-import debug from "debug";
-import { Spot } from "../types";
-import { Observable, OperatorFunction, pipe, combineLatest } from "rxjs";
-import { tap, map, filter, pairwise, share } from "rxjs/operators";
+import {EventEmitter} from "events"
 
-export enum SpotEvents {
-  ASK = "spot:ask:changed",
-  BID = "spot:bid:changed",
-  SPOT = "spot:computed"
-}
-export interface AskPriceChangedEvent {
-  type: SpotEvents.ASK;
-  price: number;
-  timestamp: number;
-}
-export interface BidPriceChangedEvent {
-  type: SpotEvents.BID;
-  price: number;
-  timestamp: number;
-}
-export interface SpotPriceChangedEvent extends Spot {
-  type: SpotEvents.SPOT;
-}
+import { Price, Timestamp } from "./types";
 
-function log<T>(logger: debug.Debugger): OperatorFunction<T, T> {
-  return pipe(
-    tap({
-      complete: () => logger("completed"),
-      error: err => logger("%j", err),
-      next: (e: T) => logger("%j", e)
-    })
-  );
-}
-
-function increasingTimestamps(): OperatorFunction<
-  AskPriceChangedEvent | BidPriceChangedEvent,
-  AskPriceChangedEvent | BidPriceChangedEvent
-> {
-  return pipe(
-    pairwise(),
-    filter(([prev, curr]) => prev.timestamp <= curr.timestamp),
-    map(([_prev, curr]) => curr)
-  );
-}
-
-function combineAskBidPrices(
-  askChanged: AskPriceChangedEvent,
-  bidChanged: BidPriceChangedEvent
-): SpotPriceChangedEvent {
-  const { price: ask } = askChanged;
-  const { price: bid } = bidChanged;
-  const spread = ask - bid;
-  const timestamp = Math.max(askChanged.timestamp, bidChanged.timestamp);
-  const date = new Date(timestamp);
-  return { type: SpotEvents.SPOT, ask, bid, spread, timestamp, date };
-}
-
-export function service(
-  events: Observable<AskPriceChangedEvent | BidPriceChangedEvent>
-): Observable<SpotPriceChangedEvent> {
-  const logger = debug("spots");
-  const inputs = logger.extend("inputs");
-  const outputs = logger.extend("outputs");
-
-  const a = events.pipe(log(inputs), increasingTimestamps(), share());
-
-  const askChangeEvents: Observable<AskPriceChangedEvent> = a.pipe(
-    filter((e): e is AskPriceChangedEvent => e.type === SpotEvents.ASK)
-  );
-  const bidChangeEvents: Observable<BidPriceChangedEvent> = a.pipe(
-    filter((e): e is BidPriceChangedEvent => e.type === SpotEvents.BID)
-  );
-
-  return combineLatest(
-    askChangeEvents,
-    bidChangeEvents,
-    combineAskBidPrices
-  ).pipe(log(outputs));
-}
-
-export class Debug extends Service {
-  public askPriceChanged(price: number, timestamp: number = Date.now()) {
-    const event: AskPriceChangedEvent = {
-      type: Events.ASK,
-      price,
-      timestamp
-    };
-    this.emit(event);
+  export interface AskPriceChangedEvent {
+      symbol: Symbol,
+      price: Price,
+      timestamp: Timestamp
   }
-  public bidPriceChanged(price: number, timestamp: number = Date.now()) {
-    const event: BidPriceChangedEvent = {
-      type: Events.BID,
-      price,
-      timestamp
-    };
-    this.emit(event);
+  export interface BidPriceChangedEvent {
+      symbol: Symbol,
+      price: Price,
+      timestamp: Timestamp
   }
-}
+  export interface PriceChangedEvent {
+      symbol: Symbol,
+      ask: Price,
+      bid: Price,
+      timestamp: Timestamp
+  }
+  export interface SpotPriceStream extends EventEmitter {
+      addListener(event: string, listener: (...args: any[]) => void): this;
+      addListener(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
+      addListener(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
+      addListener(event: "price", listener: (e: PriceChangedEvent) => void): this;
+
+      on(event: string, listener: (...args: any[]) => void): this;
+      on(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
+      on(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
+      on(event: "price", listener: (e: PriceChangedEvent) => void): this;
+
+      once(event: string, listener: (...args: any[]) => void): this;
+      once(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
+      once(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
+      once(event: "price", listener: (e: PriceChangedEvent) => void): this;
+
+      prependListener(event: string, listener: (...args: any[]) => void): this;
+      prependListener(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
+      prependListener(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
+      prependListener(event: "price", listener: (e: PriceChangedEvent) => void): this;
+
+      prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+      prependOnceListener(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
+      prependOnceListener(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
+      prependOnceListener(event: "price", listener: (e: PriceChangedEvent) => void): this;
+  }
