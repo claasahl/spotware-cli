@@ -111,31 +111,47 @@ export namespace OrderStream {
         symbol: Symbol,
         timestamp: Timestamp
     }
+    export interface OrderEndEvent {
+        symbol: Symbol,
+        timestamp: Timestamp
+    }
     export interface OrderStream extends EventEmitter {
+        readonly id: string;
+
         addListener(event: string, listener: (...args: any[]) => void): this;
         addListener(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
         addListener(event: "filled", listener: (e: OrderFilledEvent) => void): this;
         addListener(event: "closed", listener: (e: OrderClosedEvent) => void): this;
+        addListener(event: "end", listener: (e: OrderEndEvent) => void): this;
 
         on(event: string, listener: (...args: any[]) => void): this;
         on(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
         on(event: "filled", listener: (e: OrderFilledEvent) => void): this;
         on(event: "closed", listener: (e: OrderClosedEvent) => void): this;
+        on(event: "end", listener: (e: OrderEndEvent) => void): this;
 
         once(event: string, listener: (...args: any[]) => void): this;
         once(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
         once(event: "filled", listener: (e: OrderFilledEvent) => void): this;
         once(event: "closed", listener: (e: OrderClosedEvent) => void): this;
+        once(event: "end", listener: (e: OrderEndEvent) => void): this;
 
         prependListener(event: string, listener: (...args: any[]) => void): this;
         prependListener(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
         prependListener(event: "filled", listener: (e: OrderFilledEvent) => void): this;
         prependListener(event: "closed", listener: (e: OrderClosedEvent) => void): this;
+        prependListener(event: "end", listener: (e: OrderEndEvent) => void): this;
 
         prependOnceListener(event: string, listener: (...args: any[]) => void): this;
         prependOnceListener(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
         prependOnceListener(event: "filled", listener: (e: OrderFilledEvent) => void): this;
         prependOnceListener(event: "closed", listener: (e: OrderClosedEvent) => void): this;
+        prependOnceListener(event: "end", listener: (e: OrderEndEvent) => void): this;
+
+        close(): this;
+        cancel(): this;
+        end(): this;
+        amend(): this;
     }
 }
 
@@ -148,26 +164,36 @@ export namespace AccountStream {
         equity: Price
         timestamp: Timestamp
     }
+    export interface OrderEvent {
+        timestamp: Timestamp
+    }
     export interface AccountStream extends EventEmitter {
         addListener(event: string, listener: (...args: any[]) => void): this;
         addListener(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
         addListener(event: "equity", listener: (e: EquityChangedEvent) => void): this;
+        addListener(event: "order", listener: (e: OrderEvent) => void): this;
 
         on(event: string, listener: (...args: any[]) => void): this;
         on(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
         on(event: "equity", listener: (e: EquityChangedEvent) => void): this;
+        on(event: "order", listener: (e: OrderEvent) => void): this;
 
         once(event: string, listener: (...args: any[]) => void): this;
         once(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
         once(event: "equity", listener: (e: EquityChangedEvent) => void): this;
+        once(event: "order", listener: (e: OrderEvent) => void): this;
 
         prependListener(event: string, listener: (...args: any[]) => void): this;
         prependListener(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
         prependListener(event: "equity", listener: (e: EquityChangedEvent) => void): this;
+        prependListener(event: "order", listener: (e: OrderEvent) => void): this;
 
         prependOnceListener(event: string, listener: (...args: any[]) => void): this;
         prependOnceListener(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
         prependOnceListener(event: "equity", listener: (e: EquityChangedEvent) => void): this;
+        prependOnceListener(event: "order", listener: (e: OrderEvent) => void): this;
+
+        order(symbol: Symbol): OrderStream.OrderStream;
     }
 
 }
@@ -230,11 +256,20 @@ export namespace InsideBarMomentumStrategyStream {
         return Math.round(price * 100) / 100;
     }
 
-    export function from(stream: TrendbarStream.TrendbarStream, options: Partial<Options> = {}): InsideBarMomentumStrategyStream {
+    export function from(account: AccountStream.AccountStream, options: Partial<Options> = {}): InsideBarMomentumStrategyStream {
+        const stream = TrendbarStream.from(account);
+        setImmediate(() => {
+            const samples: Array<TrendbarStream.TrendbarEvent> = [
+                { symbol: EURUSD, open: 20, high: 80, low: 10, close: 70, period: 0, volume: 0, timestamp: 0 },
+                { symbol: EURUSD, open: 21, high: 79, low: 21, close: 79, period: 0, volume: 0, timestamp: 0 },
+                { symbol: EURUSD, open: 22, high: 78, low: 22, close: 78, period: 0, volume: 0, timestamp: 0 },
+            ]
+            samples.forEach(bar => stream.emit("trendbar", bar))
+        })
+
         const emitter = new EventEmitter();
         const { enterOffset, stopLossOffset, takeProfitOffset } = Object.assign(options, DEFAULT_OPTIONS)
         let prevBar: TrendbarStream.TrendbarEvent | null = null
-        const orders: EngulfedTrenbarEvent[] = []
         stream.on("trendbar", currBar => {
             const prev = prevBar;
             prevBar = currBar
@@ -265,36 +300,85 @@ export namespace InsideBarMomentumStrategyStream {
                 }
             }
         })
+
+        const orders: Map<string, OrderStream.OrderStream> = new Map();
         emitter.on("bearish", (e: EngulfedTrenbarEvent) => {
-            console.log("---")
-            orders.push(e)
-            const toBeCancelledOrClosed = orders.slice(0, -1)
-            
-            // place new order
-        // cancel existing orders
+                console.log("---")
+            orders.forEach(o => o.end())
+
+            const order = account.order(e.symbol);
+            orders.set(order.id, order);
+                order.on("end", () => {
+                    console.log("bye", order.id)
+                    orders.delete(order.id);
+                })
         })
         emitter.on("bullish", (e: EngulfedTrenbarEvent) => {
             console.log("+++")
-            orders.push(e)
-            const toBeCancelledOrClosed = orders.slice(0, -1)
-            // place new order
-        // cancel existing orders
+            orders.forEach(o => o.end())
+
+            const order = account.order(e.symbol);
+            orders.set(order.id, order);
+                order.on("end", () => {
+                    console.log("bye", order.id)
+                    orders.delete(order.id);
+                })
         })
         return emitter;
     }
 }
 
+let ids = 0;
+class O extends EventEmitter implements OrderStream.OrderStream {
+    private readonly symbol: Symbol;
+    public readonly id: string = `${ids++}`
+    constructor(symbol: Symbol) {
+        super();
+        this.symbol = symbol;
+        setImmediate(() => {
+            const e: OrderStream.OrderAcceptedEvent = {
+                symbol: this.symbol,
+                timestamp: Date.now()
+            }
+            this.emit("accepted", e)
+        })
+    }
+    amend() {
+        return this;
+    }
+    cancel() {
+        return this;
+    }
+    close() {
+        setImmediate(() => {
+            const e: OrderStream.OrderClosedEvent = {
+                symbol: this.symbol,
+                timestamp: Date.now()
+            }
+            this.emit("closed", e)
+            this.end();
+        })
+        return this;
+    }
+    end() {
+        setImmediate(() => {
+            const e: OrderStream.OrderEndEvent = {
+                symbol: this.symbol,
+                timestamp: Date.now()
+            }
+            this.emit("end", e)
+        })
+        return this;
+    }
+}
+class A extends EventEmitter implements AccountStream.AccountStream {
+    order(symbol: Symbol): OrderStream.OrderStream {
+        return new O(symbol);
+    }
+}
 
-const bars: TrendbarStream.TrendbarStream = new EventEmitter();
-setImmediate(() => {
-    const samples: Array<TrendbarStream.TrendbarEvent> = [
-        { symbol: EURUSD, open: 20, high: 80, low: 10, close: 70, period: 0, volume: 0, timestamp: 0 },
-        { symbol: EURUSD, open: 21, high: 79, low: 21, close: 79, period: 0, volume: 0, timestamp: 0 },
-    ]
-    samples.forEach(bar => bars.emit("trendbar", bar))
-})
-
-const strategy = InsideBarMomentumStrategyStream.from(bars);
+const account = new A();
+const strategy = InsideBarMomentumStrategyStream.from(account);
 strategy
     .on("bearish", console.log)
     .on("bullish", console.log)
