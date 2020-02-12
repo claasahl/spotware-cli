@@ -1,3 +1,5 @@
+export const EURUSD = Symbol.for("EURUSD")
+
 export type Price = number;
 export type Volume = number;
 export type Period = number;

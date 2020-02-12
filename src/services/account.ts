@@ -1,152 +1,44 @@
 import { EventEmitter } from "events";
-import debug from "debug";
 
-export enum Events {
-  BALANCE = "account:balance:changed",
-  EQUITY = "account:equity:changed",
-  MARGIN = "account:margin:changed",
-  ACCOUNT = "account:computed"
-}
+import { Price, Timestamp, Symbol } from "./types";
+import { OrderStream } from "./order";
 
-/**
- * Event signaling that the account's balance has changed by the specified amount.
- */
 export interface BalanceChangedEvent {
-  type: Events.BALANCE;
-  amount: number;
+  balance: Price
+  timestamp: Timestamp
 }
-/**
- * Event signaling that the account's equity has changed by the specified amount.
- */
 export interface EquityChangedEvent {
-  type: Events.EQUITY;
-  amount: number;
+  equity: Price
+  timestamp: Timestamp
 }
-/**
- * Event signaling that the account's margin has changed by the specified amount.
- */
-export interface MarginChangedEvent {
-  type: Events.MARGIN;
-  amount: number;
+export interface OrderEvent {
+  timestamp: Timestamp
 }
-/**
- * Event containing a complete snapshot of an account.
- */
-export interface SnapshotEvent extends Account {
-  type: Events.ACCOUNT;
-}
+export interface AccountStream extends EventEmitter {
+  addListener(event: string, listener: (...args: any[]) => void): this;
+  addListener(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
+  addListener(event: "equity", listener: (e: EquityChangedEvent) => void): this;
+  addListener(event: "order", listener: (e: OrderEvent) => void): this;
 
-export interface Account {
-  balance: number;
-  equity: number;
-  margin: number;
-}
+  on(event: string, listener: (...args: any[]) => void): this;
+  on(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
+  on(event: "equity", listener: (e: EquityChangedEvent) => void): this;
+  on(event: "order", listener: (e: OrderEvent) => void): this;
 
-class Service {
-  private readonly logger = debug("account");
-  private readonly emitter: EventEmitter;
-  private readonly account: Account;
+  once(event: string, listener: (...args: any[]) => void): this;
+  once(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
+  once(event: "equity", listener: (e: EquityChangedEvent) => void): this;
+  once(event: "order", listener: (e: OrderEvent) => void): this;
 
-  constructor(emitter: EventEmitter, seed?: Account) {
-    this.emitter = emitter;
-    this.account = { balance: 0, equity: 0, margin: 0, ...seed };
-    if (this.logger.enabled) {
-      this.on(Events.BALANCE, e => this.logger("%j", e));
-      this.on(Events.EQUITY, e => this.logger("%j", e));
-      this.on(Events.MARGIN, e => this.logger("%j", e));
-      this.on(Events.ACCOUNT, e => this.logger("%j", e));
-    }
-    this.on(Events.BALANCE, this.onBalanceChanged.bind(this));
-    this.on(Events.EQUITY, this.onEquityChanged.bind(this));
-    this.on(Events.MARGIN, this.onMarginChanged.bind(this));
-  }
+  prependListener(event: string, listener: (...args: any[]) => void): this;
+  prependListener(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
+  prependListener(event: "equity", listener: (e: EquityChangedEvent) => void): this;
+  prependListener(event: "order", listener: (e: OrderEvent) => void): this;
 
-  protected emit(
-    event:
-      | BalanceChangedEvent
-      | EquityChangedEvent
-      | MarginChangedEvent
-      | SnapshotEvent
-  ): void {
-    this.emitter.emit(event.type, event);
-  }
+  prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+  prependOnceListener(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
+  prependOnceListener(event: "equity", listener: (e: EquityChangedEvent) => void): this;
+  prependOnceListener(event: "order", listener: (e: OrderEvent) => void): this;
 
-  public on(
-    event: Events.BALANCE,
-    listener: (e: BalanceChangedEvent) => void
-  ): void;
-  public on(
-    event: Events.EQUITY,
-    listener: (e: EquityChangedEvent) => void
-  ): void;
-  public on(
-    event: Events.MARGIN,
-    listener: (e: MarginChangedEvent) => void
-  ): void;
-  public on(event: Events.ACCOUNT, listener: (e: SnapshotEvent) => void): void;
-  public on(event: Events, listener: (e: any) => void): void {
-    this.emitter.on(event, listener);
-  }
-  public off(
-    event: Events.BALANCE,
-    listener: (e: BalanceChangedEvent) => void
-  ): void;
-  public off(
-    event: Events.EQUITY,
-    listener: (e: EquityChangedEvent) => void
-  ): void;
-  public off(
-    event: Events.MARGIN,
-    listener: (e: MarginChangedEvent) => void
-  ): void;
-  public off(event: Events.ACCOUNT, listener: (e: SnapshotEvent) => void): void;
-  public off(event: Events, listener: (e: any) => void): void {
-    this.emitter.off(event, listener);
-  }
-
-  private onBalanceChanged(event: BalanceChangedEvent) {
-    this.account.balance += event.amount;
-    this.validateAndEmit();
-  }
-
-  private onEquityChanged(event: EquityChangedEvent) {
-    this.account.equity += event.amount;
-    this.validateAndEmit();
-  }
-
-  private onMarginChanged(event: MarginChangedEvent) {
-    this.account.margin += event.amount;
-    this.validateAndEmit();
-  }
-  private validateAndEmit() {
-    const event: SnapshotEvent = {
-      type: Events.ACCOUNT,
-      ...this.account
-    };
-    this.emitter.emit(event.type, event);
-  }
-}
-
-export class Debug extends Service {
-  public balanceChanged(amount: number) {
-    const event: BalanceChangedEvent = {
-      type: Events.BALANCE,
-      amount
-    };
-    this.emit(event);
-  }
-  public equityChanged(amount: number) {
-    const event: EquityChangedEvent = {
-      type: Events.EQUITY,
-      amount
-    };
-    this.emit(event);
-  }
-  public marginChanged(amount: number) {
-    const event: MarginChangedEvent = {
-      type: Events.MARGIN,
-      amount
-    };
-    this.emit(event);
-  }
+  order(symbol: Symbol): OrderStream;
 }
