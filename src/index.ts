@@ -55,7 +55,7 @@ socket.on("close", () => process.exit(0));
 // {"payloadType":2105,"payload":{"version":"61"}}
 // {"payloadType":2127, "payload": { "ctidTraderAccountId": "5291983", "symbolId": [22395] }}
 process.stdin.on("data", data => {
-  const message = JSON.parse(data);
+  const message = JSON.parse(data.toString());
   write(socket, message);
 });
 write(socket, { payloadType: 2104, clientMsgId: "moin", payload: {} });
