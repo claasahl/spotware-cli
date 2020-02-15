@@ -1,5 +1,5 @@
 import * as Account from "./account";
-import * as Spots from "./spotPrice";
+import * as Spots from "./spotPrices";
 
 export default {
   Account,

@@ -1,6 +1,6 @@
 import { EventEmitter } from "events"
 import { Price, Volume, Period, Timestamp, Symbol, EURUSD } from "./types";
-import { SpotPriceStream, BidPriceChangedEvent } from "./spotPrice";
+import { SpotPricesStream, BidPriceChangedEvent } from "./spotPrices";
 
 export interface TrendbarEvent {
     open: Price,
@@ -11,7 +11,7 @@ export interface TrendbarEvent {
     timestamp: Timestamp
 }
 
-export interface TrendbarStream extends EventEmitter {
+export interface TrendbarsStream extends EventEmitter {
     readonly symbol: Symbol
     readonly period: Period
 
@@ -31,7 +31,7 @@ export interface TrendbarStream extends EventEmitter {
     prependOnceListener(event: "trendbar", listener: (e: TrendbarEvent) => void): this;
 }
 
-export class Trendbars extends EventEmitter implements TrendbarStream {
+export class Trendbars extends EventEmitter implements TrendbarsStream {
     readonly symbol: Symbol;
     readonly period: Period;
     constructor(symbol: Symbol, period: Period) {
@@ -80,7 +80,7 @@ function toTrendbar(timestamp: Timestamp, events: BidPriceChangedEvent[]): Trend
     return events.reduce(accumulateTrendbar, seed)
 }
 
-export function from(spotPrice: SpotPriceStream, period: Period): TrendbarStream {
+export function from(spotPrice: SpotPricesStream, period: Period): TrendbarsStream {
     const bucked = (timestamp: Timestamp): Bucket => bucket(timestamp, period)
     const values : BidPriceChangedEvent[] = []
     const emitter = new Trendbars(spotPrice.symbol, period);
@@ -99,7 +99,7 @@ export function from(spotPrice: SpotPriceStream, period: Period): TrendbarStream
     return emitter;
 }
 
-class P extends EventEmitter implements SpotPriceStream {
+class P extends EventEmitter implements SpotPricesStream {
     symbol = EURUSD
 }
 const spotPrice = new P()

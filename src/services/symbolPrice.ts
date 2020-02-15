@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import { bearish, bullish, range } from "indicators";
 import { Price, Timestamp, TradeSide, Symbol, EURUSD } from "./types"
-import { TrendbarEvent, TrendbarStream, Trendbars } from "./trendbar";
+import { TrendbarEvent, TrendbarsStream, Trendbars } from "./trendbars";
 import { AccountStream } from "./account";
 import { OrderStream, OrderAcceptedEvent, OrderClosedEvent, OrderEndEvent } from "./order";
 
@@ -125,7 +125,7 @@ export namespace InsideBarMomentumStrategyStream {
     }
 }
 
-export function trendbarStreamFrom(_stream: AccountStream): TrendbarStream {
+export function trendbarStreamFrom(_stream: AccountStream): TrendbarsStream {
     const emitter = new Trendbars(EURUSD, 60000);
     setImmediate(() => {
         const samples: Array<TrendbarEvent> = [

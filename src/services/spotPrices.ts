@@ -15,7 +15,7 @@ export interface PriceChangedEvent {
     bid: Price,
     timestamp: Timestamp
 }
-export interface SpotPriceStream extends EventEmitter {
+export interface SpotPricesStream extends EventEmitter {
     readonly symbol: Symbol
     
     addListener(event: string, listener: (...args: any[]) => void): this;
@@ -44,7 +44,7 @@ export interface SpotPriceStream extends EventEmitter {
     prependOnceListener(event: "price", listener: (e: PriceChangedEvent) => void): this;
 }
 
-export class SpotPrices extends EventEmitter implements SpotPriceStream {
+export class SpotPrices extends EventEmitter implements SpotPricesStream {
     readonly symbol: Symbol;
     constructor(symbol: Symbol) {
         super();
