@@ -3,23 +3,20 @@ import { EventEmitter } from "events"
 import { Symbol, Timestamp } from "./types";
 
 export interface OrderAcceptedEvent {
-    symbol: Symbol,
     timestamp: Timestamp
 }
 export interface OrderFilledEvent {
-    symbol: Symbol,
     timestamp: Timestamp
 }
 export interface OrderClosedEvent {
-    symbol: Symbol,
     timestamp: Timestamp
 }
 export interface OrderEndEvent {
-    symbol: Symbol,
     timestamp: Timestamp
 }
 export interface OrderStream extends EventEmitter {
     readonly id: string;
+    readonly symbol: Symbol;
 
     addListener(event: string, listener: (...args: any[]) => void): this;
     addListener(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
@@ -55,4 +52,19 @@ export interface OrderStream extends EventEmitter {
     cancel(): this;
     end(): this;
     amend(): this;
+}
+
+export abstract class Order extends EventEmitter implements OrderStream {
+    readonly id: string;
+    readonly symbol: Symbol;
+    constructor(id: string, symbol: Symbol) {
+        super();
+        this.id = id;
+        this.symbol = symbol;
+    }
+
+    abstract close(): this;
+    abstract cancel(): this;
+    abstract end(): this;
+    abstract amend(): this;
 }
