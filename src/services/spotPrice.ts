@@ -3,17 +3,14 @@ import { EventEmitter } from "events"
 import { Price, Timestamp, Symbol } from "./types";
 
 export interface AskPriceChangedEvent {
-    symbol: Symbol,
     price: Price,
     timestamp: Timestamp
 }
 export interface BidPriceChangedEvent {
-    symbol: Symbol,
     price: Price,
     timestamp: Timestamp
 }
 export interface PriceChangedEvent {
-    symbol: Symbol,
     ask: Price,
     bid: Price,
     timestamp: Timestamp
