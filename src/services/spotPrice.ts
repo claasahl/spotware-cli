@@ -43,3 +43,11 @@ export interface SpotPriceStream extends EventEmitter {
     prependOnceListener(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
     prependOnceListener(event: "price", listener: (e: PriceChangedEvent) => void): this;
 }
+
+export class SpotPrices extends EventEmitter implements SpotPriceStream {
+    readonly symbol: Symbol;
+    constructor(symbol: Symbol) {
+        super();
+        this.symbol = symbol;
+    }
+}
