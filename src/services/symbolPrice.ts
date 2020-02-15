@@ -1,7 +1,6 @@
 import { EventEmitter } from "events";
 import { bearish, bullish, range } from "indicators";
 import { Price, Timestamp, TradeSide, Symbol, EURUSD } from "./types"
-import { SpotPriceStream } from "./spotPrice";
 import { TrendbarEvent, TrendbarStream } from "./trendbar";
 import { AccountStream } from "./account";
 import { OrderStream, OrderAcceptedEvent, OrderClosedEvent, OrderEndEvent } from "./order";
@@ -129,13 +128,7 @@ export namespace InsideBarMomentumStrategyStream {
     }
 }
 
-export function spotPriceStreamFrom(_stream: AccountStream, _symbol: Symbol): SpotPriceStream {
-    return new EventEmitter();
-}
-
-export function trendbarStreamFrom(_stream: AccountStream, _symbol: Symbol): TrendbarStream;
-export function trendbarStreamFrom(_stream: SpotPriceStream): TrendbarStream;
-export function trendbarStreamFrom(_stream: AccountStream | SpotPriceStream, _symbol?: Symbol): TrendbarStream {
+export function trendbarStreamFrom(_stream: AccountStream): TrendbarStream {
     const emitter = new EventEmitter();
     setImmediate(() => {
         const samples: Array<TrendbarEvent> = [

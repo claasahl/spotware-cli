@@ -1,6 +1,6 @@
 import { EventEmitter } from "events"
 
-import { Price, Timestamp } from "./types";
+import { Price, Timestamp, Symbol } from "./types";
 
 export interface AskPriceChangedEvent {
     symbol: Symbol,
@@ -19,6 +19,8 @@ export interface PriceChangedEvent {
     timestamp: Timestamp
 }
 export interface SpotPriceStream extends EventEmitter {
+    readonly symbol: Symbol
+    
     addListener(event: string, listener: (...args: any[]) => void): this;
     addListener(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
     addListener(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;

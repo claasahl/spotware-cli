@@ -1,5 +1,6 @@
 import { EventEmitter } from "events"
-import { Price, Volume, Period, Timestamp, Symbol } from "./types";
+import { Price, Volume, Period, Timestamp, Symbol, EURUSD } from "./types";
+import { SpotPriceStream, BidPriceChangedEvent } from "./spotPrice";
 
 export interface TrendbarEvent {
     symbol: Symbol,
@@ -28,3 +29,86 @@ export interface TrendbarStream extends EventEmitter {
     prependOnceListener(event: string, listener: (...args: any[]) => void): this;
     prependOnceListener(event: "trendbar", listener: (e: TrendbarEvent) => void): this;
 }
+
+interface Bucket {
+    begin: Timestamp,
+    end: Timestamp
+}
+function bucket(timestamp: Timestamp, period: Period): Bucket {
+    const millisPerBucket = period;
+    const bucketNo = Math.floor(timestamp / millisPerBucket);
+    const begin = bucketNo * millisPerBucket;
+    const end = begin + millisPerBucket
+    return {begin, end}
+}
+
+function accumulateTrendbar(prev: TrendbarEvent, curr: BidPriceChangedEvent, index: number): TrendbarEvent {
+    const next = {...prev}
+    if(index === 0) {
+        next.open = curr.price;
+    }
+    if(prev.high < curr.price) {
+        next.high = curr.price;
+    }
+    if(prev.low > curr.price) {
+        next.low = curr.price
+    }
+    next.close = curr.price
+    return next;
+}
+
+function toTrendbar(timestamp: Timestamp, symbol: Symbol, period: Period, events: BidPriceChangedEvent[]): TrendbarEvent {
+    const seed: TrendbarEvent = {
+        open: 0,
+        high: Number.MIN_VALUE,
+        low: Number.MAX_VALUE,
+        close: 0,
+        period,
+        symbol,
+        timestamp,
+        volume: 0
+    }
+    return events.reduce(accumulateTrendbar, seed)
+}
+
+export function from(spotPrice: SpotPriceStream, period: Period): TrendbarStream {
+    const bucked = (timestamp: Timestamp): Bucket => bucket(timestamp, period)
+    const toTrendbah = (timestamp: Timestamp, events: BidPriceChangedEvent[]) => toTrendbar(timestamp, spotPrice.symbol, period, events);
+    const values : BidPriceChangedEvent[] = []
+    const emitter = new EventEmitter();
+    spotPrice.on("bid", e => {
+        setImmediate(() => {
+            values.push(e);
+            const bucket1 = bucked(values[0].timestamp);
+            const bucket2 = bucked(values[values.length-1].timestamp);
+            if(bucket1.begin !== bucket2.begin) {
+                const eventsInBucket = values.filter(e => bucked(e.timestamp).begin === bucket1.begin)
+                values.splice(0, eventsInBucket.length);
+                emitter.emit("trendbar", toTrendbah(bucket1.begin, eventsInBucket))
+            }
+        })
+    })
+    return emitter;
+}
+
+class P extends EventEmitter implements SpotPriceStream {
+    symbol = EURUSD
+}
+const spotPrice = new P()
+setImmediate(() => {
+    spotPrice.emit("bid", {symbol: EURUSD, price: 2, timestamp: 0})
+    spotPrice.emit("bid", {symbol: EURUSD, price: 1, timestamp: 10000})
+    spotPrice.emit("bid", {symbol: EURUSD, price: 0, timestamp: 20000})
+    spotPrice.emit("bid", {symbol: EURUSD, price: 5, timestamp: 30000})
+    spotPrice.emit("bid", {symbol: EURUSD, price: 4, timestamp: 40000})
+    spotPrice.emit("bid", {symbol: EURUSD, price: 3, timestamp: 50000})
+    spotPrice.emit("bid", {symbol: EURUSD, price: 6, timestamp: 60000})
+    spotPrice.emit("bid", {symbol: EURUSD, price: 7, timestamp: 70000})
+    spotPrice.emit("bid", {symbol: EURUSD, price: 8, timestamp: 80000})
+    spotPrice.emit("bid", {symbol: EURUSD, price: 9, timestamp: 90000})
+    spotPrice.emit("bid", {symbol: EURUSD, price: 10, timestamp: 100000})
+    spotPrice.emit("bid", {symbol: EURUSD, price: 11, timestamp: 110000})
+    spotPrice.emit("bid", {symbol: EURUSD, price: 12, timestamp: 120000})
+})
+const trendbar = from(spotPrice, 60000)
+trendbar.on("trendbar", console.log)
