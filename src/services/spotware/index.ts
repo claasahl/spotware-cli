@@ -18,8 +18,6 @@ function heartbeat() {
 
 function connected() {
     log("connected")
-    assert.strictEqual(pacemaker, null)
-    pacemaker = setInterval(heartbeat, 10000)
 }
 
 function disconnected() {
@@ -40,4 +38,8 @@ socket.on("PROTO_MESSAGE.INPUT.*", (msg: $.ProtoMessages) => {
 })
 socket.on("PROTO_MESSAGE.OUTPUT.*", (msg: $.ProtoMessages) => {
     output("%j", msg)
+    if(pacemaker) {
+        clearTimeout(pacemaker)
+    }
+    pacemaker = setTimeout(heartbeat, 10000)
 })
