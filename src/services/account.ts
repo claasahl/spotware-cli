@@ -42,3 +42,7 @@ export interface AccountStream extends EventEmitter {
 
   order(symbol: Symbol): OrderStream;
 }
+
+export abstract class Account extends EventEmitter implements AccountStream {
+  abstract order(symbol: Symbol): OrderStream;
+}

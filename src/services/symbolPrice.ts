@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 import { bearish, bullish, range } from "indicators";
 import { Price, Timestamp, TradeSide, Symbol, EURUSD } from "./types"
 import { TrendbarEvent, TrendbarsStream, Trendbars } from "./trendbars";
-import { AccountStream } from "./account";
+import { AccountStream, Account } from "./account";
 import { OrderStream, OrderAcceptedEvent, OrderClosedEvent, OrderEndEvent, Order } from "./order";
 
 // API should be async, stream of events
@@ -178,7 +178,7 @@ class O extends Order {
         return this;
     }
 }
-class A extends EventEmitter implements AccountStream {
+class A extends Account {
     order(symbol: Symbol): OrderStream {
         return new O(symbol);
     }
