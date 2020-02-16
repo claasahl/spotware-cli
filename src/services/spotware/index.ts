@@ -172,3 +172,11 @@ socket.on("trader", (msg: $.ProtoMessage2122) => {
     const timestamp = Date.now();
     account.emitBalance({balance, timestamp})
 })
+socket.on("PROTO_MESSAGE.INPUT.*", msg => {
+    function isOrderEvent(msg: $.ProtoMessages): msg is $.ProtoMessage2126 {
+        return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_EXECUTION_EVENT;
+    }
+    if(isOrderEvent(msg)) {
+        trader({ctidTraderAccountId: ctidTraderAccountId!})
+    }
+})
