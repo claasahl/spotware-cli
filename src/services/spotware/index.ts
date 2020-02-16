@@ -18,11 +18,6 @@ function publish() {
     setImmediate(() => {
         const msg = messages.shift()
         if(msg) {
-            const stringified = JSON.stringify(msg)
-            while(messages.length > 0 && JSON.stringify(messages[0]) === stringified) {
-                messages.shift();
-            }
-    
             $.write(socket, msg)
         }
     })
