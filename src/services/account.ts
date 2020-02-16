@@ -14,8 +14,14 @@ export interface EquityChangedEvent {
 export interface OrderEvent {
   timestamp: Timestamp
 }
-export interface AccountStream extends EventEmitter {
-  addListener(event: string, listener: (...args: any[]) => void): this;
+
+export interface AccountProps {
+  // no props, yet
+}
+export interface AccountActions {
+  order(symbol: Symbol): OrderStream;
+}
+export declare interface AccountStream extends EventEmitter {
   addListener(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
   addListener(event: "equity", listener: (e: EquityChangedEvent) => void): this;
   addListener(event: "order", listener: (e: OrderEvent) => void): this;
@@ -39,10 +45,8 @@ export interface AccountStream extends EventEmitter {
   prependOnceListener(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
   prependOnceListener(event: "equity", listener: (e: EquityChangedEvent) => void): this;
   prependOnceListener(event: "order", listener: (e: OrderEvent) => void): this;
-
-  order(symbol: Symbol): OrderStream;
 }
 
-export abstract class Account extends EventEmitter implements AccountStream {
+export abstract class AccountStream extends EventEmitter implements AccountProps, AccountActions {
   abstract order(symbol: Symbol): OrderStream;
 }

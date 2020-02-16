@@ -14,10 +14,20 @@ export interface OrderClosedEvent {
 export interface OrderEndEvent {
     timestamp: Timestamp
 }
-export interface OrderStream extends EventEmitter {
+
+export interface OderProps {
     readonly id: string;
     readonly symbol: Symbol;
+}
 
+export interface OrderActions {
+    close(): this;
+    cancel(): this;
+    end(): this;
+    amend(): this;
+}
+
+export declare interface OrderStream extends EventEmitter {
     addListener(event: string, listener: (...args: any[]) => void): this;
     addListener(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
     addListener(event: "filled", listener: (e: OrderFilledEvent) => void): this;
@@ -47,14 +57,9 @@ export interface OrderStream extends EventEmitter {
     prependOnceListener(event: "filled", listener: (e: OrderFilledEvent) => void): this;
     prependOnceListener(event: "closed", listener: (e: OrderClosedEvent) => void): this;
     prependOnceListener(event: "end", listener: (e: OrderEndEvent) => void): this;
-
-    close(): this;
-    cancel(): this;
-    end(): this;
-    amend(): this;
 }
 
-export abstract class Order extends EventEmitter implements OrderStream {
+export abstract class OrderStream extends EventEmitter implements OderProps, OrderActions {
     readonly id: string;
     readonly symbol: Symbol;
     constructor(id: string, symbol: Symbol) {

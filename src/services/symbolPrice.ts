@@ -1,9 +1,9 @@
 import { EventEmitter } from "events";
 import { bearish, bullish, range } from "indicators";
 import { Price, Timestamp, TradeSide, Symbol, EURUSD } from "./types"
-import { TrendbarEvent, TrendbarsStream, Trendbars } from "./trendbars";
-import { AccountStream, Account } from "./account";
-import { OrderStream, OrderAcceptedEvent, OrderClosedEvent, OrderEndEvent, Order } from "./order";
+import { TrendbarEvent, TrendbarsStream } from "./trendbars";
+import { AccountStream } from "./account";
+import { OrderStream, OrderAcceptedEvent, OrderClosedEvent, OrderEndEvent } from "./order";
 
 // API should be async, stream of events
 // an Order has a lifecyle which can be represented through events (e.g. a "mini stream")
@@ -126,7 +126,7 @@ export namespace InsideBarMomentumStrategyStream {
 }
 
 export function trendbarStreamFrom(_stream: AccountStream): TrendbarsStream {
-    const emitter = new Trendbars(EURUSD, 60000);
+    const emitter = new TrendbarsStream(EURUSD, 60000);
     setImmediate(() => {
         const samples: Array<TrendbarEvent> = [
             { open: 20, high: 80, low: 10, close: 70, volume: 0, timestamp: 0 },
@@ -142,7 +142,7 @@ export function trendbarStreamFrom(_stream: AccountStream): TrendbarsStream {
 }
 
 let ids = 0;
-class O extends Order {
+class O extends OrderStream {
     constructor(symbol: Symbol) {
         super(`${ids++}`, symbol);
         setImmediate(() => {
@@ -178,7 +178,7 @@ class O extends Order {
         return this;
     }
 }
-class A extends Account {
+class A extends AccountStream {
     order(symbol: Symbol): OrderStream {
         return new O(symbol);
     }
