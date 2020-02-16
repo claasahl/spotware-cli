@@ -3,7 +3,7 @@ import { bearish, bullish, range } from "indicators";
 import { Price, Timestamp, TradeSide, Symbol, EURUSD } from "./types"
 import { TrendbarEvent, TrendbarsStream } from "./trendbars";
 import { AccountStream } from "./account";
-import { OrderStream, OrderAcceptedEvent, OrderClosedEvent, OrderEndEvent } from "./order";
+import { OrderStream, OrderAcceptedEvent, OrderClosedEvent, OrderEndEvent, DebugOrderStream } from "./order";
 
 // API should be async, stream of events
 // an Order has a lifecyle which can be represented through events (e.g. a "mini stream")
@@ -142,7 +142,7 @@ export function trendbarStreamFrom(_stream: AccountStream): TrendbarsStream {
 }
 
 let ids = 0;
-class O extends OrderStream {
+class O extends DebugOrderStream {
     constructor(symbol: Symbol) {
         super(`${ids++}`, symbol);
         setImmediate(() => {

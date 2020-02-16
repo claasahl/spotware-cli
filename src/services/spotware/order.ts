@@ -1,4 +1,4 @@
-import {Order as Base} from "../order"
+import {OrderStream as Base} from "../order"
 
 export class Order extends Base {
     close() {
