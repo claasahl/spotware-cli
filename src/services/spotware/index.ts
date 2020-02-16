@@ -4,6 +4,7 @@ import assert from "assert"
 
 import config from "../../config"
 import { DebugAccountStream } from "../account"
+import { DebugSpotPricesStream } from "../spotPrices"
 
 const log = debug("spotware")
 const input = log.extend("input")
@@ -119,12 +120,15 @@ function disconnected() {
     publisher = null;
 }
 
-
+const name = "BTC/EUR"
+const symbol = Symbol(name)
 const account = new DebugAccountStream();
+const spotPrices = new DebugSpotPricesStream(symbol)
 const symbolsByName = new Map<string, $.ProtoOALightSymbol>()
 let pacemaker: NodeJS.Timeout | null = null
 let publisher: NodeJS.Timeout | null = null
 let ctidTraderAccountId: number | null = null
+let symbolId: number | null = null
 const { port, host, clientId, clientSecret, accessToken } = config
 const socket = $.connect(port, host)
 socket.on("connect", connected)
@@ -169,10 +173,27 @@ socket.on("symbolsList", (msg: $.ProtoMessage2115) => {
     })
 })
 socket.on("symbolsListCachedByName", () => {
-    const name = "BTC/EUR"
     const symbol = symbolsByName.get(name);
     if(symbol) {
-        subscribeSpots({ctidTraderAccountId: ctidTraderAccountId!, symbolId: [symbol.symbolId]})
+        symbolId = symbol.symbolId;
+        subscribeSpots({ctidTraderAccountId: ctidTraderAccountId!, symbolId: [symbolId]})
+    }
+})
+socket.on("PROTO_MESSAGE.INPUT.*", msg => {
+    function isSpotPriceEvent(msg: $.ProtoMessages): msg is $.ProtoMessage2131 {
+        return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_SPOT_EVENT;
+    }
+    if(isSpotPriceEvent(msg) && msg.payload.symbolId === symbolId) {
+        if(msg.payload.ask) {
+            const price = msg.payload.ask
+            const timestamp = Date.now();
+            spotPrices.emitAsk({price, timestamp})
+        }
+        if(msg.payload.bid) {
+            const price = msg.payload.bid
+            const timestamp = Date.now();
+            spotPrices.emitBid({price, timestamp})
+        }
     }
 })
 socket.on("PROTO_MESSAGE.INPUT.*", msg => {
