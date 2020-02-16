@@ -92,6 +92,25 @@ function authAccount(ctidTraderAccountId: number) {
     socket.on("PROTO_MESSAGE.INPUT.*", response)
 }
 
+function version(payload: $.ProtoOAVersionReq) {
+    const msgId = clientMsgId();
+    setImmediate(() => write({payloadType: $.ProtoOAPayloadType.PROTO_OA_VERSION_REQ, payload, clientMsgId:msgId}))
+    function isResponse(msg: $.ProtoMessages): msg is $.ProtoMessage2105 {
+        return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_VERSION_RES
+    }
+    function response(msg: $.ProtoMessages) {
+        if(msg.clientMsgId === msgId && isResponse(msg)) {
+            setImmediate(() => socket.emit("version", msg))
+            socket.off("PROTO_MESSAGE.INPUT.*", response);
+        } else if(msg.clientMsgId === msgId && (isError(msg) || isOAError(msg))) {
+            const {errorCode, description} = msg.payload
+            setImmediate(() => socket.emit("error", new Error(`${errorCode}, ${description}`)))
+            socket.off("PROTO_MESSAGE.INPUT.*", response);
+        }
+    }
+    socket.on("PROTO_MESSAGE.INPUT.*", response)
+}
+
 function trader(payload: $.ProtoOATraderReq) {
     const msgId = clientMsgId();
     setImmediate(() => write({payloadType: $.ProtoOAPayloadType.PROTO_OA_TRADER_REQ, payload, clientMsgId:msgId}))
@@ -152,6 +171,7 @@ socket.on("PROTO_MESSAGE.OUTPUT.*", msg => {
     pacemaker = setTimeout(heartbeat, 10000)
 })
 
+socket.on("connect", () => version({}))
 socket.on("connect", authApplication)
 socket.on("authApplication", lookupAccounts)
 socket.on("lookupAccounts", (msg: $.ProtoMessage2150) => {
