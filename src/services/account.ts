@@ -23,6 +23,7 @@ export interface AccountActions {
   order(symbol: Symbol): OrderStream;
 }
 export declare interface AccountStream extends EventEmitter {
+  addListener(event: string, listener: (...args: any[]) => void): this;
   addListener(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
   addListener(event: "equity", listener: (e: EquityChangedEvent) => void): this;
   addListener(event: "order", listener: (e: OrderEvent) => void): this;
