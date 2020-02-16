@@ -3,6 +3,7 @@ import debug from "debug"
 import assert from "assert"
 
 import config from "../../config"
+import { DebugAccount } from "./account"
 
 const log = debug("spotware")
 const input = log.extend("input")
@@ -78,6 +79,25 @@ function authAccount(ctidTraderAccountId: number) {
     socket.on("PROTO_MESSAGE.INPUT.*", response)
 }
 
+function trader(payload: $.ProtoOATraderReq) {
+    const msgId = clientMsgId();
+    setImmediate(() => $.write(socket, {payloadType: $.ProtoOAPayloadType.PROTO_OA_TRADER_REQ, payload, clientMsgId:msgId}))
+    function isResponse(msg: $.ProtoMessages): msg is $.ProtoMessage2122 {
+        return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_TRADER_RES
+    }
+    function response(msg: $.ProtoMessages) {
+        if(msg.clientMsgId === msgId && isResponse(msg)) {
+            setImmediate(() => socket.emit("trader", msg))
+            socket.off("PROTO_MESSAGE.INPUT.*", response);
+        } else if(msg.clientMsgId === msgId && (isError(msg) || isOAError(msg))) {
+            const {errorCode, description} = msg.payload
+            setImmediate(() => socket.emit("error", new Error(`${errorCode}, ${description}`)))
+            socket.off("PROTO_MESSAGE.INPUT.*", response);
+        }
+    }
+    socket.on("PROTO_MESSAGE.INPUT.*", response)
+}
+
 function heartbeat() {
     setImmediate(() => $.write(socket, { payloadType: $.ProtoPayloadType.HEARTBEAT_EVENT, payload: {} }))
 }
@@ -93,7 +113,10 @@ function disconnected() {
     pacemaker = null;
 }
 
+
+const account = new DebugAccount();
 let pacemaker: NodeJS.Timeout | null = null
+let ctidTraderAccountId: number | null = null
 const { port, host, clientId, clientSecret, accessToken } = config
 const socket = $.connect(port, host)
 socket.on("connect", connected)
@@ -114,7 +137,14 @@ socket.on("connect", authApplication)
 socket.on("authApplication", lookupAccounts)
 socket.on("lookupAccounts", (msg: $.ProtoMessage2150) => {
     assert.strictEqual(msg.payload.ctidTraderAccount.length, 1);
-    const {ctidTraderAccountId}= msg.payload.ctidTraderAccount[0]
+    ctidTraderAccountId = msg.payload.ctidTraderAccount[0].ctidTraderAccountId
     authAccount(ctidTraderAccountId)
 })
-socket.on("authAccount", () => {})
+socket.on("authAccount", () => {
+    trader({ctidTraderAccountId: ctidTraderAccountId!})
+})
+socket.on("trader", (msg: $.ProtoMessage2122) => {
+    const balance = msg.payload.trader.balance / 100
+    const timestamp = Date.now();
+    account.emitBalance({balance, timestamp})
+})
