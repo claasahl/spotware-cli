@@ -12,7 +12,7 @@
     "prestart": "npm run build",
     "start": "node -r dotenv/config ./build/insideBarMomentumStrategy.js > debug.log 2>&1",
     "refresh": "ts-node -r dotenv/config ./src/refresh.ts",
-    "dev": "ts-node -r dotenv/config ./src/services/trendbar.ts",
+    "dev": "ts-node -r dotenv/config ./src/services/spotware/index.ts",
     "preperf": "npm run build",
     "perf": "node --trace-event-categories=v8,async_hooks -r dotenv/config ./build/services/trendbar.js"
   },
@@ -37,7 +37,7 @@
     "jest": "^24.9.0"
   },
   "dependencies": {
-    "@claasahl/spotware-adapter": "^1.1.0",
+    "@claasahl/spotware-adapter": "^1.2.0",
     "debug": "^4.1.1",
     "indicators": "^0.1.4",
     "mem": "^6.0.1",
