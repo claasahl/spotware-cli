@@ -35,15 +35,15 @@ function isOAError(msg: $.ProtoMessages): msg is $.ProtoMessage2142 {
     return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_ERROR_RES
 }
 
-function authApplication() {
+function request<REQ extends $.ProtoMessages, RES extends $.ProtoMessages>(request: REQ, payloadType: $.ProtoOAPayloadType | $.ProtoPayloadType, event: string) {
     const msgId = clientMsgId();
-    setImmediate(() => write({payloadType: $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_REQ, payload: {clientId, clientSecret}, clientMsgId: msgId}));
-    function isResponse(msg: $.ProtoMessages): msg is $.ProtoMessage2101 {
-        return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_RES
+    setImmediate(() => write({...request, clientMsgId:msgId}))
+    function isResponse(msg: $.ProtoMessages): msg is RES {
+        return msg.payloadType === payloadType
     }
     function response(msg: $.ProtoMessages) {
         if(msg.clientMsgId === msgId && isResponse(msg)) {
-            setImmediate(() => socket.emit("authApplication", msg))
+            setImmediate(() => socket.emit(event, msg))
             socket.off("PROTO_MESSAGE.INPUT.*", response);
         } else if(msg.clientMsgId === msgId && (isError(msg) || isOAError(msg))) {
             const {errorCode, description} = msg.payload
@@ -52,82 +52,39 @@ function authApplication() {
         }
     }
     socket.on("PROTO_MESSAGE.INPUT.*", response)
+}
+
+function authApplication() {
+    const requestPayloadType = $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_REQ;
+    const responsePayloadType = $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_RES;
+    const payload: $.ProtoOAApplicationAuthReq = {clientId, clientSecret}
+    request({payloadType: requestPayloadType, payload}, responsePayloadType, "authApplication")
 }
 
 function lookupAccounts() {
-    const msgId = clientMsgId();
-    setImmediate(() => write({payloadType: $.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ, payload: {accessToken}, clientMsgId: msgId}));
-    function isResponse(msg: $.ProtoMessages): msg is $.ProtoMessage2150 {
-        return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES
-    }
-    function response(msg: $.ProtoMessages) {
-        if(msg.clientMsgId === msgId && isResponse(msg)) {
-            setImmediate(() => socket.emit("lookupAccounts", msg))
-            socket.off("PROTO_MESSAGE.INPUT.*", response);
-        } else if(msg.clientMsgId === msgId && (isError(msg) || isOAError(msg))) {
-            const {errorCode, description} = msg.payload
-            setImmediate(() => socket.emit("error", new Error(`${errorCode}, ${description}`)))
-            socket.off("PROTO_MESSAGE.INPUT.*", response);
-        }
-    }
-    socket.on("PROTO_MESSAGE.INPUT.*", response)
+    const requestPayloadType = $.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ;
+    const responsePayloadType = $.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES;
+    const payload: $.ProtoOAGetAccountListByAccessTokenReq = {accessToken}
+    request({payloadType: requestPayloadType, payload}, responsePayloadType, "lookupAccounts")
 }
 
 function authAccount(ctidTraderAccountId: number) {
-    const msgId = clientMsgId();
-    setImmediate(() => write({payloadType: $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_REQ, payload: {accessToken, ctidTraderAccountId}, clientMsgId: msgId}));
-    function isResponse(msg: $.ProtoMessages): msg is $.ProtoMessage2103 {
-        return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES
-    }
-    function response(msg: $.ProtoMessages) {
-        if(msg.clientMsgId === msgId && isResponse(msg)) {
-            setImmediate(() => socket.emit("authAccount", msg))
-            socket.off("PROTO_MESSAGE.INPUT.*", response);
-        } else if(msg.clientMsgId === msgId && (isError(msg) || isOAError(msg))) {
-            const {errorCode, description} = msg.payload
-            setImmediate(() => socket.emit("error", new Error(`${errorCode}, ${description}`)))
-            socket.off("PROTO_MESSAGE.INPUT.*", response);
-        }
-    }
-    socket.on("PROTO_MESSAGE.INPUT.*", response)
+    const requestPayloadType = $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_REQ;
+    const responsePayloadType = $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES;
+    const payload: $.ProtoOAAccountAuthReq ={accessToken, ctidTraderAccountId}
+    request({payloadType: requestPayloadType, payload}, responsePayloadType, "authAccount")
 }
 
 function version(payload: $.ProtoOAVersionReq) {
-    const msgId = clientMsgId();
-    setImmediate(() => write({payloadType: $.ProtoOAPayloadType.PROTO_OA_VERSION_REQ, payload, clientMsgId:msgId}))
-    function isResponse(msg: $.ProtoMessages): msg is $.ProtoMessage2105 {
-        return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_VERSION_RES
-    }
-    function response(msg: $.ProtoMessages) {
-        if(msg.clientMsgId === msgId && isResponse(msg)) {
-            setImmediate(() => socket.emit("version", msg))
-            socket.off("PROTO_MESSAGE.INPUT.*", response);
-        } else if(msg.clientMsgId === msgId && (isError(msg) || isOAError(msg))) {
-            const {errorCode, description} = msg.payload
-            setImmediate(() => socket.emit("error", new Error(`${errorCode}, ${description}`)))
-            socket.off("PROTO_MESSAGE.INPUT.*", response);
-        }
-    }
-    socket.on("PROTO_MESSAGE.INPUT.*", response)
+    const requestPayloadType = $.ProtoOAPayloadType.PROTO_OA_VERSION_REQ;
+    const responsePayloadType = $.ProtoOAPayloadType.PROTO_OA_VERSION_RES;
+    request({payloadType: requestPayloadType, payload}, responsePayloadType, "version")
 }
 
 function trader(payload: $.ProtoOATraderReq) {
-    const msgId = clientMsgId();
-    setImmediate(() => write({payloadType: $.ProtoOAPayloadType.PROTO_OA_TRADER_REQ, payload, clientMsgId:msgId}))
-    function isResponse(msg: $.ProtoMessages): msg is $.ProtoMessage2122 {
-        return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_TRADER_RES
-    }
-    function response(msg: $.ProtoMessages) {
-        if(msg.clientMsgId === msgId && isResponse(msg)) {
-            setImmediate(() => socket.emit("trader", msg))
-            socket.off("PROTO_MESSAGE.INPUT.*", response);
-        } else if(msg.clientMsgId === msgId && (isError(msg) || isOAError(msg))) {
-            const {errorCode, description} = msg.payload
-            setImmediate(() => socket.emit("error", new Error(`${errorCode}, ${description}`)))
-            socket.off("PROTO_MESSAGE.INPUT.*", response);
-        }
-    }
-    socket.on("PROTO_MESSAGE.INPUT.*", response)
+    const requestPayloadType = $.ProtoOAPayloadType.PROTO_OA_TRADER_REQ;
+    const responsePayloadType = $.ProtoOAPayloadType.PROTO_OA_TRADER_RES;
+    request({payloadType: requestPayloadType, payload}, responsePayloadType, "trader")
 }
 
 function heartbeat() {
