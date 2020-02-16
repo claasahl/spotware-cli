@@ -87,6 +87,18 @@ function trader(payload: $.ProtoOATraderReq) {
     request({payloadType: requestPayloadType, payload}, responsePayloadType, "trader")
 }
 
+function symbolsList(payload: $.ProtoOASymbolsListReq) {
+    const requestPayloadType = $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_REQ;
+    const responsePayloadType = $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_RES;
+    request({payloadType: requestPayloadType, payload}, responsePayloadType, "symbolsList")
+}
+
+function subscribeSpots(payload: $.ProtoOASubscribeSpotsReq) {
+    const requestPayloadType = $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_REQ;
+    const responsePayloadType = $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_RES;
+    request({payloadType: requestPayloadType, payload}, responsePayloadType, "subscribeSpots")
+}
+
 function heartbeat() {
     setImmediate(() => write({ payloadType: $.ProtoPayloadType.HEARTBEAT_EVENT, payload: {} }))
 }
@@ -109,6 +121,7 @@ function disconnected() {
 
 
 const account = new DebugAccountStream();
+const symbolsByName = new Map<string, $.ProtoOALightSymbol>()
 let pacemaker: NodeJS.Timeout | null = null
 let publisher: NodeJS.Timeout | null = null
 let ctidTraderAccountId: number | null = null
@@ -138,11 +151,29 @@ socket.on("lookupAccounts", (msg: $.ProtoMessage2150) => {
 })
 socket.on("authAccount", () => {
     trader({ctidTraderAccountId: ctidTraderAccountId!})
+    symbolsList({ctidTraderAccountId: ctidTraderAccountId!})
 })
 socket.on("trader", (msg: $.ProtoMessage2122) => {
     const balance = msg.payload.trader.balance / 100
     const timestamp = Date.now();
     account.emitBalance({balance, timestamp})
+})
+socket.on("symbolsList", (msg: $.ProtoMessage2115) => {
+    setImmediate(() => {
+        symbolsByName.clear();
+        msg.payload.symbol.forEach(symbol => {
+            symbolsByName.set(symbol.symbolName || "", symbol)
+        })
+        log("cached %d symbols by name", symbolsByName.size)
+        socket.emit("symbolsListCachedByName")
+    })
+})
+socket.on("symbolsListCachedByName", () => {
+    const name = "BTC/EUR"
+    const symbol = symbolsByName.get(name);
+    if(symbol) {
+        subscribeSpots({ctidTraderAccountId: ctidTraderAccountId!, symbolId: [symbol.symbolId]})
+    }
 })
 socket.on("PROTO_MESSAGE.INPUT.*", msg => {
     function isOrderEvent(msg: $.ProtoMessages): msg is $.ProtoMessage2126 {
