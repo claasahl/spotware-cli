@@ -3,7 +3,7 @@ import debug from "debug"
 import assert from "assert"
 
 import config from "../../config"
-import { DebugAccount } from "./account"
+import { DebugAccountStream } from "../account"
 
 const log = debug("spotware")
 const input = log.extend("input")
@@ -114,7 +114,7 @@ function disconnected() {
 }
 
 
-const account = new DebugAccount();
+const account = new DebugAccountStream();
 let pacemaker: NodeJS.Timeout | null = null
 let ctidTraderAccountId: number | null = null
 const { port, host, clientId, clientSecret, accessToken } = config
