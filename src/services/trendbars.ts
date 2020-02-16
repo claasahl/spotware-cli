@@ -1,4 +1,6 @@
 import { EventEmitter } from "events"
+import debug from "debug"
+
 import { Price, Volume, Period, Timestamp, Symbol, EURUSD } from "./types";
 import { SpotPricesStream, BidPriceChangedEvent } from "./spotPrices";
 
@@ -44,6 +46,20 @@ export class TrendbarsStream extends EventEmitter implements TrendbarsProps, Tre
         super();
         this.symbol = symbol;
         this.period = period;
+    }
+}
+
+export class DebugTrendbarsStream extends TrendbarsStream {
+    constructor(symbol: Symbol, period: Period) {
+        super(symbol, period)
+        const log = debug("trendbars");
+
+        const trendbar = log.extend("trendbar");
+        this.prependListener("trendbar", e => trendbar("%j", e))
+    }
+
+    emitTrendbar(e: TrendbarEvent): void {
+        setImmediate(() => this.emit("trendbar", e))
     }
 }
 

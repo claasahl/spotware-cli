@@ -1,4 +1,5 @@
 import { EventEmitter } from "events"
+import debug from "debug"
 
 import { Price, Timestamp, Symbol } from "./types";
 
@@ -56,5 +57,33 @@ export class SpotPricesStream extends EventEmitter implements SpotPricesProps, S
     constructor(symbol: Symbol) {
         super();
         this.symbol = symbol;
+    }
+}
+
+export class DebugSpotPricesStream extends SpotPricesStream {
+    constructor(symbol: Symbol) {
+        super(symbol)
+        const log = debug("spotPrices");
+
+        const ask = log.extend("ask")
+        this.prependListener("ask", e => ask("%j", e))
+        
+        const bid = log.extend("bid")
+        this.prependListener("bid", e => bid("%j", e))
+
+        const price = log.extend("price")
+        this.prependListener("price", e => price("%j", e))
+    }
+
+    emitAsk(e: AskPriceChangedEvent): void {
+        setImmediate(() => this.emit("ask", e))
+    }
+
+    emitBid(e: BidPriceChangedEvent): void {
+        setImmediate(() => this.emit("bid", e))
+    }
+
+    emitPrice(e: PriceChangedEvent): void {
+        setImmediate(() => this.emit("price", e))
     }
 }

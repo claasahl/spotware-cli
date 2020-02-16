@@ -1,4 +1,5 @@
 import { EventEmitter } from "events"
+import debug from "debug"
 
 import { Symbol, Timestamp } from "./types";
 
@@ -72,4 +73,52 @@ export abstract class OrderStream extends EventEmitter implements OderProps, Ord
     abstract cancel(): this;
     abstract end(): this;
     abstract amend(): this;
+}
+
+export class DebugOrderStream extends OrderStream {
+    constructor(id: string, symbol: Symbol) {
+        super(id, symbol);
+        const log = debug("order");
+        
+        const accepted = log.extend("accepted")
+        this.prependListener("accepted", e => accepted("%j", e))
+
+        const filled = log.extend("filled")
+        this.prependListener("filled", e => filled("%j", e))
+
+        const closed = log.extend("closed")
+        this.prependListener("closed", e => closed("%j", e))
+
+        const end = log.extend("end")
+        this.prependListener("end", e => end("%j", e))
+    }
+
+    close(): this {
+        throw new Error("not implemented")
+    }
+    cancel(): this {
+        throw new Error("not implemented")
+    }
+    end(): this {
+        throw new Error("not implemented")
+    }
+    amend(): this {
+        throw new Error("not implemented")
+    }
+
+    emitAccepted(e: OrderAcceptedEvent): void {
+        setImmediate(() => this.emit("accepted", e))
+    }
+
+    emitFilled(e: OrderFilledEvent): void {
+        setImmediate(() => this.emit("filled", e))
+    }
+
+    emitClosed(e: OrderClosedEvent): void {
+        setImmediate(() => this.emit("closed", e))
+    }
+
+    emitEnd(e: OrderEndEvent): void {
+        setImmediate(() => this.emit("end", e))
+    }
 }
