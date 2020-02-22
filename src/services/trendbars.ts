@@ -1,7 +1,7 @@
 import { EventEmitter } from "events"
 import debug from "debug"
 
-import { Price, Volume, Period, Timestamp, Symbol, EURUSD } from "./types";
+import { Price, Volume, Period, Timestamp, Symbol } from "./types";
 import { SpotPricesStream, BidPriceChangedEvent } from "./spotPrices";
 
 export interface TrendbarEvent {
@@ -120,25 +120,3 @@ export function from(spotPrice: SpotPricesStream, period: Period): TrendbarsStre
     })
     return emitter;
 }
-
-class P extends EventEmitter implements SpotPricesStream {
-    symbol = EURUSD
-}
-const spotPrice = new P()
-setImmediate(() => {
-    spotPrice.emit("bid", {symbol: EURUSD, price: 2, timestamp: 0})
-    spotPrice.emit("bid", {symbol: EURUSD, price: 1, timestamp: 10000})
-    spotPrice.emit("bid", {symbol: EURUSD, price: 0, timestamp: 20000})
-    spotPrice.emit("bid", {symbol: EURUSD, price: 5, timestamp: 30000})
-    spotPrice.emit("bid", {symbol: EURUSD, price: 4, timestamp: 40000})
-    spotPrice.emit("bid", {symbol: EURUSD, price: 3, timestamp: 50000})
-    spotPrice.emit("bid", {symbol: EURUSD, price: 6, timestamp: 60000})
-    spotPrice.emit("bid", {symbol: EURUSD, price: 7, timestamp: 70000})
-    spotPrice.emit("bid", {symbol: EURUSD, price: 8, timestamp: 80000})
-    spotPrice.emit("bid", {symbol: EURUSD, price: 9, timestamp: 90000})
-    spotPrice.emit("bid", {symbol: EURUSD, price: 10, timestamp: 100000})
-    spotPrice.emit("bid", {symbol: EURUSD, price: 11, timestamp: 110000})
-    spotPrice.emit("bid", {symbol: EURUSD, price: 12, timestamp: 120000})
-})
-const trendbar = from(spotPrice, 60000)
-trendbar.on("trendbar", console.log)
