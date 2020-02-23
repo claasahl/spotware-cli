@@ -1,9 +1,10 @@
 import { EventEmitter } from "events";
 import { bearish, bullish, range } from "indicators";
-import { Price, Timestamp, TradeSide, Symbol, EURUSD } from "./types"
+import { Price, Timestamp, TradeSide, Symbol, EURUSD, Period } from "./types"
 import { TrendbarEvent, TrendbarsStream } from "./trendbars";
 import { AccountStream } from "./account";
 import { OrderStream, OrderAcceptedEvent, OrderClosedEvent, OrderEndEvent, DebugOrderStream } from "./order";
+import { SpotPricesStream } from "./spotPrices";
 
 // API should be async, stream of events
 // an Order has a lifecyle which can be represented through events (e.g. a "mini stream")
@@ -181,6 +182,12 @@ class O extends DebugOrderStream {
 class A extends AccountStream {
     order(symbol: Symbol): OrderStream {
         return new O(symbol);
+    }
+    spotPrices(_symbol: Symbol): SpotPricesStream {
+        throw new Error("not implemented")
+    }
+    trendbars(_symbol: Symbol, _period: Period): TrendbarsStream {
+        throw new Error("not implemented")
     }
 }
 
