@@ -188,7 +188,7 @@ class A extends AccountStream {
     }
 }
 
-const account = new A();
+const account = new A(Symbol("EUR"));
 const strategy = InsideBarMomentumStrategyStream.from(account);
 strategy
     .on("bearish", console.log)

@@ -122,7 +122,7 @@ function disconnected() {
 
 const name = "BTC/EUR"
 const symbol = Symbol(name)
-const account = new DebugAccountStream();
+const account = new DebugAccountStream(Symbol("EUR"));
 const spotPrices = new DebugSpotPricesStream(symbol)
 const symbolsByName = new Map<string, $.ProtoOALightSymbol>()
 let pacemaker: NodeJS.Timeout | null = null

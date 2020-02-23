@@ -2,7 +2,7 @@ import {promises as fs} from "fs"
 import {isArray} from "util"
 import { AccountStream } from "../account";
 import { DebugSpotPricesStream, SpotPricesStream } from "../spotPrices";
-import { Symbol } from "../types";
+import { Symbol, Currency } from "../types";
 import { OrderStream } from "../order";
 
 function emitSpotPrices(stream: DebugSpotPricesStream, events: any[]): void {
@@ -35,20 +35,23 @@ function spotPrices(path: string, symbol: Symbol): SpotPricesStream {
 
 class LocalAccountStream extends AccountStream {
     private readonly path: string;
-    constructor(path: string) {
-        super();
+    constructor(currency: Currency, path: string) {
+        super(currency);
         this.path = path;
     }
     order(_symbol: Symbol): OrderStream {
         throw new Error("not implemented");
     }
     spotPrices(symbol: Symbol): SpotPricesStream {
+        if(!symbol.toString().includes(this.currency.toString())) {
+            throw new Error(`symbol "${symbol.toString()}" does not involve currency "${this.currency.toString()}". This account only supports named currency.`);
+        }
         return spotPrices(this.path, symbol);
     }
 }
 
 const name = "BTC/EUR"
 const symbol = Symbol(name)
-const services = new LocalAccountStream("./store/samples.json");
+const services = new LocalAccountStream(Symbol("EUR"), "./store/samples.json");
 const spots = services.spotPrices(symbol)
 spots.on("ask", console.log);

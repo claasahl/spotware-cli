@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import debug from "debug"
 
-import { Price, Timestamp, Symbol } from "./types";
+import { Price, Timestamp, Symbol, Currency } from "./types";
 import { OrderStream } from "./order";
 import { SpotPricesStream } from "./spotPrices";
 
@@ -18,7 +18,7 @@ export interface OrderEvent {
 }
 
 export interface AccountProps {
-  // no props, yet
+  readonly currency: Currency
 }
 export interface AccountActions {
   order(symbol: Symbol): OrderStream;
@@ -52,13 +52,18 @@ export declare interface AccountStream extends EventEmitter {
 }
 
 export abstract class AccountStream extends EventEmitter implements AccountProps, AccountActions {
+  readonly currency: Currency;
+  constructor(currency: Currency) {
+    super();
+    this.currency = currency
+  }
   abstract order(symbol: Symbol): OrderStream;
   abstract spotPrices(symbol: Symbol): SpotPricesStream;
 }
 
 export class DebugAccountStream extends AccountStream {
-  constructor() {
-    super();
+  constructor(currency: Currency) {
+    super(currency);
     const log = debug("account")
     
     const balance = log.extend("balance")
