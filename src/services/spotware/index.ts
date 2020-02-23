@@ -214,34 +214,56 @@ socket.on("PROTO_MESSAGE.INPUT.*", msg => {
 })
 
 
-let balance: number | null = null;
-const order = {
-    entry: 9467.18,
-    volume: 0.01,
-    tradeSide: $.ProtoOATradeSide.BUY
+interface Order {
+    symbol: Symbol;
+    entry: number;
+    volume: number;
+    tradeSide: $.ProtoOATradeSide
+    profitLoss: number;
 }
+let balance: number | null = null;
+const orders: Order[] = [
+    {
+        symbol: Symbol("BTC/EUR"),
+    entry: 9143.64,
+    volume: 0.01,
+    tradeSide: $.ProtoOATradeSide.BUY,
+    profitLoss: 0
+},
+{
+    symbol: Symbol("BTC/EUR"),
+    entry: 9116.23,
+    volume: 0.01,
+    tradeSide: $.ProtoOATradeSide.SELL,
+    profitLoss: 0
+}
+]
 
 account.on("balance", e => {
     balance = e.balance
 })
 spotPrices.on("ask", e => {
-    if(order.tradeSide === $.ProtoOATradeSide.SELL) {
+    orders
+    .filter(({tradeSide}) => tradeSide === $.ProtoOATradeSide.SELL)
+    .forEach(order => {
         const price = e.price / 100000
-        const profitLoss = (price - order.entry) * order.volume
+        order.profitLoss = (order.entry - price) * order.volume
+    })
 
-        const equity = Math.round((balance! + profitLoss) * 100) / 100
-        const timestamp = Date.now();
-        account.emitEquity({equity, timestamp})
-    }
+    const profitLoss = orders.reduce((prev, curr) => prev+curr.profitLoss, 0)
+    const equity = Math.round((balance! + profitLoss) * 100) / 100
+    account.emitEquity({equity, timestamp: e.timestamp})
 })
 spotPrices.on("bid", e => {
-    if(order.tradeSide === $.ProtoOATradeSide.BUY) {
+    orders
+    .filter(({tradeSide}) => tradeSide === $.ProtoOATradeSide.BUY)
+    .forEach(order => {
         const price = e.price / 100000
-        const profitLoss = (price - order.entry) * order.volume
+        order.profitLoss = (price - order.entry) * order.volume
+    })
 
-        const equity = Math.round((balance! + profitLoss) * 100) / 100
-        const timestamp = Date.now();
-        account.emitEquity({equity, timestamp})
-    }
+    const profitLoss = orders.reduce((prev, curr) => prev+curr.profitLoss, 0)
+    const equity = Math.round((balance! + profitLoss) * 100) / 100
+    account.emitEquity({equity, timestamp: e.timestamp})
 })
-account.on("equity", e => console.log("------------------------------>", e.equity))
+account.on("equity", e => console.log("------------------------------>", e.equity, JSON.stringify(orders.map(o => o.profitLoss))))
