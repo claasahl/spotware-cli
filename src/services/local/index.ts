@@ -1,20 +1,9 @@
 import {promises as fs} from "fs"
 import {isArray} from "util"
-import { DebugAccountStream, AccountStream } from "../account";
+import { AccountStream } from "../account";
 import { DebugSpotPricesStream, SpotPricesStream } from "../spotPrices";
-import { TrendbarsStream } from "../trendbars";
-import { Period, Symbol } from "../types";
-
-
-interface Services {
-    account(): AccountStream,
-    spotPrices(symbol: Symbol): SpotPricesStream,
-    trendbar(symbol: Symbol, period: Period): TrendbarsStream
-}
-
-function account(): AccountStream {
-    return new DebugAccountStream();
-}
+import { Symbol } from "../types";
+import { OrderStream } from "../order";
 
 function emitSpotPrices(stream: DebugSpotPricesStream, events: any[]): void {
     events.forEach(e => {
@@ -44,20 +33,22 @@ function spotPrices(path: string, symbol: Symbol): SpotPricesStream {
     return stream;
 }
 
-function trendbar(symbol: Symbol, period: Period): TrendbarsStream {
-    return new TrendbarsStream(symbol, period);
-}
-
-function create(path: string): Services {    
-    return {
-        account,
-        spotPrices: (symbol: Symbol) => spotPrices(path, symbol),
-        trendbar
+class LocalAccountStream extends AccountStream {
+    private readonly path: string;
+    constructor(path: string) {
+        super();
+        this.path = path;
+    }
+    order(_symbol: Symbol): OrderStream {
+        throw new Error("not implemented");
+    }
+    spotPrices(symbol: Symbol): SpotPricesStream {
+        return spotPrices(this.path, symbol);
     }
 }
 
 const name = "BTC/EUR"
 const symbol = Symbol(name)
-const services = create("./store/samples.json");
+const services = new LocalAccountStream("./store/samples.json");
 const spots = services.spotPrices(symbol)
 spots.on("ask", console.log);
