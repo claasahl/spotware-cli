@@ -18,7 +18,7 @@ function write(msg: $.ProtoMessages) {
 function publish() {
     setImmediate(() => {
         const msg = messages.shift()
-        if(msg) {
+        if (msg) {
             $.write(socket, msg)
         }
     })
@@ -38,16 +38,16 @@ function isOAError(msg: $.ProtoMessages): msg is $.ProtoMessage2142 {
 
 function request<REQ extends $.ProtoMessages, RES extends $.ProtoMessages>(request: REQ, payloadType: $.ProtoOAPayloadType | $.ProtoPayloadType, event: string) {
     const msgId = clientMsgId();
-    setImmediate(() => write({...request, clientMsgId:msgId}))
+    setImmediate(() => write({ ...request, clientMsgId: msgId }))
     function isResponse(msg: $.ProtoMessages): msg is RES {
         return msg.payloadType === payloadType
     }
     function response(msg: $.ProtoMessages) {
-        if(msg.clientMsgId === msgId && isResponse(msg)) {
+        if (msg.clientMsgId === msgId && isResponse(msg)) {
             setImmediate(() => socket.emit(event, msg))
             socket.off("PROTO_MESSAGE.INPUT.*", response);
-        } else if(msg.clientMsgId === msgId && (isError(msg) || isOAError(msg))) {
-            const {errorCode, description} = msg.payload
+        } else if (msg.clientMsgId === msgId && (isError(msg) || isOAError(msg))) {
+            const { errorCode, description } = msg.payload
             setImmediate(() => socket.emit("error", new Error(`${errorCode}, ${description}`)))
             socket.off("PROTO_MESSAGE.INPUT.*", response);
         }
@@ -58,46 +58,46 @@ function request<REQ extends $.ProtoMessages, RES extends $.ProtoMessages>(reque
 function authApplication() {
     const requestPayloadType = $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_REQ;
     const responsePayloadType = $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_RES;
-    const payload: $.ProtoOAApplicationAuthReq = {clientId, clientSecret}
-    request({payloadType: requestPayloadType, payload}, responsePayloadType, "authApplication")
+    const payload: $.ProtoOAApplicationAuthReq = { clientId, clientSecret }
+    request({ payloadType: requestPayloadType, payload }, responsePayloadType, "authApplication")
 }
 
 function lookupAccounts() {
     const requestPayloadType = $.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ;
     const responsePayloadType = $.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES;
-    const payload: $.ProtoOAGetAccountListByAccessTokenReq = {accessToken}
-    request({payloadType: requestPayloadType, payload}, responsePayloadType, "lookupAccounts")
+    const payload: $.ProtoOAGetAccountListByAccessTokenReq = { accessToken }
+    request({ payloadType: requestPayloadType, payload }, responsePayloadType, "lookupAccounts")
 }
 
 function authAccount(ctidTraderAccountId: number) {
     const requestPayloadType = $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_REQ;
     const responsePayloadType = $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES;
-    const payload: $.ProtoOAAccountAuthReq ={accessToken, ctidTraderAccountId}
-    request({payloadType: requestPayloadType, payload}, responsePayloadType, "authAccount")
+    const payload: $.ProtoOAAccountAuthReq = { accessToken, ctidTraderAccountId }
+    request({ payloadType: requestPayloadType, payload }, responsePayloadType, "authAccount")
 }
 
 function version(payload: $.ProtoOAVersionReq) {
     const requestPayloadType = $.ProtoOAPayloadType.PROTO_OA_VERSION_REQ;
     const responsePayloadType = $.ProtoOAPayloadType.PROTO_OA_VERSION_RES;
-    request({payloadType: requestPayloadType, payload}, responsePayloadType, "version")
+    request({ payloadType: requestPayloadType, payload }, responsePayloadType, "version")
 }
 
 function trader(payload: $.ProtoOATraderReq) {
     const requestPayloadType = $.ProtoOAPayloadType.PROTO_OA_TRADER_REQ;
     const responsePayloadType = $.ProtoOAPayloadType.PROTO_OA_TRADER_RES;
-    request({payloadType: requestPayloadType, payload}, responsePayloadType, "trader")
+    request({ payloadType: requestPayloadType, payload }, responsePayloadType, "trader")
 }
 
 function symbolsList(payload: $.ProtoOASymbolsListReq) {
     const requestPayloadType = $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_REQ;
     const responsePayloadType = $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_RES;
-    request({payloadType: requestPayloadType, payload}, responsePayloadType, "symbolsList")
+    request({ payloadType: requestPayloadType, payload }, responsePayloadType, "symbolsList")
 }
 
 function subscribeSpots(payload: $.ProtoOASubscribeSpotsReq) {
     const requestPayloadType = $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_REQ;
     const responsePayloadType = $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_RES;
-    request({payloadType: requestPayloadType, payload}, responsePayloadType, "subscribeSpots")
+    request({ payloadType: requestPayloadType, payload }, responsePayloadType, "subscribeSpots")
 }
 
 function heartbeat() {
@@ -133,13 +133,13 @@ const { port, host, clientId, clientSecret, accessToken } = config
 const socket = $.connect(port, host)
 socket.on("connect", connected)
 socket.on("close", disconnected)
-socket.on("error", (err: Error) => {error(err.message); socket.end();})
+socket.on("error", (err: Error) => { error(err.message); socket.end(); })
 socket.on("PROTO_MESSAGE.INPUT.*", msg => {
     input("%j", msg)
 })
 socket.on("PROTO_MESSAGE.OUTPUT.*", msg => {
     output("%j", msg)
-    if(pacemaker) {
+    if (pacemaker) {
         clearTimeout(pacemaker)
     }
     pacemaker = setTimeout(heartbeat, 10000)
@@ -148,7 +148,7 @@ socket.on("PROTO_MESSAGE.INPUT.*", msg => {
     function isAccountDisconnectedEvent(msg: $.ProtoMessages): msg is $.ProtoMessage2164 {
         return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_DISCONNECT_EVENT;
     }
-    if(isAccountDisconnectedEvent(msg)) {
+    if (isAccountDisconnectedEvent(msg)) {
         socket.end()
     }
 })
@@ -162,13 +162,13 @@ socket.on("lookupAccounts", (msg: $.ProtoMessage2150) => {
     authAccount(ctidTraderAccountId)
 })
 socket.on("authAccount", () => {
-    trader({ctidTraderAccountId: ctidTraderAccountId!})
-    symbolsList({ctidTraderAccountId: ctidTraderAccountId!})
+    trader({ ctidTraderAccountId: ctidTraderAccountId! })
+    symbolsList({ ctidTraderAccountId: ctidTraderAccountId! })
 })
 socket.on("trader", (msg: $.ProtoMessage2122) => {
     const balance = msg.payload.trader.balance / 100
     const timestamp = Date.now();
-    account.emitBalance({balance, timestamp})
+    account.emitBalance({ balance, timestamp })
 })
 socket.on("symbolsList", (msg: $.ProtoMessage2115) => {
     setImmediate(() => {
@@ -182,25 +182,25 @@ socket.on("symbolsList", (msg: $.ProtoMessage2115) => {
 })
 socket.on("symbolsListCachedByName", () => {
     const symbol = symbolsByName.get(name);
-    if(symbol) {
+    if (symbol) {
         symbolId = symbol.symbolId;
-        subscribeSpots({ctidTraderAccountId: ctidTraderAccountId!, symbolId: [symbolId]})
+        subscribeSpots({ ctidTraderAccountId: ctidTraderAccountId!, symbolId: [symbolId] })
     }
 })
 socket.on("PROTO_MESSAGE.INPUT.*", msg => {
     function isSpotPriceEvent(msg: $.ProtoMessages): msg is $.ProtoMessage2131 {
         return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_SPOT_EVENT;
     }
-    if(isSpotPriceEvent(msg) && msg.payload.symbolId === symbolId) {
-        if(msg.payload.ask) {
+    if (isSpotPriceEvent(msg) && msg.payload.symbolId === symbolId) {
+        if (msg.payload.ask) {
             const price = msg.payload.ask
             const timestamp = Date.now();
-            spotPrices.emitAsk({price, timestamp})
+            spotPrices.emitAsk({ price, timestamp })
         }
-        if(msg.payload.bid) {
+        if (msg.payload.bid) {
             const price = msg.payload.bid
             const timestamp = Date.now();
-            spotPrices.emitBid({price, timestamp})
+            spotPrices.emitBid({ price, timestamp })
         }
     }
 })
@@ -208,8 +208,8 @@ socket.on("PROTO_MESSAGE.INPUT.*", msg => {
     function isOrderEvent(msg: $.ProtoMessages): msg is $.ProtoMessage2126 {
         return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_EXECUTION_EVENT;
     }
-    if(isOrderEvent(msg)) {
-        trader({ctidTraderAccountId: ctidTraderAccountId!})
+    if (isOrderEvent(msg)) {
+        trader({ ctidTraderAccountId: ctidTraderAccountId! })
     }
 })
 
@@ -225,18 +225,18 @@ let balance: number | null = null;
 const orders: Order[] = [
     {
         symbol: Symbol("BTC/EUR"),
-    entry: 9143.64,
-    volume: 0.01,
-    tradeSide: $.ProtoOATradeSide.BUY,
-    profitLoss: 0
-},
-{
-    symbol: Symbol("BTC/EUR"),
-    entry: 9116.23,
-    volume: 0.01,
-    tradeSide: $.ProtoOATradeSide.SELL,
-    profitLoss: 0
-}
+        entry: 9143.64,
+        volume: 0.01,
+        tradeSide: $.ProtoOATradeSide.BUY,
+        profitLoss: 0
+    },
+    {
+        symbol: Symbol("BTC/EUR"),
+        entry: 9116.23,
+        volume: 0.01,
+        tradeSide: $.ProtoOATradeSide.SELL,
+        profitLoss: 0
+    }
 ]
 
 account.on("balance", e => {
@@ -244,26 +244,26 @@ account.on("balance", e => {
 })
 spotPrices.on("ask", e => {
     orders
-    .filter(({tradeSide}) => tradeSide === $.ProtoOATradeSide.SELL)
-    .forEach(order => {
-        const price = e.price / 100000
-        order.profitLoss = (order.entry - price) * order.volume
-    })
+        .filter(({ tradeSide }) => tradeSide === $.ProtoOATradeSide.SELL)
+        .forEach(order => {
+            const price = e.price / 100000
+            order.profitLoss = (order.entry - price) * order.volume
+        })
 
-    const profitLoss = orders.reduce((prev, curr) => prev+curr.profitLoss, 0)
+    const profitLoss = orders.reduce((prev, curr) => prev + curr.profitLoss, 0)
     const equity = Math.round((balance! + profitLoss) * 100) / 100
-    account.emitEquity({equity, timestamp: e.timestamp})
+    account.emitEquity({ equity, timestamp: e.timestamp })
 })
 spotPrices.on("bid", e => {
     orders
-    .filter(({tradeSide}) => tradeSide === $.ProtoOATradeSide.BUY)
-    .forEach(order => {
-        const price = e.price / 100000
-        order.profitLoss = (price - order.entry) * order.volume
-    })
+        .filter(({ tradeSide }) => tradeSide === $.ProtoOATradeSide.BUY)
+        .forEach(order => {
+            const price = e.price / 100000
+            order.profitLoss = (price - order.entry) * order.volume
+        })
 
-    const profitLoss = orders.reduce((prev, curr) => prev+curr.profitLoss, 0)
+    const profitLoss = orders.reduce((prev, curr) => prev + curr.profitLoss, 0)
     const equity = Math.round((balance! + profitLoss) * 100) / 100
-    account.emitEquity({equity, timestamp: e.timestamp})
+    account.emitEquity({ equity, timestamp: e.timestamp })
 })
 account.on("equity", e => console.log("------------------------------>", e.equity, JSON.stringify(orders.map(o => o.profitLoss))))
