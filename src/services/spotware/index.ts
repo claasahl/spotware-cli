@@ -212,3 +212,36 @@ socket.on("PROTO_MESSAGE.INPUT.*", msg => {
         trader({ctidTraderAccountId: ctidTraderAccountId!})
     }
 })
+
+
+let balance: number | null = null;
+const order = {
+    entry: 9467.18,
+    volume: 0.01,
+    tradeSide: $.ProtoOATradeSide.BUY
+}
+
+account.on("balance", e => {
+    balance = e.balance
+})
+spotPrices.on("ask", e => {
+    if(order.tradeSide === $.ProtoOATradeSide.SELL) {
+        const price = e.price / 100000
+        const profitLoss = (price - order.entry) * order.volume
+
+        const equity = Math.round((balance! + profitLoss) * 100) / 100
+        const timestamp = Date.now();
+        account.emitEquity({equity, timestamp})
+    }
+})
+spotPrices.on("bid", e => {
+    if(order.tradeSide === $.ProtoOATradeSide.BUY) {
+        const price = e.price / 100000
+        const profitLoss = (price - order.entry) * order.volume
+
+        const equity = Math.round((balance! + profitLoss) * 100) / 100
+        const timestamp = Date.now();
+        account.emitEquity({equity, timestamp})
+    }
+})
+account.on("equity", e => console.log("------------------------------>", e.equity))
