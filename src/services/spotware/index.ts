@@ -144,6 +144,14 @@ socket.on("PROTO_MESSAGE.OUTPUT.*", msg => {
     }
     pacemaker = setTimeout(heartbeat, 10000)
 })
+socket.on("PROTO_MESSAGE.INPUT.*", msg => {
+    function isAccountDisconnectedEvent(msg: $.ProtoMessages): msg is $.ProtoMessage2164 {
+        return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_DISCONNECT_EVENT;
+    }
+    if(isAccountDisconnectedEvent(msg)) {
+        socket.end()
+    }
+})
 
 socket.on("connect", () => version({}))
 socket.on("connect", authApplication)
