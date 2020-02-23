@@ -39,12 +39,15 @@ class LocalAccountStream extends AccountStream {
         super(currency);
         this.path = path;
     }
-    order(_symbol: Symbol): OrderStream {
+    order(symbol: Symbol): OrderStream {
+        if(!symbol.toString().includes(this.currency.toString())) {
+            throw new Error(`symbol ${symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`);
+        }
         throw new Error("not implemented");
     }
     spotPrices(symbol: Symbol): SpotPricesStream {
         if(!symbol.toString().includes(this.currency.toString())) {
-            throw new Error(`symbol "${symbol.toString()}" does not involve currency "${this.currency.toString()}". This account only supports named currency.`);
+            throw new Error(`symbol ${symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`);
         }
         return spotPrices(this.path, symbol);
     }
