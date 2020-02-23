@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import { bearish, bullish, range } from "indicators";
-import { Price, Timestamp, TradeSide, Symbol, EURUSD, Period } from "./types"
+import { Price, Timestamp, TradeSide, Symbol, EURUSD } from "./types"
 import { TrendbarEvent, TrendbarsStream } from "./trendbars";
 import { AccountStream } from "./account";
 import { OrderStream, OrderAcceptedEvent, OrderClosedEvent, OrderEndEvent, DebugOrderStream } from "./order";
@@ -184,9 +184,6 @@ class A extends AccountStream {
         return new O(symbol);
     }
     spotPrices(_symbol: Symbol): SpotPricesStream {
-        throw new Error("not implemented")
-    }
-    trendbars(_symbol: Symbol, _period: Period): TrendbarsStream {
         throw new Error("not implemented")
     }
 }

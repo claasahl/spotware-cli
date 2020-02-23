@@ -1,10 +1,9 @@
 import { EventEmitter } from "events";
 import debug from "debug"
 
-import { Price, Timestamp, Symbol, Period } from "./types";
+import { Price, Timestamp, Symbol } from "./types";
 import { OrderStream } from "./order";
 import { SpotPricesStream } from "./spotPrices";
-import { TrendbarsStream } from "./trendbars";
 
 export interface BalanceChangedEvent {
   balance: Price
@@ -24,7 +23,6 @@ export interface AccountProps {
 export interface AccountActions {
   order(symbol: Symbol): OrderStream;
   spotPrices(symbol: Symbol): SpotPricesStream;
-  trendbars(symbol: Symbol, period: Period): TrendbarsStream;
 }
 export declare interface AccountStream extends EventEmitter {
   addListener(event: string, listener: (...args: any[]) => void): this;
@@ -56,7 +54,6 @@ export declare interface AccountStream extends EventEmitter {
 export abstract class AccountStream extends EventEmitter implements AccountProps, AccountActions {
   abstract order(symbol: Symbol): OrderStream;
   abstract spotPrices(symbol: Symbol): SpotPricesStream;
-  abstract trendbars(symbol: Symbol, period: Period): TrendbarsStream;
 }
 
 export class DebugAccountStream extends AccountStream {
@@ -77,9 +74,6 @@ export class DebugAccountStream extends AccountStream {
       throw new Error("not implemented")
   }
   spotPrices(_symbol: Symbol): SpotPricesStream {
-      throw new Error("not implemented")
-  }
-  trendbars(_symbol: Symbol, _period: Period): TrendbarsStream {
       throw new Error("not implemented")
   }
 
