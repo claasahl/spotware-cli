@@ -5,6 +5,7 @@ import assert from "assert"
 import config from "../../config"
 import { DebugAccountStream } from "../account"
 import { DebugSpotPricesStream } from "../spotPrices"
+import { TradeSide, Price, Volume } from "../types"
 
 const log = debug("spotware")
 const input = log.extend("input")
@@ -216,10 +217,10 @@ socket.on("PROTO_MESSAGE.INPUT.*", msg => {
 
 interface Order {
     symbol: Symbol;
-    entry: number;
-    volume: number;
-    tradeSide: $.ProtoOATradeSide
-    profitLoss: number;
+    entry: Price;
+    volume: Volume;
+    tradeSide: TradeSide
+    profitLoss: Price;
 }
 let balance: number | null = null;
 const orders: Order[] = [
@@ -227,14 +228,14 @@ const orders: Order[] = [
         symbol: Symbol("BTC/EUR"),
         entry: 9143.64,
         volume: 0.01,
-        tradeSide: $.ProtoOATradeSide.BUY,
+        tradeSide: "BUY",
         profitLoss: 0
     },
     {
         symbol: Symbol("BTC/EUR"),
         entry: 9116.23,
         volume: 0.01,
-        tradeSide: $.ProtoOATradeSide.SELL,
+        tradeSide: "SELL",
         profitLoss: 0
     }
 ]
@@ -244,7 +245,7 @@ account.on("balance", e => {
 })
 spotPrices.on("ask", e => {
     orders
-        .filter(({ tradeSide }) => tradeSide === $.ProtoOATradeSide.SELL)
+        .filter(({ tradeSide }) => tradeSide === "SELL")
         .forEach(order => {
             const price = e.price / 100000
             order.profitLoss = (order.entry - price) * order.volume
@@ -256,7 +257,7 @@ spotPrices.on("ask", e => {
 })
 spotPrices.on("bid", e => {
     orders
-        .filter(({ tradeSide }) => tradeSide === $.ProtoOATradeSide.BUY)
+        .filter(({ tradeSide }) => tradeSide === "BUY")
         .forEach(order => {
             const price = e.price / 100000
             order.profitLoss = (price - order.entry) * order.volume
