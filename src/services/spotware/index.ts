@@ -5,7 +5,7 @@ import assert from "assert"
 import config from "../../config"
 import { DebugAccountStream } from "../account"
 import { DebugSpotPricesStream } from "../spotPrices"
-import { TradeSide, Price, Volume } from "../types"
+import { TradeSide, Price, Volume, Timestamp } from "../types"
 
 const log = debug("spotware")
 const input = log.extend("input")
@@ -215,13 +215,14 @@ socket.on("PROTO_MESSAGE.INPUT.*", msg => {
         }
         if (msg.payload.executionType === $.ProtoOAExecutionType.ORDER_FILLED && msg.payload.deal && !msg.payload.deal.closePositionDetail) {
             console.log(JSON.stringify(msg.payload))
-            const order: Order = {
-                symbol: Symbol.for(`${msg.payload.deal.symbolId}`),
-                entry: msg.payload.deal.executionPrice!,
-                volume: msg.payload.deal.volume / 100, // filledVolume?
-                tradeSide: msg.payload.deal?.tradeSide === $.ProtoOATradeSide.BUY ? "BUY" : "SELL",
-                profitLoss: 0
-            }
+            const symbol = Symbol.for(`${msg.payload.deal.symbolId}`);
+            const tradeSide: TradeSide = msg.payload.deal?.tradeSide === $.ProtoOATradeSide.BUY ? "BUY" : "SELL"
+            const entry = msg.payload.deal.executionPrice!
+            const volume = msg.payload.deal.volume / 100; // filledVolume?
+            const profitLossSELL = (entry - ask!) * volume
+            const profitLossBUY = (bid! - entry) * volume
+            const profitLoss = tradeSide === "SELL" ? profitLossSELL : profitLossBUY
+            const order: Order = { symbol, entry, volume, tradeSide, profitLoss }
             console.log(JSON.stringify(order))
             orders.push(order)
         } else if (msg.payload.executionType === $.ProtoOAExecutionType.ORDER_FILLED && msg.payload.deal && msg.payload.deal.closePositionDetail) {
@@ -262,38 +263,36 @@ interface Order {
     tradeSide: TradeSide
     profitLoss: Price;
 }
-let balance: number | null = null;
+let balance: Price | null = null;
+let ask: Price | null = null;
+let bid: Price | null = null;
 const orders: Order[] = []
-// keep track of latest ask/bid price to calculate equity asap
+function emitEquity(timestamp: Timestamp) {
+    const profitLoss = orders.reduce((prev, curr) => prev + curr.profitLoss, 0)
+    const equity = Math.round((balance! + profitLoss) * 100) / 100
+    account.emitEquity({ equity, timestamp })
+}
 
 account.on("balance", e => {
     balance = e.balance
-    const profitLoss = orders.reduce((prev, curr) => prev + curr.profitLoss, 0)
-    const equity = Math.round((balance! + profitLoss) * 100) / 100
-    account.emitEquity({ equity, timestamp: e.timestamp })
+    emitEquity(e.timestamp);
 })
 spotPrices.on("ask", e => {
+    ask = e.price / 100000
     orders
         .filter(({ tradeSide }) => tradeSide === "SELL")
         .forEach(order => {
-            const price = e.price / 100000
-            order.profitLoss = (order.entry - price) * order.volume
+            order.profitLoss = (order.entry - ask!) * order.volume
         })
-
-    const profitLoss = orders.reduce((prev, curr) => prev + curr.profitLoss, 0)
-    const equity = Math.round((balance! + profitLoss) * 100) / 100
-    account.emitEquity({ equity, timestamp: e.timestamp })
+    emitEquity(e.timestamp);
 })
 spotPrices.on("bid", e => {
+    bid = e.price / 100000
     orders
         .filter(({ tradeSide }) => tradeSide === "BUY")
         .forEach(order => {
-            const price = e.price / 100000
-            order.profitLoss = (price - order.entry) * order.volume
+            order.profitLoss = (bid! - order.entry) * order.volume
         })
-
-    const profitLoss = orders.reduce((prev, curr) => prev + curr.profitLoss, 0)
-    const equity = Math.round((balance! + profitLoss) * 100) / 100
-    account.emitEquity({ equity, timestamp: e.timestamp })
+    emitEquity(e.timestamp)
 })
 account.on("equity", e => console.log("------------------------------>", e.equity, JSON.stringify(orders.map(o => o.profitLoss))))
