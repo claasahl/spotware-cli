@@ -224,20 +224,47 @@ socket.on("PROTO_MESSAGE.INPUT.*", msg => {
         if (msg.payload.executionType !== $.ProtoOAExecutionType.ORDER_ACCEPTED) {
             trader({ ctidTraderAccountId: ctidTraderAccountId! })
         }
-        if (msg.payload.executionType === $.ProtoOAExecutionType.ORDER_FILLED && msg.payload.deal && !msg.payload.deal.closePositionDetail) {
-            const symbol = Symbol.for(symbolsById.get(msg.payload.deal.symbolId!)?.symbolName!);
-            const tradeSide: TradeSide = msg.payload.deal?.tradeSide === $.ProtoOATradeSide.BUY ? "BUY" : "SELL"
-            const entry = msg.payload.deal.executionPrice!
-            const volume = msg.payload.deal.volume / 100; // filledVolume?
-            const profitLossSELL = (entry - ask!) * volume
-            const profitLossBUY = (bid! - entry) * volume
-            const profitLoss = tradeSide === "SELL" ? profitLossSELL : profitLossBUY
-            const order: Order = { symbol, entry, volume, tradeSide, profitLoss }
-            console.log(JSON.stringify(order))
-            orders.set(msg.payload.deal.positionId, order)
-        } else if (msg.payload.executionType === $.ProtoOAExecutionType.ORDER_FILLED && msg.payload.deal && msg.payload.deal.closePositionDetail) {
-            orders.delete(msg.payload.deal.positionId)
-            console.log(orders)
+        if (msg.payload.executionType === $.ProtoOAExecutionType.ORDER_FILLED) {
+            if(!msg.payload.order || !msg.payload.deal) {
+                return;
+            }
+            if(msg.payload.order.closingOrder) {
+                orders.delete(msg.payload.order.positionId!)
+                console.log(orders)
+            } else if(msg.payload.deal.closePositionDetail && msg.payload.deal.volume !== msg.payload.deal.closePositionDetail.closedVolume) {
+                const symbol = Symbol.for(symbolsById.get(msg.payload.deal.symbolId!)?.symbolName!);
+                const tradeSide: TradeSide = msg.payload.deal?.tradeSide === $.ProtoOATradeSide.BUY ? "BUY" : "SELL"
+                const entry = msg.payload.deal.executionPrice!
+                const volume = (msg.payload.deal.volume - msg.payload.deal.closePositionDetail.closedVolume!) / 100; // filledVolume?
+                const profitLossSELL = (entry - ask!) * volume
+                const profitLossBUY = (bid! - entry) * volume
+                const profitLoss = tradeSide === "SELL" ? profitLossSELL : profitLossBUY
+                const order: Order = { symbol, entry, volume, tradeSide, profitLoss }
+                console.log(JSON.stringify(order))
+                    orders.get(msg.payload.deal.positionId)?.forEach(o => {
+                        console.log("testing", o, o.tradeSide, tradeSide, o.volume, msg.payload.deal?.closePositionDetail?.closedVolume)
+                        if(o.tradeSide !== tradeSide && o.volume === msg.payload.deal?.closePositionDetail?.closedVolume! / 100) {
+                            console.log("updating this order ...", o)
+                            Object.assign(o, order)
+                            console.log("updated order ...", o)
+                        }
+                    })
+            } else {
+                const symbol = Symbol.for(symbolsById.get(msg.payload.deal.symbolId!)?.symbolName!);
+                const tradeSide: TradeSide = msg.payload.deal?.tradeSide === $.ProtoOATradeSide.BUY ? "BUY" : "SELL"
+                const entry = msg.payload.deal.executionPrice!
+                const volume = msg.payload.deal.volume / 100; // filledVolume?
+                const profitLossSELL = (entry - ask!) * volume
+                const profitLossBUY = (bid! - entry) * volume
+                const profitLoss = tradeSide === "SELL" ? profitLossSELL : profitLossBUY
+                const order: Order = { symbol, entry, volume, tradeSide, profitLoss }
+                console.log(JSON.stringify(order))
+                if(orders.has(msg.payload.deal.positionId)) {
+                    orders.get(msg.payload.deal.positionId)?.push(order)
+                } else {
+                    orders.set(msg.payload.deal.positionId, [order])
+                }
+            }
         }
     }
 })
@@ -253,10 +280,10 @@ interface Order {
 let balance: Price | null = null;
 let ask: Price | null = null;
 let bid: Price | null = null;
-const orders: Map<number, Order> = new Map();
+const orders: Map<number, Order[]> = new Map();
 function emitEquity(timestamp: Timestamp) {
     let profitLoss = 0;
-    orders.forEach(order => profitLoss+=order.profitLoss)
+    orders.forEach(o => o.forEach(o => profitLoss+=o.profitLoss))
     const equity = Math.round((balance! + profitLoss) * 100) / 100
     account.emitEquity({ equity, timestamp })
 }
@@ -267,19 +294,23 @@ account.on("balance", e => {
 })
 spotPrices.on("ask", e => {
     ask = e.price / 100000
-    orders.forEach(order => {
-        if(order.tradeSide === "SELL") {
-            order.profitLoss = (order.entry - ask!) * order.volume
-        }
+    orders.forEach(o => {
+        o.forEach(order => {
+            if(order.tradeSide === "SELL") {
+                order.profitLoss = (order.entry - ask!) * order.volume
+            }
+        })
     })
     emitEquity(e.timestamp);
 })
 spotPrices.on("bid", e => {
     bid = e.price / 100000
-    orders.forEach(order => {
-        if(order.tradeSide === "BUY") {
-            order.profitLoss = (bid! - order.entry) * order.volume
-        }
+    orders.forEach(o => {
+        o.forEach(order => {
+            if(order.tradeSide === "BUY") {
+                order.profitLoss = (bid! - order.entry) * order.volume
+            }
+        })
     })
     emitEquity(e.timestamp)
 })
