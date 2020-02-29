@@ -234,27 +234,10 @@ socket.on("PROTO_MESSAGE.INPUT.*", msg => {
             const profitLoss = tradeSide === "SELL" ? profitLossSELL : profitLossBUY
             const order: Order = { symbol, entry, volume, tradeSide, profitLoss }
             console.log(JSON.stringify(order))
-            orders.push(order)
+            orders.set(msg.payload.deal.positionId, order)
         } else if (msg.payload.executionType === $.ProtoOAExecutionType.ORDER_FILLED && msg.payload.deal && msg.payload.deal.closePositionDetail) {
-            function closeEnough(a: Order, b: Order): boolean {
-                return a.symbol === b.symbol &&
-                    a.entry === b.entry &&
-                    a.volume === b.volume &&
-                    a.tradeSide === b.tradeSide;
-            }
-
-
-            const order: Order = {
-                symbol: Symbol.for(symbolsById.get(msg.payload.deal.symbolId!)?.symbolName!),
-                entry: msg.payload.deal.closePositionDetail.entryPrice,
-                volume: msg.payload.deal.closePositionDetail.closedVolume! / 100,
-                tradeSide: msg.payload.deal?.tradeSide === $.ProtoOATradeSide.SELL ? "BUY" : "SELL",
-                profitLoss: 0
-            }
-            console.log(orders, order)
-            const indexes = orders.map((o, index) => closeEnough(o, order) ? index : undefined).filter((i): i is number => i !== undefined).reverse()
-            indexes.forEach(index => orders.splice(index, 1))
-            console.log("---> deleted orders: ", indexes, orders)
+            orders.delete(msg.payload.deal.positionId)
+            console.log(orders)
         }
     }
 })
@@ -270,9 +253,10 @@ interface Order {
 let balance: Price | null = null;
 let ask: Price | null = null;
 let bid: Price | null = null;
-const orders: Order[] = []
+const orders: Map<number, Order> = new Map();
 function emitEquity(timestamp: Timestamp) {
-    const profitLoss = orders.reduce((prev, curr) => prev + curr.profitLoss, 0)
+    let profitLoss = 0;
+    orders.forEach(order => profitLoss+=order.profitLoss)
     const equity = Math.round((balance! + profitLoss) * 100) / 100
     account.emitEquity({ equity, timestamp })
 }
@@ -283,20 +267,20 @@ account.on("balance", e => {
 })
 spotPrices.on("ask", e => {
     ask = e.price / 100000
-    orders
-        .filter(({ tradeSide }) => tradeSide === "SELL")
-        .forEach(order => {
+    orders.forEach(order => {
+        if(order.tradeSide === "SELL") {
             order.profitLoss = (order.entry - ask!) * order.volume
-        })
+        }
+    })
     emitEquity(e.timestamp);
 })
 spotPrices.on("bid", e => {
     bid = e.price / 100000
-    orders
-        .filter(({ tradeSide }) => tradeSide === "BUY")
-        .forEach(order => {
+    orders.forEach(order => {
+        if(order.tradeSide === "BUY") {
             order.profitLoss = (bid! - order.entry) * order.volume
-        })
+        }
+    })
     emitEquity(e.timestamp)
 })
-account.on("equity", e => console.log("------------------------------>", e.equity, JSON.stringify(orders.map(o => o.profitLoss))))
+account.on("equity", e => console.log("------------------------------>", e.equity))
