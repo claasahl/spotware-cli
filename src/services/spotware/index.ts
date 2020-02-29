@@ -126,6 +126,7 @@ const symbol = Symbol.for(name)
 const account = new DebugAccountStream(Symbol.for("EUR"));
 const spotPrices = new DebugSpotPricesStream(symbol)
 const symbolsByName = new Map<string, $.ProtoOALightSymbol>()
+const symbolsById = new Map<number, $.ProtoOALightSymbol>()
 let pacemaker: NodeJS.Timeout | null = null
 let publisher: NodeJS.Timeout | null = null
 let ctidTraderAccountId: number | null = null
@@ -175,10 +176,20 @@ socket.on("symbolsList", (msg: $.ProtoMessage2115) => {
     setImmediate(() => {
         symbolsByName.clear();
         msg.payload.symbol.forEach(symbol => {
-            symbolsByName.set(symbol.symbolName || "", symbol)
+            symbolsByName.set(symbol.symbolName!, symbol)
         })
         log("cached %d symbols by name", symbolsByName.size)
         socket.emit("symbolsListCachedByName")
+    })
+})
+socket.on("symbolsList", (msg: $.ProtoMessage2115) => {
+    setImmediate(() => {
+        symbolsById.clear()
+        msg.payload.symbol.forEach(symbol => {
+            symbolsById.set(symbol.symbolId, symbol)
+        })
+        log("cached %d symbols by id", symbolsByName.size)
+        socket.emit("symbolsListCachedById")
     })
 })
 socket.on("symbolsListCachedByName", () => {
@@ -214,8 +225,7 @@ socket.on("PROTO_MESSAGE.INPUT.*", msg => {
             trader({ ctidTraderAccountId: ctidTraderAccountId! })
         }
         if (msg.payload.executionType === $.ProtoOAExecutionType.ORDER_FILLED && msg.payload.deal && !msg.payload.deal.closePositionDetail) {
-            console.log(JSON.stringify(msg.payload))
-            const symbol = Symbol.for(`${msg.payload.deal.symbolId}`);
+            const symbol = Symbol.for(symbolsById.get(msg.payload.deal.symbolId!)?.symbolName!);
             const tradeSide: TradeSide = msg.payload.deal?.tradeSide === $.ProtoOATradeSide.BUY ? "BUY" : "SELL"
             const entry = msg.payload.deal.executionPrice!
             const volume = msg.payload.deal.volume / 100; // filledVolume?
@@ -226,12 +236,6 @@ socket.on("PROTO_MESSAGE.INPUT.*", msg => {
             console.log(JSON.stringify(order))
             orders.push(order)
         } else if (msg.payload.executionType === $.ProtoOAExecutionType.ORDER_FILLED && msg.payload.deal && msg.payload.deal.closePositionDetail) {
-            console.log(JSON.stringify(msg.payload))
-
-            // const timestamp = msg.payload.deal.executionTimestamp;
-            // const balance = msg.payload.deal.closePositionDetail.balance / 100;
-            // account.emitBalance({timestamp, balance})
-
             function closeEnough(a: Order, b: Order): boolean {
                 return a.symbol === b.symbol &&
                     a.entry === b.entry &&
@@ -241,7 +245,7 @@ socket.on("PROTO_MESSAGE.INPUT.*", msg => {
 
 
             const order: Order = {
-                symbol: Symbol.for(`${msg.payload.deal.symbolId}`),
+                symbol: Symbol.for(symbolsById.get(msg.payload.deal.symbolId!)?.symbolName!),
                 entry: msg.payload.deal.closePositionDetail.entryPrice,
                 volume: msg.payload.deal.closePositionDetail.closedVolume! / 100,
                 tradeSide: msg.payload.deal?.tradeSide === $.ProtoOATradeSide.SELL ? "BUY" : "SELL",
