@@ -122,8 +122,8 @@ function disconnected() {
 }
 
 const name = "BTC/EUR"
-const symbol = Symbol(name)
-const account = new DebugAccountStream(Symbol("EUR"));
+const symbol = Symbol.for(name)
+const account = new DebugAccountStream(Symbol.for("EUR"));
 const spotPrices = new DebugSpotPricesStream(symbol)
 const symbolsByName = new Map<string, $.ProtoOALightSymbol>()
 let pacemaker: NodeJS.Timeout | null = null
@@ -210,7 +210,47 @@ socket.on("PROTO_MESSAGE.INPUT.*", msg => {
         return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_EXECUTION_EVENT;
     }
     if (isOrderEvent(msg)) {
-        trader({ ctidTraderAccountId: ctidTraderAccountId! })
+        if (msg.payload.executionType !== $.ProtoOAExecutionType.ORDER_ACCEPTED) {
+            trader({ ctidTraderAccountId: ctidTraderAccountId! })
+        }
+        if (msg.payload.executionType === $.ProtoOAExecutionType.ORDER_FILLED && msg.payload.deal && !msg.payload.deal.closePositionDetail) {
+            console.log(JSON.stringify(msg.payload))
+            const order: Order = {
+                symbol: Symbol.for(`${msg.payload.deal.symbolId}`),
+                entry: msg.payload.deal.executionPrice!,
+                volume: msg.payload.deal.volume / 100, // filledVolume?
+                tradeSide: msg.payload.deal?.tradeSide === $.ProtoOATradeSide.BUY ? "BUY" : "SELL",
+                profitLoss: 0
+            }
+            console.log(JSON.stringify(order))
+            orders.push(order)
+        } else if (msg.payload.executionType === $.ProtoOAExecutionType.ORDER_FILLED && msg.payload.deal && msg.payload.deal.closePositionDetail) {
+            console.log(JSON.stringify(msg.payload))
+
+            // const timestamp = msg.payload.deal.executionTimestamp;
+            // const balance = msg.payload.deal.closePositionDetail.balance / 100;
+            // account.emitBalance({timestamp, balance})
+
+            function closeEnough(a: Order, b: Order): boolean {
+                return a.symbol === b.symbol &&
+                    a.entry === b.entry &&
+                    a.volume === b.volume &&
+                    a.tradeSide === b.tradeSide;
+            }
+
+
+            const order: Order = {
+                symbol: Symbol.for(`${msg.payload.deal.symbolId}`),
+                entry: msg.payload.deal.closePositionDetail.entryPrice,
+                volume: msg.payload.deal.closePositionDetail.closedVolume! / 100,
+                tradeSide: msg.payload.deal?.tradeSide === $.ProtoOATradeSide.SELL ? "BUY" : "SELL",
+                profitLoss: 0
+            }
+            console.log(orders, order)
+            const indexes = orders.map((o, index) => closeEnough(o, order) ? index : undefined).filter((i): i is number => i !== undefined).reverse()
+            indexes.forEach(index => orders.splice(index, 1))
+            console.log("---> deleted orders: ", indexes, orders)
+        }
     }
 })
 
@@ -223,25 +263,14 @@ interface Order {
     profitLoss: Price;
 }
 let balance: number | null = null;
-const orders: Order[] = [
-    {
-        symbol: Symbol("BTC/EUR"),
-        entry: 9143.64,
-        volume: 0.01,
-        tradeSide: "BUY",
-        profitLoss: 0
-    },
-    {
-        symbol: Symbol("BTC/EUR"),
-        entry: 9116.23,
-        volume: 0.01,
-        tradeSide: "SELL",
-        profitLoss: 0
-    }
-]
+const orders: Order[] = []
+// keep track of latest ask/bid price to calculate equity asap
 
 account.on("balance", e => {
     balance = e.balance
+    const profitLoss = orders.reduce((prev, curr) => prev + curr.profitLoss, 0)
+    const equity = Math.round((balance! + profitLoss) * 100) / 100
+    account.emitEquity({ equity, timestamp: e.timestamp })
 })
 spotPrices.on("ask", e => {
     orders
