@@ -231,36 +231,31 @@ socket.on("PROTO_MESSAGE.INPUT.*", msg => {
             if(msg.payload.order.closingOrder) {
                 orders.delete(msg.payload.order.positionId!)
                 console.log(orders)
-            } else if(msg.payload.deal.closePositionDetail && msg.payload.deal.volume !== msg.payload.deal.closePositionDetail.closedVolume) {
-                const symbol = Symbol.for(symbolsById.get(msg.payload.deal.symbolId!)?.symbolName!);
-                const tradeSide: TradeSide = msg.payload.deal?.tradeSide === $.ProtoOATradeSide.BUY ? "BUY" : "SELL"
-                const entry = msg.payload.deal.executionPrice!
-                const volume = (msg.payload.deal.volume - msg.payload.deal.closePositionDetail.closedVolume!) / 100; // filledVolume?
-                const profitLossSELL = (entry - ask!) * volume
-                const profitLossBUY = (bid! - entry) * volume
-                const profitLoss = tradeSide === "SELL" ? profitLossSELL : profitLossBUY
-                const order: Order = { symbol, entry, volume, tradeSide, profitLoss }
-                console.log(JSON.stringify(order))
-                    orders.get(msg.payload.deal.positionId)?.forEach(o => {
-                        console.log("testing", o, o.tradeSide, tradeSide, o.volume, msg.payload.deal?.closePositionDetail?.closedVolume)
-                        if(o.tradeSide !== tradeSide && o.volume === msg.payload.deal?.closePositionDetail?.closedVolume! / 100) {
-                            console.log("updating this order ...", o)
-                            Object.assign(o, order)
-                            console.log("updated order ...", o)
-                        }
-                    })
             } else {
                 const symbol = Symbol.for(symbolsById.get(msg.payload.deal.symbolId!)?.symbolName!);
                 const tradeSide: TradeSide = msg.payload.deal?.tradeSide === $.ProtoOATradeSide.BUY ? "BUY" : "SELL"
                 const entry = msg.payload.deal.executionPrice!
                 const volume = msg.payload.deal.volume / 100; // filledVolume?
-                const profitLossSELL = (entry - ask!) * volume
-                const profitLossBUY = (bid! - entry) * volume
-                const profitLoss = tradeSide === "SELL" ? profitLossSELL : profitLossBUY
+                const profitLossSELL = (entry - ask!)
+                const profitLossBUY = (bid! - entry)
+                const profitLoss = (tradeSide === "SELL" ? profitLossSELL : profitLossBUY) * volume
                 const order: Order = { symbol, entry, volume, tradeSide, profitLoss }
                 console.log(JSON.stringify(order))
                 if(orders.has(msg.payload.deal.positionId)) {
-                    orders.get(msg.payload.deal.positionId)?.push(order)
+                    const all = orders.get(msg.payload.deal.positionId);
+                    const toBeDeleted: number[] = []
+                    console.log("BEFORE", JSON.stringify(all))
+                    all?.forEach((o, index) => {
+                        if(order.tradeSide !== o.tradeSide && order.volume >= o.volume) {
+                            order.volume -= o.volume
+                            order.profitLoss = (tradeSide === "SELL" ? profitLossSELL : profitLossBUY) * order.volume
+                            o.volume = 0;
+                            toBeDeleted.push(index)
+                        }
+                    })
+                    toBeDeleted.reverse().forEach(i => all?.splice(i, 1))
+                    all?.push(order)
+                    console.log("AFTER", JSON.stringify(all))
                 } else {
                     orders.set(msg.payload.deal.positionId, [order])
                 }
