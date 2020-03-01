@@ -5,7 +5,7 @@ import assert from "assert"
 import config from "../../config"
 import { DebugAccountStream } from "../account"
 import { DebugSpotPricesStream } from "../spotPrices"
-import { TradeSide, Price, Volume, Timestamp } from "../types"
+import { TradeSide, Price, Order, Timestamp } from "../types"
 
 const log = debug("spotware")
 const input = log.extend("input")
@@ -267,13 +267,6 @@ socket.on("PROTO_MESSAGE.INPUT.*", msg => {
 })
 
 
-interface Order {
-    symbol: Symbol;
-    entry: Price;
-    volume: Volume;
-    tradeSide: TradeSide
-    profitLoss: Price;
-}
 let balance: Price | null = null;
 let ask: Price | null = null;
 let bid: Price | null = null;
