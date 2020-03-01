@@ -38,7 +38,7 @@ function emitSpotPrices(stream: DebugSpotPricesStream, e: AskPriceChangedEvent |
     setImmediate(() => stream.emit("next"))
 }
 
-function spotPrices(_path: string, symbol: Symbol): SpotPricesStream {
+function spotPrices(symbol: Symbol): SpotPricesStream {
     function emitNext() {
         const a = data.next();
         if (a.value) {
@@ -62,12 +62,10 @@ function includesCurrency(symbol: Symbol, currency: Currency): boolean {
 }
 
 class LocalAccountStream extends DebugAccountStream {
-    private readonly path: string;
     private balance: Price = 0;
     private equity: Price = 0;
-    constructor(currency: Currency, initialBalance: Price, path: string) {
+    constructor(currency: Currency, initialBalance: Price) {
         super(currency);
-        this.path = path;
         this.balance = initialBalance;
         this.equity = initialBalance;
         this.updateBalance(Date.now());
@@ -85,7 +83,7 @@ class LocalAccountStream extends DebugAccountStream {
         if (!includesCurrency(symbol, this.currency)) {
             throw new Error(`symbol ${symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`);
         }
-        const stream = spotPrices(this.path, symbol);
+        const stream = spotPrices(symbol);
         stream.on("ask", e => this.updateEquity(e.timestamp))
         stream.on("bid", e => this.updateEquity(e.timestamp))
         return stream;
@@ -103,7 +101,7 @@ class LocalAccountStream extends DebugAccountStream {
 
 const name = "BTC/EUR"
 const symbol = Symbol.for(name)
-const account = new LocalAccountStream(Symbol.for("EUR"), 1000, "./store/samples.json");
+const account = new LocalAccountStream(Symbol.for("EUR"), 1000);
 setImmediate(() => {
     account.spotPrices(symbol)
 })
