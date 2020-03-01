@@ -229,6 +229,7 @@ socket.on("PROTO_MESSAGE.INPUT.*", msg => {
                 return;
             }
             if(msg.payload.order.closingOrder) {
+                orders.get(msg.payload.order.positionId!)?.forEach(o => balance! += o.profitLoss)
                 orders.delete(msg.payload.order.positionId!)
                 console.log(orders)
             } else {
@@ -250,6 +251,7 @@ socket.on("PROTO_MESSAGE.INPUT.*", msg => {
                             order.volume -= o.volume
                             order.profitLoss = (tradeSide === "SELL" ? profitLossSELL : profitLossBUY) * order.volume
                             o.volume = 0;
+                            balance! += o.profitLoss
                             toBeDeleted.push(index)
                         }
                     })
@@ -284,7 +286,11 @@ function emitEquity(timestamp: Timestamp) {
 }
 
 account.on("balance", e => {
-    balance = e.balance
+    if(balance === null) {
+        balance = e.balance
+    } else {
+        console.log("-------------------------------", balance, e.balance, Math.abs(balance-e.balance), "-------------------------------")
+    }
     emitEquity(e.timestamp);
 })
 spotPrices.on("ask", e => {
