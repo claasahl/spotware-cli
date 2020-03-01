@@ -1,4 +1,4 @@
-export const EURUSD = Symbol.for("EURUSD")
+export const EURUSD = Symbol.for("EURUSD");
 
 export type Price = number;
 export type Volume = number;
@@ -6,12 +6,12 @@ export type Period = number;
 export type Timestamp = number;
 export type Symbol = symbol;
 export type Currency = symbol;
-export type TradeSide = "BUY" | "SELL"
+export type TradeSide = "BUY" | "SELL";
 
 export interface Order {
-    symbol: Symbol;
-    entry: Price;
-    volume: Volume;
-    tradeSide: TradeSide
-    profitLoss: Price;
+  symbol: Symbol;
+  entry: Price;
+  volume: Volume;
+  tradeSide: TradeSide;
+  profitLoss: Price;
 }

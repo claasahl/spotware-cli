@@ -1,16 +1,16 @@
-import {OrderStream as Base} from "../order"
+import { OrderStream as Base } from "../order";
 
 export class Order extends Base {
-    close() {
-        return this;
-    }
-    cancel() {
-        return this;
-    }
-    end() {
-        return this;
-    }
-    amend() {
-        return this;
-    }
+  close() {
+    return this;
+  }
+  cancel() {
+    return this;
+  }
+  end() {
+    return this;
+  }
+  amend() {
+    return this;
+  }
 }

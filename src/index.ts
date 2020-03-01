@@ -11,10 +11,7 @@ import CONFIG from "./config";
 
 const { host, port, clientId, clientSecret, accessToken } = CONFIG;
 
-const socket = connect(
-  port,
-  host
-);
+const socket = connect(port, host);
 socket.on("PROTO_MESSAGE.*", message => {
   if ([2113, 2115, 2154, 2161, 2146].includes(message.payloadType)) {
     process.stdout.write(
