@@ -54,7 +54,7 @@ class LocalAccountStream extends AccountStream {
 }
 
 const name = "BTC/EUR"
-const symbol = Symbol(name)
-const services = new LocalAccountStream(Symbol("EUR"), "./store/samples.json");
+const symbol = Symbol.for(name)
+const services = new LocalAccountStream(Symbol.for("EUR"), "./store/samples.json");
 const spots = services.spotPrices(symbol)
 spots.on("ask", console.log);
