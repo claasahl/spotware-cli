@@ -84,8 +84,10 @@ class LocalAccountStream extends DebugAccountStream {
             throw new Error(`symbol ${symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`);
         }
         const stream = spotPrices(symbol);
-        stream.on("ask", e => this.updateEquity(e.timestamp))
-        stream.on("bid", e => this.updateEquity(e.timestamp))
+        setImmediate(() => {
+            stream.on("ask", e => this.updateEquity(e.timestamp))
+            stream.on("bid", e => this.updateEquity(e.timestamp))
+        })
         return stream;
     }
 
