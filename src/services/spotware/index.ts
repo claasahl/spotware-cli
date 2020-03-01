@@ -205,14 +205,14 @@ socket.on("PROTO_MESSAGE.INPUT.*", msg => {
     }
     if (isSpotPriceEvent(msg) && msg.payload.symbolId === symbolId) {
         if (msg.payload.ask) {
-            const price = msg.payload.ask
+            const ask = msg.payload.ask
             const timestamp = Date.now();
-            spotPrices.emitAsk({ price, timestamp })
+            spotPrices.emitAsk({ ask, timestamp })
         }
         if (msg.payload.bid) {
-            const price = msg.payload.bid
+            const bid = msg.payload.bid
             const timestamp = Date.now();
-            spotPrices.emitBid({ price, timestamp })
+            spotPrices.emitBid({ bid, timestamp })
         }
     }
 })
@@ -294,7 +294,7 @@ account.on("balance", e => {
     emitEquity(e.timestamp);
 })
 spotPrices.on("ask", e => {
-    ask = e.price / 100000
+    ask = e.ask / 100000
     orders.forEach(o => {
         o.forEach(order => {
             if(order.tradeSide === "SELL") {
@@ -305,7 +305,7 @@ spotPrices.on("ask", e => {
     emitEquity(e.timestamp);
 })
 spotPrices.on("bid", e => {
-    bid = e.price / 100000
+    bid = e.bid / 100000
     orders.forEach(o => {
         o.forEach(order => {
             if(order.tradeSide === "BUY") {

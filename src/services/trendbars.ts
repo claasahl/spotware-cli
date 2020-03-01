@@ -78,15 +78,15 @@ function bucket(timestamp: Timestamp, period: Period): Bucket {
 function accumulateTrendbar(prev: TrendbarEvent, curr: BidPriceChangedEvent, index: number): TrendbarEvent {
     const next = {...prev}
     if(index === 0) {
-        next.open = curr.price;
+        next.open = curr.bid;
     }
-    if(prev.high < curr.price) {
-        next.high = curr.price;
+    if(prev.high < curr.bid) {
+        next.high = curr.bid;
     }
-    if(prev.low > curr.price) {
-        next.low = curr.price
+    if(prev.low > curr.bid) {
+        next.low = curr.bid
     }
-    next.close = curr.price
+    next.close = curr.bid
     return next;
 }
 

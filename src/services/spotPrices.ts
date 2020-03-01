@@ -5,11 +5,11 @@ import { Price, Timestamp, Symbol, Period } from "./types";
 import { TrendbarsStream } from "./trendbars";
 
 export interface AskPriceChangedEvent {
-    price: Price,
+    ask: Price,
     timestamp: Timestamp
 }
 export interface BidPriceChangedEvent {
-    price: Price,
+    bid: Price,
     timestamp: Timestamp
 }
 export interface PriceChangedEvent {

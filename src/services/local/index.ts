@@ -73,18 +73,22 @@ class LocalAccountStream extends DebugAccountStream {
 
     private updateBalance(timestamp: Timestamp) {
         const e: BalanceChangedEvent = { balance: this.balance, timestamp }
-        setImmediate(() => this.emitBalance(e))
+        this.emitBalance(e)
     }
     private updateEquity(timestamp: Timestamp) {
         const e: EquityChangedEvent = { equity: this.equity, timestamp }
-        setImmediate(() => this.emitEquity(e))
+        this.emitEquity(e)
     }
 }
 
 const name = "BTC/EUR"
 const symbol = Symbol.for(name)
 const account = new LocalAccountStream(Symbol.for("EUR"), 1000, "./store/samples.json");
-const spots = account.spotPrices(symbol)
-spots.on("ask", console.log);
-const order = account.order(symbol)
-order.on("end", console.log)
+setImmediate(() => {
+    const spots = account.spotPrices(symbol)
+    spots.on("ask", console.log);
+})
+setImmediate(() => {
+    const order = account.order(symbol)
+    order.on("end", console.log)
+})
