@@ -1,35 +1,117 @@
-import { promises as fs } from "fs"
 import assert from "assert"
-import { isArray } from "util"
 import { BalanceChangedEvent, EquityChangedEvent, DebugAccountStream, OrderEvent } from "../account";
-import { DebugSpotPricesStream, SpotPricesStream } from "../spotPrices";
+import { DebugSpotPricesStream, SpotPricesStream, AskPriceChangedEvent, BidPriceChangedEvent, PriceChangedEvent } from "../spotPrices";
 import { Symbol, Currency, Price, Timestamp } from "../types";
 import { OrderStream, DebugOrderStream } from "../order";
 
-function emitSpotPrices(stream: DebugSpotPricesStream, events: any[]): void {
-    events.forEach(e => {
-        setImmediate(() => {
-            if (e.timestamp && e.ask && !e.bid) {
-                stream.emitAsk({ price: e.ask, timestamp: e.timestamp })
-            } else if (e.timestamp && !e.ask && e.bid) {
-                stream.emitBid({ price: e.bid, timestamp: e.timestamp })
-            } else if (e.timestamp && e.ask && e.bid) {
-                stream.emitAsk({ price: e.ask, timestamp: e.timestamp })
-                stream.emitBid({ price: e.bid, timestamp: e.timestamp })
-                stream.emitPrice({ ask: e.ask, bid: e.bid, timestamp: e.timestamp })
-            }
-        })
-    })
+const samples: (AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent)[] = [
+    {
+        "ask": 6611.79,
+        "timestamp": 1577663999771
+    },
+    {
+        "bid": 6612.03,
+        "timestamp": 1577663999425
+    },
+    {
+        "bid": 6612.28,
+        "timestamp": 1577663999110
+    },
+    {
+        "ask": 6612.52,
+        "timestamp": 1577663998928
+    },
+    {
+        "bid": 6612.73,
+        "timestamp": 1577663998447
+    },
+    {
+        "bid": 6613.18,
+        "timestamp": 1577663998021
+    },
+    {
+        "ask": 6613.21,
+        "timestamp": 1577663997680
+    },
+    {
+        "bid": 6613.11,
+        "timestamp": 1577663997264
+    },
+    {
+        "bid": 6613.18,
+        "timestamp": 1577663997026
+    },
+    {
+        "bid": 6613.21,
+        "timestamp": 1577663996609
+    },
+    {
+        "ask": 6613.24,
+        "timestamp": 1577663995996
+    },
+    {
+        "bid": 6613.98,
+        "timestamp": 1577663995829
+    },
+    {
+        "bid": 6614.08,
+        "timestamp": 1577663995601
+    },
+    {
+        "ask": 6613,
+        "bid": 6613.91,
+        "timestamp": 1577663995198
+    },
+    {
+        "ask": 6613,
+        "bid": 6613.17,
+        "timestamp": 1577663994564
+    },
+    {
+        "ask": 6613,
+        "bid": 6613.14,
+        "timestamp": 1577663994182
+    },
+    {
+        "bid": 6613.21,
+        "timestamp": 1577663993987
+    },
+    {
+        "ask": 6612.72,
+        "timestamp": 1577663993516
+    }
+]
+function* test() {
+    for (const sample of samples) {
+        yield sample;
+    }
 }
 
-function spotPrices(path: string, symbol: Symbol): SpotPricesStream {
-    const stream = new DebugSpotPricesStream(symbol);
-    setImmediate(async () => {
-        const data = await fs.readFile(path)
-        const events = JSON.parse(data.toString())
-        if (isArray(events)) {
-            emitSpotPrices(stream, events)
+function emitSpotPrices(stream: DebugSpotPricesStream, e: AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent): void {
+    if ("ask" in e && !("bid" in e)) {
+        stream.emitAsk({ ask: e.ask, timestamp: e.timestamp })
+    } else if (!("ask" in e) && "bid" in e) {
+        stream.emitBid({ bid: e.bid, timestamp: e.timestamp })
+    } else if ("ask" in e && "bid" in e) {
+        stream.emitAsk({ ask: e.ask, timestamp: e.timestamp })
+        stream.emitBid({ bid: e.bid, timestamp: e.timestamp })
+        stream.emitPrice({ ask: e.ask, bid: e.bid, timestamp: e.timestamp })
+    }
+    setImmediate(() => stream.emit("next"))
+}
+
+function spotPrices(_path: string, symbol: Symbol): SpotPricesStream {
+    function emitNext() {
+        const a = data.next();
+        if (a.value) {
+            emitSpotPrices(stream, a.value)
         }
+    }
+    const data = test();
+    const stream = new DebugSpotPricesStream(symbol);
+    setImmediate(() => {
+        stream.on("next", emitNext)
+        emitNext()
     })
     return stream;
 }
@@ -57,7 +139,7 @@ class LocalAccountStream extends DebugAccountStream {
             throw new Error(`symbol ${symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`);
         }
         const stream = new DebugOrderStream(new Date().toISOString(), symbol)
-        const e: OrderEvent = {timestamp: Date.now()}
+        const e: OrderEvent = { timestamp: Date.now() }
         this.emitOrder(e)
         return stream;
     }
@@ -85,10 +167,8 @@ const name = "BTC/EUR"
 const symbol = Symbol.for(name)
 const account = new LocalAccountStream(Symbol.for("EUR"), 1000, "./store/samples.json");
 setImmediate(() => {
-    const spots = account.spotPrices(symbol)
-    spots.on("ask", console.log);
+    account.spotPrices(symbol)
 })
 setImmediate(() => {
-    const order = account.order(symbol)
-    order.on("end", console.log)
+    account.order(symbol)
 })
