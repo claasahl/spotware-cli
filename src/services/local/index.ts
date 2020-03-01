@@ -104,7 +104,21 @@ class LocalAccountStream extends DebugAccountStream {
         `symbol ${symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`
       );
     }
+
     const stream = new DebugOrderStream(props);
+    const prices = this.spotPrices({symbol: props.symbol})
+    if(props.tradeSide === "BUY") {
+      // entry price: last ask price
+      prices.on("bid", () => {
+        // update profit and loss
+      })
+    } else if(props.tradeSide === "SELL") {
+      // entry price: last bid price
+      prices.on("ask", () => {
+        // update profit and loss
+      })
+    }
+    
     const e: OrderEvent = { timestamp: Date.now() };
     this.emitOrder(e);
     return stream;
