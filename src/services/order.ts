@@ -1,7 +1,7 @@
 import { EventEmitter } from "events"
 import debug from "debug"
 
-import { Symbol, Timestamp } from "./types";
+import { Symbol, Timestamp, TradeSide } from "./types";
 
 export interface OrderAcceptedEvent {
     timestamp: Timestamp
@@ -16,9 +16,10 @@ export interface OrderEndEvent {
     timestamp: Timestamp
 }
 
-export interface OderProps {
+export interface OrderProps {
     readonly id: string;
     readonly symbol: Symbol;
+    readonly tradeSide: TradeSide;
 }
 
 export interface OrderActions {
@@ -60,13 +61,15 @@ export declare interface OrderStream extends EventEmitter {
     prependOnceListener(event: "end", listener: (e: OrderEndEvent) => void): this;
 }
 
-export abstract class OrderStream extends EventEmitter implements OderProps, OrderActions {
+export abstract class OrderStream extends EventEmitter implements OrderProps, OrderActions {
     readonly id: string;
     readonly symbol: Symbol;
-    constructor(id: string, symbol: Symbol) {
+    readonly tradeSide: TradeSide;
+    constructor(props: OrderProps) {
         super();
-        this.id = id;
-        this.symbol = symbol;
+        this.id = props.id;
+        this.symbol = props.symbol;
+        this.tradeSide = props.tradeSide
     }
 
     abstract close(): this;
@@ -76,8 +79,8 @@ export abstract class OrderStream extends EventEmitter implements OderProps, Ord
 }
 
 export class DebugOrderStream extends OrderStream {
-    constructor(id: string, symbol: Symbol) {
-        super(id, symbol);
+    constructor(props: OrderProps) {
+        super(props);
         const log = debug("order");
         
         const accepted = log.extend("accepted")

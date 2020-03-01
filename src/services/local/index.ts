@@ -1,5 +1,5 @@
 import assert from "assert"
-import { BalanceChangedEvent, EquityChangedEvent, DebugAccountStream, OrderEvent } from "../account";
+import { BalanceChangedEvent, EquityChangedEvent, DebugAccountStream, OrderEvent, AccountProps, SimpleOrderProps, SimpleSpotPricesProps } from "../account";
 import { DebugSpotPricesStream, SpotPricesStream, AskPriceChangedEvent, BidPriceChangedEvent, PriceChangedEvent } from "../spotPrices";
 import { Symbol, Currency, Price, Timestamp } from "../types";
 import { OrderStream, DebugOrderStream } from "../order";
@@ -46,7 +46,7 @@ function spotPrices(symbol: Symbol): SpotPricesStream {
         }
     }
     const data = test();
-    const stream = new DebugSpotPricesStream(symbol);
+    const stream = new DebugSpotPricesStream({symbol});
     setImmediate(() => {
         stream.on("next", emitNext)
         emitNext()
@@ -64,26 +64,26 @@ function includesCurrency(symbol: Symbol, currency: Currency): boolean {
 class LocalAccountStream extends DebugAccountStream {
     private balance: Price = 0;
     private equity: Price = 0;
-    constructor(currency: Currency, initialBalance: Price) {
-        super(currency);
+    constructor(props: AccountProps, initialBalance: Price) {
+        super(props);
         this.balance = initialBalance;
         this.equity = initialBalance;
         this.updateBalance(Date.now());
     }
-    order(symbol: Symbol): OrderStream {
+    order(props:  SimpleOrderProps): OrderStream {
         if (!includesCurrency(symbol, this.currency)) {
             throw new Error(`symbol ${symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`);
         }
-        const stream = new DebugOrderStream(new Date().toISOString(), symbol)
+        const stream = new DebugOrderStream(props)
         const e: OrderEvent = { timestamp: Date.now() }
         this.emitOrder(e)
         return stream;
     }
-    spotPrices(symbol: Symbol): SpotPricesStream {
-        if (!includesCurrency(symbol, this.currency)) {
+    spotPrices(props:  SimpleSpotPricesProps): SpotPricesStream {
+        if (!includesCurrency(props.symbol, this.currency)) {
             throw new Error(`symbol ${symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`);
         }
-        const stream = spotPrices(symbol);
+        const stream = spotPrices(props.symbol);
         setImmediate(() => {
             stream.on("ask", e => this.updateEquity(e.timestamp))
             stream.on("bid", e => this.updateEquity(e.timestamp))
@@ -103,10 +103,11 @@ class LocalAccountStream extends DebugAccountStream {
 
 const name = "BTC/EUR"
 const symbol = Symbol.for(name)
-const account = new LocalAccountStream(Symbol.for("EUR"), 1000);
+const currency = Symbol.for("EUR")
+const account = new LocalAccountStream({currency}, 1000);
 setImmediate(() => {
-    account.spotPrices(symbol)
+    account.spotPrices({symbol})
 })
 setImmediate(() => {
-    account.order(symbol)
+    account.order({id: "1", symbol, tradeSide: "BUY"})
 })

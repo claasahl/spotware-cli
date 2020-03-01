@@ -1,9 +1,9 @@
 import { EventEmitter } from "events";
 import debug from "debug"
 
-import { Price, Timestamp, Symbol, Currency } from "./types";
-import { OrderStream } from "./order";
-import { SpotPricesStream } from "./spotPrices";
+import { Price, Timestamp, Currency } from "./types";
+import { OrderStream, OrderProps } from "./order";
+import { SpotPricesStream, SpotPricesProps } from "./spotPrices";
 
 export interface BalanceChangedEvent {
   balance: Price
@@ -16,13 +16,14 @@ export interface EquityChangedEvent {
 export interface OrderEvent {
   timestamp: Timestamp
 }
-
+export type SimpleOrderProps =  Omit<OrderProps, keyof AccountProps>
+export type SimpleSpotPricesProps =  Omit<SpotPricesProps, keyof AccountProps>
 export interface AccountProps {
   readonly currency: Currency
 }
 export interface AccountActions {
-  order(symbol: Symbol): OrderStream;
-  spotPrices(symbol: Symbol): SpotPricesStream;
+  order(props: SimpleOrderProps ): OrderStream;
+  spotPrices(props:  SimpleSpotPricesProps): SpotPricesStream;
 }
 export declare interface AccountStream extends EventEmitter {
   addListener(event: string, listener: (...args: any[]) => void): this;
@@ -53,17 +54,17 @@ export declare interface AccountStream extends EventEmitter {
 
 export abstract class AccountStream extends EventEmitter implements AccountProps, AccountActions {
   readonly currency: Currency;
-  constructor(currency: Currency) {
+  constructor(props: AccountProps) {
     super();
-    this.currency = currency
+    this.currency = props.currency
   }
-  abstract order(symbol: Symbol): OrderStream;
-  abstract spotPrices(symbol: Symbol): SpotPricesStream;
+  abstract order(props:  SimpleOrderProps): OrderStream;
+  abstract spotPrices(props: SimpleSpotPricesProps): SpotPricesStream;
 }
 
 export class DebugAccountStream extends AccountStream {
-  constructor(currency: Currency) {
-    super(currency);
+  constructor(props: AccountProps) {
+    super(props);
     const log = debug("account")
     
     const balance = log.extend("balance")
@@ -75,10 +76,10 @@ export class DebugAccountStream extends AccountStream {
     const order = log.extend("order")
     this.prependListener("order", e => order("%j", e))
   }
-  order(_symbol: Symbol): OrderStream {
+  order(_props: SimpleOrderProps): OrderStream {
       throw new Error("not implemented")
   }
-  spotPrices(_symbol: Symbol): SpotPricesStream {
+  spotPrices(_props: SimpleSpotPricesProps): SpotPricesStream {
       throw new Error("not implemented")
   }
 

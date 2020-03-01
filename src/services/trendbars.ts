@@ -42,16 +42,16 @@ export declare interface TrendbarsStream extends EventEmitter {
 export class TrendbarsStream extends EventEmitter implements TrendbarsProps, TrendbarsActions {
     readonly symbol: Symbol;
     readonly period: Period;
-    constructor(symbol: Symbol, period: Period) {
+    constructor(props: TrendbarsProps) {
         super();
-        this.symbol = symbol;
-        this.period = period;
+        this.symbol = props.symbol;
+        this.period = props.period;
     }
 }
 
 export class DebugTrendbarsStream extends TrendbarsStream {
-    constructor(symbol: Symbol, period: Period) {
-        super(symbol, period)
+    constructor(props: TrendbarsProps) {
+        super(props)
         const log = debug("trendbars");
 
         const trendbar = log.extend("trendbar");
@@ -105,7 +105,7 @@ function toTrendbar(timestamp: Timestamp, events: BidPriceChangedEvent[]): Trend
 export function from(spotPrice: SpotPricesStream, period: Period): TrendbarsStream {
     const bucked = (timestamp: Timestamp): Bucket => bucket(timestamp, period)
     const values : BidPriceChangedEvent[] = []
-    const emitter = new TrendbarsStream(spotPrice.symbol, period);
+    const emitter = new TrendbarsStream({symbol: spotPrice.symbol, period});
     spotPrice.on("bid", e => {
         setImmediate(() => {
             values.push(e);

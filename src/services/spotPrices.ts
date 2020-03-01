@@ -1,8 +1,8 @@
 import { EventEmitter } from "events"
 import debug from "debug"
 
-import { Price, Timestamp, Symbol, Period } from "./types";
-import { TrendbarsStream } from "./trendbars";
+import { Price, Timestamp, Symbol } from "./types";
+import { TrendbarsStream, TrendbarsProps } from "./trendbars";
 
 export interface AskPriceChangedEvent {
     ask: Price,
@@ -18,12 +18,13 @@ export interface PriceChangedEvent {
     timestamp: Timestamp
 }
 
+export type SimpleTrendbarsProps = Omit<TrendbarsProps, keyof SpotPricesProps>
 export interface SpotPricesProps {
     readonly symbol: Symbol
 }
 
 export interface SpotPricesActions {
-    trendbars(period: Period): TrendbarsStream;
+    trendbars(props:  SimpleTrendbarsProps): TrendbarsStream;
 }
 
 export declare interface SpotPricesStream extends EventEmitter {
@@ -55,16 +56,16 @@ export declare interface SpotPricesStream extends EventEmitter {
 
 export abstract class SpotPricesStream extends EventEmitter implements SpotPricesProps, SpotPricesActions {
     readonly symbol: Symbol;
-    constructor(symbol: Symbol) {
+    constructor(props: SpotPricesProps) {
         super();
-        this.symbol = symbol;
+        this.symbol = props.symbol;
     }
-    abstract trendbars(period: Period): TrendbarsStream;
+    abstract trendbars(props: SimpleTrendbarsProps): TrendbarsStream;
 }
 
 export class DebugSpotPricesStream extends SpotPricesStream {
-    constructor(symbol: Symbol) {
-        super(symbol)
+    constructor(props: SpotPricesProps) {
+        super(props)
         const log = debug("spotPrices");
 
         const ask = log.extend("ask")
@@ -77,7 +78,7 @@ export class DebugSpotPricesStream extends SpotPricesStream {
         this.prependListener("price", e => price("%j", e))
     }
 
-    trendbars(_period: Period): TrendbarsStream {
+    trendbars(_props: SimpleTrendbarsProps): TrendbarsStream {
         throw new Error("not implemented");
     }
 
