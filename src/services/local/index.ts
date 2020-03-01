@@ -1,10 +1,10 @@
 import { promises as fs } from "fs"
 import assert from "assert"
 import { isArray } from "util"
-import { BalanceChangedEvent, EquityChangedEvent, DebugAccountStream } from "../account";
+import { BalanceChangedEvent, EquityChangedEvent, DebugAccountStream, OrderEvent } from "../account";
 import { DebugSpotPricesStream, SpotPricesStream } from "../spotPrices";
 import { Symbol, Currency, Price, Timestamp } from "../types";
-import { OrderStream } from "../order";
+import { OrderStream, DebugOrderStream } from "../order";
 
 function emitSpotPrices(stream: DebugSpotPricesStream, events: any[]): void {
     events.forEach(e => {
@@ -56,7 +56,10 @@ class LocalAccountStream extends DebugAccountStream {
         if (!includesCurrency(symbol, this.currency)) {
             throw new Error(`symbol ${symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`);
         }
-        throw new Error("not implemented");
+        const stream = new DebugOrderStream(new Date().toISOString(), symbol)
+        const e: OrderEvent = {timestamp: Date.now()}
+        this.emitOrder(e)
+        return stream;
     }
     spotPrices(symbol: Symbol): SpotPricesStream {
         if (!includesCurrency(symbol, this.currency)) {
@@ -80,6 +83,8 @@ class LocalAccountStream extends DebugAccountStream {
 
 const name = "BTC/EUR"
 const symbol = Symbol.for(name)
-const services = new LocalAccountStream(Symbol.for("EUR"), 1000, "./store/samples.json");
-const spots = services.spotPrices(symbol)
+const account = new LocalAccountStream(Symbol.for("EUR"), 1000, "./store/samples.json");
+const spots = account.spotPrices(symbol)
 spots.on("ask", console.log);
+const order = account.order(symbol)
+order.on("end", console.log)
