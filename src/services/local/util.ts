@@ -12,5 +12,6 @@ export function includesCurrency(symbol: Symbol, currency: Currency): boolean {
     2,
     `there should have been exactly two matches, but ${matches?.length} was/were found`
   );
+  const name = matches![1]
   return symbol.toString().includes(name);
 }
