@@ -34,6 +34,7 @@ class LocalAccountStream extends DebugAccountStream {
     this.balance = initialBalance;
     this.spots = spots;
     this.updateBalance(Date.now());
+    this.updateEquity(Date.now());
     setImmediate(() => {
       this.spots.on("ask", e => this.updateProfitLossForSellOrders(e));
       this.spots.on("bid", e => this.updateProfitLossForBuyOrders(e));
@@ -55,27 +56,41 @@ class LocalAccountStream extends DebugAccountStream {
     if (props.tradeSide === "BUY") {
       if (this.ask) {
         order.entry = this.ask;
+        if(this.bid) {
+          order.profitLoss = (this.bid - order.entry) * order.volume;
+        }
         this.orders.push(order)
         stream.emitFilled({ timestamp: Date.now() })
+        this.updateEquity(Date.now())
       } else {
         prices.once("ask", e => {
-          this.ask = e.ask;
-          order.entry = this.ask;
+          order.entry = e.ask;
+          if(this.bid) {
+            order.profitLoss = (this.bid - order.entry) * order.volume;
+          }
           this.orders.push(order)
           stream.emitFilled({ timestamp: e.timestamp })
+          this.updateEquity(e.timestamp)
         })
       }
     } else if (props.tradeSide === "SELL") {
       if (this.bid) {
         order.entry = this.bid;
+        if(this.ask) {
+          order.profitLoss = (order.entry - this.ask) * order.volume;
+        }
         this.orders.push(order)
         stream.emitFilled({ timestamp: Date.now() })
+        this.updateEquity(Date.now())
       } else {
         prices.once("bid", e => {
-          this.bid = e.bid;
-          order.entry = this.bid;
+          order.entry = e.bid;
+          if(this.ask) {
+            order.profitLoss = (order.entry - this.ask) * order.volume;
+          }
           this.orders.push(order)
           stream.emitFilled({ timestamp: e.timestamp })
+          this.updateEquity(e.timestamp)
         })
       }
     }
@@ -106,6 +121,7 @@ class LocalAccountStream extends DebugAccountStream {
   }
 
   private updateProfitLossForSellOrders(e: AskPriceChangedEvent) {
+    this.ask = e.ask;
     this.orders.forEach(order => {
       if (order.tradeSide === "SELL") {
         order.profitLoss = (order.entry - e.ask) * order.volume;
@@ -114,6 +130,7 @@ class LocalAccountStream extends DebugAccountStream {
     this.updateEquity(e.timestamp)
   }
   private updateProfitLossForBuyOrders(e: BidPriceChangedEvent) {
+    this.bid = e.bid;
     this.orders.forEach(order => {
       if (order.tradeSide === "BUY") {
         order.profitLoss = (e.bid - order.entry) * order.volume;
@@ -132,5 +149,5 @@ setImmediate(() => {
   account.spotPrices({ symbol });
 });
 setImmediate(() => {
-  account.order({ id: "1", symbol, tradeSide: "BUY", volume: 1 });
+  account.order({ id: "1", symbol, tradeSide: "SELL", volume: 1 });
 });
