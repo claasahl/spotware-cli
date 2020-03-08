@@ -47,8 +47,6 @@ AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent,
 void,
 unknown
 > {
-  const fileLog = log.extend(`${path.toString()}`)
-  fileLog("preparing to read data from file: %s", path)
   const fileStream = fs.createReadStream(path);
 
   const rl = readline.createInterface({
@@ -57,10 +55,13 @@ unknown
   });
 
   for await (const line of rl) {
-    fileLog("processing line: %s", line)
-    const data = JSON.parse(line)
-    if(isBidPriceChangedEvent(data) || isAskPriceChangedEvent(data) || isPriceChangedEvent(data)) {
-      yield data
+    try {
+      const data = JSON.parse(line)
+      if (isBidPriceChangedEvent(data) || isAskPriceChangedEvent(data) || isPriceChangedEvent(data)) {
+        yield data
+      }
+    } catch {
+      log("failed to parse line '%s' as JSON (%s)... skipping", line, path.toString())
     }
   }
 }

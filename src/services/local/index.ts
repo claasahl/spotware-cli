@@ -36,6 +36,11 @@ class LocalAccountStream extends DebugAccountStream {
 
   constructor(props: AccountProps, initialBalance: Price, spots: SpotPricesStream) {
     super(props);
+    if (!includesCurrency(spots.symbol, props.currency)) {
+      throw new Error(
+        `symbol ${symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`
+      );
+    }
     this.balance = initialBalance;
     this.equity = initialBalance;
     this.spots = spots
@@ -71,9 +76,9 @@ class LocalAccountStream extends DebugAccountStream {
     return stream;
   }
   spotPrices(props: SimpleSpotPricesProps): SpotPricesStream {
-    if (!includesCurrency(props.symbol, this.currency)) {
+    if (props.symbol !== this.spots.symbol) {
       throw new Error(
-        `symbol ${symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`
+        `spot prices for symbol ${props.symbol.toString()} cannot be provided. This account can only supply spot prices for ${this.spots.symbol.toString()}.`
       );
     }
     return this.spots
