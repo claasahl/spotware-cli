@@ -1,4 +1,10 @@
+import fs from "fs";
+import readline from 'readline';
+import debug from "debug"
+
 import { AskPriceChangedEvent, BidPriceChangedEvent, PriceChangedEvent } from "../spotPrices";
+
+const log = debug("local-data")
 
 export async function* sampleData(): AsyncGenerator<
   AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent,
@@ -23,4 +29,37 @@ export async function* sampleData(): AsyncGenerator<
   yield { ask: 6613, bid: 6613.14, timestamp: 1577663994182 };
   yield { bid: 6613.21, timestamp: 1577663993987 };
   yield { ask: 6612.72, timestamp: 1577663993516 };
+}
+
+function isBidPriceChangedEvent(data: any): data is BidPriceChangedEvent {
+  return typeof data.timestamp === "number" && typeof data.ask === "undefined" && typeof data.bid === "number"
+}
+function isAskPriceChangedEvent(data: any): data is AskPriceChangedEvent {
+  return typeof data.timestamp === "number" && typeof data.ask === "number" && typeof data.bid === "undefined"
+}
+function isPriceChangedEvent(data: any): data is PriceChangedEvent {
+  return typeof data.timestamp === "number" && typeof data.ask === "number" && typeof data.bid === "number"
+}
+
+export async function* fromFile(path: fs.PathLike): AsyncGenerator<
+AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent,
+void,
+unknown
+> {
+  const fileLog = log.extend(`${path.toString()}`)
+  fileLog("preparing to read data from file: %s", path)
+  const fileStream = fs.createReadStream(path);
+
+  const rl = readline.createInterface({
+    input: fileStream,
+    crlfDelay: Infinity
+  });
+
+  for await (const line of rl) {
+    fileLog("processing line: %s", line)
+    const data = JSON.parse(line)
+    if(isBidPriceChangedEvent(data) || isAskPriceChangedEvent(data) || isPriceChangedEvent(data)) {
+      yield data
+    }
+  }
 }

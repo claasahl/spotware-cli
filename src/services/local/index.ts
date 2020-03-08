@@ -17,7 +17,7 @@ import {
 } from "../spotPrices";
 import { Symbol, Currency, Price, Timestamp } from "../types";
 import { OrderStream, DebugOrderStream } from "../order";
-import { sampleData } from "./data";
+import { fromFile } from "./data";
 
 function emitSpotPrices(
   stream: DebugSpotPricesStream,
@@ -43,7 +43,7 @@ function spotPrices(symbol: Symbol): SpotPricesStream {
       }
     });
   }
-  const data = sampleData();
+  const data = fromFile("./store/samples.json");
   const stream = new DebugSpotPricesStream({ symbol });
   setImmediate(() => {
     stream.on("next", emitNext);
