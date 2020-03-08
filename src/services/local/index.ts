@@ -1,4 +1,3 @@
-import assert from "assert";
 import {
   BalanceChangedEvent,
   EquityChangedEvent,
@@ -11,23 +10,10 @@ import {
 import {
   SpotPricesStream
 } from "../spotPrices";
-import { Symbol, Currency, Price, Timestamp } from "../types";
+import { Price, Timestamp } from "../types";
 import { OrderStream, DebugOrderStream } from "../order";
 import { fromFile, spotPrices } from "./data";
-
-function includesCurrency(symbol: Symbol, currency: Currency): boolean {
-  const matches = currency.toString().match(/Symbol\((.*)\)/);
-  assert.ok(
-    matches,
-    `couldn't extract name of currency ${currency.toString()}`
-  );
-  assert.strictEqual(
-    matches?.length,
-    2,
-    `there should have been exactly two matches, but ${matches?.length} was/were found`
-  );
-  return symbol.toString().includes(name);
-}
+import { includesCurrency } from "./util";
 
 class LocalAccountStream extends DebugAccountStream {
   private balance: Price = 0;
