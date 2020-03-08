@@ -8,15 +8,15 @@ import {
   SimpleSpotPricesProps
 } from "../account";
 import { SpotPricesStream } from "../spotPrices";
-import { Price, Timestamp } from "../types";
+import { Price, Timestamp, Order } from "../types";
 import { OrderStream, DebugOrderStream } from "../order";
-import { fromFile, spotPrices } from "./data";
+import { spotPrices, sampleData } from "./data";
 import { includesCurrency } from "./util";
 
 class LocalAccountStream extends DebugAccountStream {
   private balance: Price = 0;
-  private equity: Price = 0;
   private spots: SpotPricesStream;
+  private orders: Order[];
 
   constructor(
     props: AccountProps,
@@ -30,12 +30,28 @@ class LocalAccountStream extends DebugAccountStream {
       );
     }
     this.balance = initialBalance;
-    this.equity = initialBalance;
     this.spots = spots;
+    this.orders=[{entry: 6611.79, symbol: Symbol.for(""), tradeSide: "BUY", profitLoss: 0, volume: 1}]
     this.updateBalance(Date.now());
     setImmediate(() => {
-      this.spots.on("ask", e => this.updateEquity(e.timestamp));
-      this.spots.on("bid", e => this.updateEquity(e.timestamp));
+      this.spots.on("ask", e => {
+        const {ask} = e;
+        this.orders.forEach(order => {
+            if (order.tradeSide === "SELL") {
+              order.profitLoss = (order.entry - ask!) * order.volume;
+            }
+          });
+          this.updateEquity(e.timestamp)
+      });
+      this.spots.on("bid", e => {
+        const {bid} = e;
+        this.orders.forEach(order => {
+            if (order.tradeSide === "BUY") {
+              order.profitLoss = (bid! - order.entry) * order.volume;
+            }
+          });
+          this.updateEquity(e.timestamp)
+      });
     });
   }
   order(props: SimpleOrderProps): OrderStream {
@@ -46,8 +62,9 @@ class LocalAccountStream extends DebugAccountStream {
     }
 
     const stream = new DebugOrderStream(props);
-    const prices = this.spotPrices({symbol: props.symbol})
-    if(props.tradeSide === "BUY") {
+    stream.on("end", () => {
+      // update balance (and equity)
+    });
     const prices = this.spotPrices({ symbol: props.symbol });
     if (props.tradeSide === "BUY") {
       // entry price: last ask price
@@ -79,7 +96,10 @@ class LocalAccountStream extends DebugAccountStream {
     this.emitBalance(e);
   }
   private updateEquity(timestamp: Timestamp) {
-    const e: EquityChangedEvent = { equity: this.equity, timestamp };
+    let profitLoss = 0;
+  this.orders.forEach(o => (profitLoss += o.profitLoss));
+  const equity = Math.round((this.balance! + profitLoss) * 100) / 100;
+    const e: EquityChangedEvent = { equity, timestamp };
     this.emitEquity(e);
   }
 }
@@ -87,8 +107,7 @@ class LocalAccountStream extends DebugAccountStream {
 const name = "BTC/EUR";
 const symbol = Symbol.for(name);
 const currency = Symbol.for("EUR");
-const data = fromFile("./store/samples.json");
-const spots = spotPrices(symbol, data);
+const spots = spotPrices(symbol, sampleData());
 const account = new LocalAccountStream({ currency }, 1000, spots);
 setImmediate(() => {
   account.spotPrices({ symbol });
