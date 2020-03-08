@@ -17,7 +17,7 @@ export class LocalAccountStream extends DebugAccountStream {
   private spots: SpotPricesStream;
   private ask: Price | null = null;
   private bid: Price | null = null;
-  private orders: Order[] = [];
+  private orders: Map<string, Order[]> = new Map();
 
   constructor(
     props: AccountProps,
@@ -46,10 +46,24 @@ export class LocalAccountStream extends DebugAccountStream {
       );
     }
 
+    if (!this.orders.has(props.id)) {
+      this.orders.set(props.id, [])
+    }
     const order: Order = { ...props, entry: 0, profitLoss: 0 }
     const stream = new DebugOrderStream(props);
-    stream.on("end", () => {
-      // update balance (and equity)
+    stream.on("end", e => {
+      const all = this.orders.get(props.id)!
+      const toBeDeleted: number[] = [];
+      all.forEach((o, index) => {
+        if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
+          this.balance += o.profitLoss;
+          toBeDeleted.push(index);
+        }
+      });
+      toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
+
+      this.updateBalance(e.timestamp);
+      this.updateEquity(e.timestamp)
     });
     const prices = this.spotPrices({ symbol: props.symbol });
     if (props.tradeSide === "BUY") {
@@ -58,7 +72,7 @@ export class LocalAccountStream extends DebugAccountStream {
         if (this.bid) {
           order.profitLoss = (this.bid - order.entry) * order.volume;
         }
-        this.orders.push(order)
+        this.orders.get(props.id)!.push(order)
         stream.emitFilled({ timestamp: Date.now() })
         this.updateEquity(Date.now())
       } else {
@@ -67,7 +81,7 @@ export class LocalAccountStream extends DebugAccountStream {
           if (this.bid) {
             order.profitLoss = (this.bid - order.entry) * order.volume;
           }
-          this.orders.push(order)
+          this.orders.get(props.id)!.push(order)
           stream.emitFilled({ timestamp: e.timestamp })
           this.updateEquity(e.timestamp)
         })
@@ -78,7 +92,7 @@ export class LocalAccountStream extends DebugAccountStream {
         if (this.ask) {
           order.profitLoss = (order.entry - this.ask) * order.volume;
         }
-        this.orders.push(order)
+        this.orders.get(props.id)!.push(order)
         stream.emitFilled({ timestamp: Date.now() })
         this.updateEquity(Date.now())
       } else {
@@ -87,7 +101,7 @@ export class LocalAccountStream extends DebugAccountStream {
           if (this.ask) {
             order.profitLoss = (order.entry - this.ask) * order.volume;
           }
-          this.orders.push(order)
+          this.orders.get(props.id)!.push(order)
           stream.emitFilled({ timestamp: e.timestamp })
           this.updateEquity(e.timestamp)
         })
@@ -113,7 +127,7 @@ export class LocalAccountStream extends DebugAccountStream {
   }
   private updateEquity(timestamp: Timestamp) {
     let profitLoss = 0;
-    this.orders.forEach(o => (profitLoss += o.profitLoss));
+    this.orders.forEach(o => o.forEach(o => (profitLoss += o.profitLoss)));
     const equity = Math.round((this.balance + profitLoss) * 100) / 100;
     const e: EquityChangedEvent = { equity, timestamp };
     this.emitEquity(e);
@@ -121,20 +135,20 @@ export class LocalAccountStream extends DebugAccountStream {
 
   private updateProfitLossForSellOrders(e: AskPriceChangedEvent) {
     this.ask = e.ask;
-    this.orders.forEach(order => {
+    this.orders.forEach(o => o.forEach(order => {
       if (order.tradeSide === "SELL") {
         order.profitLoss = (order.entry - e.ask) * order.volume;
       }
-    })
+    }))
     this.updateEquity(e.timestamp)
   }
   private updateProfitLossForBuyOrders(e: BidPriceChangedEvent) {
     this.bid = e.bid;
-    this.orders.forEach(order => {
+    this.orders.forEach(o => o.forEach(order => {
       if (order.tradeSide === "BUY") {
         order.profitLoss = (e.bid - order.entry) * order.volume;
       }
-    })
+    }))
     this.updateEquity(e.timestamp)
   }
 }
