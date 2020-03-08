@@ -10,10 +10,9 @@ import {
 import { SpotPricesStream, AskPriceChangedEvent, BidPriceChangedEvent } from "../spotPrices";
 import { Price, Timestamp, Order } from "../types";
 import { OrderStream, DebugOrderStream } from "../order";
-import { spotPrices, sampleData } from "./data";
 import { includesCurrency } from "./util";
 
-class LocalAccountStream extends DebugAccountStream {
+export class LocalAccountStream extends DebugAccountStream {
   private balance: Price = 0;
   private spots: SpotPricesStream;
   private ask: Price | null = null;
@@ -28,7 +27,7 @@ class LocalAccountStream extends DebugAccountStream {
     super(props);
     if (!includesCurrency(spots.symbol, props.currency)) {
       throw new Error(
-        `symbol ${symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`
+        `symbol ${spots.symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`
       );
     }
     this.balance = initialBalance;
@@ -41,9 +40,9 @@ class LocalAccountStream extends DebugAccountStream {
     });
   }
   order(props: SimpleOrderProps): OrderStream {
-    if (!includesCurrency(symbol, this.currency)) {
+    if (!includesCurrency(props.symbol, this.currency)) {
       throw new Error(
-        `symbol ${symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`
+        `symbol ${props.symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`
       );
     }
 
@@ -139,15 +138,3 @@ class LocalAccountStream extends DebugAccountStream {
     this.updateEquity(e.timestamp)
   }
 }
-
-const name = "BTC/EUR";
-const symbol = Symbol.for(name);
-const currency = Symbol.for("EUR");
-const spots = spotPrices(symbol, sampleData());
-const account = new LocalAccountStream({ currency }, 1000, spots);
-setImmediate(() => {
-  account.spotPrices({ symbol });
-});
-setImmediate(() => {
-  account.order({ id: "1", symbol, tradeSide: "SELL", volume: 1 });
-});

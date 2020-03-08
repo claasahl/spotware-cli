@@ -12,9 +12,9 @@
     "prestart": "npm run build",
     "start": "node -r dotenv/config ./build/insideBarMomentumStrategy.js > debug.log 2>&1",
     "refresh": "ts-node -r dotenv/config ./src/refresh.ts",
-    "dev": "ts-node -r dotenv/config ./src/services/spotware/index.ts",
+    "dev": "ts-node -r dotenv/config ./src/services/index.ts",
     "preperf": "npm run build",
-    "perf": "node --trace-event-categories=v8,async_hooks -r dotenv/config ./build/services/trendbar.js"
+    "perf": "node --trace-event-categories=v8,async_hooks -r dotenv/config ./build/services/index.js"
   },
   "repository": {
     "type": "git",
