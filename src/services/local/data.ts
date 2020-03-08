@@ -2,7 +2,8 @@ import fs from "fs";
 import readline from 'readline';
 import debug from "debug"
 
-import { AskPriceChangedEvent, BidPriceChangedEvent, PriceChangedEvent } from "../spotPrices";
+import { AskPriceChangedEvent, BidPriceChangedEvent, PriceChangedEvent, SpotPricesStream, DebugSpotPricesStream } from "../spotPrices";
+import { Symbol } from "../types";
 
 const log = debug("local-data")
 
@@ -62,4 +63,41 @@ unknown
       yield data
     }
   }
+}
+
+
+function emitSpotPrices(
+  stream: DebugSpotPricesStream,
+  e: AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent
+): void {
+  if ("ask" in e && !("bid" in e)) {
+    stream.emitAsk({ ask: e.ask, timestamp: e.timestamp });
+  } else if (!("ask" in e) && "bid" in e) {
+    stream.emitBid({ bid: e.bid, timestamp: e.timestamp });
+  } else if ("ask" in e && "bid" in e) {
+    stream.emitAsk({ ask: e.ask, timestamp: e.timestamp });
+    stream.emitBid({ bid: e.bid, timestamp: e.timestamp });
+    stream.emitPrice({ ask: e.ask, bid: e.bid, timestamp: e.timestamp });
+  }
+  setImmediate(() => stream.emit("next"));
+}
+
+export function spotPrices(symbol: Symbol, data: AsyncGenerator<
+  AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent,
+  void,
+  unknown
+  >): SpotPricesStream {
+  function emitNext() {
+    data.next().then(a => {
+      if (a.value) {
+        emitSpotPrices(stream, a.value);
+      }
+    });
+  }
+  const stream = new DebugSpotPricesStream({ symbol });
+  setImmediate(() => {
+    stream.on("next", emitNext);
+    emitNext();
+  });
+  return stream;
 }

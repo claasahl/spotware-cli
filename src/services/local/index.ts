@@ -9,48 +9,11 @@ import {
   SimpleSpotPricesProps
 } from "../account";
 import {
-  DebugSpotPricesStream,
-  SpotPricesStream,
-  AskPriceChangedEvent,
-  BidPriceChangedEvent,
-  PriceChangedEvent
+  SpotPricesStream
 } from "../spotPrices";
 import { Symbol, Currency, Price, Timestamp } from "../types";
 import { OrderStream, DebugOrderStream } from "../order";
-import { fromFile } from "./data";
-
-function emitSpotPrices(
-  stream: DebugSpotPricesStream,
-  e: AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent
-): void {
-  if ("ask" in e && !("bid" in e)) {
-    stream.emitAsk({ ask: e.ask, timestamp: e.timestamp });
-  } else if (!("ask" in e) && "bid" in e) {
-    stream.emitBid({ bid: e.bid, timestamp: e.timestamp });
-  } else if ("ask" in e && "bid" in e) {
-    stream.emitAsk({ ask: e.ask, timestamp: e.timestamp });
-    stream.emitBid({ bid: e.bid, timestamp: e.timestamp });
-    stream.emitPrice({ ask: e.ask, bid: e.bid, timestamp: e.timestamp });
-  }
-  setImmediate(() => stream.emit("next"));
-}
-
-function spotPrices(symbol: Symbol): SpotPricesStream {
-  function emitNext() {
-    data.next().then(a => {
-      if (a.value) {
-        emitSpotPrices(stream, a.value);
-      }
-    });
-  }
-  const data = fromFile("./store/samples.json");
-  const stream = new DebugSpotPricesStream({ symbol });
-  setImmediate(() => {
-    stream.on("next", emitNext);
-    emitNext();
-  });
-  return stream;
-}
+import { fromFile, spotPrices } from "./data";
 
 function includesCurrency(symbol: Symbol, currency: Currency): boolean {
   const matches = currency.toString().match(/Symbol\((.*)\)/);
@@ -69,11 +32,18 @@ function includesCurrency(symbol: Symbol, currency: Currency): boolean {
 class LocalAccountStream extends DebugAccountStream {
   private balance: Price = 0;
   private equity: Price = 0;
-  constructor(props: AccountProps, initialBalance: Price) {
+  private spots: SpotPricesStream;
+
+  constructor(props: AccountProps, initialBalance: Price, spots: SpotPricesStream) {
     super(props);
     this.balance = initialBalance;
     this.equity = initialBalance;
+    this.spots = spots
     this.updateBalance(Date.now());
+    setImmediate(() => {
+      this.spots.on("ask", e => this.updateEquity(e.timestamp));
+      this.spots.on("bid", e => this.updateEquity(e.timestamp));
+    });
   }
   order(props: SimpleOrderProps): OrderStream {
     if (!includesCurrency(symbol, this.currency)) {
@@ -106,12 +76,7 @@ class LocalAccountStream extends DebugAccountStream {
         `symbol ${symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`
       );
     }
-    const stream = spotPrices(props.symbol);
-    setImmediate(() => {
-      stream.on("ask", e => this.updateEquity(e.timestamp));
-      stream.on("bid", e => this.updateEquity(e.timestamp));
-    });
-    return stream;
+    return this.spots
   }
 
   private updateBalance(timestamp: Timestamp) {
@@ -127,7 +92,9 @@ class LocalAccountStream extends DebugAccountStream {
 const name = "BTC/EUR";
 const symbol = Symbol.for(name);
 const currency = Symbol.for("EUR");
-const account = new LocalAccountStream({ currency }, 1000);
+const data = fromFile("./store/samples.json")
+const spots = spotPrices(symbol, data)
+const account = new LocalAccountStream({ currency }, 1000, spots);
 setImmediate(() => {
   account.spotPrices({ symbol });
 });
