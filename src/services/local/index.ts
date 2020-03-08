@@ -7,9 +7,7 @@ import {
   SimpleOrderProps,
   SimpleSpotPricesProps
 } from "../account";
-import {
-  SpotPricesStream
-} from "../spotPrices";
+import { SpotPricesStream } from "../spotPrices";
 import { Price, Timestamp } from "../types";
 import { OrderStream, DebugOrderStream } from "../order";
 import { fromFile, spotPrices } from "./data";
@@ -20,7 +18,11 @@ class LocalAccountStream extends DebugAccountStream {
   private equity: Price = 0;
   private spots: SpotPricesStream;
 
-  constructor(props: AccountProps, initialBalance: Price, spots: SpotPricesStream) {
+  constructor(
+    props: AccountProps,
+    initialBalance: Price,
+    spots: SpotPricesStream
+  ) {
     super(props);
     if (!includesCurrency(spots.symbol, props.currency)) {
       throw new Error(
@@ -29,7 +31,7 @@ class LocalAccountStream extends DebugAccountStream {
     }
     this.balance = initialBalance;
     this.equity = initialBalance;
-    this.spots = spots
+    this.spots = spots;
     this.updateBalance(Date.now());
     setImmediate(() => {
       this.spots.on("ask", e => this.updateEquity(e.timestamp));
@@ -46,17 +48,19 @@ class LocalAccountStream extends DebugAccountStream {
     const stream = new DebugOrderStream(props);
     const prices = this.spotPrices({symbol: props.symbol})
     if(props.tradeSide === "BUY") {
+    const prices = this.spotPrices({ symbol: props.symbol });
+    if (props.tradeSide === "BUY") {
       // entry price: last ask price
       prices.on("bid", () => {
         // update profit and loss
-      })
-    } else if(props.tradeSide === "SELL") {
+      });
+    } else if (props.tradeSide === "SELL") {
       // entry price: last bid price
       prices.on("ask", () => {
         // update profit and loss
-      })
+      });
     }
-    
+
     const e: OrderEvent = { timestamp: Date.now() };
     this.emitOrder(e);
     return stream;
@@ -67,7 +71,7 @@ class LocalAccountStream extends DebugAccountStream {
         `spot prices for symbol ${props.symbol.toString()} cannot be provided. This account can only supply spot prices for ${this.spots.symbol.toString()}.`
       );
     }
-    return this.spots
+    return this.spots;
   }
 
   private updateBalance(timestamp: Timestamp) {
@@ -83,8 +87,8 @@ class LocalAccountStream extends DebugAccountStream {
 const name = "BTC/EUR";
 const symbol = Symbol.for(name);
 const currency = Symbol.for("EUR");
-const data = fromFile("./store/samples.json")
-const spots = spotPrices(symbol, data)
+const data = fromFile("./store/samples.json");
+const spots = spotPrices(symbol, data);
 const account = new LocalAccountStream({ currency }, 1000, spots);
 setImmediate(() => {
   account.spotPrices({ symbol });

@@ -1,11 +1,17 @@
 import fs from "fs";
-import readline from 'readline';
-import debug from "debug"
+import readline from "readline";
+import debug from "debug";
 
-import { AskPriceChangedEvent, BidPriceChangedEvent, PriceChangedEvent, SpotPricesStream, DebugSpotPricesStream } from "../spotPrices";
+import {
+  AskPriceChangedEvent,
+  BidPriceChangedEvent,
+  PriceChangedEvent,
+  SpotPricesStream,
+  DebugSpotPricesStream
+} from "../spotPrices";
 import { Symbol } from "../types";
 
-const log = debug("local-data")
+const log = debug("local-data");
 
 export async function* sampleData(): AsyncGenerator<
   AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent,
@@ -33,19 +39,33 @@ export async function* sampleData(): AsyncGenerator<
 }
 
 function isBidPriceChangedEvent(data: any): data is BidPriceChangedEvent {
-  return typeof data.timestamp === "number" && typeof data.ask === "undefined" && typeof data.bid === "number"
+  return (
+    typeof data.timestamp === "number" &&
+    typeof data.ask === "undefined" &&
+    typeof data.bid === "number"
+  );
 }
 function isAskPriceChangedEvent(data: any): data is AskPriceChangedEvent {
-  return typeof data.timestamp === "number" && typeof data.ask === "number" && typeof data.bid === "undefined"
+  return (
+    typeof data.timestamp === "number" &&
+    typeof data.ask === "number" &&
+    typeof data.bid === "undefined"
+  );
 }
 function isPriceChangedEvent(data: any): data is PriceChangedEvent {
-  return typeof data.timestamp === "number" && typeof data.ask === "number" && typeof data.bid === "number"
+  return (
+    typeof data.timestamp === "number" &&
+    typeof data.ask === "number" &&
+    typeof data.bid === "number"
+  );
 }
 
-export async function* fromFile(path: fs.PathLike): AsyncGenerator<
-AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent,
-void,
-unknown
+export async function* fromFile(
+  path: fs.PathLike
+): AsyncGenerator<
+  AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent,
+  void,
+  unknown
 > {
   const fileStream = fs.createReadStream(path);
 
@@ -56,16 +76,23 @@ unknown
 
   for await (const line of rl) {
     try {
-      const data = JSON.parse(line)
-      if (isBidPriceChangedEvent(data) || isAskPriceChangedEvent(data) || isPriceChangedEvent(data)) {
-        yield data
+      const data = JSON.parse(line);
+      if (
+        isBidPriceChangedEvent(data) ||
+        isAskPriceChangedEvent(data) ||
+        isPriceChangedEvent(data)
+      ) {
+        yield data;
       }
     } catch {
-      log("failed to parse line '%s' as JSON (%s)... skipping", line, path.toString())
+      log(
+        "failed to parse line '%s' as JSON (%s)... skipping",
+        line,
+        path.toString()
+      );
     }
   }
 }
-
 
 function emitSpotPrices(
   stream: DebugSpotPricesStream,
@@ -83,11 +110,14 @@ function emitSpotPrices(
   setImmediate(() => stream.emit("next"));
 }
 
-export function spotPrices(symbol: Symbol, data: AsyncGenerator<
-  AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent,
-  void,
-  unknown
-  >): SpotPricesStream {
+export function spotPrices(
+  symbol: Symbol,
+  data: AsyncGenerator<
+    AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent,
+    void,
+    unknown
+  >
+): SpotPricesStream {
   function emitNext() {
     data.next().then(a => {
       if (a.value) {
