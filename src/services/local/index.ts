@@ -56,7 +56,7 @@ class LocalAccountStream extends DebugAccountStream {
     if (props.tradeSide === "BUY") {
       if (this.ask) {
         order.entry = this.ask;
-        if(this.bid) {
+        if (this.bid) {
           order.profitLoss = (this.bid - order.entry) * order.volume;
         }
         this.orders.push(order)
@@ -65,7 +65,7 @@ class LocalAccountStream extends DebugAccountStream {
       } else {
         prices.once("ask", e => {
           order.entry = e.ask;
-          if(this.bid) {
+          if (this.bid) {
             order.profitLoss = (this.bid - order.entry) * order.volume;
           }
           this.orders.push(order)
@@ -76,7 +76,7 @@ class LocalAccountStream extends DebugAccountStream {
     } else if (props.tradeSide === "SELL") {
       if (this.bid) {
         order.entry = this.bid;
-        if(this.ask) {
+        if (this.ask) {
           order.profitLoss = (order.entry - this.ask) * order.volume;
         }
         this.orders.push(order)
@@ -85,7 +85,7 @@ class LocalAccountStream extends DebugAccountStream {
       } else {
         prices.once("bid", e => {
           order.entry = e.bid;
-          if(this.ask) {
+          if (this.ask) {
             order.profitLoss = (order.entry - this.ask) * order.volume;
           }
           this.orders.push(order)
