@@ -1,6 +1,6 @@
 import { AskPriceChangedEvent, BidPriceChangedEvent, PriceChangedEvent } from "../spotPrices";
 
-export function* sampleData(): Generator<
+export async function* sampleData(): AsyncGenerator<
   AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent,
   void,
   unknown

@@ -37,10 +37,11 @@ function emitSpotPrices(
 
 function spotPrices(symbol: Symbol): SpotPricesStream {
   function emitNext() {
-    const a = data.next();
-    if (a.value) {
-      emitSpotPrices(stream, a.value);
-    }
+    data.next().then(a => {
+      if (a.value) {
+        emitSpotPrices(stream, a.value);
+      }
+    });
   }
   const data = sampleData();
   const stream = new DebugSpotPricesStream({ symbol });
