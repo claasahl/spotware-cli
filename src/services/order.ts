@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import debug from "debug";
 
-import { Symbol, Timestamp, TradeSide } from "./types";
+import { Symbol, Timestamp, TradeSide, Volume } from "./types";
 
 export interface OrderAcceptedEvent {
   timestamp: Timestamp;
@@ -20,6 +20,7 @@ export interface OrderProps {
   readonly id: string;
   readonly symbol: Symbol;
   readonly tradeSide: TradeSide;
+  readonly volume: Volume;
 }
 
 export interface OrderActions {
@@ -66,11 +67,13 @@ export abstract class OrderStream extends EventEmitter
   readonly id: string;
   readonly symbol: Symbol;
   readonly tradeSide: TradeSide;
+  readonly volume: Volume;
   constructor(props: OrderProps) {
     super();
     this.id = props.id;
     this.symbol = props.symbol;
     this.tradeSide = props.tradeSide;
+    this.volume = props.volume;
   }
 
   abstract close(): this;

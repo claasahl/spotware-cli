@@ -16,6 +16,8 @@ import { includesCurrency } from "./util";
 class LocalAccountStream extends DebugAccountStream {
   private balance: Price = 0;
   private spots: SpotPricesStream;
+  private ask: Price | null = null;
+  private bid: Price | null = null;
   private orders: Order[];
 
   constructor(
@@ -35,22 +37,20 @@ class LocalAccountStream extends DebugAccountStream {
     this.updateBalance(Date.now());
     setImmediate(() => {
       this.spots.on("ask", e => {
-        const {ask} = e;
         this.orders.forEach(order => {
-            if (order.tradeSide === "SELL") {
-              order.profitLoss = (order.entry - ask!) * order.volume;
-            }
-          });
-          this.updateEquity(e.timestamp)
+          if(order.tradeSide === "SELL") {
+            order.profitLoss = (order.entry - e.ask) * order.volume;
+          }
+        })
+        this.updateEquity(e.timestamp)
       });
       this.spots.on("bid", e => {
-        const {bid} = e;
         this.orders.forEach(order => {
-            if (order.tradeSide === "BUY") {
-              order.profitLoss = (bid! - order.entry) * order.volume;
-            }
-          });
-          this.updateEquity(e.timestamp)
+          if(order.tradeSide === "BUY") {
+            order.profitLoss = (e.bid - order.entry) * order.volume;
+          }
+        })
+        this.updateEquity(e.timestamp)
       });
     });
   }
@@ -61,21 +61,38 @@ class LocalAccountStream extends DebugAccountStream {
       );
     }
 
+    const order: Order = {...props, entry: 0, profitLoss: 0}
     const stream = new DebugOrderStream(props);
     stream.on("end", () => {
       // update balance (and equity)
     });
     const prices = this.spotPrices({ symbol: props.symbol });
     if (props.tradeSide === "BUY") {
-      // entry price: last ask price
-      prices.on("bid", () => {
-        // update profit and loss
-      });
+      if(this.ask) {
+        order.entry = this.ask;
+        this.orders.push(order)
+        stream.emitFilled({timestamp: Date.now()})
+      } else {
+        prices.once("ask", e=> {
+          this.ask = e.ask;
+          order.entry = this.ask;
+          this.orders.push(order)
+          stream.emitFilled({timestamp: e.timestamp})
+        })
+      }
     } else if (props.tradeSide === "SELL") {
-      // entry price: last bid price
-      prices.on("ask", () => {
-        // update profit and loss
-      });
+      if(this.bid) {
+        order.entry = this.bid;
+        this.orders.push(order)
+        stream.emitFilled({timestamp: Date.now()})
+      } else {
+        prices.once("bid", e=> {
+          this.bid = e.bid;
+          order.entry = this.bid;
+          this.orders.push(order)
+          stream.emitFilled({timestamp: e.timestamp})
+        })
+      }
     }
 
     const e: OrderEvent = { timestamp: Date.now() };
@@ -113,5 +130,5 @@ setImmediate(() => {
   account.spotPrices({ symbol });
 });
 setImmediate(() => {
-  account.order({ id: "1", symbol, tradeSide: "BUY" });
+  account.order({ id: "1", symbol, tradeSide: "BUY", volume: 1 });
 });
