@@ -1,6 +1,6 @@
 import * as Account from "./account";
 import * as Spots from "./spotPrices";
-import { sampleData, spotPrices } from "./local/data";
+import { sampleData, spotPrices } from "./local/spotPrices";
 import { LocalAccountStream } from "./local";
 
 export default {
