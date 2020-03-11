@@ -12,6 +12,10 @@ import { Price, Timestamp, Order } from "../types";
 import { OrderStream, DebugOrderStream } from "../order";
 import { includesCurrency } from "./util";
 
+export interface LocalAccountProps extends AccountProps {
+  balance: Price,
+  spots: SpotPricesStream
+}
 export class LocalAccountStream extends DebugAccountStream {
   private balance: Price = 0;
   private spots: SpotPricesStream;
@@ -19,19 +23,15 @@ export class LocalAccountStream extends DebugAccountStream {
   private bid: Price | null = null;
   private orders: Map<string, Order[]> = new Map();
 
-  constructor(
-    props: AccountProps,
-    initialBalance: Price,
-    spots: SpotPricesStream
-  ) {
+  constructor(    props: LocalAccountProps  ) {
     super(props);
-    if (!includesCurrency(spots.symbol, props.currency)) {
+    if (!includesCurrency(props.spots.symbol, props.currency)) {
       throw new Error(
-        `symbol ${spots.symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`
+        `symbol ${props.spots.symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`
       );
     }
-    this.balance = initialBalance;
-    this.spots = spots;
+    this.balance = props.balance;
+    this.spots = props.spots;
     this.updateBalance(Date.now());
     this.updateEquity(Date.now());
     setImmediate(() => {
@@ -40,6 +40,7 @@ export class LocalAccountStream extends DebugAccountStream {
     });
   }
   order(props: SimpleOrderProps): OrderStream {
+    // refactor!
     if (!includesCurrency(props.symbol, this.currency)) {
       throw new Error(
         `symbol ${props.symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`

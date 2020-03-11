@@ -14,12 +14,14 @@ export default {
 
 // Each service should have a Base implementation and at least a Debug imlementation (which allows emitting of all service-owned events)
 
+// each service should export a class that extends (and completes) its base implementation
+
 function local() {
   const name = "BTC/EUR";
   const symbol = Symbol.for(name);
   const currency = Symbol.for("EUR");
   const spots = spotPrices(symbol, sampleData());
-  const account = new LocalAccountStream({ currency }, 1000, spots);
+  const account = new LocalAccountStream({ currency, balance: 1000, spots });
   setImmediate(() => {
     account.spotPrices({ symbol });
   });
