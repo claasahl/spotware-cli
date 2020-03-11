@@ -6,14 +6,13 @@ import {
   AskPriceChangedEvent,
   BidPriceChangedEvent,
   PriceChangedEvent,
-  SpotPricesStream,
-  DebugSpotPricesStream
+  DebugSpotPricesStream,
+  SpotPricesProps
 } from "../spotPrices";
-import { Symbol } from "../types";
 
 const log = debug("local-data");
 
-export async function* sampleData(): AsyncGenerator<
+async function* sampleData(): AsyncGenerator<
   AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent,
   void,
   unknown
@@ -60,7 +59,7 @@ function isPriceChangedEvent(data: any): data is PriceChangedEvent {
   );
 }
 
-export async function* fromFile(
+async function* fromFile(
   path: fs.PathLike
 ): AsyncGenerator<
   AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent,
@@ -110,25 +109,24 @@ function emitSpotPrices(
   setImmediate(() => stream.emit("next"));
 }
 
-export function spotPrices(
-  symbol: Symbol,
-  data: AsyncGenerator<
-    AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent,
-    void,
-    unknown
-  >
-): SpotPricesStream {
-  function emitNext() {
-    data.next().then(a => {
-      if (a.value) {
-        emitSpotPrices(stream, a.value);
-      }
-    });
+export interface LocalSpotPriceProps extends SpotPricesProps {
+  path?: fs.PathLike
+}
+
+export class LocalSpotPricesStream extends DebugSpotPricesStream {
+  constructor(props: LocalSpotPriceProps) {
+    super(props);
+    const emitNext = () => {
+      data.next().then(a => {
+        if (a.value) {
+          emitSpotPrices(this, a.value);
+        }
+      });
+    }
+    const data = props.path ? fromFile(props.path) : sampleData();
+    setImmediate(() => {
+      this.on("next", emitNext)
+      emitNext();
+    })
   }
-  const stream = new DebugSpotPricesStream({ symbol });
-  setImmediate(() => {
-    stream.on("next", emitNext);
-    emitNext();
-  });
-  return stream;
 }

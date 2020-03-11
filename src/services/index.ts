@@ -1,6 +1,6 @@
 import * as Account from "./account";
 import * as Spots from "./spotPrices";
-import { sampleData, spotPrices } from "./local/spotPrices";
+import { LocalSpotPricesStream } from "./local/spotPrices";
 import { LocalAccountStream } from "./local";
 
 export default {
@@ -20,13 +20,13 @@ function local() {
   const name = "BTC/EUR";
   const symbol = Symbol.for(name);
   const currency = Symbol.for("EUR");
-  const spots = spotPrices(symbol, sampleData());
+  const spots = new LocalSpotPricesStream({ symbol })
   const account = new LocalAccountStream({ currency, balance: 1000, spots });
   setImmediate(() => {
     account.spotPrices({ symbol });
   });
   setImmediate(() => {
-    account.order({ id: "1", symbol, tradeSide: "SELL", volume: 1 });
+    account.order({ id: "1", symbol, tradeSide: "BUY", volume: 1 });
   });
 }
 local();
