@@ -44,22 +44,50 @@ export declare interface SpotPricesStream extends EventEmitter {
   once(event: "price", listener: (e: PriceChangedEvent) => void): this;
 
   prependListener(event: string, listener: (...args: any[]) => void): this;
-    prependListener(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
-    prependListener(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
-    prependListener(event: "price", listener: (e: PriceChangedEvent) => void): this;
+  prependListener(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
+  prependListener(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
+  prependListener(event: "price", listener: (e: PriceChangedEvent) => void): this;
 
   prependOnceListener(event: string, listener: (...args: any[]) => void): this;
-    prependOnceListener(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
-    prependOnceListener(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
-    prependOnceListener(event: "price", listener: (e: PriceChangedEvent) => void): this;
+  prependOnceListener(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
+  prependOnceListener(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
+  prependOnceListener(event: "price", listener: (e: PriceChangedEvent) => void): this;
 }
 
 export abstract class SpotPricesStream extends EventEmitter
   implements SpotPricesProps, SpotPricesActions {
   readonly symbol: Symbol;
+  private cachedAskPrice?: Price;
+  private cachedBidPrice?: Price;
   constructor(props: SpotPricesProps) {
     super();
     this.symbol = props.symbol;
+    this.on("ask", e => this.cachedAskPrice = e.ask)
+    this.on("bid", e => this.cachedBidPrice = e.bid)
+  }
+  get askSync(): Price | undefined {
+    return this.cachedAskPrice;
+  }
+  get bidSync(): Price | undefined {
+    return this.cachedBidPrice;
+  }
+  get ask(): Promise<Price> {
+    if (this.cachedAskPrice) {
+      return Promise.resolve(this.cachedAskPrice)
+    } else {
+      return new Promise((resolve, _reject) => {
+        this.once("ask", e => resolve(e.ask))
+      })
+    }
+  }
+  get bid(): Promise<Price> {
+    if (this.cachedBidPrice) {
+      return Promise.resolve(this.cachedBidPrice)
+    } else {
+      return new Promise((resolve, _reject) => {
+        this.once("bid", e => resolve(e.bid))
+      })
+    }
   }
   abstract trendbars(props: SimpleTrendbarsProps): TrendbarsStream;
 }
