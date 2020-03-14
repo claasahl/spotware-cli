@@ -72,7 +72,7 @@ export class LocalAccountStream extends DebugAccountStream {
           order.profitLoss = (spots.bidSync - order.entry) * order.volume;
         }
         this.orders.get(props.id)!.push(order)
-        stream.emitFilled({ timestamp: Date.now() })
+        stream.emitFilled({ timestamp: Date.now(), entry: order.entry })
         this.updateEquity(Date.now())
       } else {
         spots.once("ask", e => {
@@ -81,7 +81,7 @@ export class LocalAccountStream extends DebugAccountStream {
             order.profitLoss = (spots.bidSync - order.entry) * order.volume;
           }
           this.orders.get(props.id)!.push(order)
-          stream.emitFilled({ timestamp: e.timestamp })
+          stream.emitFilled({ timestamp: e.timestamp, entry: order.entry })
           this.updateEquity(e.timestamp)
         })
       }
@@ -92,7 +92,7 @@ export class LocalAccountStream extends DebugAccountStream {
           order.profitLoss = (order.entry - spots.askSync) * order.volume;
         }
         this.orders.get(props.id)!.push(order)
-        stream.emitFilled({ timestamp: Date.now() })
+        stream.emitFilled({ timestamp: Date.now(), entry: order.entry })
         this.updateEquity(Date.now())
       } else {
         spots.once("bid", e => {
@@ -101,7 +101,7 @@ export class LocalAccountStream extends DebugAccountStream {
             order.profitLoss = (order.entry - spots.askSync) * order.volume;
           }
           this.orders.get(props.id)!.push(order)
-          stream.emitFilled({ timestamp: e.timestamp })
+          stream.emitFilled({ timestamp: e.timestamp, entry: order.entry })
           this.updateEquity(e.timestamp)
         })
       }

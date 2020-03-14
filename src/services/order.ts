@@ -1,19 +1,24 @@
 import { EventEmitter } from "events";
 import debug from "debug";
 
-import { Symbol, Timestamp, TradeSide, Volume } from "./types";
+import { Symbol, Timestamp, TradeSide, Volume, Price } from "./types";
 
 export interface OrderAcceptedEvent {
   timestamp: Timestamp;
 }
 export interface OrderFilledEvent {
   timestamp: Timestamp;
+  entry: Price;
 }
 export interface OrderClosedEvent {
   timestamp: Timestamp;
+  exit: Price;
+  profitLoss: Price;
 }
 export interface OrderEndEvent {
   timestamp: Timestamp;
+  exit?: Price;
+  profitLoss?: Price;
 }
 
 export interface OrderProps {
