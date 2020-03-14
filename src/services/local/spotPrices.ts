@@ -38,28 +38,6 @@ async function* sampleData(): AsyncGenerator<
   yield { ask: 6612.72, timestamp: 1577663993516 };
 }
 
-function isBidPriceChangedEvent(data: any): data is BidPriceChangedEvent {
-  return (
-    typeof data.timestamp === "number" &&
-    typeof data.ask === "undefined" &&
-    typeof data.bid === "number"
-  );
-}
-function isAskPriceChangedEvent(data: any): data is AskPriceChangedEvent {
-  return (
-    typeof data.timestamp === "number" &&
-    typeof data.ask === "number" &&
-    typeof data.bid === "undefined"
-  );
-}
-function isPriceChangedEvent(data: any): data is PriceChangedEvent {
-  return (
-    typeof data.timestamp === "number" &&
-    typeof data.ask === "number" &&
-    typeof data.bid === "number"
-  );
-}
-
 async function* fr0mFile(
   path: fs.PathLike
 ): AsyncGenerator<
@@ -77,11 +55,7 @@ async function* fr0mFile(
   for await (const line of rl) {
     try {
       const data = JSON.parse(line);
-      if (
-        isBidPriceChangedEvent(data) ||
-        isAskPriceChangedEvent(data) ||
-        isPriceChangedEvent(data)
-      ) {
+      if (typeof data === "object") {
         yield data;
       }
     } catch {
@@ -110,28 +84,6 @@ function emitSpotPrices(
   setImmediate(() => stream.emit("next"));
 }
 
-export interface LocalSpotPriceProps extends SpotPricesProps {
-  path: fs.PathLike
-}
-
-export class LocalSpotPricesStream extends DebugSpotPricesStream {
-  constructor(props: LocalSpotPriceProps) {
-    super(props);
-    const emitNext = () => {
-      data.next().then(a => {
-        if (a.value) {
-          emitSpotPrices(this, a.value);
-        }
-      });
-    }
-    const data = props.path ? fr0mFile(props.path) : sampleData();
-    setImmediate(() => {
-      this.on("next", emitNext)
-      emitNext();
-    })
-  }
-}
-
 export function fromSampleData(props: SpotPricesProps): SpotPricesStream {
   const data = sampleData();
   const stream = new DebugSpotPricesStream(props);
@@ -149,7 +101,7 @@ export function fromSampleData(props: SpotPricesProps): SpotPricesStream {
   return stream;
 }
 
-export function fromFile(props: LocalSpotPriceProps): SpotPricesStream {
+export function fromFile(props: SpotPricesProps & {path: fs.PathLike}): SpotPricesStream {
   const data = fr0mFile(props.path);
   const stream = new DebugSpotPricesStream(props);
   const emitNext = () => {
