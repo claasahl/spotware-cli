@@ -65,12 +65,6 @@ export abstract class SpotPricesStream extends EventEmitter
     this.on("ask", e => this.cachedAskPrice = e.ask)
     this.on("bid", e => this.cachedBidPrice = e.bid)
   }
-  get askSync(): Price | undefined {
-    return this.cachedAskPrice;
-  }
-  get bidSync(): Price | undefined {
-    return this.cachedBidPrice;
-  }
   get ask(): Promise<Price> {
     if (this.cachedAskPrice) {
       return Promise.resolve(this.cachedAskPrice)
