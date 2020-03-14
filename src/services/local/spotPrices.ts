@@ -7,7 +7,8 @@ import {
   BidPriceChangedEvent,
   PriceChangedEvent,
   DebugSpotPricesStream,
-  SpotPricesProps
+  SpotPricesProps,
+  SpotPricesStream
 } from "../spotPrices";
 
 const log = debug("local-data");
@@ -59,7 +60,7 @@ function isPriceChangedEvent(data: any): data is PriceChangedEvent {
   );
 }
 
-async function* fromFile(
+async function* fr0mFile(
   path: fs.PathLike
 ): AsyncGenerator<
   AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent,
@@ -110,7 +111,7 @@ function emitSpotPrices(
 }
 
 export interface LocalSpotPriceProps extends SpotPricesProps {
-  path?: fs.PathLike
+  path: fs.PathLike
 }
 
 export class LocalSpotPricesStream extends DebugSpotPricesStream {
@@ -123,10 +124,44 @@ export class LocalSpotPricesStream extends DebugSpotPricesStream {
         }
       });
     }
-    const data = props.path ? fromFile(props.path) : sampleData();
+    const data = props.path ? fr0mFile(props.path) : sampleData();
     setImmediate(() => {
       this.on("next", emitNext)
       emitNext();
     })
   }
+}
+
+export function fromSampleData(props: SpotPricesProps): SpotPricesStream {
+  const data = sampleData();
+  const stream = new DebugSpotPricesStream(props);
+  const emitNext = () => {
+    data.next().then(a => {
+      if (a.value) {
+        emitSpotPrices(stream, a.value);
+      }
+    });
+  }
+  setImmediate(() => {
+    stream.on("next", emitNext)
+    emitNext();
+  })
+  return stream;
+}
+
+export function fromFile(props: LocalSpotPriceProps): SpotPricesStream {
+  const data = fr0mFile(props.path);
+  const stream = new DebugSpotPricesStream(props);
+  const emitNext = () => {
+    data.next().then(a => {
+      if (a.value) {
+        emitSpotPrices(stream, a.value);
+      }
+    });
+  }
+  setImmediate(() => {
+    stream.on("next", emitNext)
+    emitNext();
+  })
+  return stream;
 }
