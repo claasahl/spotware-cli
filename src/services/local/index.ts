@@ -66,45 +66,27 @@ export class LocalAccountStream extends DebugAccountStream {
     });
     const spots = this.spotPrices({ symbol: props.symbol });
     if (props.tradeSide === "BUY") {
-      if (spots.askSync) {
-        order.entry = spots.askSync;
-        if (spots.bidSync) {
-          order.profitLoss = (spots.bidSync - order.entry) * order.volume;
-        }
+      spots.ask.then(ask => {
+        order.entry = ask;
         this.orders.get(props.id)!.push(order)
         stream.emitFilled({ timestamp: Date.now(), entry: order.entry })
-        this.updateEquity(Date.now())
-      } else {
-        spots.once("ask", e => {
-          order.entry = e.ask;
-          if (spots.bidSync) {
-            order.profitLoss = (spots.bidSync - order.entry) * order.volume;
-          }
-          this.orders.get(props.id)!.push(order)
-          stream.emitFilled({ timestamp: e.timestamp, entry: order.entry })
-          this.updateEquity(e.timestamp)
+
+        spots.bid.then(bid => {
+          order.profitLoss = (bid - order.entry) * order.volume;
+          this.updateEquity(Date.now())
         })
-      }
+      })
     } else if (props.tradeSide === "SELL") {
-      if (spots.bidSync) {
-        order.entry = spots.bidSync;
-        if (spots.askSync) {
-          order.profitLoss = (order.entry - spots.askSync) * order.volume;
-        }
+      spots.bid.then(bid => {
+        order.entry = bid;
         this.orders.get(props.id)!.push(order)
         stream.emitFilled({ timestamp: Date.now(), entry: order.entry })
-        this.updateEquity(Date.now())
-      } else {
-        spots.once("bid", e => {
-          order.entry = e.bid;
-          if (spots.askSync) {
-            order.profitLoss = (order.entry - spots.askSync) * order.volume;
-          }
-          this.orders.get(props.id)!.push(order)
-          stream.emitFilled({ timestamp: e.timestamp, entry: order.entry })
-          this.updateEquity(e.timestamp)
+
+        spots.ask.then(ask => {
+          order.profitLoss = (order.entry - ask) * order.volume;
+          this.updateEquity(Date.now())
         })
-      }
+      })
     }
 
     const e: OrderEvent = { timestamp: Date.now() };
