@@ -64,21 +64,21 @@ export class LocalAccountStream extends DebugAccountStream {
       this.updateBalance(e.timestamp);
       this.updateEquity(e.timestamp)
     });
-    const prices = this.spotPrices({ symbol: props.symbol });
+    const spots = this.spotPrices({ symbol: props.symbol });
     if (props.tradeSide === "BUY") {
-      if (prices.askSync) {
-        order.entry = prices.askSync;
-        if (prices.bidSync) {
-          order.profitLoss = (prices.bidSync - order.entry) * order.volume;
+      if (spots.askSync) {
+        order.entry = spots.askSync;
+        if (spots.bidSync) {
+          order.profitLoss = (spots.bidSync - order.entry) * order.volume;
         }
         this.orders.get(props.id)!.push(order)
         stream.emitFilled({ timestamp: Date.now() })
         this.updateEquity(Date.now())
       } else {
-        prices.once("ask", e => {
+        spots.once("ask", e => {
           order.entry = e.ask;
-          if (prices.bidSync) {
-            order.profitLoss = (prices.bidSync - order.entry) * order.volume;
+          if (spots.bidSync) {
+            order.profitLoss = (spots.bidSync - order.entry) * order.volume;
           }
           this.orders.get(props.id)!.push(order)
           stream.emitFilled({ timestamp: e.timestamp })
@@ -86,19 +86,19 @@ export class LocalAccountStream extends DebugAccountStream {
         })
       }
     } else if (props.tradeSide === "SELL") {
-      if (prices.bidSync) {
-        order.entry = prices.bidSync;
-        if (prices.askSync) {
-          order.profitLoss = (order.entry - prices.askSync) * order.volume;
+      if (spots.bidSync) {
+        order.entry = spots.bidSync;
+        if (spots.askSync) {
+          order.profitLoss = (order.entry - spots.askSync) * order.volume;
         }
         this.orders.get(props.id)!.push(order)
         stream.emitFilled({ timestamp: Date.now() })
         this.updateEquity(Date.now())
       } else {
-        prices.once("bid", e => {
+        spots.once("bid", e => {
           order.entry = e.bid;
-          if (prices.askSync) {
-            order.profitLoss = (order.entry - prices.askSync) * order.volume;
+          if (spots.askSync) {
+            order.profitLoss = (order.entry - spots.askSync) * order.volume;
           }
           this.orders.get(props.id)!.push(order)
           stream.emitFilled({ timestamp: e.timestamp })
