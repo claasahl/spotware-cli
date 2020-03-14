@@ -102,8 +102,9 @@ export function fromSampleData(props: SpotPricesProps): SpotPricesStream {
 }
 
 export function fromFile(props: SpotPricesProps & {path: fs.PathLike}): SpotPricesStream {
-  const data = fr0mFile(props.path);
-  const stream = new DebugSpotPricesStream(props);
+  const {path, ...originalProps} = props;
+  const data = fr0mFile(path);
+  const stream = new DebugSpotPricesStream(originalProps);
   const emitNext = () => {
     data.next().then(a => {
       if (a.value) {
