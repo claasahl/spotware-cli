@@ -74,6 +74,13 @@ export abstract class AccountStream extends EventEmitter
     this.currency = props.currency;
     this.on("balance", e => this.cachedBalance = e)
     this.on("equity", e => this.cachedEquity = e)
+    this.on("transaction", e => {
+      setImmediate(() => {
+        const {timestamp, amount} = e;
+        const balance = this.cachedBalance ? this.cachedBalance.balance : 0;
+        this.emit("balance", {timestamp, balance: balance + amount})
+      })
+  })
   }
 
   balance(cb: (e: BalanceChangedEvent) => void): void {
