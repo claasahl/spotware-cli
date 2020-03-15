@@ -94,24 +94,24 @@ export abstract class OrderStream extends EventEmitter
     this.on("profitLoss", e => this.cachedProfitLoss = e)
   }
 
-  get entry(): Promise<OrderFilledEvent> {
-    if (this.cachedEntry) {
-      return Promise.resolve(this.cachedEntry);
-    } else {
-      return new Promise((resolve, _reject) => {
-        this.once("filled", resolve)
-      })
-    }
+  entry(cb: (e: OrderFilledEvent) => void): void {
+    setImmediate(() => {
+      if (this.cachedEntry) {
+        cb(this.cachedEntry);
+      } else {
+        this.once("filled", cb)
+      }
+    })
   }
 
-  get profitLoss(): Promise<OrderProfitLossEvent> {
-    if (this.cachedProfitLoss) {
-      return Promise.resolve(this.cachedProfitLoss);
-    } else {
-      return new Promise((resolve, _reject) => {
-        this.once("profitLoss", resolve)
-      })
-    }
+  profitLoss(cb: (e: OrderProfitLossEvent) => void): void {
+    setImmediate(() => {
+      if (this.cachedProfitLoss) {
+        cb(this.cachedProfitLoss);
+      } else {
+        this.once("profitLoss", cb)
+      }
+    })
   }
 
   abstract close(): this;

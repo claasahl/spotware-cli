@@ -65,23 +65,23 @@ export abstract class SpotPricesStream extends EventEmitter
     this.on("ask", e => this.cachedAskPrice = e)
     this.on("bid", e => this.cachedBidPrice = e)
   }
-  get ask(): Promise<AskPriceChangedEvent> {
-    if (this.cachedAskPrice) {
-      return Promise.resolve(this.cachedAskPrice)
-    } else {
-      return new Promise((resolve, _reject) => {
-        this.once("ask", resolve)
-      })
-    }
+  ask(cb: (e: AskPriceChangedEvent) => void): void {
+    setImmediate(() => {
+      if (this.cachedAskPrice) {
+        cb(this.cachedAskPrice)
+      } else {
+        this.once("ask", cb)
+      }
+    })
   }
-  get bid(): Promise<BidPriceChangedEvent> {
-    if (this.cachedBidPrice) {
-      return Promise.resolve(this.cachedBidPrice)
-    } else {
-      return new Promise((resolve, _reject) => {
-        this.once("bid", resolve)
-      })
-    }
+  bid(cb: (e: BidPriceChangedEvent) => void): void {
+    setImmediate(() => {
+      if (this.cachedBidPrice) {
+        cb(this.cachedBidPrice)
+      } else {
+        this.once("bid", cb)
+      }
+    })
   }
   abstract trendbars(props: SimpleTrendbarsProps): TrendbarsStream;
 }

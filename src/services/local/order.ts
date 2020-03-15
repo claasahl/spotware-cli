@@ -5,7 +5,7 @@ export function fromSpotPrices(props: OrderProps & { spots: SpotPricesStream }):
     const { spots, ...originalProps } = props;
     const stream = new DebugOrderStream(originalProps);
     if (props.tradeSide === "BUY") {
-        spots.ask.then(e => {
+        spots.ask(e => {
             const {timestamp, ask: entry} = e;
             stream.emitFilled({ timestamp, entry })
 
@@ -14,14 +14,14 @@ export function fromSpotPrices(props: OrderProps & { spots: SpotPricesStream }):
                 const profitLoss = (e.bid - entry) * stream.volume;
                 stream.emitProfitLoss({ timestamp, profitLoss })
             }
-            spots.bid.then(e => {
+            spots.bid(e => {
                 update(e);
                 spots.on("bid", update)
                 stream.on("end", () => stream.off("bid", update))
             })
         })
     } else if (props.tradeSide === "SELL") {
-        spots.bid.then(e => {
+        spots.bid(e => {
             const {timestamp, bid: entry} = e;
             stream.emitFilled({ timestamp, entry })
 
@@ -30,7 +30,7 @@ export function fromSpotPrices(props: OrderProps & { spots: SpotPricesStream }):
                 const profitLoss = (entry - e.ask) * stream.volume;
                 stream.emitProfitLoss({ timestamp, profitLoss })
             }
-            spots.ask.then(e => {
+            spots.ask(e => {
                 update(e);
                 spots.on("ask", update)
                 stream.on("end", () => stream.off("ask", update))
