@@ -1,5 +1,5 @@
 import { fromSampleData } from "./local/spotPrices";
-import { LocalAccountStream } from "./local";
+import { fromNothing } from "./local/account";
 
 // Idea: Write services which consume events (from other services) and produce events (for other services to consume).
 
@@ -14,11 +14,10 @@ function local() {
   const name = "BTC/EUR";
   const symbol = Symbol.for(name);
   const currency = Symbol.for("EUR");
-  const spots = fromSampleData({ symbol })
-  const account = new LocalAccountStream({ currency, balance: 1000, spots });
-  setImmediate(() => {
-    account.spotPrices({ symbol });
-  });
+  const account = fromNothing({currency, spots: fromSampleData, initialBalance: 1000})
+  // setImmediate(() => {
+  //   account.spotPrices({ symbol });
+  // });
   setImmediate(() => {
     account.order({ id: "1", symbol, tradeSide: "BUY", volume: 1 });
   });
