@@ -9,7 +9,7 @@ import {
   DebugSpotPricesStream,
   SpotPricesProps,
   SpotPricesStream
-} from "../spotPrices";
+} from "../types/spotPrices";
 
 const log = debug("local-data");
 

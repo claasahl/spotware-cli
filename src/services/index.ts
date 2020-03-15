@@ -1,5 +1,5 @@
-import * as Account from "./account";
-import * as Spots from "./spotPrices";
+import * as Account from "./types/account";
+import * as Spots from "./types/spotPrices";
 import { fromSampleData } from "./local/spotPrices";
 import { LocalAccountStream } from "./local";
 

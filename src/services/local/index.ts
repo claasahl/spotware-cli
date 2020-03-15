@@ -6,10 +6,10 @@ import {
   AccountProps,
   SimpleOrderProps,
   SimpleSpotPricesProps
-} from "../account";
-import { SpotPricesStream } from "../spotPrices";
-import { Price, Timestamp, Order } from "../types";
-import { OrderStream, OrderProfitLossEvent } from "../order";
+} from "../types/account";
+import { SpotPricesStream } from "../types/spotPrices";
+import { Price, Timestamp, Order } from "../types/types";
+import { OrderStream, OrderProfitLossEvent } from "../types/order";
 import { includesCurrency } from "./util";
 import { fromSpotPrices } from "./order";
 

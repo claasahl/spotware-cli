@@ -1,5 +1,5 @@
-import { DebugOrderStream, OrderStream, OrderProps } from "../order"
-import { SpotPricesStream, BidPriceChangedEvent, AskPriceChangedEvent } from "../spotPrices";
+import { DebugOrderStream, OrderStream, OrderProps } from "../types/order"
+import { SpotPricesStream, BidPriceChangedEvent, AskPriceChangedEvent } from "../types/spotPrices";
 
 export function fromSpotPrices(props: OrderProps & { spots: SpotPricesStream }): OrderStream {
     const { spots, ...originalProps } = props;
