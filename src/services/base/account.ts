@@ -26,6 +26,9 @@ export interface AccountActions {
   spotPrices(props: SimpleSpotPricesProps): SpotPricesStream;
 }
 export declare interface AccountStream extends EventEmitter {
+  balance(cb: (e: BalanceChangedEvent) => void): void
+  equity(cb: (e: EquityChangedEvent) => void): void
+
   addListener(event: string, listener: (...args: any[]) => void): this;
   addListener(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
   addListener(event: "equity", listener: (e: EquityChangedEvent) => void): this;
@@ -55,10 +58,35 @@ export declare interface AccountStream extends EventEmitter {
 export abstract class AccountStream extends EventEmitter
   implements AccountProps, AccountActions {
   readonly currency: Currency;
+  private cachedBalance?: BalanceChangedEvent;
+  private cachedEquity?: EquityChangedEvent;
   constructor(props: AccountProps) {
     super();
     this.currency = props.currency;
+    this.on("balance", e => this.cachedBalance = e)
+    this.on("equity", e => this.cachedEquity = e)
   }
+
+  balance(cb: (e: BalanceChangedEvent) => void): void {
+    setImmediate(() => {
+      if(this.cachedBalance) {
+        cb(this.cachedBalance);
+      } else {
+        this.once("balance", cb)
+      }
+    })
+  }
+
+  equity(cb: (e: EquityChangedEvent) => void): void {
+    setImmediate(() => {
+      if(this.cachedEquity) {
+        cb(this.cachedEquity);
+      } else {
+        this.once("equity", cb)
+      }
+    })
+  }
+
   abstract order(props: SimpleOrderProps): OrderStream;
   abstract spotPrices(props: SimpleSpotPricesProps): SpotPricesStream;
 }

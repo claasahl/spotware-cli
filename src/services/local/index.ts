@@ -18,7 +18,7 @@ export interface LocalAccountProps extends AccountProps {
   spots: SpotPricesStream
 }
 export class LocalAccountStream extends DebugAccountStream {
-  private balance: Price = 0;
+  private myBalance: Price = 0;
   private spots: SpotPricesStream;
   private orders: Map<string, Order[]> = new Map();
 
@@ -29,7 +29,7 @@ export class LocalAccountStream extends DebugAccountStream {
         `symbol ${props.spots.symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`
       );
     }
-    this.balance = props.balance;
+    this.myBalance = props.balance;
     this.spots = props.spots;
     this.updateBalance(Date.now());
     this.updateEquity(Date.now());
@@ -54,7 +54,7 @@ export class LocalAccountStream extends DebugAccountStream {
       const toBeDeleted: number[] = [];
       all.forEach((o, index) => {
         if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
-          this.balance += o.profitLoss;
+          this.myBalance += o.profitLoss;
           toBeDeleted.push(index);
         }
       });
@@ -84,13 +84,13 @@ export class LocalAccountStream extends DebugAccountStream {
   }
 
   private updateBalance(timestamp: Timestamp) {
-    const e: BalanceChangedEvent = { timestamp, balance: this.balance };
+    const e: BalanceChangedEvent = { timestamp, balance: this.myBalance };
     this.emitBalance(e);
   }
   private updateEquity(timestamp: Timestamp) {
     let profitLoss = 0;
     this.orders.forEach(o => o.forEach(o => (profitLoss += o.profitLoss)));
-    const equity = Math.round((this.balance + profitLoss) * 100) / 100;
+    const equity = Math.round((this.myBalance + profitLoss) * 100) / 100;
     const e: EquityChangedEvent = { timestamp, equity };
     this.emitEquity(e);
   }
