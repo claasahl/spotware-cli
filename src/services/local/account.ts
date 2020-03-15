@@ -50,11 +50,12 @@ class LocalAccountStream extends B.DebugAccountStream {
     }
 
     private updateEquity(e: {timestamp: B.Timestamp}): void {
-        const myBalance = 0;
-        let profitLoss = 0;
-        this.orders.forEach(o => o.forEach(o => (profitLoss += o.profitLoss)));
-        const equity = Math.round((myBalance + profitLoss) * 100) / 100;
-        this.emitEquity({ timestamp: e.timestamp, equity });
+        this.balance(({balance}) => {
+            let profitLoss = 0;
+            this.orders.forEach(o => o.forEach(o => (profitLoss += o.profitLoss)));
+            const equity = Math.round((balance + profitLoss) * 100) / 100;
+            this.emitEquity({ timestamp: e.timestamp, equity });
+        })
     }
 }
 
