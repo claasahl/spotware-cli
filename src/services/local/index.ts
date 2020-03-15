@@ -9,7 +9,7 @@ import {
 } from "../account";
 import { SpotPricesStream } from "../spotPrices";
 import { Price, Timestamp, Order } from "../types";
-import { OrderStream } from "../order";
+import { OrderStream, OrderProfitLossEvent } from "../order";
 import { includesCurrency } from "./util";
 import { fromSpotPrices } from "./order";
 
@@ -49,6 +49,7 @@ export class LocalAccountStream extends DebugAccountStream {
     const spots = this.spotPrices({ symbol: props.symbol });
     const stream = fromSpotPrices({...props, spots})
     stream.on("end", e => {
+      stream.off("profitLoss", update)
       const all = this.orders.get(props.id)!
       const toBeDeleted: number[] = [];
       all.forEach((o, index) => {
@@ -63,11 +64,11 @@ export class LocalAccountStream extends DebugAccountStream {
       this.updateEquity(e.timestamp)
     });
     stream.once("filled", () => this.orders.get(props.id)!.push(order))
-    stream.on("profitLoss", e => {
-      // todo off
+    const update = (e: OrderProfitLossEvent) => {
       order.profitLoss = e.profitLoss;
       this.updateEquity(e.timestamp)
-    })
+    }
+    stream.on("profitLoss", update)
 
     const e: OrderEvent = { timestamp: Date.now() };
     this.emitOrder(e);
