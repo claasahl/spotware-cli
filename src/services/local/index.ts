@@ -5,11 +5,11 @@ import {
   OrderEvent,
   AccountProps,
   SimpleOrderProps,
-  SimpleSpotPricesProps
-} from "../types/account";
-import { SpotPricesStream } from "../types/spotPrices";
-import { Price, Timestamp, Order } from "../types/types";
-import { OrderStream, OrderProfitLossEvent } from "../types/order";
+  SimpleSpotPricesProps,
+  SpotPricesStream,
+  Price, Timestamp, Order,
+  OrderStream, OrderProfitLossEvent
+} from "../types";
 import { includesCurrency } from "./util";
 import { fromSpotPrices } from "./order";
 
@@ -22,7 +22,7 @@ export class LocalAccountStream extends DebugAccountStream {
   private spots: SpotPricesStream;
   private orders: Map<string, Order[]> = new Map();
 
-  constructor(    props: LocalAccountProps  ) {
+  constructor(props: LocalAccountProps) {
     super(props);
     if (!includesCurrency(props.spots.symbol, props.currency)) {
       throw new Error(
@@ -47,7 +47,7 @@ export class LocalAccountStream extends DebugAccountStream {
     }
     const order: Order = { ...props, entry: 0, profitLoss: 0 }
     const spots = this.spotPrices({ symbol: props.symbol });
-    const stream = fromSpotPrices({...props, spots})
+    const stream = fromSpotPrices({ ...props, spots })
     stream.on("end", e => {
       stream.off("profitLoss", update)
       const all = this.orders.get(props.id)!

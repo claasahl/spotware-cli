@@ -3,9 +3,7 @@ import debug from "debug";
 import assert from "assert";
 
 import config from "../../config";
-import { DebugAccountStream } from "../types/account";
-import { DebugSpotPricesStream } from "../types/spotPrices";
-import { TradeSide, Price, Order, Timestamp } from "../types/types";
+import { DebugAccountStream, DebugSpotPricesStream, TradeSide, Price, Order, Timestamp } from "../types";
 
 const log = debug("spotware");
 const input = log.extend("input");

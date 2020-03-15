@@ -1,12 +1,5 @@
-import * as Account from "./types/account";
-import * as Spots from "./types/spotPrices";
 import { fromSampleData } from "./local/spotPrices";
 import { LocalAccountStream } from "./local";
-
-export default {
-  Account,
-  Spots
-};
 
 // Idea: Write services which consume events (from other services) and produce events (for other services to consume).
 
