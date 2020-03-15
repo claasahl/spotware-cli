@@ -1,5 +1,5 @@
 import assert from "assert";
-import { Symbol, Currency } from "../types";
+import { Symbol, Currency } from "../base";
 
 export function includesCurrency(symbol: Symbol, currency: Currency): boolean {
   const matches = currency.toString().match(/Symbol\((.*)\)/);

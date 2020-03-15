@@ -9,7 +9,7 @@ import {
   SpotPricesStream,
   Price, Timestamp, Order,
   OrderStream, OrderProfitLossEvent
-} from "../types";
+} from "../base";
 import { includesCurrency } from "./util";
 import { fromSpotPrices } from "./order";
 
