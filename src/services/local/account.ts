@@ -9,10 +9,12 @@ interface LocalAccountProps extends AccountProps {
 class LocalAccountStream extends B.DebugAccountStream {
     private readonly spots: (props: B.SimpleSpotPricesProps) => B.SpotPricesStream;
     private readonly orders: Map<string, B.Order[]> = new Map();
+    private myBalance?: B.Price;
     
     constructor(props: LocalAccountProps) {
         super(props);
         this.spots = props.spots;
+        this.on("balance", e => this.myBalance = e.balance)
     }
 
     order(props: B.SimpleOrderProps): B.OrderStream {
@@ -50,12 +52,11 @@ class LocalAccountStream extends B.DebugAccountStream {
     }
 
     private updateEquity(e: {timestamp: B.Timestamp}): void {
-        this.balance(({balance}) => {
-            let profitLoss = 0;
-            this.orders.forEach(o => o.forEach(o => (profitLoss += o.profitLoss)));
-            const equity = Math.round((balance + profitLoss) * 100) / 100;
-            this.emitEquity({ timestamp: e.timestamp, equity });
-        })
+        const balance = this.myBalance || 0
+        let profitLoss = 0;
+        this.orders.forEach(o => o.forEach(o => (profitLoss += o.profitLoss)));
+        const equity = Math.round((balance + profitLoss) * 100) / 100;
+        this.emitEquity({ timestamp: e.timestamp, equity });
     }
 }
 
