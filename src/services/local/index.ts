@@ -84,14 +84,14 @@ export class LocalAccountStream extends DebugAccountStream {
   }
 
   private updateBalance(timestamp: Timestamp) {
-    const e: BalanceChangedEvent = { balance: this.balance, timestamp };
+    const e: BalanceChangedEvent = { timestamp, balance: this.balance };
     this.emitBalance(e);
   }
   private updateEquity(timestamp: Timestamp) {
     let profitLoss = 0;
     this.orders.forEach(o => o.forEach(o => (profitLoss += o.profitLoss)));
     const equity = Math.round((this.balance + profitLoss) * 100) / 100;
-    const e: EquityChangedEvent = { equity, timestamp };
+    const e: EquityChangedEvent = { timestamp, equity };
     this.emitEquity(e);
   }
 }

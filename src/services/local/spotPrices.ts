@@ -73,13 +73,13 @@ function emitSpotPrices(
   e: AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent
 ): void {
   if ("ask" in e && !("bid" in e)) {
-    stream.emitAsk({ ask: e.ask, timestamp: e.timestamp });
+    stream.emitAsk({ timestamp: e.timestamp, ask: e.ask });
   } else if (!("ask" in e) && "bid" in e) {
-    stream.emitBid({ bid: e.bid, timestamp: e.timestamp });
+    stream.emitBid({ timestamp: e.timestamp, bid: e.bid });
   } else if ("ask" in e && "bid" in e) {
-    stream.emitAsk({ ask: e.ask, timestamp: e.timestamp });
-    stream.emitBid({ bid: e.bid, timestamp: e.timestamp });
-    stream.emitPrice({ ask: e.ask, bid: e.bid, timestamp: e.timestamp });
+    stream.emitAsk({ timestamp: e.timestamp, ask: e.ask });
+    stream.emitBid({ timestamp: e.timestamp, bid: e.bid });
+    stream.emitPrice({ timestamp: e.timestamp, ask: e.ask, bid: e.bid });
   }
   setImmediate(() => stream.emit("next"));
 }
