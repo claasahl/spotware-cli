@@ -82,32 +82,34 @@ export abstract class OrderStream extends EventEmitter
   readonly symbol: Symbol;
   readonly tradeSide: TradeSide;
   readonly volume: Volume;
-  private cachedEntry?: Price;
-  private cachedProfitLoss?: Price;
+  private cachedEntry?: OrderFilledEvent;
+  private cachedProfitLoss?: OrderProfitLossEvent;
   constructor(props: OrderProps) {
     super();
     this.id = props.id;
     this.symbol = props.symbol;
     this.tradeSide = props.tradeSide;
     this.volume = props.volume;
+    this.on("filled", e => this.cachedEntry = e)
+    this.on("profitLoss", e => this.cachedProfitLoss = e)
   }
 
-  get entry(): Promise<Price> {
+  get entry(): Promise<OrderFilledEvent> {
     if (this.cachedEntry) {
       return Promise.resolve(this.cachedEntry);
     } else {
       return new Promise((resolve, _reject) => {
-        this.once("filled", e => resolve(e.entry))
+        this.once("filled", resolve)
       })
     }
   }
 
-  get profitLoss(): Promise<Price> {
+  get profitLoss(): Promise<OrderProfitLossEvent> {
     if (this.cachedProfitLoss) {
       return Promise.resolve(this.cachedProfitLoss);
     } else {
       return new Promise((resolve, _reject) => {
-        this.once("profitLoss", e => resolve(e.profitLoss))
+        this.once("profitLoss", resolve)
       })
     }
   }

@@ -57,29 +57,29 @@ export declare interface SpotPricesStream extends EventEmitter {
 export abstract class SpotPricesStream extends EventEmitter
   implements SpotPricesProps, SpotPricesActions {
   readonly symbol: Symbol;
-  private cachedAskPrice?: Price;
-  private cachedBidPrice?: Price;
+  private cachedAskPrice?: AskPriceChangedEvent;
+  private cachedBidPrice?: BidPriceChangedEvent;
   constructor(props: SpotPricesProps) {
     super();
     this.symbol = props.symbol;
-    this.on("ask", e => this.cachedAskPrice = e.ask)
-    this.on("bid", e => this.cachedBidPrice = e.bid)
+    this.on("ask", e => this.cachedAskPrice = e)
+    this.on("bid", e => this.cachedBidPrice = e)
   }
-  get ask(): Promise<Price> {
+  get ask(): Promise<AskPriceChangedEvent> {
     if (this.cachedAskPrice) {
       return Promise.resolve(this.cachedAskPrice)
     } else {
       return new Promise((resolve, _reject) => {
-        this.once("ask", e => resolve(e.ask))
+        this.once("ask", resolve)
       })
     }
   }
-  get bid(): Promise<Price> {
+  get bid(): Promise<BidPriceChangedEvent> {
     if (this.cachedBidPrice) {
       return Promise.resolve(this.cachedBidPrice)
     } else {
       return new Promise((resolve, _reject) => {
-        this.once("bid", e => resolve(e.bid))
+        this.once("bid", resolve)
       })
     }
   }
