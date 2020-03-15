@@ -16,8 +16,8 @@ export function fromSpotPrices(props: OrderProps & { spots: SpotPricesStream }):
             spots.bid(e => {
                 update(e);
                 spots.on("bid", update)
-                stream.on("end", () => stream.off("bid", update))
             })
+            stream.once("end", () => spots.off("bid", update))
         })
     } else if (props.tradeSide === "SELL") {
         spots.bid(e => {
@@ -32,9 +32,10 @@ export function fromSpotPrices(props: OrderProps & { spots: SpotPricesStream }):
             spots.ask(e => {
                 update(e);
                 spots.on("ask", update)
-                stream.on("end", () => stream.off("ask", update))
             })
+            stream.once("end", () => spots.off("ask", update))
         })
     }
+    stream.emitAccepted({timestamp: Date.now()})
     return stream;
 }
