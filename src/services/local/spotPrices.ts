@@ -89,9 +89,11 @@ export function fromSampleData(props: SpotPricesProps): SpotPricesStream {
   const stream = new DebugSpotPricesStream(props);
   const emitNext = () => {
     data.next().then(a => {
-      if (a.value) {
-        emitSpotPrices(stream, a.value);
-      }
+      setImmediate(() => {
+        if (a.value) {
+          emitSpotPrices(stream, a.value);
+        }
+      })
     });
   }
   setImmediate(() => {
@@ -107,9 +109,11 @@ export function fromFile(props: SpotPricesProps & {path: fs.PathLike}): SpotPric
   const stream = new DebugSpotPricesStream(originalProps);
   const emitNext = () => {
     data.next().then(a => {
-      if (a.value) {
-        emitSpotPrices(stream, a.value);
-      }
+      setImmediate(() => {
+        if (a.value) {
+          emitSpotPrices(stream, a.value);
+        }
+      })
     });
   }
   setImmediate(() => {
