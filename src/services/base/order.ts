@@ -40,6 +40,9 @@ export interface OrderActions {
 }
 
 export declare interface OrderStream extends EventEmitter {
+  entry(cb: (e: OrderFilledEvent) => void): void;
+  profitLoss(cb: (e: OrderProfitLossEvent) => void): void
+
   addListener(event: string, listener: (...args: any[]) => void): this;
   addListener(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
   addListener(event: "filled", listener: (e: OrderFilledEvent) => void): this;

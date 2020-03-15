@@ -28,6 +28,9 @@ export interface SpotPricesActions {
 }
 
 export declare interface SpotPricesStream extends EventEmitter {
+  ask(cb: (e: AskPriceChangedEvent) => void): void;
+  bid(cb: (e: BidPriceChangedEvent) => void): void;
+
   addListener(event: string, listener: (...args: any[]) => void): this;
   addListener(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
   addListener(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
