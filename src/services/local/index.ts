@@ -7,10 +7,11 @@ import {
   SimpleOrderProps,
   SimpleSpotPricesProps
 } from "../account";
-import { SpotPricesStream, AskPriceChangedEvent, BidPriceChangedEvent } from "../spotPrices";
+import { SpotPricesStream } from "../spotPrices";
 import { Price, Timestamp, Order } from "../types";
-import { OrderStream, DebugOrderStream } from "../order";
+import { OrderStream } from "../order";
 import { includesCurrency } from "./util";
+import { fromSpotPrices } from "./order";
 
 export interface LocalAccountProps extends AccountProps {
   balance: Price,
@@ -32,10 +33,6 @@ export class LocalAccountStream extends DebugAccountStream {
     this.spots = props.spots;
     this.updateBalance(Date.now());
     this.updateEquity(Date.now());
-    setImmediate(() => {
-      this.spots.on("ask", e => this.updateProfitLossForSellOrders(e));
-      this.spots.on("bid", e => this.updateProfitLossForBuyOrders(e));
-    });
   }
   order(props: SimpleOrderProps): OrderStream {
     // refactor!
@@ -49,7 +46,8 @@ export class LocalAccountStream extends DebugAccountStream {
       this.orders.set(props.id, [])
     }
     const order: Order = { ...props, entry: 0, profitLoss: 0 }
-    const stream = new DebugOrderStream(props);
+    const spots = this.spotPrices({ symbol: props.symbol });
+    const stream = fromSpotPrices({...props, spots})
     stream.on("end", e => {
       const all = this.orders.get(props.id)!
       const toBeDeleted: number[] = [];
@@ -64,30 +62,12 @@ export class LocalAccountStream extends DebugAccountStream {
       this.updateBalance(e.timestamp);
       this.updateEquity(e.timestamp)
     });
-    const spots = this.spotPrices({ symbol: props.symbol });
-    if (props.tradeSide === "BUY") {
-      spots.ask.then(ask => {
-        order.entry = ask;
-        this.orders.get(props.id)!.push(order)
-        stream.emitFilled({ timestamp: Date.now(), entry: order.entry })
-
-        spots.bid.then(bid => {
-          order.profitLoss = (bid - order.entry) * order.volume;
-          this.updateEquity(Date.now())
-        })
-      })
-    } else if (props.tradeSide === "SELL") {
-      spots.bid.then(bid => {
-        order.entry = bid;
-        this.orders.get(props.id)!.push(order)
-        stream.emitFilled({ timestamp: Date.now(), entry: order.entry })
-
-        spots.ask.then(ask => {
-          order.profitLoss = (order.entry - ask) * order.volume;
-          this.updateEquity(Date.now())
-        })
-      })
-    }
+    stream.once("filled", () => this.orders.get(props.id)!.push(order))
+    stream.on("profitLoss", e => {
+      // todo off
+      order.profitLoss = e.profitLoss;
+      this.updateEquity(e.timestamp)
+    })
 
     const e: OrderEvent = { timestamp: Date.now() };
     this.emitOrder(e);
@@ -112,22 +92,5 @@ export class LocalAccountStream extends DebugAccountStream {
     const equity = Math.round((this.balance + profitLoss) * 100) / 100;
     const e: EquityChangedEvent = { equity, timestamp };
     this.emitEquity(e);
-  }
-
-  private updateProfitLossForSellOrders(e: AskPriceChangedEvent) {
-    this.orders.forEach(o => o.forEach(order => {
-      if (order.tradeSide === "SELL") {
-        order.profitLoss = (order.entry - e.ask) * order.volume;
-      }
-    }))
-    this.updateEquity(e.timestamp)
-  }
-  private updateProfitLossForBuyOrders(e: BidPriceChangedEvent) {
-    this.orders.forEach(o => o.forEach(order => {
-      if (order.tradeSide === "BUY") {
-        order.profitLoss = (e.bid - order.entry) * order.volume;
-      }
-    }))
-    this.updateEquity(e.timestamp)
   }
 }
