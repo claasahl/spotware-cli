@@ -23,6 +23,8 @@ export interface TrendbarsActions {
 }
 
 export declare interface TrendbarsStream extends EventEmitter {
+  trendbar(cb: (e: TrendbarEvent) => void): void;
+
   addListener(event: string, listener: (...args: any[]) => void): this;
   addListener(event: "trendbar", listener: (e: TrendbarEvent) => void): this;
 
@@ -43,10 +45,22 @@ export class TrendbarsStream extends EventEmitter
   implements TrendbarsProps, TrendbarsActions {
   readonly symbol: Symbol;
   readonly period: Period;
+  private cachedTrendbar?: TrendbarEvent;
   constructor(props: TrendbarsProps) {
     super();
     this.symbol = props.symbol;
     this.period = props.period;
+    this.on("trendbar", e => this.cachedTrendbar = e)
+  }
+
+  trendbar(cb: (e: TrendbarEvent) => void): void {
+    setImmediate(() => {
+      if(this.cachedTrendbar) {
+        cb(this.cachedTrendbar);
+      } else {
+        this.once("trendbar", cb);
+      }
+    })
   }
 }
 
