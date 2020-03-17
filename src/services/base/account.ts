@@ -77,8 +77,9 @@ export abstract class AccountStream extends EventEmitter
     this.on("transaction", e => {
       setImmediate(() => {
         const {timestamp, amount} = e;
-        const balance = this.cachedBalance ? this.cachedBalance.balance : 0;
-        this.emit("balance", {timestamp, balance: balance + amount})
+        const oldBalance = this.cachedBalance ? this.cachedBalance.balance : 0;
+        const balance = Math.round((oldBalance + amount) * 100) / 100;
+        this.emit("balance", {timestamp, balance})
       })
   })
   }
