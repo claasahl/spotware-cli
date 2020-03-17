@@ -3,7 +3,8 @@ import debug from "debug";
 import assert from "assert";
 
 import config from "../../config";
-import { DebugAccountStream, DebugSpotPricesStream, TradeSide, Price, Order, Timestamp } from "../base";
+import { DebugAccountStream, TradeSide, Price, Order, Timestamp } from "../base";
+import { fromSocket } from "./spotPrices";
 
 const log = debug("spotware");
 const input = log.extend("input");
@@ -162,7 +163,6 @@ const name = "BTC/EUR";
 const symbol = Symbol.for(name);
 const currency = Symbol.for("EUR");
 const account = new DebugAccountStream({ currency });
-const spotPrices = new DebugSpotPricesStream({ symbol });
 const symbolsByName = new Map<string, $.ProtoOALightSymbol>();
 const symbolsById = new Map<number, $.ProtoOALightSymbol>();
 let pacemaker: NodeJS.Timeout | null = null;
@@ -171,6 +171,7 @@ let ctidTraderAccountId: number | null = null;
 let symbolId: number | null = null;
 const { port, host, clientId, clientSecret, accessToken } = config;
 const socket = $.connect(port, host);
+const spotPrices = fromSocket({symbol, socket, symbolId})
 socket.on("connect", connected);
 socket.on("close", disconnected);
 socket.on("error", (err: Error) => {
@@ -245,23 +246,6 @@ socket.on("symbolsListCachedByName", () => {
       ctidTraderAccountId: ctidTraderAccountId!,
       symbolId: [symbolId]
     });
-  }
-});
-socket.on("PROTO_MESSAGE.INPUT.*", msg => {
-  function isSpotPriceEvent(msg: $.ProtoMessages): msg is $.ProtoMessage2131 {
-    return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_SPOT_EVENT;
-  }
-  if (isSpotPriceEvent(msg) && msg.payload.symbolId === symbolId) {
-    if (msg.payload.ask) {
-      const ask = msg.payload.ask;
-      const timestamp = Date.now();
-      spotPrices.emitAsk({ ask, timestamp });
-    }
-    if (msg.payload.bid) {
-      const bid = msg.payload.bid;
-      const timestamp = Date.now();
-      spotPrices.emitBid({ bid, timestamp });
-    }
   }
 });
 socket.on("PROTO_MESSAGE.INPUT.*", msg => {
