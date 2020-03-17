@@ -15,6 +15,7 @@ class LocalAccountStream extends B.DebugAccountStream {
         super(props);
         this.spots = props.spots;
         this.on("balance", e => this.myBalance = e.balance)
+        this.on("balance", this.updateEquity)
     }
 
     order(props: B.SimpleOrderProps): B.OrderStream {
@@ -40,8 +41,6 @@ class LocalAccountStream extends B.DebugAccountStream {
               }
             });
             toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
-      
-            this.updateEquity(e)
         })
         stream.once("accepted", () => this.orders.get(props.id)!.push(order))
         return stream;
