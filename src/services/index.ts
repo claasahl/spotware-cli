@@ -1,5 +1,4 @@
-import { fromSampleData } from "./local/spotPrices";
-import { fromNothing } from "./local/account";
+import { fromSampleData, fromNothing } from "./local";
 
 // Idea: Write services which consume events (from other services) and produce events (for other services to consume).
 
@@ -19,7 +18,7 @@ function local() {
     account.spotPrices({ symbol });
   });
   setImmediate(() => {
-    account.order({ id: "1", symbol, tradeSide: "BUY", volume: 1 });
+    account.order({ id: "1", symbol, tradeSide: "SELL", volume: 1 });
   });
 }
 local();
