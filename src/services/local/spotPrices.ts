@@ -1,6 +1,7 @@
 import fs from "fs";
 import readline from "readline";
 import debug from "debug";
+import mem from "mem"
 
 import {
   AskPriceChangedEvent,
@@ -84,7 +85,7 @@ function emitSpotPrices(
   setImmediate(() => stream.emit("next"));
 }
 
-export function fromSampleData(props: SpotPricesProps): SpotPricesStream {
+function fromSampleDataBase(props: SpotPricesProps): SpotPricesStream {
   const data = sampleData();
   const stream = new DebugSpotPricesStream(props);
   const emitNext = () => {
@@ -102,8 +103,9 @@ export function fromSampleData(props: SpotPricesProps): SpotPricesStream {
   })
   return stream;
 }
+export const fromSampleData = mem(fromSampleDataBase, {cacheKey: arguments_ => JSON.stringify(arguments_)})
 
-export function fromFile(props: SpotPricesProps & {path: fs.PathLike}): SpotPricesStream {
+function fromFileBase(props: SpotPricesProps & {path: fs.PathLike}): SpotPricesStream {
   const {path, ...originalProps} = props;
   const data = fr0mFile(path);
   const stream = new DebugSpotPricesStream(originalProps);
@@ -122,3 +124,4 @@ export function fromFile(props: SpotPricesProps & {path: fs.PathLike}): SpotPric
   })
   return stream;
 }
+export const fromFile = mem(fromFileBase, {cacheKey: arguments_ => JSON.stringify(arguments_)})

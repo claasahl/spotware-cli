@@ -15,9 +15,9 @@ function local() {
   const symbol = Symbol.for(name);
   const currency = Symbol.for("EUR");
   const account = fromNothing({currency, spots: fromSampleData, initialBalance: 1000})
-  // setImmediate(() => {
-  //   account.spotPrices({ symbol });
-  // });
+  setImmediate(() => {
+    account.spotPrices({ symbol });
+  });
   setImmediate(() => {
     account.order({ id: "1", symbol, tradeSide: "BUY", volume: 1 });
   });
