@@ -1,6 +1,7 @@
 import * as B from "../base";
 import { AccountProps } from "../base";
 import { fromSpotPrices } from "./order";
+import { includesCurrency } from "./util";
 
 interface LocalAccountProps extends AccountProps {
     spots: (props: B.SimpleSpotPricesProps) => B.SpotPricesStream;
@@ -10,7 +11,7 @@ class LocalAccountStream extends B.DebugAccountStream {
     private readonly spots: (props: B.SimpleSpotPricesProps) => B.SpotPricesStream;
     private readonly orders: Map<string, B.Order[]> = new Map();
     private myBalance?: B.Price;
-    
+
     constructor(props: LocalAccountProps) {
         super(props);
         this.spots = props.spots;
@@ -19,6 +20,12 @@ class LocalAccountStream extends B.DebugAccountStream {
     }
 
     order(props: B.SimpleOrderProps): B.OrderStream {
+        if (!includesCurrency(props.symbol, this.currency)) {
+            throw new Error(
+                `symbol ${props.symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`
+            );
+        }
+
         if (!this.orders.has(props.id)) {
             this.orders.set(props.id, [])
         }
@@ -35,10 +42,10 @@ class LocalAccountStream extends B.DebugAccountStream {
             const all = this.orders.get(props.id)!
             const toBeDeleted: number[] = [];
             all.forEach((o, index) => {
-              if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
-                this.emitTransaction({timestamp: e.timestamp, amount: o.profitLoss})
-                toBeDeleted.push(index);
-              }
+                if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
+                    this.emitTransaction({ timestamp: e.timestamp, amount: o.profitLoss })
+                    toBeDeleted.push(index);
+                }
             });
             toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
         })
@@ -50,7 +57,7 @@ class LocalAccountStream extends B.DebugAccountStream {
         return this.spots(props)
     }
 
-    private updateEquity(e: {timestamp: B.Timestamp}): void {
+    private updateEquity(e: { timestamp: B.Timestamp }): void {
         const balance = this.myBalance || 0
         let profitLoss = 0;
         this.orders.forEach(o => o.forEach(o => (profitLoss += o.profitLoss)));
@@ -61,6 +68,6 @@ class LocalAccountStream extends B.DebugAccountStream {
 
 export function fromNothing(props: LocalAccountProps): B.AccountStream {
     const stream = new LocalAccountStream(props);
-    stream.emitTransaction({timestamp: Date.now(), amount: props.initialBalance});
+    stream.emitTransaction({ timestamp: Date.now(), amount: props.initialBalance });
     return stream;
 }
