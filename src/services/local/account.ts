@@ -2,13 +2,14 @@ import * as B from "../base";
 import { AccountProps } from "../base";
 import { fromSpotPrices } from "./order";
 import { includesCurrency } from "./util";
+import { trendbarsFromSpotPrices } from "./trendbars";
 
 interface LocalAccountProps extends AccountProps {
-    spots: (props: B.SimpleSpotPricesProps) => B.SpotPricesStream;
+    spots: (props: B.AccountSimpleSpotPricesProps) => B.SpotPricesStream;
     initialBalance: B.Price;
 }
 class LocalAccountStream extends B.DebugAccountStream {
-    private readonly spots: (props: B.SimpleSpotPricesProps) => B.SpotPricesStream;
+    private readonly spots: (props: B.AccountSimpleSpotPricesProps) => B.SpotPricesStream;
     private readonly orders: Map<string, B.Order[]> = new Map();
     private myBalance?: B.Price;
 
@@ -19,7 +20,7 @@ class LocalAccountStream extends B.DebugAccountStream {
         this.on("balance", this.updateEquity)
     }
 
-    order(props: B.SimpleOrderProps): B.OrderStream {
+    order(props: B.AccountSimpleOrderProps): B.OrderStream {
         if (!includesCurrency(props.symbol, this.currency)) {
             throw new Error(
                 `symbol ${props.symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`
@@ -53,8 +54,13 @@ class LocalAccountStream extends B.DebugAccountStream {
         return stream;
     }
 
-    spotPrices(props: B.SimpleSpotPricesProps): B.SpotPricesStream {
+    spotPrices(props: B.AccountSimpleSpotPricesProps): B.SpotPricesStream {
         return this.spots(props)
+    }
+
+    trendbars(props: B.AccountSimpleTrendbarsProps): B.TrendbarsStream {
+        const spots = this.spotPrices(props);
+        return trendbarsFromSpotPrices({...props, spots})
     }
 
     private updateEquity(e: { timestamp: B.Timestamp }): void {

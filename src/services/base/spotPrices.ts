@@ -18,13 +18,13 @@ export interface PriceChangedEvent {
   timestamp: Timestamp;
 }
 
-export type SimpleTrendbarsProps = Omit<TrendbarsProps, keyof SpotPricesProps>;
+export type SpotPricesSimpleTrendbarsProps = Omit<TrendbarsProps, keyof SpotPricesProps>;
 export interface SpotPricesProps {
   readonly symbol: Symbol;
 }
 
 export interface SpotPricesActions {
-  trendbars(props: SimpleTrendbarsProps): TrendbarsStream;
+  trendbars(props: SpotPricesSimpleTrendbarsProps): TrendbarsStream;
 }
 
 export declare interface SpotPricesStream extends EventEmitter {
@@ -86,7 +86,7 @@ export abstract class SpotPricesStream extends EventEmitter
       }
     })
   }
-  abstract trendbars(props: SimpleTrendbarsProps): TrendbarsStream;
+  abstract trendbars(props: SpotPricesSimpleTrendbarsProps): TrendbarsStream;
 }
 
 export class DebugSpotPricesStream extends SpotPricesStream {
@@ -104,7 +104,7 @@ export class DebugSpotPricesStream extends SpotPricesStream {
     this.prependListener("price", e => price("%j", e));
   }
 
-  trendbars(_props: SimpleTrendbarsProps): TrendbarsStream {
+  trendbars(_props: SpotPricesSimpleTrendbarsProps): TrendbarsStream {
     throw new Error("not implemented");
   }
 

@@ -4,6 +4,7 @@ import debug from "debug";
 import { Price, Timestamp, Currency } from "./types";
 import { OrderStream, OrderProps } from "./order";
 import { SpotPricesStream, SpotPricesProps } from "./spotPrices";
+import { TrendbarsProps, TrendbarsStream } from "./trendbars";
 
 export interface BalanceChangedEvent {
   balance: Price;
@@ -20,14 +21,16 @@ export interface EquityChangedEvent {
 export interface OrderEvent {
   timestamp: Timestamp;
 }
-export type SimpleOrderProps = Omit<OrderProps, keyof AccountProps>;
-export type SimpleSpotPricesProps = Omit<SpotPricesProps, keyof AccountProps>;
+export type AccountSimpleOrderProps = Omit<OrderProps, keyof AccountProps>;
+export type AccountSimpleSpotPricesProps = Omit<SpotPricesProps, keyof AccountProps>;
+export type AccountSimpleTrendbarsProps = Omit<TrendbarsProps, keyof AccountProps>;
 export interface AccountProps {
   readonly currency: Currency;
 }
 export interface AccountActions {
-  order(props: SimpleOrderProps): OrderStream;
-  spotPrices(props: SimpleSpotPricesProps): SpotPricesStream;
+  order(props: AccountSimpleOrderProps): OrderStream;
+  spotPrices(props: AccountSimpleSpotPricesProps): SpotPricesStream;
+  trendbars(props: AccountSimpleTrendbarsProps): TrendbarsStream;
 }
 export declare interface AccountStream extends EventEmitter {
   balance(cb: (e: BalanceChangedEvent) => void): void
@@ -104,8 +107,9 @@ export abstract class AccountStream extends EventEmitter
     })
   }
 
-  abstract order(props: SimpleOrderProps): OrderStream;
-  abstract spotPrices(props: SimpleSpotPricesProps): SpotPricesStream;
+  abstract order(props: AccountSimpleOrderProps): OrderStream;
+  abstract spotPrices(props: AccountSimpleSpotPricesProps): SpotPricesStream;
+  abstract trendbars(props: AccountSimpleTrendbarsProps): TrendbarsStream;
 }
 
 export class DebugAccountStream extends AccountStream {
@@ -125,10 +129,13 @@ export class DebugAccountStream extends AccountStream {
     const order = log.extend("order");
     this.prependListener("order", e => order("%j", e));
   }
-  order(_props: SimpleOrderProps): OrderStream {
+  order(_props: AccountSimpleOrderProps): OrderStream {
     throw new Error("not implemented");
   }
-  spotPrices(_props: SimpleSpotPricesProps): SpotPricesStream {
+  spotPrices(_props: AccountSimpleSpotPricesProps): SpotPricesStream {
+    throw new Error("not implemented");
+  }
+  trendbars(_props: AccountSimpleSpotPricesProps): TrendbarsStream {
     throw new Error("not implemented");
   }
 
