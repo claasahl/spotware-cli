@@ -2,7 +2,6 @@ import { EventEmitter } from "events";
 import debug from "debug";
 
 import { Price, Volume, Period, Timestamp, Symbol } from "./types";
-import { SpotPricesStream, BidPriceChangedEvent } from "./spotPrices";
 
 export interface TrendbarEvent {
   open: Price;
@@ -76,74 +75,4 @@ export class DebugTrendbarsStream extends TrendbarsStream {
   emitTrendbar(e: TrendbarEvent): void {
     setImmediate(() => this.emit("trendbar", e));
   }
-}
-
-interface Bucket {
-  begin: Timestamp;
-  end: Timestamp;
-}
-function bucket(timestamp: Timestamp, period: Period): Bucket {
-  const millisPerBucket = period;
-  const bucketNo = Math.floor(timestamp / millisPerBucket);
-  const begin = bucketNo * millisPerBucket;
-  const end = begin + millisPerBucket;
-  return { begin, end };
-}
-
-function accumulateTrendbar(
-  prev: TrendbarEvent,
-  curr: BidPriceChangedEvent,
-  index: number
-): TrendbarEvent {
-  const next = { ...prev };
-  if (index === 0) {
-    next.open = curr.bid;
-  }
-  if (prev.high < curr.bid) {
-    next.high = curr.bid;
-  }
-  if (prev.low > curr.bid) {
-    next.low = curr.bid;
-  }
-  next.close = curr.bid;
-  return next;
-}
-
-function toTrendbar(
-  timestamp: Timestamp,
-  events: BidPriceChangedEvent[]
-): TrendbarEvent {
-  const seed: TrendbarEvent = {
-    open: 0,
-    high: Number.MIN_VALUE,
-    low: Number.MAX_VALUE,
-    close: 0,
-    timestamp,
-    volume: 0
-  };
-  return events.reduce(accumulateTrendbar, seed);
-}
-
-export function from(
-  spotPrice: SpotPricesStream,
-  period: Period
-): TrendbarsStream {
-  const bucked = (timestamp: Timestamp): Bucket => bucket(timestamp, period);
-  const values: BidPriceChangedEvent[] = [];
-  const emitter = new TrendbarsStream({ symbol: spotPrice.symbol, period });
-  spotPrice.on("bid", e => {
-    setImmediate(() => {
-      values.push(e);
-      const bucket1 = bucked(values[0].timestamp);
-      const bucket2 = bucked(values[values.length - 1].timestamp);
-      if (bucket1.begin !== bucket2.begin) {
-        const eventsInBucket = values.filter(
-          e => bucked(e.timestamp).begin === bucket1.begin
-        );
-        values.splice(0, eventsInBucket.length);
-        emitter.emit("trendbar", toTrendbar(bucket1.begin, eventsInBucket));
-      }
-    });
-  });
-  return emitter;
 }
