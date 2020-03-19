@@ -3,19 +3,19 @@ import readline from "readline";
 import debug from "debug";
 import mem from "mem"
 
-import {
-  AskPriceChangedEvent,
-  BidPriceChangedEvent,
-  PriceChangedEvent,
-  DebugSpotPricesStream,
-  SpotPricesProps,
-  SpotPricesStream
-} from "../base";
+import * as B from "../base";
+import { trendbarsFromSpotPrices } from "./trendbars";
 
 const log = debug("local-data");
 
+class LocalSpotPricesStream extends B.DebugSpotPricesStream {
+  trendbars(props: B.SpotPricesSimpleTrendbarsProps): B.TrendbarsStream {
+    return trendbarsFromSpotPrices({...props, ...this, spots: this});
+  }
+}
+
 async function* sampleData(): AsyncGenerator<
-  AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent,
+  B.AskPriceChangedEvent | B.BidPriceChangedEvent | B.PriceChangedEvent,
   void,
   unknown
 > {
@@ -42,7 +42,7 @@ async function* sampleData(): AsyncGenerator<
 async function* fr0mFile(
   path: fs.PathLike
 ): AsyncGenerator<
-  AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent,
+  B.AskPriceChangedEvent | B.BidPriceChangedEvent | B.PriceChangedEvent,
   void,
   unknown
 > {
@@ -70,8 +70,8 @@ async function* fr0mFile(
 }
 
 function emitSpotPrices(
-  stream: DebugSpotPricesStream,
-  e: AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent
+  stream: B.DebugSpotPricesStream,
+  e: B.AskPriceChangedEvent | B.BidPriceChangedEvent | B.PriceChangedEvent
 ): void {
   if ("ask" in e && !("bid" in e)) {
     stream.emitAsk({ timestamp: e.timestamp, ask: e.ask });
@@ -85,9 +85,9 @@ function emitSpotPrices(
   setImmediate(() => stream.emit("next"));
 }
 
-function fromSampleDataBase(props: SpotPricesProps): SpotPricesStream {
+function fromSampleDataBase(props: B.SpotPricesProps): B.SpotPricesStream {
   const data = sampleData();
-  const stream = new DebugSpotPricesStream(props);
+  const stream = new LocalSpotPricesStream(props);
   const emitNext = () => {
     data.next().then(a => {
       setImmediate(() => {
@@ -105,10 +105,10 @@ function fromSampleDataBase(props: SpotPricesProps): SpotPricesStream {
 }
 export const fromSampleData = mem(fromSampleDataBase, {cacheKey: arguments_ => JSON.stringify(arguments_)})
 
-function fromFileBase(props: SpotPricesProps & {path: fs.PathLike}): SpotPricesStream {
+function fromFileBase(props: B.SpotPricesProps & {path: fs.PathLike}): B.SpotPricesStream {
   const {path, ...originalProps} = props;
   const data = fr0mFile(path);
-  const stream = new DebugSpotPricesStream(originalProps);
+  const stream = new LocalSpotPricesStream(originalProps);
   const emitNext = () => {
     data.next().then(a => {
       setImmediate(() => {
