@@ -55,6 +55,42 @@ class LocalAccountStream extends B.DebugAccountStream {
         return stream;
     }
 
+    stopOrder(props: B.AccountSimpleStopOrderProps): B.OrderStream<B.StopOrderProps> {
+        if (!includesCurrency(props.symbol, this.props.currency)) {
+            const symbol = props.symbol.toString();
+            const currency = this.props.currency.toString()
+            throw new Error(
+                `symbol ${symbol} does not involve currency ${currency}. This account only supports currency pairs with ${currency}.`
+            );
+        }
+
+        if (!this.orders.has(props.id)) {
+            this.orders.set(props.id, [])
+        }
+        const order: B.Order = { ...props, entry: 0, profitLoss: 0 }
+        const spots = this.spotPrices({ symbol: props.symbol })
+        const stream = fromSpotPrices({ ...props, orderType: "STOP", spots })
+        const update = (e: B.OrderProfitLossEvent) => {
+            order.profitLoss = e.profitLoss;
+            this.updateEquity(e)
+        }
+        stream.on("profitLoss", update)
+        stream.once("end", e => {
+            stream.off("profitLoss", update)
+            const all = this.orders.get(props.id)!
+            const toBeDeleted: number[] = [];
+            all.forEach((o, index) => {
+                if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
+                    this.emitTransaction({ timestamp: e.timestamp, amount: o.profitLoss })
+                    toBeDeleted.push(index);
+                }
+            });
+            toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
+        })
+        stream.once("accepted", () => this.orders.get(props.id)!.push(order))
+        return stream;
+    }
+
     spotPrices(props: B.AccountSimpleSpotPricesProps): B.SpotPricesStream {
         return this.spots(props)
     }
