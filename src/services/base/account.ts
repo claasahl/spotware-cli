@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 import debug from "debug";
 
 import { Price, Timestamp, Currency } from "./types";
-import { OrderStream, OrderProps } from "./order";
+import { OrderStream, MarketOrderProps, StopOrderProps } from "./order";
 import { SpotPricesStream, SpotPricesProps } from "./spotPrices";
 import { TrendbarsProps, TrendbarsStream } from "./trendbars";
 
@@ -21,14 +21,16 @@ export interface EquityChangedEvent {
 export interface OrderEvent {
   timestamp: Timestamp;
 }
-export type AccountSimpleOrderProps<Props extends OrderProps> = Omit<Props, keyof AccountProps>;
+export type AccountSimpleMarketOrderProps = Omit<MarketOrderProps, keyof AccountProps>;
+export type AccountSimpleStopOrderProps = Omit<StopOrderProps, keyof AccountProps>;
 export type AccountSimpleSpotPricesProps = Omit<SpotPricesProps, keyof AccountProps>;
 export type AccountSimpleTrendbarsProps = Omit<TrendbarsProps, keyof AccountProps>;
 export interface AccountProps {
   readonly currency: Currency;
 }
 export interface AccountActions {
-  order<Props extends OrderProps>(props: AccountSimpleOrderProps<Props>): OrderStream<Props>;
+  marketOrder(props: AccountSimpleMarketOrderProps): OrderStream<MarketOrderProps>;
+  stopOrder(props: AccountSimpleStopOrderProps): OrderStream<StopOrderProps>;
   spotPrices(props: AccountSimpleSpotPricesProps): SpotPricesStream;
   trendbars(props: AccountSimpleTrendbarsProps): TrendbarsStream;
 }
@@ -106,7 +108,8 @@ export abstract class AccountStream extends EventEmitter implements AccountActio
     })
   }
 
-  abstract order<Props extends OrderProps>(props: AccountSimpleOrderProps<Props>): OrderStream<Props>;
+  abstract marketOrder(props: AccountSimpleMarketOrderProps): OrderStream<MarketOrderProps>;
+  abstract stopOrder(props: AccountSimpleStopOrderProps): OrderStream<StopOrderProps>;
   abstract spotPrices(props: AccountSimpleSpotPricesProps): SpotPricesStream;
   abstract trendbars(props: AccountSimpleTrendbarsProps): TrendbarsStream;
 }
@@ -128,7 +131,10 @@ export class DebugAccountStream extends AccountStream {
     const order = log.extend("order");
     this.prependListener("order", e => order("%j", e));
   }
-  order<Props extends OrderProps>(_props: AccountSimpleOrderProps<Props>): OrderStream<Props> {
+  marketOrder(_props: AccountSimpleMarketOrderProps): OrderStream<MarketOrderProps> {
+    throw new Error("not implemented");
+  }
+  stopOrder(_props: AccountSimpleStopOrderProps): OrderStream<StopOrderProps> {
     throw new Error("not implemented");
   }
   spotPrices(_props: AccountSimpleSpotPricesProps): SpotPricesStream {
