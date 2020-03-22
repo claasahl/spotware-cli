@@ -93,12 +93,12 @@ export declare interface OrderStream<Props extends OrderProps> extends EventEmit
 
 export abstract class OrderStream<Props extends OrderProps> extends EventEmitter
   implements OrderActions {
-  readonly props: Props
+  public readonly props: Props
   private cachedEntry?: OrderFilledEvent;
   private cachedProfitLoss?: OrderProfitLossEvent;
   constructor(props: Props) {
     super();
-    this.props = props;
+    this.props = Object.freeze(props);
     this.on("filled", e => this.cachedEntry = e)
     this.on("profitLoss", e => this.cachedProfitLoss = e)
   }

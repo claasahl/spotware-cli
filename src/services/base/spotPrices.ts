@@ -57,14 +57,13 @@ export declare interface SpotPricesStream extends EventEmitter {
   prependOnceListener(event: "price", listener: (e: PriceChangedEvent) => void): this;
 }
 
-export abstract class SpotPricesStream extends EventEmitter
-  implements SpotPricesProps, SpotPricesActions {
-  readonly symbol: Symbol;
+export abstract class SpotPricesStream extends EventEmitter implements SpotPricesActions {
+  public readonly props: SpotPricesProps;
   private cachedAskPrice?: AskPriceChangedEvent;
   private cachedBidPrice?: BidPriceChangedEvent;
   constructor(props: SpotPricesProps) {
     super();
-    this.symbol = props.symbol;
+    this.props = Object.freeze(props);
     this.on("ask", e => this.cachedAskPrice = e)
     this.on("bid", e => this.cachedBidPrice = e)
   }

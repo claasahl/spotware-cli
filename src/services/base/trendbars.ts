@@ -40,15 +40,12 @@ export declare interface TrendbarsStream extends EventEmitter {
     prependOnceListener(event: "trendbar", listener: (e: TrendbarEvent) => void): this;
 }
 
-export class TrendbarsStream extends EventEmitter
-  implements TrendbarsProps, TrendbarsActions {
-  readonly symbol: Symbol;
-  readonly period: Period;
+export class TrendbarsStream extends EventEmitter implements TrendbarsActions {
+  public readonly props: TrendbarsProps;
   private cachedTrendbar?: TrendbarEvent;
   constructor(props: TrendbarsProps) {
     super();
-    this.symbol = props.symbol;
-    this.period = props.period;
+    this.props = Object.freeze(props);
     this.on("trendbar", e => this.cachedTrendbar = e)
   }
 

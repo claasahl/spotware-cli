@@ -69,14 +69,13 @@ export declare interface AccountStream extends EventEmitter {
   prependOnceListener(event: "order", listener: (e: OrderEvent) => void): this;
 }
 
-export abstract class AccountStream extends EventEmitter
-  implements AccountProps, AccountActions {
-  readonly currency: Currency;
+export abstract class AccountStream extends EventEmitter implements AccountActions {
+  public readonly props: AccountProps;
   private cachedBalance?: BalanceChangedEvent;
   private cachedEquity?: EquityChangedEvent;
   constructor(props: AccountProps) {
     super();
-    this.currency = props.currency;
+    this.props = Object.freeze(props);
     this.on("balance", e => this.cachedBalance = e)
     this.on("equity", e => this.cachedEquity = e)
     this.on("transaction", e => {
