@@ -21,8 +21,8 @@ export interface EquityChangedEvent {
 export interface OrderEvent {
   timestamp: Timestamp;
 }
-export type AccountSimpleMarketOrderProps = Omit<MarketOrderProps, keyof AccountProps>;
-export type AccountSimpleStopOrderProps = Omit<StopOrderProps, keyof AccountProps>;
+export type AccountSimpleMarketOrderProps = Omit<MarketOrderProps, keyof AccountProps | "orderType">;
+export type AccountSimpleStopOrderProps = Omit<StopOrderProps, keyof AccountProps | "orderType">;
 export type AccountSimpleSpotPricesProps = Omit<SpotPricesProps, keyof AccountProps>;
 export type AccountSimpleTrendbarsProps = Omit<TrendbarsProps, keyof AccountProps>;
 export interface AccountProps {
