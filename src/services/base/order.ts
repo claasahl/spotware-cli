@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import debug from "debug";
 
-import { Symbol, Timestamp, TradeSide, Volume, Price } from "./types";
+import { Symbol, Timestamp, TradeSide, Volume, Price, OrderType } from "./types";
 
 export interface OrderAcceptedEvent {
   timestamp: Timestamp;
@@ -25,12 +25,24 @@ export interface OrderEndEvent {
   profitLoss?: Price;
 }
 
-export interface OrderProps {
+interface CommonOrderProps {
   readonly id: string;
   readonly symbol: Symbol;
   readonly tradeSide: TradeSide;
   readonly volume: Volume;
+  readonly takeProfit?: Price;
+  readonly stopLoss?: Price;
+  readonly orderType: OrderType
 }
+
+export interface MarketOrderProps extends CommonOrderProps {
+  readonly orderType: "MARKET"
+}
+export interface StopOrderProps extends CommonOrderProps {
+  readonly orderType: "STOP"
+  readonly enter: Price;
+}
+export type OrderProps = MarketOrderProps | StopOrderProps
 
 export interface OrderActions {
   close(): this;
@@ -39,7 +51,7 @@ export interface OrderActions {
   amend(): this;
 }
 
-export declare interface OrderStream extends EventEmitter {
+export declare interface OrderStream<Props extends OrderProps> extends EventEmitter {
   entry(cb: (e: OrderFilledEvent) => void): void;
   profitLoss(cb: (e: OrderProfitLossEvent) => void): void
 
@@ -79,20 +91,14 @@ export declare interface OrderStream extends EventEmitter {
   prependOnceListener(event: "end", listener: (e: OrderEndEvent) => void): this;
 }
 
-export abstract class OrderStream extends EventEmitter
-  implements OrderProps, OrderActions {
-  readonly id: string;
-  readonly symbol: Symbol;
-  readonly tradeSide: TradeSide;
-  readonly volume: Volume;
+export abstract class OrderStream<Props extends OrderProps> extends EventEmitter
+  implements OrderActions {
+  readonly props: Props
   private cachedEntry?: OrderFilledEvent;
   private cachedProfitLoss?: OrderProfitLossEvent;
-  constructor(props: OrderProps) {
+  constructor(props: Props) {
     super();
-    this.id = props.id;
-    this.symbol = props.symbol;
-    this.tradeSide = props.tradeSide;
-    this.volume = props.volume;
+    this.props = props;
     this.on("filled", e => this.cachedEntry = e)
     this.on("profitLoss", e => this.cachedProfitLoss = e)
   }
@@ -123,8 +129,8 @@ export abstract class OrderStream extends EventEmitter
   abstract amend(): this;
 }
 
-export class DebugOrderStream extends OrderStream {
-  constructor(props: OrderProps) {
+export class DebugOrderStream<Props extends OrderProps> extends OrderStream<Props> {
+  constructor(props: Props) {
     super(props);
     const log = debug("order");
 

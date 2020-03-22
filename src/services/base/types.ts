@@ -7,6 +7,7 @@ export type Timestamp = number;
 export type Symbol = symbol;
 export type Currency = symbol;
 export type TradeSide = "BUY" | "SELL";
+export type OrderType = "MARKET" | "STOP"
 
 export interface Order {
   symbol: Symbol;
