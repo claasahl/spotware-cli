@@ -1,5 +1,5 @@
 import * as B from "../base";
-import { fromSpotPrices } from "./order";
+import { marketOrderFromSpotPrices, stopOrderFromSpotPrices } from "./order";
 import { includesCurrency } from "./util";
 import { trendbarsFromSpotPrices } from "./trendbars";
 
@@ -33,7 +33,7 @@ class LocalAccountStream extends B.DebugAccountStream {
         }
         const order: B.Order = { ...props, entry: 0, profitLoss: 0 }
         const spots = this.spotPrices({ symbol: props.symbol })
-        const stream = fromSpotPrices({ ...props, orderType: "MARKET", spots })
+        const stream = marketOrderFromSpotPrices({ ...props, orderType: "MARKET", spots })
         const update = (e: B.OrderProfitLossEvent) => {
             order.profitLoss = e.profitLoss;
             this.updateEquity(e)
@@ -69,7 +69,7 @@ class LocalAccountStream extends B.DebugAccountStream {
         }
         const order: B.Order = { ...props, entry: 0, profitLoss: 0 }
         const spots = this.spotPrices({ symbol: props.symbol })
-        const stream = fromSpotPrices({ ...props, orderType: "STOP", spots })
+        const stream = stopOrderFromSpotPrices({ ...props, orderType: "STOP", spots })
         const update = (e: B.OrderProfitLossEvent) => {
             order.profitLoss = e.profitLoss;
             this.updateEquity(e)
