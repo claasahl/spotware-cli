@@ -1,10 +1,9 @@
 import * as B from "../base";
-import { AccountProps } from "../base";
 import { fromSpotPrices } from "./order";
 import { includesCurrency } from "./util";
 import { trendbarsFromSpotPrices } from "./trendbars";
 
-interface LocalAccountProps extends AccountProps {
+interface LocalAccountProps extends B.AccountProps {
     spots: (props: B.AccountSimpleSpotPricesProps) => B.SpotPricesStream;
     initialBalance: B.Price;
 }
@@ -20,10 +19,12 @@ class LocalAccountStream extends B.DebugAccountStream {
         this.on("balance", this.updateEquity)
     }
 
-    order(props: B.AccountSimpleOrderProps): B.OrderStream {
-        if (!includesCurrency(props.symbol, this.currency)) {
+    marketOrder(props: B.AccountSimpleMarketOrderProps): B.OrderStream<B.MarketOrderProps> {
+        if (!includesCurrency(props.symbol, this.props.currency)) {
+            const symbol = props.symbol.toString();
+            const currency = this.props.currency.toString()
             throw new Error(
-                `symbol ${props.symbol.toString()} does not involve currency ${this.currency.toString()}. This account only supports currency pairs with ${this.currency.toString()}.`
+                `symbol ${symbol} does not involve currency ${currency}. This account only supports currency pairs with ${currency}.`
             );
         }
 

@@ -10,7 +10,7 @@ const log = debug("local-data");
 
 class LocalSpotPricesStream extends B.DebugSpotPricesStream {
   trendbars(props: B.SpotPricesSimpleTrendbarsProps): B.TrendbarsStream {
-    return trendbarsFromSpotPrices({...props, ...this, spots: this});
+    return trendbarsFromSpotPrices({...props, ...this.props, spots: this});
   }
 }
 

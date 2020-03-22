@@ -1,16 +1,23 @@
-import { DebugOrderStream, OrderStream, OrderProps, SpotPricesStream, BidPriceChangedEvent, AskPriceChangedEvent } from "../base"
+import * as B from "../base"
 
-export function fromSpotPrices(props: OrderProps & { spots: SpotPricesStream }): OrderStream {
-    const { spots, ...originalProps } = props;
-    const stream = new DebugOrderStream(originalProps);
+class LocalOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream<Props> {
+    end() {
+        // implement me & others
+        return this;
+    }
+}
+
+export function fromSpotPrices<Props extends B.OrderProps>(props: Props & { spots: B.SpotPricesStream }): B.OrderStream<Props> {
+    const { spots } = props;
+    const stream = new LocalOrderStream<Props>(props);
     if (props.tradeSide === "BUY") {
         spots.ask(e => {
             const {timestamp, ask: entry} = e;
             stream.emitFilled({ timestamp, entry })
 
-            const update = (e: BidPriceChangedEvent) => {
+            const update = (e: B.BidPriceChangedEvent) => {
                 const timestamp = e.timestamp
-                const profitLoss = (e.bid - entry) * stream.volume;
+                const profitLoss = (e.bid - entry) * stream.props.volume;
                 stream.emitProfitLoss({ timestamp, profitLoss })
             }
             spots.bid(e => {
@@ -24,9 +31,9 @@ export function fromSpotPrices(props: OrderProps & { spots: SpotPricesStream }):
             const {timestamp, bid: entry} = e;
             stream.emitFilled({ timestamp, entry })
 
-            const update = (e: AskPriceChangedEvent) => {
+            const update = (e: B.AskPriceChangedEvent) => {
                 const timestamp = e.timestamp
-                const profitLoss = (entry - e.ask) * stream.volume;
+                const profitLoss = (entry - e.ask) * stream.props.volume;
                 stream.emitProfitLoss({ timestamp, profitLoss })
             }
             spots.ask(e => {

@@ -15,10 +15,10 @@ function local() {
   const currency = Symbol.for("EUR");
   const account = fromNothing({currency, spots: fromSampleData, initialBalance: 1000})
   setImmediate(() => {
-    account.spotPrices({ symbol });
+    account.trendbars({ symbol, period: 2000 });
   });
   setImmediate(() => {
-    account.order({ id: "1", symbol, tradeSide: "SELL", volume: 1 });
+    account.marketOrder({ id: "1", symbol, tradeSide: "BUY", volume: 1, orderType: "MARKET" });
   });
 }
 local();
