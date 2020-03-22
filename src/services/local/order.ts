@@ -12,7 +12,7 @@ export function marketOrderFromSpotPrices(props: B.MarketOrderProps & { spots: B
     const stream = new LocalOrderStream(props);
     if (props.tradeSide === "BUY") {
         spots.ask(e => {
-            const {timestamp, ask: entry} = e;
+            const { timestamp, ask: entry } = e;
             stream.emitFilled({ timestamp, entry })
 
             const update = (e: B.BidPriceChangedEvent) => {
@@ -28,7 +28,7 @@ export function marketOrderFromSpotPrices(props: B.MarketOrderProps & { spots: B
         })
     } else if (props.tradeSide === "SELL") {
         spots.bid(e => {
-            const {timestamp, bid: entry} = e;
+            const { timestamp, bid: entry } = e;
             stream.emitFilled({ timestamp, entry })
 
             const update = (e: B.AskPriceChangedEvent) => {
@@ -43,7 +43,10 @@ export function marketOrderFromSpotPrices(props: B.MarketOrderProps & { spots: B
             stream.once("end", () => spots.off("ask", update))
         })
     }
-    stream.emitAccepted({timestamp: Date.now()})
+    stream.emitAccepted({ timestamp: Date.now() })
+    setTimeout(() => {
+        stream.emitEnd({ timestamp: Date.now() })
+    }, 500)
     return stream;
 }
 
@@ -52,38 +55,63 @@ export function stopOrderFromSpotPrices(props: B.StopOrderProps & { spots: B.Spo
     const { spots } = props;
     const stream = new LocalOrderStream(props);
     if (props.tradeSide === "BUY") {
-        spots.ask(e => {
-            const {timestamp, ask: entry} = e;
-            stream.emitFilled({ timestamp, entry })
+        const fill = (e: B.AskPriceChangedEvent): boolean => {
+            const { timestamp, ask: entry } = e;
+            if (entry >= props.enter) {
+                stream.emitFilled({ timestamp, entry })
 
-            const update = (e: B.BidPriceChangedEvent) => {
-                const timestamp = e.timestamp
-                const profitLoss = (e.bid - entry) * stream.props.volume;
-                stream.emitProfitLoss({ timestamp, profitLoss })
+                const update = (e: B.BidPriceChangedEvent) => {
+                    const timestamp = e.timestamp
+                    const profitLoss = (e.bid - entry) * stream.props.volume;
+                    stream.emitProfitLoss({ timestamp, profitLoss })
+                }
+                spots.bid(e => {
+                    update(e);
+                    spots.on("bid", update)
+                })
+                stream.once("end", () => spots.off("bid", update))
+                return true;
             }
-            spots.bid(e => {
-                update(e);
-                spots.on("bid", update)
-            })
-            stream.once("end", () => spots.off("bid", update))
+            return false;
+        }
+        spots.ask(e => {
+            if(!fill(e)) {
+                spots.on("ask", fill);
+                stream.once("filled", () => spots.off("ask", fill))
+                stream.once("end", () => spots.off("ask", fill))
+            }
         })
     } else if (props.tradeSide === "SELL") {
-        spots.bid(e => {
-            const {timestamp, bid: entry} = e;
-            stream.emitFilled({ timestamp, entry })
+        const fill = (e: B.BidPriceChangedEvent): boolean => {
+            const { timestamp, bid: entry } = e;
+            if (entry <= props.enter) {
+                stream.emitFilled({ timestamp, entry })
 
-            const update = (e: B.AskPriceChangedEvent) => {
-                const timestamp = e.timestamp
-                const profitLoss = (entry - e.ask) * stream.props.volume;
-                stream.emitProfitLoss({ timestamp, profitLoss })
+                const update = (e: B.AskPriceChangedEvent) => {
+                    const timestamp = e.timestamp
+                    const profitLoss = (entry - e.ask) * stream.props.volume;
+                    stream.emitProfitLoss({ timestamp, profitLoss })
+                }
+                spots.ask(e => {
+                    update(e);
+                    spots.on("ask", update)
+                })
+                stream.once("end", () => spots.off("ask", update))
+                return true;
             }
-            spots.ask(e => {
-                update(e);
-                spots.on("ask", update)
-            })
-            stream.once("end", () => spots.off("ask", update))
+            return false;
+        }
+        spots.bid(e => {
+            if(!fill(e)) {
+                spots.on("bid", fill)
+                stream.once("filled", () => spots.off("bid", fill))
+                stream.once("end", () => spots.off("bid", fill))
+            }
         })
     }
-    stream.emitAccepted({timestamp: Date.now()})
+    stream.emitAccepted({ timestamp: Date.now() })
+    setTimeout(() => {
+        stream.emitEnd({ timestamp: Date.now() })
+    }, 500)
     return stream;
 }
