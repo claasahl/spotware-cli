@@ -44,9 +44,6 @@ export function marketOrderFromSpotPrices(props: B.MarketOrderProps & { spots: B
         })
     }
     stream.emitAccepted({timestamp: Date.now()})
-    setTimeout(() => {
-        stream.emitEnd({timestamp: Date.now()})
-    }, 500)
     return stream;
 }
 
@@ -88,8 +85,5 @@ export function stopOrderFromSpotPrices(props: B.StopOrderProps & { spots: B.Spo
         })
     }
     stream.emitAccepted({timestamp: Date.now()})
-    setTimeout(() => {
-        stream.emitEnd({timestamp: Date.now()})
-    }, 500)
     return stream;
 }
