@@ -19,7 +19,7 @@ class LocalAccountStream extends B.DebugAccountStream {
         this.on("balance", this.updateEquity)
     }
 
-    marketOrder(props: B.AccountSimpleMarketOrderProps): B.OrderStream<B.MarketOrderProps> {
+    order<Props extends B.OrderProps>(props: B.AccountSimpleOrderProps<Props>): B.OrderStream<Props> {
         if (!includesCurrency(props.symbol, this.props.currency)) {
             const symbol = props.symbol.toString();
             const currency = this.props.currency.toString()
@@ -33,7 +33,7 @@ class LocalAccountStream extends B.DebugAccountStream {
         }
         const order: B.Order = { ...props, entry: 0, profitLoss: 0 }
         const spots = this.spotPrices({ symbol: props.symbol })
-        const stream = fromSpotPrices({ ...props, spots })
+        const stream = fromSpotPrices<Props>({ ...props, spots })
         const update = (e: B.OrderProfitLossEvent) => {
             order.profitLoss = e.profitLoss;
             this.updateEquity(e)
