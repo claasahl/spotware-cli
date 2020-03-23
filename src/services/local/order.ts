@@ -20,6 +20,12 @@ function fromSpotPrices<Props extends B.OrderProps>(props: Props & { spots: B.Sp
                     const timestamp = e.timestamp
                     const profitLoss = (e.bid - entry) * stream.props.volume;
                     stream.emitProfitLoss({ timestamp, profitLoss })
+
+                    if(props.stopLoss && props.stopLoss >= e.bid ||
+                        props.takeProfit && props.takeProfit <= e.bid) {
+                        stream.emitClosed({timestamp, exit: e.bid, profitLoss})
+                        stream.emitEnd({timestamp, exit: e.bid, profitLoss})
+                    }
                 }
                 spots.bid(e => {
                     update(e);
@@ -47,6 +53,12 @@ function fromSpotPrices<Props extends B.OrderProps>(props: Props & { spots: B.Sp
                     const timestamp = e.timestamp
                     const profitLoss = (entry - e.ask) * stream.props.volume;
                     stream.emitProfitLoss({ timestamp, profitLoss })
+
+                    if(props.stopLoss && props.stopLoss <= e.ask ||
+                        props.takeProfit && props.takeProfit >= e.ask) {
+                        stream.emitClosed({timestamp, exit: e.ask, profitLoss})
+                        stream.emitEnd({timestamp, exit: e.ask, profitLoss})
+                    }
                 }
                 spots.ask(e => {
                     update(e);

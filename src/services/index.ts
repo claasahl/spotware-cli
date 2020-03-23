@@ -18,7 +18,9 @@ function local() {
     account.trendbars({ symbol, period: 2000 });
   });
   setImmediate(() => {
-    account.marketOrder({ id: "1", symbol, tradeSide: "BUY", volume: 1 });
+    // account.stopOrder({ id: "1", symbol, tradeSide: "SELL", volume: 1, enter: 6613});
+    // account.marketOrder({ id: "1", symbol, tradeSide: "BUY", volume: 1, takeProfit: 6614.0});
+    account.marketOrder({ id: "1", symbol, tradeSide: "SELL", volume: 1, stopLoss: 6613.0});
   });
 }
 local();
