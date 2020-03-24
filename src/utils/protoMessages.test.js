@@ -359,6 +359,18 @@ describe("", () => {
       ProtoOAPayloadType.PROTO_OA_MARGIN_CALL_TRIGGER_EVENT
     );
   });
+  test("2173 / PROTO_OA_REFRESH_TOKEN_REQ", () => {
+    const { payloadType } = pm.pm2173();
+    expect(payloadType).toBe(
+      ProtoOAPayloadType.PROTO_OA_REFRESH_TOKEN_REQ
+    );
+  });
+  test("2174 / PROTO_OA_REFRESH_TOKEN_RES", () => {
+    const { payloadType } = pm.pm2174();
+    expect(payloadType).toBe(
+      ProtoOAPayloadType.PROTO_OA_REFRESH_TOKEN_RES
+    );
+  });
   test("should cover all payloadTypes", () => {
     const protoOAPayloadTypes = Object.keys(ProtoOAPayloadType)
       .map(k => ProtoOAPayloadType[k])
