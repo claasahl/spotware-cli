@@ -66,6 +66,29 @@ describe("DebugAccountStream", () => {
         stream.emit("equity", event);
     })
 
+    describe("actions", () => {
+        test("marketOrder", () => {
+            const props = { currency: Symbol.for("abc"), a: 2 }
+            const stream = new DebugAccountStream(props)
+            expect(stream.marketOrder).toThrow("not implemented")
+        })
+        test("stopOrder", () => {
+            const props = { currency: Symbol.for("abc"), a: 2 }
+            const stream = new DebugAccountStream(props)
+            expect(stream.stopOrder).toThrow("not implemented")
+        })
+        test("spotPrices", () => {
+            const props = { currency: Symbol.for("abc"), a: 2 }
+            const stream = new DebugAccountStream(props)
+            expect(stream.spotPrices).toThrow("not implemented")
+        })
+        test("trendbars", () => {
+            const props = { currency: Symbol.for("abc"), a: 2 }
+            const stream = new DebugAccountStream(props)
+            expect(stream.trendbars).toThrow("not implemented")
+        })
+    })
+
     describe("emitXXX helpers", () => {
         test("should emit 'balance' event", done => {
             const props = { currency: Symbol.for("abc"), a: 2 }
