@@ -1,4 +1,11 @@
 const {DebugAccountStream} = require("../../../build/services/base/account")
+const debug = require("debug")
+
+jest.mock("debug");
+const log = jest.fn(() => undefined)
+const extend = jest.fn(() => log)
+debug.mockImplementation(() => ({ extend }))
+
 describe("DebugAccountStream", () => {
     
     describe("props", () => {
@@ -13,6 +20,66 @@ describe("DebugAccountStream", () => {
             const stream = new DebugAccountStream(props)
             expect(Object.isFrozen(props)).toBe(true)
             expect(Object.isFrozen(stream.props)).toBe(true)
+        })
+    })
+
+    describe("log events", () => {
+        beforeEach(() => {
+            debug.mockClear();
+            extend.mockClear();
+            log.mockClear();
+        });
+
+        test("setup loggers", () => {
+            const props = { currency: Symbol.for("abc"), a: 2 }
+            new DebugAccountStream(props)
+            expect(debug).toHaveBeenCalledTimes(1)
+            expect(extend).toHaveBeenCalledTimes(4)
+            expect(log).toHaveBeenCalledTimes(0)
+        })
+
+        test("log 'balance' events", () => {
+            const props = { currency: Symbol.for("abc"), a: 2 }
+            const stream = new DebugAccountStream(props)
+            const event = { balance: 23, timestamp: 123 };
+            stream.emit("balance", event)
+            expect(log).toHaveBeenCalledTimes(1)
+            expect(log).toHaveBeenCalledWith(expect.any(String), event);
+        })
+
+        test("log 'transaction' events", () => {
+            const props = { currency: Symbol.for("abc"), a: 2 }
+            const stream = new DebugAccountStream(props)
+            const event = { balance: 23, timestamp: 123 };
+            stream.emit("transaction", event)
+            expect(log).toHaveBeenCalledTimes(1)
+            expect(log).toHaveBeenCalledWith(expect.any(String), event);
+        })
+
+        test("log 'equity' events", () => {
+            const props = { currency: Symbol.for("abc"), a: 2 }
+            const stream = new DebugAccountStream(props)
+            const event = { equity: 23, timestamp: 123 };
+            stream.emit("equity", event)
+            expect(log).toHaveBeenCalledTimes(1)
+            expect(log).toHaveBeenCalledWith(expect.any(String), event);
+        })
+
+        test("log 'order' events", () => {
+            const props = { currency: Symbol.for("abc"), a: 2 }
+            const stream = new DebugAccountStream(props)
+            const event = { timestamp: 123 };
+            stream.emit("order", event)
+            expect(log).toHaveBeenCalledTimes(1)
+            expect(log).toHaveBeenCalledWith(expect.any(String), event);
+        })
+
+        test("should not log unknown events", () => {
+            const props = { currency: Symbol.for("abc"), a: 2 }
+            const stream = new DebugAccountStream(props)
+            stream.emit("unknown", {})
+            stream.emit("something", {})
+            expect(log).toHaveBeenCalledTimes(0)
         })
     })
 
