@@ -61,11 +61,13 @@ export abstract class SpotPricesStream extends EventEmitter implements SpotPrice
   public readonly props: SpotPricesProps;
   private cachedAskPrice?: AskPriceChangedEvent;
   private cachedBidPrice?: BidPriceChangedEvent;
+  private cachedPrice?: PriceChangedEvent;
   constructor(props: SpotPricesProps) {
     super();
     this.props = Object.freeze(props);
     this.on("ask", e => this.cachedAskPrice = e)
     this.on("bid", e => this.cachedBidPrice = e)
+    this.on("price", e => this.cachedPrice = e)
   }
   ask(cb: (e: AskPriceChangedEvent) => void): void {
     setImmediate(() => {
@@ -82,6 +84,15 @@ export abstract class SpotPricesStream extends EventEmitter implements SpotPrice
         cb(this.cachedBidPrice)
       } else {
         this.once("bid", cb)
+      }
+    })
+  }
+  price(cb: (e: PriceChangedEvent) => void): void {
+    setImmediate(() => {
+      if (this.cachedPrice) {
+        cb(this.cachedPrice)
+      } else {
+        this.once("price", cb)
       }
     })
   }
