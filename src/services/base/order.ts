@@ -52,7 +52,7 @@ export interface OrderActions {
 }
 
 export declare interface OrderStream<Props extends OrderProps> extends EventEmitter {
-  entry(cb: (e: OrderFilledEvent) => void): void;
+  filled(cb: (e: OrderFilledEvent) => void): void;
   profitLoss(cb: (e: OrderProfitLossEvent) => void): void
 
   addListener(event: string, listener: (...args: any[]) => void): this;
@@ -103,7 +103,7 @@ export abstract class OrderStream<Props extends OrderProps> extends EventEmitter
     this.on("profitLoss", e => this.cachedProfitLoss = e)
   }
 
-  entry(cb: (e: OrderFilledEvent) => void): void {
+  filled(cb: (e: OrderFilledEvent) => void): void {
     setImmediate(() => {
       if (this.cachedEntry) {
         cb(this.cachedEntry);
