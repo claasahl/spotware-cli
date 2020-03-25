@@ -73,11 +73,11 @@ describe("DebugOrderStream", () => {
             expect(log).toHaveBeenCalledWith(expect.any(String), event);
         })
 
-        test("log 'end' events", () => {
+        test("log 'ended' events", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
             const event = { exit: 42, profitLoss: 23, timestamp: 123 };
-            stream.emit("end", event)
+            stream.emit("ended", event)
             expect(log).toHaveBeenCalledTimes(1)
             expect(log).toHaveBeenCalledWith(expect.any(String), event);
         })
@@ -92,6 +92,30 @@ describe("DebugOrderStream", () => {
     })
 
     describe("access cached events", () => {
+        test("should call cb with accepted (not cached)", done => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { timestamp: 123 };
+            stream.accepted(e => {
+                expect(e).toBe(event);
+                done()
+            })
+            setTimeout(() => stream.emit("accepted", event), 100)
+        })
+    
+        test("should call cb with accepted (cached)", done => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { timestamp: 123 };
+            stream.once("accepted", () => {
+                stream.accepted(e => {
+                    expect(e).toBe(event);
+                    done()
+                })
+            })
+            stream.emit("accepted", event);
+        })
+
         test("should call cb with filled (not cached)", done => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
@@ -138,6 +162,54 @@ describe("DebugOrderStream", () => {
                 })
             })
             stream.emit("profitLoss", event);
+        })
+        
+        test("should call cb with closed (not cached)", done => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { exit: 42, profitLoss: 23, timestamp: 123 };
+            stream.closed(e => {
+                expect(e).toBe(event);
+                done()
+            })
+            setTimeout(() => stream.emit("closed", event), 100)
+        })
+    
+        test("should call cb with closed (cached)", done => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { exit: 42, profitLoss: 23, timestamp: 123 };
+            stream.once("closed", () => {
+                stream.closed(e => {
+                    expect(e).toBe(event);
+                    done()
+                })
+            })
+            stream.emit("closed", event);
+        })
+
+        test("should call cb with ended (not cached)", done => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { exit: 42, profitLoss: 23, timestamp: 123 };
+            stream.ended(e => {
+                expect(e).toBe(event);
+                done()
+            })
+            setTimeout(() => stream.emit("ended", event), 100)
+        })
+    
+        test("should call cb with ended (cached)", done => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { exit: 42, profitLoss: 23, timestamp: 123 };
+            stream.once("ended", () => {
+                stream.ended(e => {
+                    expect(e).toBe(event);
+                    done()
+                })
+            })
+            stream.emit("ended", event);
         })
     })
 
@@ -209,15 +281,15 @@ describe("DebugOrderStream", () => {
             stream.emitClosed(event)
         })
 
-        test("should emit 'end' event", done => {
+        test("should emit 'ended' event", done => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
             const event = { exit: 42, profitLoss: 23, timestamp: 123 };
-            stream.once("end", e => {
+            stream.once("ended", e => {
                 expect(e).toBe(event);
                 done()
             })
-            stream.emitEnd(event)
+            stream.emitEnded(event)
         })
     })
 })

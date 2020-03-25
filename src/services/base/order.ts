@@ -19,7 +19,7 @@ export interface OrderClosedEvent {
   exit: Price;
   profitLoss: Price;
 }
-export interface OrderEndEvent {
+export interface OrderEndedEvent {
   timestamp: Timestamp;
   exit?: Price;
   profitLoss?: Price;
@@ -52,61 +52,80 @@ export interface OrderActions {
 }
 
 export declare interface OrderStream<Props extends OrderProps> extends EventEmitter {
+  accepted(cb: (e: OrderAcceptedEvent) => void): void;
   filled(cb: (e: OrderFilledEvent) => void): void;
   profitLoss(cb: (e: OrderProfitLossEvent) => void): void
+  closed(cb: (e: OrderClosedEvent) => void): void
+  ended(cb: (e: OrderEndedEvent) => void): void
 
   addListener(event: string, listener: (...args: any[]) => void): this;
   addListener(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
   addListener(event: "filled", listener: (e: OrderFilledEvent) => void): this;
   addListener(event: "profitLoss", listener: (e: OrderProfitLossEvent) => void): this;
   addListener(event: "closed", listener: (e: OrderClosedEvent) => void): this;
-  addListener(event: "end", listener: (e: OrderEndEvent) => void): this;
+  addListener(event: "ended", listener: (e: OrderEndedEvent) => void): this;
 
   on(event: string, listener: (...args: any[]) => void): this;
   on(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
   on(event: "filled", listener: (e: OrderFilledEvent) => void): this;
   on(event: "profitLoss", listener: (e: OrderProfitLossEvent) => void): this;
   on(event: "closed", listener: (e: OrderClosedEvent) => void): this;
-  on(event: "end", listener: (e: OrderEndEvent) => void): this;
+  on(event: "ended", listener: (e: OrderEndedEvent) => void): this;
 
   once(event: string, listener: (...args: any[]) => void): this;
   once(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
   once(event: "filled", listener: (e: OrderFilledEvent) => void): this;
   once(event: "profitLoss", listener: (e: OrderProfitLossEvent) => void): this;
   once(event: "closed", listener: (e: OrderClosedEvent) => void): this;
-  once(event: "end", listener: (e: OrderEndEvent) => void): this;
+  once(event: "ended", listener: (e: OrderEndedEvent) => void): this;
 
   prependListener(event: string, listener: (...args: any[]) => void): this;
   prependListener(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
   prependListener(event: "filled", listener: (e: OrderFilledEvent) => void): this;
   prependListener(event: "profitLoss", listener: (e: OrderProfitLossEvent) => void): this;
   prependListener(event: "closed", listener: (e: OrderClosedEvent) => void): this;
-  prependListener(event: "end", listener: (e: OrderEndEvent) => void): this;
+  prependListener(event: "ended", listener: (e: OrderEndedEvent) => void): this;
 
   prependOnceListener(event: string, listener: (...args: any[]) => void): this;
   prependOnceListener(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
   prependOnceListener(event: "filled", listener: (e: OrderFilledEvent) => void): this;
   prependOnceListener(event: "profitLoss", listener: (e: OrderProfitLossEvent) => void): this;
   prependOnceListener(event: "closed", listener: (e: OrderClosedEvent) => void): this;
-  prependOnceListener(event: "end", listener: (e: OrderEndEvent) => void): this;
+  prependOnceListener(event: "ended", listener: (e: OrderEndedEvent) => void): this;
 }
 
 export abstract class OrderStream<Props extends OrderProps> extends EventEmitter
   implements OrderActions {
   public readonly props: Props
-  private cachedEntry?: OrderFilledEvent;
+  private cachedAccepted?: OrderAcceptedEvent;
+  private cachedFilled?: OrderFilledEvent;
   private cachedProfitLoss?: OrderProfitLossEvent;
+  private cachedClosed?: OrderClosedEvent;
+  private cachedEnded?: OrderEndedEvent;
   constructor(props: Props) {
     super();
     this.props = Object.freeze(props);
-    this.on("filled", e => this.cachedEntry = e)
+    this.on("accepted", e => this.cachedAccepted = e)
+    this.on("filled", e => this.cachedFilled = e)
     this.on("profitLoss", e => this.cachedProfitLoss = e)
+    this.on("closed", e => this.cachedClosed = e)
+    this.on("ended", e => this.cachedEnded = e)
+  }
+
+  accepted(cb: (e: OrderAcceptedEvent) => void): void {
+    setImmediate(() => {
+      if (this.cachedAccepted) {
+        cb(this.cachedAccepted);
+      } else {
+        this.once("accepted", cb)
+      }
+    })
   }
 
   filled(cb: (e: OrderFilledEvent) => void): void {
     setImmediate(() => {
-      if (this.cachedEntry) {
-        cb(this.cachedEntry);
+      if (this.cachedFilled) {
+        cb(this.cachedFilled);
       } else {
         this.once("filled", cb)
       }
@@ -119,6 +138,26 @@ export abstract class OrderStream<Props extends OrderProps> extends EventEmitter
         cb(this.cachedProfitLoss);
       } else {
         this.once("profitLoss", cb)
+      }
+    })
+  }
+
+  closed(cb: (e: OrderClosedEvent) => void): void {
+    setImmediate(() => {
+      if (this.cachedClosed) {
+        cb(this.cachedClosed);
+      } else {
+        this.once("closed", cb)
+      }
+    })
+  }
+
+  ended(cb: (e: OrderEndedEvent) => void): void {
+    setImmediate(() => {
+      if (this.cachedEnded) {
+        cb(this.cachedEnded);
+      } else {
+        this.once("ended", cb)
       }
     })
   }
@@ -146,8 +185,8 @@ export class DebugOrderStream<Props extends OrderProps> extends OrderStream<Prop
     const closed = log.extend("closed");
     this.prependListener("closed", e => closed("%j", e));
 
-    const end = log.extend("end");
-    this.prependListener("end", e => end("%j", e));
+    const end = log.extend("ended");
+    this.prependListener("ended", e => end("%j", e));
   }
 
   close(): this {
@@ -179,7 +218,7 @@ export class DebugOrderStream<Props extends OrderProps> extends OrderStream<Prop
     setImmediate(() => this.emit("closed", e));
   }
 
-  emitEnd(e: OrderEndEvent): void {
-    setImmediate(() => this.emit("end", e));
+  emitEnded(e: OrderEndedEvent): void {
+    setImmediate(() => this.emit("ended", e));
   }
 }
