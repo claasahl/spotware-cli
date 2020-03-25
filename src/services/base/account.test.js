@@ -7,7 +7,6 @@ const extend = jest.fn(() => log)
 debug.mockImplementation(() => ({ extend }))
 
 describe("DebugAccountStream", () => {
-    
     describe("props", () => {
         test("should expose props", () => {
             const props = { currency: Symbol.for("abc"), a: 2 }
@@ -107,30 +106,30 @@ describe("DebugAccountStream", () => {
             })
             stream.emit("balance", event);
         })
-    })
 
-    test("should call cb with equity (not cached)", done => {
-        const props = { currency: Symbol.for("abc"), a: 2 }
-        const stream = new DebugAccountStream(props)
-        const event = { equity: 23, timestamp: 123 };
-        stream.equity(e => {
-            expect(e).toBe(event);
-            done()
-        })
-        setTimeout(() => stream.emit("equity", event), 100)
-    })
-
-    test("should call cb with equity (cached)", done => {
-        const props = { currency: Symbol.for("abc"), a: 2 }
-        const stream = new DebugAccountStream(props)
-        const event = { equity: 23, timestamp: 123 };
-        stream.once("equity", () => {
+        test("should call cb with equity (not cached)", done => {
+            const props = { currency: Symbol.for("abc"), a: 2 }
+            const stream = new DebugAccountStream(props)
+            const event = { equity: 23, timestamp: 123 };
             stream.equity(e => {
                 expect(e).toBe(event);
                 done()
             })
+            setTimeout(() => stream.emit("equity", event), 100)
         })
-        stream.emit("equity", event);
+    
+        test("should call cb with equity (cached)", done => {
+            const props = { currency: Symbol.for("abc"), a: 2 }
+            const stream = new DebugAccountStream(props)
+            const event = { equity: 23, timestamp: 123 };
+            stream.once("equity", () => {
+                stream.equity(e => {
+                    expect(e).toBe(event);
+                    done()
+                })
+            })
+            stream.emit("equity", event);
+        })
     })
 
     describe("actions", () => {
