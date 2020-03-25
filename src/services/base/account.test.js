@@ -107,6 +107,30 @@ describe("DebugAccountStream", () => {
             stream.emit("balance", event);
         })
 
+        test("should call cb with transaction (not cached)", done => {
+            const props = { currency: Symbol.for("abc"), a: 2 }
+            const stream = new DebugAccountStream(props)
+            const event = { amount: 23, timestamp: 123 };
+            stream.transaction(e => {
+                expect(e).toBe(event);
+                done()
+            })
+            setTimeout(() => stream.emit("transaction", event), 100)
+        })
+    
+        test("should call cb with transaction (cached)", done => {
+            const props = { currency: Symbol.for("abc"), a: 2 }
+            const stream = new DebugAccountStream(props)
+            const event = { amount: 23, timestamp: 123 };
+            stream.once("transaction", () => {
+                stream.transaction(e => {
+                    expect(e).toBe(event);
+                    done()
+                })
+            })
+            stream.emit("transaction", event);
+        })
+
         test("should call cb with equity (not cached)", done => {
             const props = { currency: Symbol.for("abc"), a: 2 }
             const stream = new DebugAccountStream(props)
@@ -129,6 +153,30 @@ describe("DebugAccountStream", () => {
                 })
             })
             stream.emit("equity", event);
+        })
+
+        test("should call cb with order (not cached)", done => {
+            const props = { currency: Symbol.for("abc"), a: 2 }
+            const stream = new DebugAccountStream(props)
+            const event = { timestamp: 123 };
+            stream.order(e => {
+                expect(e).toBe(event);
+                done()
+            })
+            setTimeout(() => stream.emit("order", event), 100)
+        })
+    
+        test("should call cb with order (cached)", done => {
+            const props = { currency: Symbol.for("abc"), a: 2 }
+            const stream = new DebugAccountStream(props)
+            const event = { timestamp: 123 };
+            stream.once("order", () => {
+                stream.order(e => {
+                    expect(e).toBe(event);
+                    done()
+                })
+            })
+            stream.emit("order", event);
         })
     })
 

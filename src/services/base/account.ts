@@ -36,7 +36,9 @@ export interface AccountActions {
 }
 export declare interface AccountStream extends EventEmitter {
   balance(cb: (e: BalanceChangedEvent) => void): void
+  transaction(cb: (e: TransactionEvent) => void): void
   equity(cb: (e: EquityChangedEvent) => void): void
+  order(cb: (e: OrderEvent) => void): void
 
   addListener(event: string, listener: (...args: any[]) => void): this;
   addListener(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
@@ -72,12 +74,16 @@ export declare interface AccountStream extends EventEmitter {
 export abstract class AccountStream extends EventEmitter implements AccountActions {
   public readonly props: AccountProps;
   private cachedBalance?: BalanceChangedEvent;
+  private cachedTransaction?: TransactionEvent;
   private cachedEquity?: EquityChangedEvent;
+  private cachedOrder?: OrderEvent;
   constructor(props: AccountProps) {
     super();
     this.props = Object.freeze(props);
     this.on("balance", e => this.cachedBalance = e)
+    this.on("transaction", e => this.cachedTransaction = e)
     this.on("equity", e => this.cachedEquity = e)
+    this.on("order", e => this.cachedOrder = e)
     this.on("transaction", e => {
       setImmediate(() => {
         const {timestamp, amount} = e;
@@ -98,12 +104,32 @@ export abstract class AccountStream extends EventEmitter implements AccountActio
     })
   }
 
+  transaction(cb: (e: TransactionEvent) => void): void {
+    setImmediate(() => {
+      if(this.cachedTransaction) {
+        cb(this.cachedTransaction);
+      } else {
+        this.once("transaction", cb)
+      }
+    })
+  }
+
   equity(cb: (e: EquityChangedEvent) => void): void {
     setImmediate(() => {
       if(this.cachedEquity) {
         cb(this.cachedEquity);
       } else {
         this.once("equity", cb)
+      }
+    })
+  }
+
+  order(cb: (e: OrderEvent) => void): void {
+    setImmediate(() => {
+      if(this.cachedOrder) {
+        cb(this.cachedOrder);
+      } else {
+        this.once("order", cb)
       }
     })
   }
