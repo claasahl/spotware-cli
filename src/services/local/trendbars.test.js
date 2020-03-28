@@ -53,5 +53,20 @@ describe("trendbarsFromSpotPrices", () => {
             spots.emitBid({ timestamp: 0, bid: 1 })
             spots.emitAsk({ timestamp: 1000, ask: 10 })
         })
+        test("no trendbar based on single price change (3)", done => {
+            const symbol = Symbol.for("abc");
+            const period = 1000;
+            const spots = new DebugSpotPricesStream({ symbol })
+            const stream = trendbarsFromSpotPrices({ symbol, period, spots })
+            const event = { timestamp: 1000, open: 1, high: 1, low: 1, close: 1, volume: 0 };
+            stream.on("trendbar", e => {
+                expect(e).toStrictEqual(event)
+                done()
+            })
+            
+            spots.emitAsk({ timestamp: 0, ask: 10 })
+            spots.emitBid({ timestamp: 1000, bid: 1 })
+            spots.emitAsk({ timestamp: 2000, ask: 10 })
+        })
     })
 })

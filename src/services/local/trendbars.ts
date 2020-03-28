@@ -63,6 +63,9 @@ export function trendbarsFromSpotPrices(props: B.TrendbarsProps & { spots: B.Spo
         }
     });
     props.spots.on("ask", e => {
+        if(values.length === 0) {
+            return;
+        }
         const bucket1 = bucked(values[0].timestamp);
         const bucket2 = bucked(e.timestamp);
         if (bucket1.begin !== bucket2.begin) {
