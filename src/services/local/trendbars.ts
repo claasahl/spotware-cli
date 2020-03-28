@@ -62,5 +62,16 @@ export function trendbarsFromSpotPrices(props: B.TrendbarsProps & { spots: B.Spo
             stream.emitTrendbar(toTrendbar(bucket1.begin, eventsInBucket))
         }
     });
+    props.spots.on("ask", e => {
+        const bucket1 = bucked(values[0].timestamp);
+        const bucket2 = bucked(e.timestamp);
+        if (bucket1.begin !== bucket2.begin) {
+            const eventsInBucket = values.filter(
+                e => bucked(e.timestamp).begin === bucket1.begin
+            );
+            values.splice(0, eventsInBucket.length);
+            stream.emitTrendbar(toTrendbar(bucket1.begin, eventsInBucket))
+        }
+    });
     return stream;
 }
