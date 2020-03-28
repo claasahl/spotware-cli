@@ -1,7 +1,6 @@
 import fs from "fs";
 import readline from "readline";
 import debug from "debug";
-import mem from "mem"
 
 import * as B from "../base";
 import { trendbarsFromSpotPrices } from "./trendbars";
@@ -85,7 +84,7 @@ function emitSpotPrices(
   setImmediate(() => stream.emit("next"));
 }
 
-function fromSampleDataBase(props: B.SpotPricesProps): B.SpotPricesStream {
+export function fromSampleData(props: B.SpotPricesProps): B.SpotPricesStream {
   const data = sampleData();
   const stream = new LocalSpotPricesStream(props);
   const emitNext = () => {
@@ -103,9 +102,8 @@ function fromSampleDataBase(props: B.SpotPricesProps): B.SpotPricesStream {
   })
   return stream;
 }
-export const fromSampleData = mem(fromSampleDataBase, {cacheKey: arguments_ => JSON.stringify(arguments_)})
 
-function fromFileBase(props: B.SpotPricesProps & {path: fs.PathLike}): B.SpotPricesStream {
+export function fromFile(props: B.SpotPricesProps & {path: fs.PathLike}): B.SpotPricesStream {
   const {path, ...originalProps} = props;
   const data = fr0mFile(path);
   const stream = new LocalSpotPricesStream(originalProps);
@@ -124,4 +122,3 @@ function fromFileBase(props: B.SpotPricesProps & {path: fs.PathLike}): B.SpotPri
   })
   return stream;
 }
-export const fromFile = mem(fromFileBase, {cacheKey: arguments_ => JSON.stringify(arguments_)})
