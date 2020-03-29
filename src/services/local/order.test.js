@@ -87,6 +87,7 @@ describe("marketOrderFromSpotPrices", () => {
             const event = { timestamp: 6, profitLoss: 12, exit: 11 }
             stream.on("closed", e => {
                 expect(e).toStrictEqual(event);
+                spots.emitBid({ timestamp: 7, bid: 12 })
                 done()
             })
             spots.emitAsk({ timestamp: 1, ask: 5 })
@@ -151,6 +152,7 @@ describe("marketOrderFromSpotPrices", () => {
             const event = { timestamp: 60, profitLoss: -8, exit: 1 }
             stream.on("ended", e => {
                 expect(e).toStrictEqual(event);
+                spots.emitBid({ timestamp: 61, bid: 0.5 })
                 done()
             })
             spots.emitAsk({ timestamp: 1, ask: 5 })
@@ -243,6 +245,7 @@ describe("marketOrderFromSpotPrices", () => {
             const event = { timestamp: 6, profitLoss: 6, exit: 2 }
             stream.on("closed", e => {
                 expect(e).toStrictEqual(event);
+                spots.emitAsk({ timestamp: 7, ask: 1 })
                 done()
             })
             spots.emitBid({ timestamp: 1, bid: 5 })
@@ -307,6 +310,7 @@ describe("marketOrderFromSpotPrices", () => {
             const event = { timestamp: 60, profitLoss: 8, exit: 1 }
             stream.on("ended", e => {
                 expect(e).toStrictEqual(event);
+                spots.emitAsk({ timestamp: 61, ask: 0.5 })
                 done()
             })
             spots.emitBid({ timestamp: 1, bid: 5 })
@@ -411,6 +415,7 @@ describe("stopOrderFromSpotPrices", () => {
             const event = { timestamp: 6, profitLoss: 10, exit: 11 }
             stream.on("closed", e => {
                 expect(e).toStrictEqual(event);
+                spots.emitBid({ timestamp: 7, bid: 12 })
                 done()
             })
             spots.emitAsk({ timestamp: 1, ask: 6 })
@@ -479,6 +484,7 @@ describe("stopOrderFromSpotPrices", () => {
             const event = { timestamp: 60, profitLoss: -8, exit: 2 }
             stream.on("ended", e => {
                 expect(e).toStrictEqual(event);
+                spots.emitBid({ timestamp: 61, bid: 0.5 })
                 done()
             })
             spots.emitAsk({ timestamp: 1, ask: 6 })
@@ -578,6 +584,7 @@ describe("stopOrderFromSpotPrices", () => {
             const event = { timestamp: 6, profitLoss: 4, exit: 2 }
             stream.on("closed", e => {
                 expect(e).toStrictEqual(event);
+                spots.emitAsk({ timestamp: 7, ask: 1 })
                 done()
             })
             spots.emitBid({ timestamp: 1, bid: 4 })
@@ -646,6 +653,7 @@ describe("stopOrderFromSpotPrices", () => {
             const event = { timestamp: 60, profitLoss: 6, exit: 1 }
             stream.on("ended", e => {
                 expect(e).toStrictEqual(event);
+                spots.emitAsk({ timestamp: 61, ask: 0.5 })
                 done()
             })
             spots.emitBid({ timestamp: 1, bid: 4 })

@@ -31,7 +31,7 @@ function fromSpotPrices<Props extends B.OrderProps>(props: Props & { spots: B.Sp
                     update(e);
                     spots.on("bid", update)
                 })
-                stream.once("end", () => spots.off("bid", update))
+                stream.once("ended", () => spots.off("bid", update))
                 return true;
             }
             return false;
@@ -40,7 +40,7 @@ function fromSpotPrices<Props extends B.OrderProps>(props: Props & { spots: B.Sp
             if(!fill(e)) {
                 spots.on("ask", fill);
                 stream.once("filled", () => spots.off("ask", fill))
-                stream.once("end", () => spots.off("ask", fill))
+                stream.once("ended", () => spots.off("ask", fill))
             }
         })
     } else if (props.tradeSide === "SELL") {
@@ -64,7 +64,7 @@ function fromSpotPrices<Props extends B.OrderProps>(props: Props & { spots: B.Sp
                     update(e);
                     spots.on("ask", update)
                 })
-                stream.once("end", () => spots.off("ask", update))
+                stream.once("ended", () => spots.off("ask", update))
                 return true;
             }
             return false;
@@ -73,7 +73,7 @@ function fromSpotPrices<Props extends B.OrderProps>(props: Props & { spots: B.Sp
             if(!fill(e)) {
                 spots.on("bid", fill)
                 stream.once("filled", () => spots.off("bid", fill))
-                stream.once("end", () => spots.off("bid", fill))
+                stream.once("ended", () => spots.off("bid", fill))
             }
         })
     }
