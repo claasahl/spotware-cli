@@ -171,7 +171,7 @@ let ctidTraderAccountId: number | null = null;
 let symbolId: number | null = null;
 const { port, host, clientId, clientSecret, accessToken } = config;
 const socket = $.connect(port, host);
-const spotPrices = fromSocket({symbol, socket, symbolId})
+const spotPrices = fromSocket({symbol, socket, symbolId: 0})
 socket.on("connect", connected);
 socket.on("close", disconnected);
 socket.on("error", (err: Error) => {
