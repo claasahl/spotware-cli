@@ -33,7 +33,7 @@ describe("DebugOrderStream", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             new DebugOrderStream(props)
             expect(debug).toHaveBeenCalledTimes(1)
-            expect(extend).toHaveBeenCalledTimes(6)
+            expect(extend).toHaveBeenCalledTimes(7)
             expect(log).toHaveBeenCalledTimes(0)
         })
 
@@ -78,6 +78,15 @@ describe("DebugOrderStream", () => {
             const stream = new DebugOrderStream(props)
             const event = { exit: 42, profitLoss: 23, timestamp: 123 };
             stream.emit("closed", event)
+            expect(log).toHaveBeenCalledTimes(1)
+            expect(log).toHaveBeenCalledWith(expect.any(String), event);
+        })
+
+        test("log 'canceled' events", () => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { timestamp: 123 };
+            stream.emit("canceled", event)
             expect(log).toHaveBeenCalledTimes(1)
             expect(log).toHaveBeenCalledWith(expect.any(String), event);
         })
@@ -220,6 +229,30 @@ describe("DebugOrderStream", () => {
             })
             stream.emit("closed", event);
         })
+        
+        test("should call cb with canceled (not cached)", done => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { timestamp: 123 };
+            stream.canceled(e => {
+                expect(e).toBe(event);
+                done()
+            })
+            setTimeout(() => stream.emit("canceled", event), 100)
+        })
+    
+        test("should call cb with canceled (cached)", done => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { timestamp: 123 };
+            stream.once("canceled", () => {
+                stream.canceled(e => {
+                    expect(e).toBe(event);
+                    done()
+                })
+            })
+            stream.emit("canceled", event);
+        })
 
         test("should call cb with ended (not cached)", done => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
@@ -323,6 +356,17 @@ describe("DebugOrderStream", () => {
                 done()
             })
             stream.emitClosed(event)
+        })
+
+        test("should emit 'canceled' event", done => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { timestamp: 123 };
+            stream.once("canceled", e => {
+                expect(e).toBe(event);
+                done()
+            })
+            stream.emitCanceled(event)
         })
 
         test("should emit 'ended' event", done => {
