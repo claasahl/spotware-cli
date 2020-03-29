@@ -33,7 +33,7 @@ describe("DebugOrderStream", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             new DebugOrderStream(props)
             expect(debug).toHaveBeenCalledTimes(1)
-            expect(extend).toHaveBeenCalledTimes(5)
+            expect(extend).toHaveBeenCalledTimes(6)
             expect(log).toHaveBeenCalledTimes(0)
         })
 
@@ -42,6 +42,15 @@ describe("DebugOrderStream", () => {
             const stream = new DebugOrderStream(props)
             const event = { timestamp: 123 };
             stream.emit("accepted", event)
+            expect(log).toHaveBeenCalledTimes(1)
+            expect(log).toHaveBeenCalledWith(expect.any(String), event);
+        })
+
+        test("log 'rejected' events", () => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { timestamp: 123 };
+            stream.emit("rejected", event)
             expect(log).toHaveBeenCalledTimes(1)
             expect(log).toHaveBeenCalledWith(expect.any(String), event);
         })
@@ -114,6 +123,30 @@ describe("DebugOrderStream", () => {
                 })
             })
             stream.emit("accepted", event);
+        })
+
+        test("should call cb with rejected (not cached)", done => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { timestamp: 123 };
+            stream.rejected(e => {
+                expect(e).toBe(event);
+                done()
+            })
+            setTimeout(() => stream.emit("rejected", event), 100)
+        })
+    
+        test("should call cb with rejected (cached)", done => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { timestamp: 123 };
+            stream.once("rejected", () => {
+                stream.rejected(e => {
+                    expect(e).toBe(event);
+                    done()
+                })
+            })
+            stream.emit("rejected", event);
         })
 
         test("should call cb with filled (not cached)", done => {
@@ -246,6 +279,17 @@ describe("DebugOrderStream", () => {
                 done()
             })
             stream.emitAccepted(event)
+        })
+
+        test("should emit 'rejected' event", done => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { timestamp: 123 };
+            stream.once("rejected", e => {
+                expect(e).toBe(event);
+                done()
+            })
+            stream.emitRejected(event)
         })
 
         test("should emit 'filled' event", done => {
