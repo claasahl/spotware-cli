@@ -96,7 +96,8 @@ class LocalAccountStream extends B.DebugAccountStream {
     }
 
     trendbars(props: B.AccountSimpleTrendbarsProps): B.TrendbarsStream {
-        const spots = this.spotPrices(props);
+        const { symbol } = props;
+        const spots = this.spotPrices({ symbol });
         return trendbarsFromSpotPrices({...props, spots})
     }
 
