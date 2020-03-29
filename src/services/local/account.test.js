@@ -144,4 +144,79 @@ describe("fromNothing", () => {
             spotPrices.emitAsk({ timestamp: 4, ask: 8 })
         })
     })
+    describe("stop order", () => {
+        test("should emit 'order' event", done => {
+            const symbol = Symbol.for("abc/def")
+            const spotPrices = new DebugSpotPricesStream({ symbol })
+            const currency = Symbol.for("abc")
+            const spots = () => spotPrices
+            const stream = fromNothing({ currency, spots, initialBalance: 500 })
+            stream.stopOrder({ id: "346", symbol, tradeSide: "BUY", volume: 4, enter: 6, takeProfit: 18 })
+            const event = { timestamp: expect.any(Number) }
+            stream.on("order", e => {
+                expect(e).toStrictEqual(event);
+                done()
+            })
+        })
+        test("should produce 'equity' events", done => {
+            const symbol = Symbol.for("abc/def")
+            const spotPrices = new DebugSpotPricesStream({ symbol })
+            const currency = Symbol.for("abc")
+            const spots = () => spotPrices
+            const stream = fromNothing({ currency, spots, initialBalance: 500})
+            stream.stopOrder({ id: "346", symbol, tradeSide: "BUY", volume: 4, enter: 3, takeProfit: 18 })
+            let no = 0;
+            stream.on("equity", e => {
+                if(no === 1) {
+                    expect(e).toStrictEqual({ timestamp: 2, equity: 520 });
+                    spotPrices.emitBid({ timestamp: 3, bid: 12 })
+                } else if(no === 2) {
+                    expect(e).toStrictEqual({ timestamp: 3, equity: 508 });
+                    spotPrices.emitBid({ timestamp: 4, bid: 18 })
+                } else if(no === 3) {
+                    expect(e).toStrictEqual({ timestamp: 4, equity: 532 });
+                    done()
+                }
+                no++;
+            })
+            spotPrices.emitAsk({ timestamp: 1, ask: 10 })
+            spotPrices.emitBid({ timestamp: 2, bid: 15 })
+        })
+        test("should produce 'balance' event", done => {
+            const symbol = Symbol.for("abc/def")
+            const spotPrices = new DebugSpotPricesStream({ symbol })
+            const currency = Symbol.for("abc")
+            const spots = () => spotPrices
+            const stream = fromNothing({ currency, spots, initialBalance: 500})
+            stream.stopOrder({ id: "346", symbol, tradeSide: "BUY", volume: 4, enter: 3, takeProfit: 15 })
+            let no = 0;
+            stream.on("balance", e => {
+                if(no === 1) {
+                    expect(e).toStrictEqual({ timestamp: 2, balance: 520 });
+                    done()
+                }
+                no++;
+            })
+            spotPrices.emitAsk({ timestamp: 1, ask: 10 })
+            spotPrices.emitBid({ timestamp: 2, bid: 15 })
+        })
+        test("should produce 'transaction' event", done => {
+            const symbol = Symbol.for("abc/def")
+            const spotPrices = new DebugSpotPricesStream({ symbol })
+            const currency = Symbol.for("abc")
+            const spots = () => spotPrices
+            const stream = fromNothing({ currency, spots, initialBalance: 500})
+            stream.stopOrder({ id: "346", symbol, tradeSide: "BUY", volume: 4, enter: 3, takeProfit: 15 })
+            let no = 0;
+            stream.on("transaction", e => {
+                if(no === 1) {
+                    expect(e).toStrictEqual({ timestamp: 2, amount: 20 });
+                    done()
+                }
+                no++;
+            })
+            spotPrices.emitAsk({ timestamp: 1, ask: 10 })
+            spotPrices.emitBid({ timestamp: 2, bid: 15 })
+        })
+    })
 })

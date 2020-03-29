@@ -76,7 +76,7 @@ class LocalAccountStream extends B.DebugAccountStream {
             this.updateEquity(e)
         }
         stream.on("profitLoss", update)
-        stream.once("end", e => {
+        stream.once("ended", e => {
             stream.off("profitLoss", update)
             const all = this.orders.get(props.id)!
             const toBeDeleted: number[] = [];
@@ -89,6 +89,7 @@ class LocalAccountStream extends B.DebugAccountStream {
             toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
         })
         stream.once("accepted", () => this.orders.get(props.id)!.push(order))
+        this.emitOrder({ timestamp: Date.now() })
         return stream;
     }
 
