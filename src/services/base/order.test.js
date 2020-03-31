@@ -185,7 +185,7 @@ describe("DebugOrderStream", () => {
         test("should call cb with profitLoss (not cached)", done => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            const event = { profitLoss: 23, timestamp: 123 };
+            const event = { price: 123, profitLoss: 23, timestamp: 123 };
             stream.profitLoss(e => {
                 expect(e).toBe(event);
                 done()
@@ -196,7 +196,7 @@ describe("DebugOrderStream", () => {
         test("should call cb with profitLoss (cached)", done => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            const event = { profitLoss: 23, timestamp: 123 };
+            const event = { price: 123, profitLoss: 23, timestamp: 123 };
             stream.once("profitLoss", () => {
                 stream.profitLoss(e => {
                     expect(e).toBe(event);
@@ -339,7 +339,7 @@ describe("DebugOrderStream", () => {
         test("should emit 'profitLoss' event", done => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            const event = { profitLoss: 23, timestamp: 123 };
+            const event = { price: 123, profitLoss: 23, timestamp: 123 };
             stream.once("profitLoss", e => {
                 expect(e).toBe(event);
                 done()

@@ -42,7 +42,7 @@ describe("marketOrderFromSpotPrices", () => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = marketOrderFromSpotPrices({ id: 1, symbol, tradeSide: "BUY", volume: 2, spots })
-            const event = { timestamp: 0, profitLoss: -8 }
+            const event = { timestamp: 0, price: 1, profitLoss: -8 }
             stream.on("profitLoss", e => {
                 expect(e).toStrictEqual(event);
                 done()
@@ -54,7 +54,7 @@ describe("marketOrderFromSpotPrices", () => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = marketOrderFromSpotPrices({ id: 1, symbol, tradeSide: "BUY", volume: 2, spots })
-            const event = { timestamp: 5, profitLoss: 2 }
+            const event = { timestamp: 5, price: 6, profitLoss: 2 }
             stream.on("profitLoss", e => {
                 expect(e).toStrictEqual(event);
                 done()
@@ -171,7 +171,7 @@ describe("marketOrderFromSpotPrices", () => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = marketOrderFromSpotPrices({ id: 1, symbol, tradeSide: "SELL", volume: 2, spots })
-            const event = { timestamp: 0, profitLoss: 8 }
+            const event = { timestamp: 0, price: 1, profitLoss: 8 }
             stream.on("profitLoss", e => {
                 expect(e).toStrictEqual(event);
                 done()
@@ -183,7 +183,7 @@ describe("marketOrderFromSpotPrices", () => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = marketOrderFromSpotPrices({ id: 1, symbol, tradeSide: "SELL", volume: 2, spots })
-            const event = { timestamp: 5, profitLoss: -2 }
+            const event = { timestamp: 5, price: 6, profitLoss: -2 }
             stream.on("profitLoss", e => {
                 expect(e).toStrictEqual(event);
                 done()
@@ -304,7 +304,7 @@ describe("stopOrderFromSpotPrices", () => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = stopOrderFromSpotPrices({ id: 1, symbol, tradeSide: "BUY", volume: 2, enter: 6, spots })
-            const event = { timestamp: 0, profitLoss: -10 }
+            const event = { timestamp: 0, price: 1, profitLoss: -10 }
             stream.on("profitLoss", e => {
                 expect(e).toStrictEqual(event);
                 done()
@@ -317,7 +317,7 @@ describe("stopOrderFromSpotPrices", () => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = stopOrderFromSpotPrices({ id: 1, symbol, tradeSide: "BUY", volume: 2, enter: 6, spots })
-            const event = { timestamp: 5, profitLoss: 2 }
+            const event = { timestamp: 5, price: 7, profitLoss: 2 }
             stream.on("profitLoss", e => {
                 expect(e).toStrictEqual(event);
                 done()
@@ -433,7 +433,7 @@ describe("stopOrderFromSpotPrices", () => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = stopOrderFromSpotPrices({ id: 1, symbol, tradeSide: "SELL", volume: 2, enter: 4, spots })
-            const event = { timestamp: 0, profitLoss: 6 }
+            const event = { timestamp: 0, price: 1, profitLoss: 6 }
             stream.on("profitLoss", e => {
                 expect(e).toStrictEqual(event);
                 done()
@@ -446,7 +446,7 @@ describe("stopOrderFromSpotPrices", () => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = stopOrderFromSpotPrices({ id: 1, symbol, tradeSide: "SELL", volume: 2, enter: 4, spots })
-            const event = { timestamp: 5, profitLoss: -4 }
+            const event = { timestamp: 5, price: 6, profitLoss: -4 }
             stream.on("profitLoss", e => {
                 expect(e).toStrictEqual(event);
                 done()

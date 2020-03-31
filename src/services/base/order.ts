@@ -18,6 +18,7 @@ export interface OrderFilledEvent {
 }
 export interface OrderProfitLossEvent {
   timestamp: Timestamp;
+  price: Price;
   profitLoss: Price;
 }
 export interface OrderClosedEvent {

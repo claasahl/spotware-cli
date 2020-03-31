@@ -17,9 +17,9 @@ function fromSpotPrices<Props extends B.OrderProps>(props: Props & { spots: B.Sp
                 stream.emitFilled({ timestamp, entry })
 
                 const update = (e: B.BidPriceChangedEvent) => {
-                    const timestamp = e.timestamp
-                    const profitLoss = (e.bid - entry) * stream.props.volume;
-                    stream.emitProfitLoss({ timestamp, profitLoss })
+                    const {timestamp, bid: price} = e
+                    const profitLoss = (price - entry) * stream.props.volume;
+                    stream.emitProfitLoss({ timestamp, price, profitLoss })
 
                     if(props.stopLoss && props.stopLoss >= e.bid ||
                         props.takeProfit && props.takeProfit <= e.bid) {
@@ -50,9 +50,9 @@ function fromSpotPrices<Props extends B.OrderProps>(props: Props & { spots: B.Sp
                 stream.emitFilled({ timestamp, entry })
 
                 const update = (e: B.AskPriceChangedEvent) => {
-                    const timestamp = e.timestamp
+                    const {timestamp, ask: price} = e
                     const profitLoss = (entry - e.ask) * stream.props.volume;
-                    stream.emitProfitLoss({ timestamp, profitLoss })
+                    stream.emitProfitLoss({ timestamp, price, profitLoss })
 
                     if(props.stopLoss && props.stopLoss <= e.ask ||
                         props.takeProfit && props.takeProfit >= e.ask) {
