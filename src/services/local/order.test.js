@@ -2,6 +2,61 @@ const {marketOrderFromSpotPrices, stopOrderFromSpotPrices} = require("../../../b
 const { DebugSpotPricesStream } = require("../../../build/services/base/spotPrices")
 
 describe("marketOrderFromSpotPrices", () => {
+    describe("actions", () => {
+        test("should cancel order", done => {
+            const symbol = Symbol.for("abc")
+            const spots = new DebugSpotPricesStream({ symbol })
+            const stream = marketOrderFromSpotPrices({ id: 1, symbol, tradeSide: "SELL", volume: 2, spots })
+            stream.on("accepted", () => {
+                stream.cancel();
+            })
+            stream.on("canceled", e => {
+                expect(e).toStrictEqual({timestamp: expect.anything(Number)})
+                done();
+            })
+        })
+        test("should close order", done => {
+            const symbol = Symbol.for("abc")
+            const spots = new DebugSpotPricesStream({ symbol })
+            const stream = marketOrderFromSpotPrices({ id: 1, symbol, tradeSide: "SELL", volume: 2, spots })
+            stream.on("filled", () => {
+                stream.close();
+            })
+            stream.on("closed", e => {
+                expect(e).toStrictEqual({timestamp: expect.anything(Number), exit: 1, profitLoss: 8})
+                done();
+            })
+            spots.emitBid({ timestamp: 0, bid: 5 })
+            spots.emitAsk({ timestamp: 1, ask: 1 })
+        })
+        test("should 'end' order (1)", done => {
+            const symbol = Symbol.for("abc")
+            const spots = new DebugSpotPricesStream({ symbol })
+            const stream = marketOrderFromSpotPrices({ id: 1, symbol, tradeSide: "BUY", volume: 2, spots })
+            stream.on("accepted", () => {
+                stream.end();
+            })
+            stream.on("canceled", e => {
+                expect(e).toStrictEqual({timestamp: expect.anything(Number)})
+                done();
+            })
+        })
+        test("should 'end' order (2)", done => {
+            const symbol = Symbol.for("abc")
+            const spots = new DebugSpotPricesStream({ symbol })
+            const stream = marketOrderFromSpotPrices({ id: 1, symbol, tradeSide: "BUY", volume: 2, spots })
+            stream.on("filled", () => {
+                stream.end();
+            })
+            stream.on("closed", e => {
+                expect(e).toStrictEqual({timestamp: expect.anything(Number), exit: 1, profitLoss: -8})
+                done();
+            })
+            spots.emitAsk({ timestamp: 0, ask: 5 })
+            spots.emitBid({ timestamp: 1, bid: 1 })
+        })
+    })
+
     describe("order type: BUY", () => {
         test("accept order asap", done => {
             const symbol = Symbol.for("abc")
@@ -262,6 +317,63 @@ describe("marketOrderFromSpotPrices", () => {
 })
 
 describe("stopOrderFromSpotPrices", () => {
+    describe("actions", () => {
+        test("should cancel order", done => {
+            const symbol = Symbol.for("abc")
+            const spots = new DebugSpotPricesStream({ symbol })
+            const stream = stopOrderFromSpotPrices({ id: 1, symbol, tradeSide: "SELL", volume: 2, enter: 6, spots })
+            stream.on("accepted", () => {
+                stream.cancel();
+            })
+            stream.on("canceled", e => {
+                expect(e).toStrictEqual({timestamp: expect.anything(Number)})
+                done();
+            })
+        })
+        test("should close order", done => {
+            const symbol = Symbol.for("abc")
+            const spots = new DebugSpotPricesStream({ symbol })
+            const stream = stopOrderFromSpotPrices({ id: 1, symbol, tradeSide: "SELL", volume: 2, enter: 4.5, spots })
+            stream.on("filled", () => {
+                stream.close();
+            })
+            stream.on("closed", e => {
+                expect(e).toStrictEqual({timestamp: expect.anything(Number), exit: 2, profitLoss: 4})
+                done();
+            })
+            spots.emitBid({ timestamp: 0, bid: 5 })
+            spots.emitBid({ timestamp: 1, bid: 4 })
+            spots.emitAsk({ timestamp: 2, ask: 2 })
+        })
+        test("should 'end' order (1)", done => {
+            const symbol = Symbol.for("abc")
+            const spots = new DebugSpotPricesStream({ symbol })
+            const stream = stopOrderFromSpotPrices({ id: 1, symbol, tradeSide: "BUY", volume: 2, enter: 6, spots })
+            stream.on("accepted", () => {
+                stream.end();
+            })
+            stream.on("canceled", e => {
+                expect(e).toStrictEqual({timestamp: expect.anything(Number)})
+                done();
+            })
+        })
+        test("should 'end' order (2)", done => {
+            const symbol = Symbol.for("abc")
+            const spots = new DebugSpotPricesStream({ symbol })
+            const stream = stopOrderFromSpotPrices({ id: 1, symbol, tradeSide: "BUY", volume: 2, enter: 6, spots })
+            stream.on("filled", () => {
+                stream.end();
+            })
+            stream.on("closed", e => {
+                expect(e).toStrictEqual({timestamp: expect.anything(Number), exit: 10, profitLoss: 6})
+                done();
+            })
+            spots.emitAsk({ timestamp: 0, ask: 5 })
+            spots.emitAsk({ timestamp: 1, ask: 7 })
+            spots.emitBid({ timestamp: 2, bid: 10 })
+        })
+    })
+
     describe("order type: BUY", () => {
         test("accept order asap", done => {
             const symbol = Symbol.for("abc")

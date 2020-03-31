@@ -1,9 +1,54 @@
 import * as B from "../base"
 
 class LocalOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream<Props> {
-    end() {
-        // implement me & others
-        return this;
+    private canBeClosed: boolean = false;
+    private canBeCanceled: boolean = true;
+    private canBeAmended: boolean = true;
+    constructor(props: Props) {
+        super(props);
+        const reset = () => {
+            this.canBeClosed = false;
+            this.canBeCanceled = false;
+            this.canBeAmended = false;
+        }
+        this.on("accepted", () => {
+            this.canBeClosed = false;
+            this.canBeCanceled = true;
+            this.canBeAmended = true;
+        })
+        this.on("rejected", () => reset())
+        this.on("filled", () => {
+            this.canBeClosed = true;
+            this.canBeCanceled = false;
+            this.canBeAmended = false;
+        })
+        this.on("closed", () => reset())
+        this.on("canceled", () => reset())
+        this.on("ended", () => reset())
+    }
+    close(): this {
+        if(this.canBeClosed) {
+            this.profitLoss(e => {
+                this.emitClosed({ timestamp: e.timestamp, exit: e.price, profitLoss: e.profitLoss})
+            })
+            return this;
+        }
+        throw new Error("order cannot be closed" + JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled, canBeAmended: this.canBeAmended}));
+    }
+    cancel(): this {
+        if(this.canBeCanceled) {
+            this.emitCanceled({timestamp: Date.now()})
+            return this;
+        }
+        throw new Error("order cannot be canceled" + JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled, canBeAmended: this.canBeAmended}));
+    }
+    end(): this {
+        if(this.canBeCanceled) {
+            return this.cancel();
+        } else if(this.canBeClosed) {
+            return this.close();
+        }
+        throw new Error("order cannot be ended (i.e. closed or canceled)" + JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled, canBeAmended: this.canBeAmended}));
     }
 }
 
