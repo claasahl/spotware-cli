@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 import debug from "debug";
 
 import { Price, Timestamp, Currency } from "./types";
-import { OrderStream, MarketOrderProps, StopOrderProps } from "./order";
+import { OrderStream, MarketOrderProps, StopOrderProps, OrderProps } from "./order";
 import { SpotPricesStream, SpotPricesProps } from "./spotPrices";
 import { TrendbarsProps, TrendbarsStream } from "./trendbars";
 
@@ -18,9 +18,10 @@ export interface EquityChangedEvent {
   equity: Price;
   timestamp: Timestamp;
 }
-export interface OrderEvent {
+interface OrderEventBase {
   timestamp: Timestamp;
 }
+export type OrderEvent = OrderProps & OrderEventBase
 export type AccountSimpleMarketOrderProps = Omit<MarketOrderProps, keyof AccountProps | "orderType">;
 export type AccountSimpleStopOrderProps = Omit<StopOrderProps, keyof AccountProps | "orderType">;
 export type AccountSimpleSpotPricesProps = Omit<SpotPricesProps, keyof AccountProps>;

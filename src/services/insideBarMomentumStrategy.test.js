@@ -28,7 +28,7 @@ describe("insideBarMomentumStrategy", () => {
             trendbarNo++;
         })
         account.on("order", e => {
-            expect(e).toStrictEqual({timestamp: expect.any(Number)});
+            expect(e).toStrictEqual({timestamp: expect.any(Number), id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916});
             expect(trendbarNo).toBe(2);
             done();
         })
@@ -70,7 +70,7 @@ describe("insideBarMomentumStrategy", () => {
             trendbarNo++;
         })
         account.on("order", e => {
-            expect(e).toStrictEqual({timestamp: expect.any(Number)});
+            expect(e).toStrictEqual({timestamp: expect.any(Number), id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564});
             expect(trendbarNo).toBe(2);
             done();
         })

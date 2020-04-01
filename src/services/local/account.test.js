@@ -72,10 +72,10 @@ describe("fromNothing", () => {
             const currency = Symbol.for("abc")
             const spots = () => spotPrices
             const stream = fromNothing({ currency, spots, initialBalance: 500 })
-            stream.marketOrder({ id: "346", symbol, tradeSide: "SELL", volume: 4, takeProfit: 8 })
-            const event = { timestamp: expect.any(Number) }
+            const order = {id: "346", symbol, tradeSide: "SELL", volume: 4, takeProfit: 8}
+            stream.marketOrder(order)
             stream.on("order", e => {
-                expect(e).toStrictEqual(event);
+                expect(e).toStrictEqual({ timestamp: expect.any(Number), orderType: "MARKET", ...order });
                 done()
             })
         })
@@ -151,10 +151,10 @@ describe("fromNothing", () => {
             const currency = Symbol.for("abc")
             const spots = () => spotPrices
             const stream = fromNothing({ currency, spots, initialBalance: 500 })
-            stream.stopOrder({ id: "346", symbol, tradeSide: "BUY", volume: 4, enter: 6, takeProfit: 18 })
-            const event = { timestamp: expect.any(Number) }
+            const order = { id: "346", symbol, tradeSide: "BUY", volume: 4, enter: 6, takeProfit: 18 }
+            stream.stopOrder(order)
             stream.on("order", e => {
-                expect(e).toStrictEqual(event);
+                expect(e).toStrictEqual({ timestamp: expect.any(Number), orderType: "STOP", ...order });
                 done()
             })
         })

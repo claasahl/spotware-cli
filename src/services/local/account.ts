@@ -52,7 +52,7 @@ class LocalAccountStream extends B.DebugAccountStream {
             toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
         })
         stream.once("accepted", () => this.orders.get(props.id)!.push(order))
-        this.emitOrder({ timestamp: Date.now() })
+        this.emitOrder({ timestamp: Date.now(), ...stream.props })
         return stream;
     }
 
@@ -89,7 +89,7 @@ class LocalAccountStream extends B.DebugAccountStream {
             toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
         })
         stream.once("accepted", () => this.orders.get(props.id)!.push(order))
-        this.emitOrder({ timestamp: Date.now() })
+        this.emitOrder({ timestamp: Date.now(), ...stream.props })
         return stream;
     }
 

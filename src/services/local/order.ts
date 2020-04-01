@@ -52,9 +52,8 @@ class LocalOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream<Pr
     }
 }
 
-function fromSpotPrices<Props extends B.OrderProps>(props: Props & { spots: B.SpotPricesStream }, buyCond: (e: B.AskPriceChangedEvent) => boolean, sellCond: (e: B.BidPriceChangedEvent) => boolean): B.OrderStream<Props> {
-    const { spots } = props;
-    const stream = new LocalOrderStream(props);
+function fromSpotPrices<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream, buyCond: (e: B.AskPriceChangedEvent) => boolean, sellCond: (e: B.BidPriceChangedEvent) => boolean): B.OrderStream<Props> {
+    const stream = new LocalOrderStream<Props>(props);
     if (props.tradeSide === "BUY") {
         const fill = (e: B.AskPriceChangedEvent): boolean => {
             const { timestamp, ask: entry } = e;
@@ -127,14 +126,16 @@ function fromSpotPrices<Props extends B.OrderProps>(props: Props & { spots: B.Sp
 }
 
 export function marketOrderFromSpotPrices(props: B.MarketOrderProps & { spots: B.SpotPricesStream }): B.OrderStream<B.MarketOrderProps> {
+    const {spots, ...rest} = props;
     const buyCond = () => true
     const sellCond = () => true
-    return fromSpotPrices(props, buyCond, sellCond)  
+    return fromSpotPrices(rest, spots, buyCond, sellCond)  
 }
 
 
 export function stopOrderFromSpotPrices(props: B.StopOrderProps & { spots: B.SpotPricesStream }): B.OrderStream<B.StopOrderProps> {
+    const {spots, ...rest} = props;
     const buyCond = ({ask: entry}: B.AskPriceChangedEvent) => entry >= props.enter
     const sellCond = ({bid: entry}: B.BidPriceChangedEvent) => entry <= props.enter
-    return fromSpotPrices(props, buyCond, sellCond)   
+    return fromSpotPrices(rest, spots, buyCond, sellCond)   
 }
