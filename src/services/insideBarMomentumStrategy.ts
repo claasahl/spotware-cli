@@ -26,16 +26,17 @@ interface PlaceOrderProps {
   volume: B.Volume,
   stopLoss: B.Price,
   takeProfit: B.Price,
-  account: B.AccountStream
+  account: B.AccountStream,
 }
-let lastOrder: B.OrderStream<B.StopOrderProps> | null = null
-function placeOrder(props: PlaceOrderProps) {
-  if (lastOrder) {
-    lastOrder.end()
-  }
+function placeOrder(props: PlaceOrderProps): B.OrderStream<B.StopOrderProps> {
   const { account, ...rest } = props;
-  const order = account.stopOrder(rest)
-  lastOrder = order;
+  return account.stopOrder(rest)
+}
+
+function endLastOrder(lastOrder?: B.OrderStream<B.StopOrderProps>) {
+  if(lastOrder) {
+    lastOrder.end();
+  }
 }
 
 export interface Props {
@@ -57,6 +58,7 @@ export function insideBarMomentumStrategy(props: Props): B.AccountStream {
   const trendbars = account.trendbars({ period, symbol })
   let id = 1
 
+  let lastOrder: B.OrderStream<B.StopOrderProps> | undefined = undefined;
   const placeBuyOrder = (enter: B.Price, stopLoss: B.Price, takeProfit: B.Price) => placeOrder({ id: `${id++}`, symbol, enter, tradeSide: "BUY", volume, stopLoss, takeProfit, account })
   const placeSellOrder = (enter: B.Price, stopLoss: B.Price, takeProfit: B.Price) => placeOrder({ id: `${id++}`, symbol, enter, tradeSide: "SELL", volume, stopLoss, takeProfit, account })
 
@@ -72,12 +74,14 @@ export function insideBarMomentumStrategy(props: Props): B.AccountStream {
         const enter = roundPrice(first.high + r * enterOffset);
         const stopLoss = roundPrice(first.high - r * stopLossOffset);
         const takeProfit = roundPrice(first.high + r * takeProfitOffset);
-        placeBuyOrder(enter, stopLoss, takeProfit)
+        endLastOrder(lastOrder);
+        lastOrder = placeBuyOrder(enter, stopLoss, takeProfit)
       } else if (bearish(first) && engulfed(first, second)) {
         const enter = roundPrice(first.low - r * enterOffset);
         const stopLoss = roundPrice(first.low + r * stopLossOffset);
         const takeProfit = roundPrice(first.low - r * takeProfitOffset);
-        placeSellOrder(enter, stopLoss, takeProfit)
+        endLastOrder(lastOrder);
+        lastOrder = placeSellOrder(enter, stopLoss, takeProfit)
       }
       trendbarEvents.shift()
     }
