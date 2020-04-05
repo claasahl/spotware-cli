@@ -19,6 +19,7 @@ function roundPrice(price: number): number {
 }
 
 interface PlaceOrderProps {
+  id: string,
   symbol: B.Symbol,
   enter: B.Price,
   tradeSide: B.TradeSide,
@@ -29,11 +30,11 @@ interface PlaceOrderProps {
 }
 let lastOrder: B.OrderStream<B.StopOrderProps> | null = null
 function placeOrder(props: PlaceOrderProps) {
-  const { account, ...rest } = props;
-  const order = account.stopOrder({ ...rest, id: "1" })
   if (lastOrder) {
     lastOrder.end()
   }
+  const { account, ...rest } = props;
+  const order = account.stopOrder(rest)
   lastOrder = order;
 }
 
@@ -54,9 +55,10 @@ export function insideBarMomentumStrategy(props: Props): B.AccountStream {
   const { currency, initialBalance, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, spots } = props
   const account = fromNothing({ currency, initialBalance, spots })
   const trendbars = account.trendbars({ period, symbol })
+  let id = 1
 
-  const placeBuyOrder = (enter: B.Price, stopLoss: B.Price, takeProfit: B.Price) => placeOrder({ symbol, enter, tradeSide: "BUY", volume, stopLoss, takeProfit, account })
-  const placeSellOrder = (enter: B.Price, stopLoss: B.Price, takeProfit: B.Price) => placeOrder({ symbol, enter, tradeSide: "SELL", volume, stopLoss, takeProfit, account })
+  const placeBuyOrder = (enter: B.Price, stopLoss: B.Price, takeProfit: B.Price) => placeOrder({ id: `${id++}`, symbol, enter, tradeSide: "BUY", volume, stopLoss, takeProfit, account })
+  const placeSellOrder = (enter: B.Price, stopLoss: B.Price, takeProfit: B.Price) => placeOrder({ id: `${id++}`, symbol, enter, tradeSide: "SELL", volume, stopLoss, takeProfit, account })
 
   const trendbarEvents: B.TrendbarEvent[] = []
   trendbars.on("trendbar", e => {
@@ -65,7 +67,7 @@ export function insideBarMomentumStrategy(props: Props): B.AccountStream {
       const [first, second] = trendbarEvents;
       const r = range(first);
       if (r < minTrendbarRange) {
-        // no good. if this trendbar is used to calculate stopLoss and takeProfit level, then chance are high that the current spot price is too close to these levels.
+        // no good. if this trendbar is used to calculate stopLoss and takeProfit levels, then chance are high that the current spot price is too close to these levels.
       } else if (bullish(first) && engulfed(first, second)) {
         const enter = roundPrice(first.high + r * enterOffset);
         const stopLoss = roundPrice(first.high - r * stopLossOffset);
