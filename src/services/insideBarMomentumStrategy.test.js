@@ -24,13 +24,22 @@ describe("insideBarMomentumStrategy", () => {
                 expect(e).toStrictEqual({timestamp: 1000000, open: 15000, high: 15500, low: 14980, close: 15100, volume: 0})
             } else if(trendbarNo === 1) {
                 expect(e).toStrictEqual({timestamp: 1001000, open: 15000, high: 15000, low: 15000, close: 15000, volume: 0})
+            } else {
+                fail(new Error(`unexpected trendbar-event: ${JSON.stringify(e)}`))
             }
             trendbarNo++;
         })
+        let orderNo = 0;
         account.on("order", e => {
-            expect(e).toStrictEqual({timestamp: expect.any(Number), id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916});
-            expect(trendbarNo).toBe(2);
-            done();
+            if(orderNo === 0) {
+                expect(e).toStrictEqual({timestamp: expect.any(Number), status: "CREATED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916});
+            } else if(orderNo ===  1) {
+                expect(e).toStrictEqual({timestamp: expect.any(Number), status: "ACCEPTED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916});
+                done();
+            } else {
+                fail(new Error(`unexpected order-event: ${JSON.stringify(e)}`))
+            }
+            orderNo++;
         })
 
         spotPrices.emitBid({ timestamp: 1000000, bid: 15000})
@@ -66,13 +75,22 @@ describe("insideBarMomentumStrategy", () => {
                 expect(e).toStrictEqual({timestamp: 1000000, open: 15100, high: 15500, low: 14980, close: 15000, volume: 0})
             } else if(trendbarNo === 1) {
                 expect(e).toStrictEqual({timestamp: 1001000, open: 15000, high: 15000, low: 15000, close: 15000, volume: 0})
+            } else {
+                fail(new Error(`unexpected trendbar-event: ${JSON.stringify(e)}`))
             }
             trendbarNo++;
         })
+        let orderNo = 0;
         account.on("order", e => {
-            expect(e).toStrictEqual({timestamp: expect.any(Number), id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564});
-            expect(trendbarNo).toBe(2);
-            done();
+            if(orderNo === 0) {
+                expect(e).toStrictEqual({timestamp: expect.any(Number), status: "CREATED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564});
+            } else if(orderNo === 1) {
+                expect(e).toStrictEqual({timestamp: expect.any(Number), status: "ACCEPTED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564});
+                done();
+            } else {
+                fail(new Error(`unexpected order-event: ${JSON.stringify(e)}`))
+            }
+            orderNo++;
         })
 
         spotPrices.emitBid({ timestamp: 1000000, bid: 15100})
