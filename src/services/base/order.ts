@@ -3,6 +3,9 @@ import debug from "debug";
 
 import { Symbol, Timestamp, TradeSide, Volume, Price, OrderType } from "./types";
 
+export interface OrderCreatedEvent {
+  timestamp: Timestamp;
+}
 export interface OrderAcceptedEvent {
   timestamp: Timestamp;
 }
@@ -59,6 +62,7 @@ export interface OrderActions {
 }
 
 export declare interface OrderStream<Props extends OrderProps> extends EventEmitter {
+  created(cb: (e: OrderCreatedEvent) => void): void;
   accepted(cb: (e: OrderAcceptedEvent) => void): void;
   rejected(cb: (e: OrderAcceptedEvent) => void): void;
   filled(cb: (e: OrderFilledEvent) => void): void;
@@ -68,6 +72,7 @@ export declare interface OrderStream<Props extends OrderProps> extends EventEmit
   ended(cb: (e: OrderEndedEvent) => void): void
 
   addListener(event: string, listener: (...args: any[]) => void): this;
+  addListener(event: "created", listener: (e: OrderCreatedEvent) => void): this;
   addListener(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
   addListener(event: "rejected", listener: (e: OrderRejectedEvent) => void): this;
   addListener(event: "filled", listener: (e: OrderFilledEvent) => void): this;
@@ -77,6 +82,7 @@ export declare interface OrderStream<Props extends OrderProps> extends EventEmit
   addListener(event: "ended", listener: (e: OrderEndedEvent) => void): this;
 
   on(event: string, listener: (...args: any[]) => void): this;
+  on(event: "created", listener: (e: OrderCreatedEvent) => void): this;
   on(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
   on(event: "rejected", listener: (e: OrderRejectedEvent) => void): this;
   on(event: "filled", listener: (e: OrderFilledEvent) => void): this;
@@ -86,6 +92,7 @@ export declare interface OrderStream<Props extends OrderProps> extends EventEmit
   on(event: "ended", listener: (e: OrderEndedEvent) => void): this;
 
   once(event: string, listener: (...args: any[]) => void): this;
+  once(event: "created", listener: (e: OrderCreatedEvent) => void): this;
   once(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
   once(event: "rejected", listener: (e: OrderRejectedEvent) => void): this;
   once(event: "filled", listener: (e: OrderFilledEvent) => void): this;
@@ -95,6 +102,7 @@ export declare interface OrderStream<Props extends OrderProps> extends EventEmit
   once(event: "ended", listener: (e: OrderEndedEvent) => void): this;
 
   prependListener(event: string, listener: (...args: any[]) => void): this;
+  prependListener(event: "created", listener: (e: OrderCreatedEvent) => void): this;
   prependListener(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
   prependListener(event: "rejected", listener: (e: OrderRejectedEvent) => void): this;
   prependListener(event: "filled", listener: (e: OrderFilledEvent) => void): this;
@@ -104,6 +112,7 @@ export declare interface OrderStream<Props extends OrderProps> extends EventEmit
   prependListener(event: "ended", listener: (e: OrderEndedEvent) => void): this;
 
   prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+  prependOnceListener(event: "created", listener: (e: OrderCreatedEvent) => void): this;
   prependOnceListener(event: "accepted", listener: (e: OrderAcceptedEvent) => void): this;
   prependOnceListener(event: "rejected", listener: (e: OrderRejectedEvent) => void): this;
   prependOnceListener(event: "filled", listener: (e: OrderFilledEvent) => void): this;
@@ -116,6 +125,7 @@ export declare interface OrderStream<Props extends OrderProps> extends EventEmit
 export abstract class OrderStream<Props extends OrderProps> extends EventEmitter
   implements OrderActions {
   public readonly props: Props
+  private cachedCreated?: OrderCreatedEvent;
   private cachedAccepted?: OrderAcceptedEvent;
   private cachedRejected?: OrderRejectedEvent;
   private cachedFilled?: OrderFilledEvent;
@@ -126,6 +136,7 @@ export abstract class OrderStream<Props extends OrderProps> extends EventEmitter
   constructor(props: Props) {
     super();
     this.props = Object.freeze(props);
+    this.on("created", e => this.cachedCreated = e)
     this.on("accepted", e => this.cachedAccepted = e)
     this.on("rejected", e => this.cachedRejected = e)
     this.on("filled", e => this.cachedFilled = e)
@@ -133,6 +144,16 @@ export abstract class OrderStream<Props extends OrderProps> extends EventEmitter
     this.on("closed", e => this.cachedClosed = e)
     this.on("canceled", e => this.cachedCanceled = e)
     this.on("ended", e => this.cachedEnded = e)
+  }
+
+  created(cb: (e: OrderCreatedEvent) => void): void {
+    setImmediate(() => {
+      if (this.cachedCreated) {
+        cb(this.cachedCreated);
+      } else {
+        this.once("created", cb)
+      }
+    })
   }
 
   accepted(cb: (e: OrderAcceptedEvent) => void): void {
@@ -216,6 +237,9 @@ export class DebugOrderStream<Props extends OrderProps> extends OrderStream<Prop
     super(props);
     const log = debug("order");
 
+    const created = log.extend("created");
+    this.prependListener("created", e => created("%j", e));
+    
     const accepted = log.extend("accepted");
     this.prependListener("accepted", e => accepted("%j", e));
 
@@ -249,6 +273,10 @@ export class DebugOrderStream<Props extends OrderProps> extends OrderStream<Prop
   }
   amend(): this {
     throw new Error("not implemented");
+  }
+
+  emitCreated(e: OrderCreatedEvent): void {
+    setImmediate(() => this.emit("created", e));
   }
 
   emitAccepted(e: OrderAcceptedEvent): void {

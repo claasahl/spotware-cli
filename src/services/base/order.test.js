@@ -33,8 +33,17 @@ describe("DebugOrderStream", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             new DebugOrderStream(props)
             expect(debug).toHaveBeenCalledTimes(1)
-            expect(extend).toHaveBeenCalledTimes(7)
+            expect(extend).toHaveBeenCalledTimes(8)
             expect(log).toHaveBeenCalledTimes(0)
+        })
+
+        test("log 'created' events", () => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { timestamp: 123 };
+            stream.emit("created", event)
+            expect(log).toHaveBeenCalledTimes(1)
+            expect(log).toHaveBeenCalledWith(expect.any(String), event);
         })
 
         test("log 'accepted' events", () => {
@@ -132,6 +141,30 @@ describe("DebugOrderStream", () => {
                 })
             })
             stream.emit("accepted", event);
+        })
+
+        test("should call cb with created (not cached)", done => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { timestamp: 123 };
+            stream.created(e => {
+                expect(e).toBe(event);
+                done()
+            })
+            setTimeout(() => stream.emit("created", event), 100)
+        })
+    
+        test("should call cb with created (cached)", done => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { timestamp: 123 };
+            stream.once("created", () => {
+                stream.created(e => {
+                    expect(e).toBe(event);
+                    done()
+                })
+            })
+            stream.emit("created", event);
         })
 
         test("should call cb with rejected (not cached)", done => {
@@ -303,6 +336,17 @@ describe("DebugOrderStream", () => {
     })
 
     describe("emitXXX helpers", () => {
+        test("should emit 'created' event", done => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { timestamp: 123 };
+            stream.once("created", e => {
+                expect(e).toBe(event);
+                done()
+            })
+            stream.emitCreated(event)
+        })
+
         test("should emit 'accepted' event", done => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
