@@ -20,6 +20,7 @@ export interface EquityChangedEvent {
 }
 interface OrderEventBase {
   timestamp: Timestamp;
+  status: "CREATED" | "ACCEPTED" | "REJECTED" | "CANCELED" | "FILLED" | "CLOSED" | "ENDED"
 }
 export type OrderEvent = OrderProps & OrderEventBase
 export type AccountSimpleMarketOrderProps = Omit<MarketOrderProps, keyof AccountProps | "orderType">;

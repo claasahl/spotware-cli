@@ -74,9 +74,15 @@ describe("fromNothing", () => {
             const stream = fromNothing({ currency, spots, initialBalance: 500 })
             const order = {id: "346", symbol, tradeSide: "SELL", volume: 4, takeProfit: 8}
             stream.marketOrder(order)
+            let orderNo = 0;
             stream.on("order", e => {
-                expect(e).toStrictEqual({ timestamp: expect.any(Number), orderType: "MARKET", ...order });
-                done()
+                if(orderNo == 0) {
+                    expect(e).toStrictEqual({ timestamp: expect.any(Number), status: "CREATED", orderType: "MARKET", ...order });
+                } else if(orderNo == 1) {
+                    expect(e).toStrictEqual({ timestamp: expect.any(Number), status: "ACCEPTED", orderType: "MARKET", ...order });
+                    done()
+                }
+                orderNo++;
             })
         })
         test("should produce 'equity' events", done => {
@@ -153,9 +159,15 @@ describe("fromNothing", () => {
             const stream = fromNothing({ currency, spots, initialBalance: 500 })
             const order = { id: "346", symbol, tradeSide: "BUY", volume: 4, enter: 6, takeProfit: 18 }
             stream.stopOrder(order)
+            let orderNo = 0;
             stream.on("order", e => {
-                expect(e).toStrictEqual({ timestamp: expect.any(Number), orderType: "STOP", ...order });
-                done()
+                if(orderNo == 0) {
+                    expect(e).toStrictEqual({ timestamp: expect.any(Number), status: "CREATED", orderType: "STOP", ...order });
+                } else if(orderNo == 1) {
+                    expect(e).toStrictEqual({ timestamp: expect.any(Number), status: "ACCEPTED", orderType: "STOP", ...order });
+                    done()
+                }
+                orderNo++;
             })
         })
         test("should produce 'equity' events", done => {

@@ -67,7 +67,7 @@ describe("DebugAccountStream", () => {
         test("log 'order' events", () => {
             const props = { currency: Symbol.for("abc"), a: 2 }
             const stream = new DebugAccountStream(props)
-            const event = { timestamp: 123 };
+            const event = { timestamp: 123, status: "CREATED" };
             stream.emit("order", event)
             expect(log).toHaveBeenCalledTimes(1)
             expect(log).toHaveBeenCalledWith(expect.any(String), event);
@@ -158,7 +158,7 @@ describe("DebugAccountStream", () => {
         test("should call cb with order (not cached)", done => {
             const props = { currency: Symbol.for("abc"), a: 2 }
             const stream = new DebugAccountStream(props)
-            const event = { timestamp: 123 };
+            const event = { timestamp: 123, status: "CREATED" };
             stream.order(e => {
                 expect(e).toBe(event);
                 done()
@@ -169,7 +169,7 @@ describe("DebugAccountStream", () => {
         test("should call cb with order (cached)", done => {
             const props = { currency: Symbol.for("abc"), a: 2 }
             const stream = new DebugAccountStream(props)
-            const event = { timestamp: 123 };
+            const event = { timestamp: 123, status: "CREATED" };
             stream.once("order", () => {
                 stream.order(e => {
                     expect(e).toBe(event);
