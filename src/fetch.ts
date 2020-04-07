@@ -123,7 +123,7 @@ function main() {
 
   setInterval(publish, 300);
   const path = "./store/test2.json"
-  const fromTimestamp = new Date("2020-04-05T11:00:00.000Z").getTime()
+  const fromTimestamp = new Date("2020-04-05T00:00:00.000Z").getTime()
   const toTimestamp = new Date("2020-04-05T12:00:00.000Z").getTime()
   interface Interval {fromTimestamp: number, toTimestamp: number, type: $.ProtoOAQuoteType}
   const intervals: Interval[] = []
@@ -140,6 +140,7 @@ function main() {
   function nextInterval() {
     const interval = intervals.shift()
     if(interval) {
+      log("fetching: %j", {from: new Date(interval.fromTimestamp), to: new Date(interval.toTimestamp), type: interval.type})
       const msgId = JSON.stringify(interval)
       getTickdata({ ctidTraderAccountId: ctidTraderAccountId!, symbolId: symbolId!, ...interval }, msgId)
     }
@@ -199,7 +200,7 @@ function main() {
     }
     nextInterval();
   });
-  socket.on("getTickdata", (msg: $.ProtoMessage2146) => {
+  socket.on("getTickdata", async (msg: $.ProtoMessage2146) => {
     assert.strictEqual(msg.payload.hasMore, false)
     const interval = JSON.parse(msg.clientMsgId || "") as Interval;
     if(interval.type === $.ProtoOAQuoteType.BID) {
@@ -214,7 +215,6 @@ function main() {
         stream.write(JSON.stringify(tick) + "\n")
       }
       stream.close()
-      socket.end()
     }
     nextInterval();
   })
