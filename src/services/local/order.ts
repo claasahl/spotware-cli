@@ -34,7 +34,7 @@ class LocalOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream<Pr
             })
             return this;
         }
-        throw new Error("order cannot be closed" + JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled, canBeAmended: this.canBeAmended}));
+        throw new Error(`order ${this.props.id} cannot be closed ${JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled, canBeAmended: this.canBeAmended})}`);
     }
     cancel(): this {
         if(this.canBeCanceled) {
@@ -42,15 +42,16 @@ class LocalOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream<Pr
             this.emitEnded({timestamp: Date.now()})
             return this;
         }
-        throw new Error("order cannot be canceled" + JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled, canBeAmended: this.canBeAmended}));
+        throw new Error(`order ${this.props.id} cannot be canceled ${JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled, canBeAmended: this.canBeAmended})}`);
     }
     end(): this {
         if(this.canBeCanceled) {
             return this.cancel();
         } else if(this.canBeClosed) {
             return this.close();
+        } else {
+            return this;
         }
-        throw new Error("order cannot be ended (i.e. closed or canceled)" + JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled, canBeAmended: this.canBeAmended}));
     }
 }
 
