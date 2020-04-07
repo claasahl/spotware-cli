@@ -1,4 +1,5 @@
-import { fromSampleData, fromNothing } from "./local";
+import { fromSampleData, fromFile, fromNothing } from "./local";
+import { insideBarMomentumStrategy } from "./insideBarMomentumStrategy";
 
 // Idea: Write services which consume events (from other services) and produce events (for other services to consume).
 
@@ -8,6 +9,10 @@ import { fromSampleData, fromNothing } from "./local";
 
 // each service should export a class that extends (and completes) its base implementation
 // alternatively, new services may be introduced through factory/creator-functions
+
+// each service must expose a callback-function for every documented event, which provides access to the last event. The function must be named after the event.
+
+// implement insideBarMomentumStrategy
 
 function local() {
   const name = "BTC/EUR";
@@ -23,4 +28,19 @@ function local() {
     account.marketOrder({ id: "1", symbol, tradeSide: "SELL", volume: 1, stopLoss: 6613.0});
   });
 }
-local();
+local;
+
+function insideBar() {
+  const currency = Symbol.for("EUR");
+  const initialBalance = 1000;
+  const period = 60000;
+  const symbol = Symbol.for("BTC/EUR");
+  const enterOffset = 0.1;
+  const stopLossOffset = 0.4;
+  const takeProfitOffset = 0.8;
+  const minTrendbarRange = 15;
+  const volume = 0.1;
+  const spots = () => fromFile({path: "./store/test2.json", symbol});
+  insideBarMomentumStrategy({ currency, initialBalance, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, spots })
+}
+insideBar();
