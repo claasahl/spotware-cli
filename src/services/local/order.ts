@@ -30,6 +30,7 @@ class LocalOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream<Pr
         if(this.canBeClosed) {
             this.profitLoss(e => {
                 this.emitClosed({ timestamp: e.timestamp, exit: e.price, profitLoss: e.profitLoss})
+                this.emitEnded({ timestamp: e.timestamp, exit: e.price, profitLoss: e.profitLoss})
             })
             return this;
         }
@@ -38,6 +39,7 @@ class LocalOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream<Pr
     cancel(): this {
         if(this.canBeCanceled) {
             this.emitCanceled({timestamp: Date.now()})
+            this.emitEnded({timestamp: Date.now()})
             return this;
         }
         throw new Error("order cannot be canceled" + JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled, canBeAmended: this.canBeAmended}));

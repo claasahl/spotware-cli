@@ -12,7 +12,10 @@ describe("marketOrderFromSpotPrices", () => {
             })
             stream.on("canceled", e => {
                 expect(e).toStrictEqual({timestamp: expect.anything(Number)})
-                done();
+                stream.on("ended", e => {
+                    expect(e).toStrictEqual({timestamp: expect.anything(Number)})
+                    done();
+                })
             })
         })
         test("should close order", done => {
@@ -24,7 +27,10 @@ describe("marketOrderFromSpotPrices", () => {
             })
             stream.on("closed", e => {
                 expect(e).toStrictEqual({timestamp: expect.anything(Number), exit: 1, profitLoss: 8})
-                done();
+                stream.on("ended", e => {
+                    expect(e).toStrictEqual({timestamp: expect.anything(Number), exit: 1, profitLoss: 8})
+                    done();
+                })
             })
             spots.emitBid({ timestamp: 0, bid: 5 })
             spots.emitAsk({ timestamp: 1, ask: 1 })
@@ -327,7 +333,10 @@ describe("stopOrderFromSpotPrices", () => {
             })
             stream.on("canceled", e => {
                 expect(e).toStrictEqual({timestamp: expect.anything(Number)})
-                done();
+                stream.on("ended", e => {
+                    expect(e).toStrictEqual({timestamp: expect.anything(Number)})
+                    done();
+                })
             })
         })
         test("should close order", done => {
@@ -339,7 +348,10 @@ describe("stopOrderFromSpotPrices", () => {
             })
             stream.on("closed", e => {
                 expect(e).toStrictEqual({timestamp: expect.anything(Number), exit: 2, profitLoss: 4})
-                done();
+                stream.on("ended", e => {
+                    expect(e).toStrictEqual({timestamp: expect.anything(Number), exit: 2, profitLoss: 4})
+                    done();
+                })
             })
             spots.emitBid({ timestamp: 0, bid: 5 })
             spots.emitBid({ timestamp: 1, bid: 4 })

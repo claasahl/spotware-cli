@@ -123,7 +123,8 @@ describe("insideBarMomentumStrategy", () => {
             "1": [
                 {timestamp: expect.any(Number), status: "CREATED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916},
                 {timestamp: expect.any(Number), status: "ACCEPTED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916},
-                {timestamp: expect.any(Number), status: "CANCELED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916}
+                {timestamp: expect.any(Number), status: "CANCELED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916},
+                {timestamp: expect.any(Number), status: "ENDED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916}
             ],
             "2": [
                 {timestamp: expect.any(Number), status: "CREATED", id: "2", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564},
@@ -182,7 +183,8 @@ describe("insideBarMomentumStrategy", () => {
             "1": [
                 {timestamp: expect.any(Number), status: "CREATED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564},
                 {timestamp: expect.any(Number), status: "ACCEPTED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564},
-                {timestamp: expect.any(Number), status: "CANCELED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564}
+                {timestamp: expect.any(Number), status: "CANCELED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564},
+                {timestamp: expect.any(Number), status: "ENDED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564}
             ],
             "2": [
                 {timestamp: expect.any(Number), status: "CREATED", id: "2", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916},
