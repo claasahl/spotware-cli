@@ -2,8 +2,10 @@ import debug from "debug";
 import assert from "assert"
 import * as $ from "@claasahl/spotware-adapter";
 import fs from "fs"
+import ms from "ms";
 
 import config from "./config";
+import * as B from "./services/base"
 
 function main() {
   const messages: $.ProtoMessages[] = [];
@@ -34,9 +36,10 @@ function main() {
   function request<REQ extends $.ProtoMessages, RES extends $.ProtoMessages>(
     request: REQ,
     payloadType: $.ProtoOAPayloadType | $.ProtoPayloadType,
-    event: string
+    event: string,
+    clientMessageId?: string
   ) {
-    const msgId = clientMsgId();
+    const msgId = clientMessageId ? clientMessageId : clientMsgId();
     setImmediate(() => write({ ...request, clientMsgId: msgId }));
     function isResponse(msg: $.ProtoMessages): msg is RES {
       return msg.payloadType === payloadType;
@@ -102,13 +105,14 @@ function main() {
     );
   }
 
-  function getTickdata(payload: $.ProtoOAGetTickDataReq) {
+  function getTickdata(payload: $.ProtoOAGetTickDataReq, msgId: string) {
     const requestPayloadType = $.ProtoOAPayloadType.PROTO_OA_GET_TICKDATA_REQ;
     const responsePayloadType = $.ProtoOAPayloadType.PROTO_OA_GET_TICKDATA_RES;
     request(
       { payloadType: requestPayloadType, payload },
       responsePayloadType,
-      "getTickdata"
+      "getTickdata",
+      msgId
     );
   }
 
@@ -118,6 +122,44 @@ function main() {
   const error = log.extend("error");
 
   setInterval(publish, 300);
+  const path = "./store/test2.json"
+  const fromTimestamp = new Date("2020-04-05T11:00:00.000Z").getTime()
+  const toTimestamp = new Date("2020-04-05T12:00:00.000Z").getTime()
+  interface Interval {fromTimestamp: number, toTimestamp: number, type: $.ProtoOAQuoteType}
+  const intervals: Interval[] = []
+  const offset = ms("1h")
+  let timestamp = fromTimestamp;
+  while(timestamp + offset < toTimestamp) {
+    intervals.push({fromTimestamp: timestamp, toTimestamp: timestamp+offset, type: $.ProtoOAQuoteType.BID})
+    intervals.push({fromTimestamp: timestamp, toTimestamp: timestamp+offset, type: $.ProtoOAQuoteType.ASK})
+    timestamp += offset;
+  }
+  intervals.push({fromTimestamp: timestamp, toTimestamp, type: $.ProtoOAQuoteType.BID})
+  intervals.push({fromTimestamp: timestamp, toTimestamp, type: $.ProtoOAQuoteType.ASK})
+  const spotPrices: (B.AskPriceChangedEvent | B.BidPriceChangedEvent)[] = []
+  function nextInterval() {
+    const interval = intervals.shift()
+    if(interval) {
+      const msgId = JSON.stringify(interval)
+      getTickdata({ ctidTraderAccountId: ctidTraderAccountId!, symbolId: symbolId!, ...interval }, msgId)
+    }
+  }
+  function interpolate(msg: $.ProtoMessage2146, type: "ask" | "bid"): (B.AskPriceChangedEvent | B.BidPriceChangedEvent)[] {
+    const tickData = msg.payload.tickData
+    for(let index = 1; index < tickData.length; index++) {
+      const prev = tickData[index - 1]
+      const curr = tickData[index]
+      curr.timestamp = prev.timestamp + curr.timestamp
+      curr.tick = prev.tick + curr.tick
+    }
+    if(type === "ask") {
+      return tickData.map(t => ({timestamp: t.timestamp, ask: t.tick / 100000}));
+    } else if(type === "bid") {
+      return tickData.map(t => ({timestamp: t.timestamp, bid: t.tick / 100000}));
+    }
+    return []
+  }
+
   let ctidTraderAccountId: number | null = null;
   let symbolId: number | null = null;
   const symbolName = "BTC/EUR";
@@ -152,27 +194,29 @@ function main() {
   });
   socket.on("symbolsList", (msg: $.ProtoMessage2115) => {
     msg.payload.symbol.filter(s => s.symbolName === symbolName).forEach(s => symbolId = s.symbolId);
-    const fromTimestamp = new Date("2020-04-05T11:00:00.000Z").getTime()
-    const toTimestamp = new Date("2020-04-05T12:00:00.000Z").getTime()
-    getTickdata({ ctidTraderAccountId: ctidTraderAccountId!, symbolId: symbolId!, fromTimestamp, toTimestamp, type: $.ProtoOAQuoteType.BID })
+    if(fs.existsSync(path)) {
+      fs.unlinkSync(path);
+    }
+    nextInterval();
   });
   socket.on("getTickdata", (msg: $.ProtoMessage2146) => {
     assert.strictEqual(msg.payload.hasMore, false)
-    const tickData = msg.payload.tickData
-    for(let index = 1; index < tickData.length; index++) {
-      const prev = tickData[index - 1]
-      const curr = tickData[index]
-      curr.timestamp = prev.timestamp + curr.timestamp
-      curr.tick = prev.tick + curr.tick
-    }
+    const interval = JSON.parse(msg.clientMsgId || "") as Interval;
+    if(interval.type === $.ProtoOAQuoteType.BID) {
+      spotPrices.splice(0)
+      spotPrices.push(...interpolate(msg, "ask"))
+    } else if(interval.type === $.ProtoOAQuoteType.ASK) {
+      spotPrices.push(...interpolate(msg, "bid"))
 
-    const path = "./store/test.json";
-    const stream = fs.createWriteStream(path)
-    for(const tick of tickData) {
-      stream.write(JSON.stringify({timestamp: tick.timestamp, bid: tick.tick / 10000}) + "\n")
+      const ticks = spotPrices.sort((a, b) => a.timestamp - b.timestamp)
+      const stream = fs.createWriteStream(path, {flags: "a"})
+      for(const tick of ticks) {
+        stream.write(JSON.stringify(tick) + "\n")
+      }
+      stream.close()
+      socket.end()
     }
-    stream.close()
-    socket.end()
+    nextInterval();
   })
 }
 main();
