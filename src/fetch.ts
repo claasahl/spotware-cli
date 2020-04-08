@@ -209,7 +209,19 @@ function main() {
     } else if(interval.type === $.ProtoOAQuoteType.ASK) {
       spotPrices.push(...interpolate(msg, "bid"))
 
-      const ticks = spotPrices.sort((a, b) => a.timestamp - b.timestamp)
+      const ticks = spotPrices
+        .sort((a, b) => a.timestamp - b.timestamp)
+        .map((tick, index, ticks) => {
+          if(index + 1 < ticks.length && tick.timestamp === ticks[index + 1].timestamp) {
+            return {...tick, ...ticks[index+1]}
+          }
+          if(index - 1 >= 0 && tick.timestamp === ticks[index - 1].timestamp) {
+            return undefined
+          }
+          return tick
+        })
+        .filter(t => typeof t !== "undefined")
+
       const stream = fs.createWriteStream(path, {flags: "a"})
       for(const tick of ticks) {
         stream.write(JSON.stringify(tick) + "\n")
