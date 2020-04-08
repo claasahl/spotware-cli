@@ -1,3 +1,4 @@
+import mem from "mem";
 import * as B from "../base";
 import { marketOrderFromSpotPrices, stopOrderFromSpotPrices } from "./order";
 import { includesCurrency } from "./util";
@@ -14,7 +15,8 @@ class LocalAccountStream extends B.DebugAccountStream {
 
     constructor(props: LocalAccountProps) {
         super(props);
-        this.spots = props.spots;
+        const cacheKey = (arguments_: any) => JSON.stringify(arguments_.symbol);
+        this.spots = mem(props.spots, {cacheKey})
         this.on("balance", e => this.myBalance = e.balance)
         this.on("balance", this.updateEquity)
     }
