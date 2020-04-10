@@ -97,14 +97,14 @@ export function sock(props: SockProps): $.SpotwareSocket {
   const output = log.extend("output");
   const error = log.extend("error");
 
-  const socket = $.connect(props.port, props.host);
-  const P = publisher(socket);
-  socket.on("connect", () => log("connected"));
-  socket.on("connect", () => pacemaker(socket, P));
-  socket.on("connect", () => authApplication(socket, P, props));
-  socket.on("close", () => log("disconnect"));
-  socket.on("error", (err: Error) => error(err.message));
-  socket.on("PROTO_MESSAGE.INPUT.*", msg => input("%j", msg));
-  socket.on("PROTO_MESSAGE.OUTPUT.*", msg => output("%j", msg));
-  return socket;
+  const S = $.connect(props.port, props.host);
+  const P = publisher(S);
+  S.on("connect", () => log("connected"));
+  S.on("connect", () => pacemaker(S, P));
+  S.on("connect", () => authApplication(S, P, props));
+  S.on("close", () => log("disconnect"));
+  S.on("error", (err: Error) => error(err.message));
+  S.on("PROTO_MESSAGE.INPUT.*", msg => input("%j", msg));
+  S.on("PROTO_MESSAGE.OUTPUT.*", msg => output("%j", msg));
+  return S;
 }
