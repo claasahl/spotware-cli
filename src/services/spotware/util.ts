@@ -83,6 +83,50 @@ function authApplication(socket: $.SpotwareSocket, publisher: Publisher, payload
   );
 }
 
+function lookupAccounts(socket: $.SpotwareSocket, publisher: Publisher, payload: $.ProtoOAGetAccountListByAccessTokenReq) {
+  const requestPayloadType = $.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ;
+  const responsePayloadType = $.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES;
+  request(
+    socket, publisher,
+    { payloadType: requestPayloadType, payload },
+    responsePayloadType,
+    "lookupAccounts"
+  );
+}
+
+function authAccount(socket: $.SpotwareSocket, publisher: Publisher, payload: $.ProtoOAAccountAuthReq) {
+  const requestPayloadType = $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_REQ;
+  const responsePayloadType = $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES;
+  request(
+    socket, publisher,
+    { payloadType: requestPayloadType, payload },
+    responsePayloadType,
+    "authAccount"
+  );
+}
+
+function version(socket: $.SpotwareSocket, publisher: Publisher, payload: $.ProtoOAVersionReq) {
+  const requestPayloadType = $.ProtoOAPayloadType.PROTO_OA_VERSION_REQ;
+  const responsePayloadType = $.ProtoOAPayloadType.PROTO_OA_VERSION_RES;
+  request(
+    socket, publisher,
+    { payloadType: requestPayloadType, payload },
+    responsePayloadType,
+    "version"
+  );
+}
+
+function symbolsList(socket: $.SpotwareSocket, publisher: Publisher, payload: $.ProtoOASymbolsListReq) {
+  const requestPayloadType = $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_REQ;
+  const responsePayloadType = $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_RES;
+  request(
+    socket, publisher,
+    { payloadType: requestPayloadType, payload },
+    responsePayloadType,
+    "symbolsList"
+  );
+}
+
 
 interface SockProps {
   port: number;
@@ -91,7 +135,12 @@ interface SockProps {
   clientSecret: string;
   accessToken: string;
 }
-export function sock(props: SockProps): $.SpotwareSocket {
+export interface Result {
+  socket: $.SpotwareSocket,
+  ctidTraderAccountId: number | null,
+  symbols: Map<string, $.ProtoOALightSymbol>
+}
+export function sock(props: SockProps): Result {
   const log = debug("spotware");
   const input = log.extend("input");
   const output = log.extend("output");
@@ -99,6 +148,11 @@ export function sock(props: SockProps): $.SpotwareSocket {
 
   const S = $.connect(props.port, props.host);
   const P = publisher(S);
+  const result: Result = {
+    socket: S,
+    ctidTraderAccountId: null,
+    symbols: new Map()
+  }
   S.on("connect", () => log("connected"));
   S.on("connect", () => pacemaker(S, P));
   S.on("connect", () => authApplication(S, P, props));
@@ -106,5 +160,16 @@ export function sock(props: SockProps): $.SpotwareSocket {
   S.on("error", (err: Error) => error(err.message));
   S.on("PROTO_MESSAGE.INPUT.*", msg => input("%j", msg));
   S.on("PROTO_MESSAGE.OUTPUT.*", msg => output("%j", msg));
-  return S;
+
+  S.on("authApplication", () => version(S, P, {}))
+  S.on("authApplication", () => lookupAccounts(S, P, props))
+  S.on("lookupAccounts", (msg: $.ProtoMessage2150) => {
+    result.ctidTraderAccountId = msg.payload.ctidTraderAccount[0].ctidTraderAccountId;
+    authAccount(S, P, {...props, ctidTraderAccountId: result.ctidTraderAccountId })
+  })
+  S.on("authAccount", () => symbolsList(S, P, {ctidTraderAccountId: result.ctidTraderAccountId!}))
+  S.on("symbolsList", (msg: $.ProtoMessage2115) => {
+    msg.payload.symbol.forEach(s => result.symbols.set(s.symbolName || "", s))
+  });
+  return result;
 }
