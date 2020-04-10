@@ -137,12 +137,6 @@ function subscribeSpots(payload: $.ProtoOASubscribeSpotsReq) {
   );
 }
 
-function heartbeat() {
-  setImmediate(() =>
-    write({ payloadType: $.ProtoPayloadType.HEARTBEAT_EVENT, payload: {} })
-  );
-}
-
 function connected() {
   log("connected");
   publisher = setInterval(publish, 300);
@@ -150,9 +144,6 @@ function connected() {
 
 function disconnected() {
   log("disconnected");
-  assert.ok(pacemaker);
-  clearTimeout(pacemaker!);
-  pacemaker = null;
 
   assert.ok(publisher);
   clearTimeout(publisher!);
@@ -165,7 +156,6 @@ const currency = Symbol.for("EUR");
 const account = new DebugAccountStream({ currency });
 const symbolsByName = new Map<string, $.ProtoOALightSymbol>();
 const symbolsById = new Map<number, $.ProtoOALightSymbol>();
-let pacemaker: NodeJS.Timeout | null = null;
 let publisher: NodeJS.Timeout | null = null;
 let ctidTraderAccountId: number | null = null;
 let symbolId: number | null = null;
@@ -183,10 +173,6 @@ socket.on("PROTO_MESSAGE.INPUT.*", msg => {
 });
 socket.on("PROTO_MESSAGE.OUTPUT.*", msg => {
   output("%j", msg);
-  if (pacemaker) {
-    clearTimeout(pacemaker);
-  }
-  pacemaker = setTimeout(heartbeat, 10000);
 });
 socket.on("PROTO_MESSAGE.INPUT.*", msg => {
   function isAccountDisconnectedEvent(
