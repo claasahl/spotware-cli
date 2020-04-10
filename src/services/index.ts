@@ -1,5 +1,7 @@
 import { fromSampleData, fromFile, fromNothing } from "./local";
 import { insideBarMomentumStrategy } from "./insideBarMomentumStrategy";
+import { sock } from "./spotware/util";
+import config from "../config";
 
 // Idea: Write services which consume events (from other services) and produce events (for other services to consume).
 
@@ -40,7 +42,12 @@ function insideBar() {
   const takeProfitOffset = 0.8;
   const minTrendbarRange = 15;
   const volume = 0.1;
-  const spots = () => fromFile({path: "./store/test2.json", symbol});
+  const spots = () => fromFile({path: "./store/test3.json", symbol});
   insideBarMomentumStrategy({ currency, initialBalance, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, spots })
 }
-insideBar();
+insideBar;
+
+function spotware() {
+  sock(config)
+}
+spotware();
