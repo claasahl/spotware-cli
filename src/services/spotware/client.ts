@@ -51,6 +51,7 @@ export class SpotwareClient extends EventEmitter {
 
         this.throttledPublisher();
         this.pacemaker();
+        this.endOnError();
     }
 
     private publish(msg: $.ProtoMessages): void {
@@ -79,6 +80,10 @@ export class SpotwareClient extends EventEmitter {
             }
             pacemaker = setTimeout(() => this.publish(heartbeat), 10000);
         });
+    }
+
+    private endOnError() {
+        this.socket.on("error", () => this.socket.end());
     }
 
     private awaitResponse<T extends $.ProtoMessages>(clientMsgId: string, isResponse: (msg: $.ProtoMessages) => msg is T, cb: (payload: T["payload"]) => void): void {
@@ -315,4 +320,8 @@ export class SpotwareClient extends EventEmitter {
     // PROTO_OA_ACCOUNT_DISCONNECT_EVENT
     // PROTO_OA_MARGIN_CALL_UPDATE_EVENT = 2171,
     // PROTO_OA_MARGIN_CALL_TRIGGER_EVENT = 2172,
+
+    end() {
+        this.socket.end();
+    }
 }
