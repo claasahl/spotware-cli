@@ -11,7 +11,7 @@ function isOAError(msg: $.ProtoMessages): msg is $.ProtoMessage2142 {
     return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_ERROR_RES;
 }
 
-function testResponse<T extends $.ProtoMessages>(payloadType: $.ProtoOAPayloadType | $.ProtoPayloadType) {
+function testResponse<T extends $.ProtoMessages>(payloadType: T["payloadType"]) {
     return (msg: $.ProtoMessages): msg is T => {
         return msg.payloadType === payloadType;
     }
