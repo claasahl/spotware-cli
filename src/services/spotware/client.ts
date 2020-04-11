@@ -11,9 +11,8 @@ function isOAError(msg: $.ProtoMessages): msg is $.ProtoMessage2142 {
     return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_ERROR_RES;
 }
 
-interface Callback<T> {
-    (err: Error): void
-    (err: undefined, payload: T): void
+export interface Callback<T> {
+    (payload: T): void
 } 
 
 interface SpotwareClientProps {
@@ -87,12 +86,11 @@ export class SpotwareClient extends EventEmitter {
                 this.socket.off("PROTO_MESSAGE.INPUT.*", response);
                 if (isResponse(msg)) {
                     setImmediate(() => this.socket.emit("PROTO_OA_VERSION_RES", msg.payload));
-                    setImmediate(() => cb(undefined, msg.payload));
+                    setImmediate(() => cb(msg.payload));
                 } else if (isError(msg) || isOAError(msg)) {
                     const { errorCode, description } = msg.payload;
                     const error = new Error(`${errorCode}, ${description}`);
                     setImmediate(() => this.socket.emit("error", error));
-                    setImmediate(() => cb(error));
                 }
             }
         }
@@ -110,12 +108,11 @@ export class SpotwareClient extends EventEmitter {
                 this.socket.off("PROTO_MESSAGE.INPUT.*", response);
                 if (isResponse(msg)) {
                     setImmediate(() => this.socket.emit("PROTO_OA_APPLICATION_AUTH_RES", msg.payload));
-                    setImmediate(() => cb(undefined, msg.payload));
+                    setImmediate(() => cb(msg.payload));
                 } else if (isError(msg) || isOAError(msg)) {
                     const { errorCode, description } = msg.payload;
                     const error = new Error(`${errorCode}, ${description}`);
                     setImmediate(() => this.socket.emit("error", error));
-                    setImmediate(() => cb(error));
                 }
             }
         }

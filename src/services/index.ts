@@ -48,6 +48,7 @@ function insideBar() {
 insideBar;
 
 function spotware() {
-  new SpotwareClient(config);
+  const client = new SpotwareClient(config);
+  client.applicationAuth(config, p => console.log(p))
 }
 spotware();
