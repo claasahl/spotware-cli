@@ -1,7 +1,7 @@
 import { fromSampleData, fromFile, fromNothing } from "./local";
 import { insideBarMomentumStrategy } from "./insideBarMomentumStrategy";
-import { sock } from "./spotware/util";
 import config from "../config";
+import { SpotwareClient } from "./spotware/client";
 
 // Idea: Write services which consume events (from other services) and produce events (for other services to consume).
 
@@ -48,6 +48,6 @@ function insideBar() {
 insideBar;
 
 function spotware() {
-  sock(config)
+  new SpotwareClient(config);
 }
 spotware();
