@@ -86,7 +86,8 @@ export class SpotwareClient extends EventEmitter {
             if (msg.clientMsgId === clientMsgId) {
                 this.socket.off("PROTO_MESSAGE.INPUT.*", response);
                 if (isResponse(msg)) {
-                    setImmediate(() => this.socket.emit("PROTO_OA_ACCOUNT_AUTH_RES", msg.payload));
+                    const event = $.ProtoOAPayloadType[msg.payloadType] || $.ProtoPayloadType[msg.payloadType]
+                    setImmediate(() => this.socket.emit(event, msg.payload));
                     setImmediate(() => cb(msg.payload));
                 } else if (isError(msg) || isOAError(msg)) {
                     const { errorCode, description } = msg.payload;
