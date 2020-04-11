@@ -11,6 +11,12 @@ function isOAError(msg: $.ProtoMessages): msg is $.ProtoMessage2142 {
     return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_ERROR_RES;
 }
 
+function testResponse<T extends $.ProtoMessages>(payloadType: $.ProtoOAPayloadType | $.ProtoPayloadType) {
+    return (msg: $.ProtoMessages): msg is T => {
+        return msg.payloadType === payloadType;
+    }
+}
+
 export interface Callback<T> {
     (payload: T): void
 } 
@@ -75,12 +81,7 @@ export class SpotwareClient extends EventEmitter {
         });
     }
 
-    accountAuth(payload: $.ProtoOAAccountAuthReq, cb: Callback<$.ProtoOAAccountAuthRes>) {
-        const clientMsgId = v4()
-        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_REQ, payload, clientMsgId })
-        const isResponse = (msg: $.ProtoMessages): msg is $.ProtoMessage2103 => {
-            return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES;
-        }
+    private awaitResponse<T extends $.ProtoMessages>(clientMsgId: string, isResponse: (msg: $.ProtoMessages) => msg is T, cb: (payload: T["payload"]) => void): void {
         const response = (msg: $.ProtoMessages) => {
             if (msg.clientMsgId === clientMsgId) {
                 this.socket.off("PROTO_MESSAGE.INPUT.*", response);
@@ -97,157 +98,59 @@ export class SpotwareClient extends EventEmitter {
         this.socket.on("PROTO_MESSAGE.INPUT.*", response);
     }
 
+    accountAuth(payload: $.ProtoOAAccountAuthReq, cb: Callback<$.ProtoOAAccountAuthRes>) {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2103>($.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
+    }
+
     accountLogout(payload: $.ProtoOAAccountLogoutReq, cb: Callback<$.ProtoOAAccountLogoutRes>) {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_LOGOUT_REQ, payload, clientMsgId })
-        const isResponse = (msg: $.ProtoMessages): msg is $.ProtoMessage2163 => {
-            return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_LOGOUT_RES;
-        }
-        const response = (msg: $.ProtoMessages) => {
-            if (msg.clientMsgId === clientMsgId) {
-                this.socket.off("PROTO_MESSAGE.INPUT.*", response);
-                if (isResponse(msg)) {
-                    setImmediate(() => this.socket.emit("PROTO_OA_ACCOUNT_LOGOUT_RES", msg.payload));
-                    setImmediate(() => cb(msg.payload));
-                } else if (isError(msg) || isOAError(msg)) {
-                    const { errorCode, description } = msg.payload;
-                    const error = new Error(`${errorCode}, ${description}`);
-                    setImmediate(() => this.socket.emit("error", error));
-                }
-            }
-        }
-        this.socket.on("PROTO_MESSAGE.INPUT.*", response);
+        const isResponse = testResponse<$.ProtoMessage2163>($.ProtoOAPayloadType.PROTO_OA_ACCOUNT_LOGOUT_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
     }
 
     applicationAuth(payload: $.ProtoOAApplicationAuthReq, cb: Callback<$.ProtoOAApplicationAuthRes>) {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_REQ, payload, clientMsgId })
-        const isResponse = (msg: $.ProtoMessages): msg is $.ProtoMessage2105 => {
-            return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_RES;
-        }
-        const response = (msg: $.ProtoMessages) => {
-            if (msg.clientMsgId === clientMsgId) {
-                this.socket.off("PROTO_MESSAGE.INPUT.*", response);
-                if (isResponse(msg)) {
-                    setImmediate(() => this.socket.emit("PROTO_OA_APPLICATION_AUTH_RES", msg.payload));
-                    setImmediate(() => cb(msg.payload));
-                } else if (isError(msg) || isOAError(msg)) {
-                    const { errorCode, description } = msg.payload;
-                    const error = new Error(`${errorCode}, ${description}`);
-                    setImmediate(() => this.socket.emit("error", error));
-                }
-            }
-        }
-        this.socket.on("PROTO_MESSAGE.INPUT.*", response);
+        const isResponse = testResponse<$.ProtoMessage2101>($.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_RES);
+        this.awaitResponse(clientMsgId, isResponse, cb);
     }
 
     assetClassList(payload: $.ProtoOAAssetClassListReq, cb: Callback<$.ProtoOAAssetClassListRes>) {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_ASSET_CLASS_LIST_REQ, payload, clientMsgId })
-        const isResponse = (msg: $.ProtoMessages): msg is $.ProtoMessage2154 => {
-            return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_ASSET_CLASS_LIST_RES;
-        }
-        const response = (msg: $.ProtoMessages) => {
-            if (msg.clientMsgId === clientMsgId) {
-                this.socket.off("PROTO_MESSAGE.INPUT.*", response);
-                if (isResponse(msg)) {
-                    setImmediate(() => this.socket.emit("PROTO_OA_ASSET_CLASS_LIST_RES", msg.payload));
-                    setImmediate(() => cb(msg.payload));
-                } else if (isError(msg) || isOAError(msg)) {
-                    const { errorCode, description } = msg.payload;
-                    const error = new Error(`${errorCode}, ${description}`);
-                    setImmediate(() => this.socket.emit("error", error));
-                }
-            }
-        }
-        this.socket.on("PROTO_MESSAGE.INPUT.*", response);
+        const isResponse = testResponse<$.ProtoMessage2154>($.ProtoOAPayloadType.PROTO_OA_ASSET_CLASS_LIST_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
     }
 
     assetList(payload: $.ProtoOAAssetListReq, cb: Callback<$.ProtoOAAssetListRes>) {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_ASSET_LIST_REQ, payload, clientMsgId })
-        const isResponse = (msg: $.ProtoMessages): msg is $.ProtoMessage2113 => {
-            return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_ASSET_LIST_RES;
-        }
-        const response = (msg: $.ProtoMessages) => {
-            if (msg.clientMsgId === clientMsgId) {
-                this.socket.off("PROTO_MESSAGE.INPUT.*", response);
-                if (isResponse(msg)) {
-                    setImmediate(() => this.socket.emit("PROTO_OA_ASSET_LIST_RES", msg.payload));
-                    setImmediate(() => cb(msg.payload));
-                } else if (isError(msg) || isOAError(msg)) {
-                    const { errorCode, description } = msg.payload;
-                    const error = new Error(`${errorCode}, ${description}`);
-                    setImmediate(() => this.socket.emit("error", error));
-                }
-            }
-        }
-        this.socket.on("PROTO_MESSAGE.INPUT.*", response);
+        const isResponse = testResponse<$.ProtoMessage2113>($.ProtoOAPayloadType.PROTO_OA_ASSET_LIST_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
     }
 
     dealList(payload: $.ProtoOADealListReq, cb: Callback<$.ProtoOADealListRes>) {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_DEAL_LIST_REQ, payload, clientMsgId })
-        const isResponse = (msg: $.ProtoMessages): msg is $.ProtoMessage2134 => {
-            return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_DEAL_LIST_RES;
-        }
-        const response = (msg: $.ProtoMessages) => {
-            if (msg.clientMsgId === clientMsgId) {
-                this.socket.off("PROTO_MESSAGE.INPUT.*", response);
-                if (isResponse(msg)) {
-                    setImmediate(() => this.socket.emit("PROTO_OA_DEAL_LIST_RES", msg.payload));
-                    setImmediate(() => cb(msg.payload));
-                } else if (isError(msg) || isOAError(msg)) {
-                    const { errorCode, description } = msg.payload;
-                    const error = new Error(`${errorCode}, ${description}`);
-                    setImmediate(() => this.socket.emit("error", error));
-                }
-            }
-        }
-        this.socket.on("PROTO_MESSAGE.INPUT.*", response);
+        const isResponse = testResponse<$.ProtoMessage2134>($.ProtoOAPayloadType.PROTO_OA_DEAL_LIST_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
     }
 
     expectedMargin(payload: $.ProtoOAExpectedMarginReq, cb: Callback<$.ProtoOAExpectedMarginRes>) {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_EXPECTED_MARGIN_REQ, payload, clientMsgId })
-        const isResponse = (msg: $.ProtoMessages): msg is $.ProtoMessage2140 => {
-            return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_EXPECTED_MARGIN_RES;
-        }
-        const response = (msg: $.ProtoMessages) => {
-            if (msg.clientMsgId === clientMsgId) {
-                this.socket.off("PROTO_MESSAGE.INPUT.*", response);
-                if (isResponse(msg)) {
-                    setImmediate(() => this.socket.emit("PROTO_OA_EXPECTED_MARGIN_RES", msg.payload));
-                    setImmediate(() => cb(msg.payload));
-                } else if (isError(msg) || isOAError(msg)) {
-                    const { errorCode, description } = msg.payload;
-                    const error = new Error(`${errorCode}, ${description}`);
-                    setImmediate(() => this.socket.emit("error", error));
-                }
-            }
-        }
-        this.socket.on("PROTO_MESSAGE.INPUT.*", response);
+        const isResponse = testResponse<$.ProtoMessage2140>($.ProtoOAPayloadType.PROTO_OA_EXPECTED_MARGIN_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
     }
 
     version(payload: $.ProtoOAVersionReq, cb: Callback<$.ProtoOAVersionRes>) {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_VERSION_REQ, payload, clientMsgId })
-        const isResponse = (msg: $.ProtoMessages): msg is $.ProtoMessage2105 => {
-            return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_VERSION_RES;
-        }
-        const response = (msg: $.ProtoMessages) => {
-            if (msg.clientMsgId === clientMsgId) {
-                this.socket.off("PROTO_MESSAGE.INPUT.*", response);
-                if (isResponse(msg)) {
-                    setImmediate(() => this.socket.emit("PROTO_OA_VERSION_RES", msg.payload));
-                    setImmediate(() => cb(msg.payload));
-                } else if (isError(msg) || isOAError(msg)) {
-                    const { errorCode, description } = msg.payload;
-                    const error = new Error(`${errorCode}, ${description}`);
-                    setImmediate(() => this.socket.emit("error", error));
-                }
-            }
-        }
-        this.socket.on("PROTO_MESSAGE.INPUT.*", response);
+        const isResponse = testResponse<$.ProtoMessage2105>($.ProtoOAPayloadType.PROTO_OA_VERSION_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
     }
 }
