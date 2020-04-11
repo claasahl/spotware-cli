@@ -113,10 +113,6 @@ export class SpotwareClient extends EventEmitter {
         this.awaitResponse(clientMsgId, isResponse, cb);
     }
 
-    // TODO: ProtoOAAmendOrderReq
-
-    // TODO: ProtoOAAmendPositionSLTPReq
-
     applicationAuth(payload: $.ProtoOAApplicationAuthReq, cb: Callback<$.ProtoOAApplicationAuthRes>) {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_REQ, payload, clientMsgId })
@@ -138,16 +134,12 @@ export class SpotwareClient extends EventEmitter {
         this.awaitResponse(clientMsgId, isResponse, cb);
     }
 
-    // TODO: ProtoOACancelOrderReq
-
     cashFlowHistoryList(payload: $.ProtoOACashFlowHistoryListReq, cb: Callback<$.ProtoOACashFlowHistoryListRes>) {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_CASH_FLOW_HISTORY_LIST_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2144>($.ProtoOAPayloadType.PROTO_OA_CASH_FLOW_HISTORY_LIST_RES)
         this.awaitResponse(clientMsgId, isResponse, cb);
     }
-
-    // TODO: ProtoOAClosePositionReq
 
     dealList(payload: $.ProtoOADealListReq, cb: Callback<$.ProtoOADealListRes>) {
         const clientMsgId = v4()
@@ -204,8 +196,6 @@ export class SpotwareClient extends EventEmitter {
         const isResponse = testResponse<$.ProtoMessage2170>($.ProtoOAPayloadType.PROTO_OA_MARGIN_CALL_UPDATE_RES)
         this.awaitResponse(clientMsgId, isResponse, cb);
     }
-
-    // TODO: ProtoOANewOrderReq
 
     reconcile(payload: $.ProtoOAReconcileReq, cb: Callback<$.ProtoOAReconcileRes>) {
         const clientMsgId = v4()
@@ -304,4 +294,25 @@ export class SpotwareClient extends EventEmitter {
         const isResponse = testResponse<$.ProtoMessage2105>($.ProtoOAPayloadType.PROTO_OA_VERSION_RES)
         this.awaitResponse(clientMsgId, isResponse, cb);
     }
+
+    // TODO:
+    // PROTO_OA_NEW_ORDER_REQ = 2106,
+    // PROTO_OA_TRAILING_SL_CHANGED_EVENT = 2107,
+    // PROTO_OA_CANCEL_ORDER_REQ = 2108,
+    // PROTO_OA_AMEND_ORDER_REQ = 2109,
+    // PROTO_OA_AMEND_POSITION_SLTP_REQ = 2110,
+    // PROTO_OA_CLOSE_POSITION_REQ = 2111,
+    // PROTO_OA_SYMBOL_CHANGED_EVENT = 2120,
+    // PROTO_OA_TRADER_UPDATE_EVENT = 2123,
+    // PROTO_OA_EXECUTION_EVENT = 2126,
+    // PROTO_OA_SPOT_EVENT = 2131,
+    // PROTO_OA_ORDER_ERROR_EVENT
+    // PROTO_OA_MARGIN_CHANGED_EVENT
+    // PROTO_OA_ERROR_RES
+    // PROTO_OA_ACCOUNTS_TOKEN_INVALIDATED_EVENT
+    // PROTO_OA_CLIENT_DISCONNECT_EVENT
+    // PROTO_OA_DEPTH_EVENT,
+    // PROTO_OA_ACCOUNT_DISCONNECT_EVENT
+    // PROTO_OA_MARGIN_CALL_UPDATE_EVENT = 2171,
+    // PROTO_OA_MARGIN_CALL_TRIGGER_EVENT = 2172,
 }
