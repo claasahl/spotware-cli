@@ -87,12 +87,12 @@ export class SpotwareClient extends EventEmitter {
                 this.socket.off("PROTO_MESSAGE.INPUT.*", response);
                 if (isResponse(msg)) {
                     const event = $.ProtoOAPayloadType[msg.payloadType] || $.ProtoPayloadType[msg.payloadType]
-                    setImmediate(() => this.socket.emit(event, msg.payload));
+                    setImmediate(() => this.emit(event, msg.payload));
                     setImmediate(() => cb(msg.payload));
                 } else if (isError(msg) || isOAError(msg)) {
                     const { errorCode, description } = msg.payload;
                     const error = new Error(`${errorCode}, ${description}`);
-                    setImmediate(() => this.socket.emit("error", error));
+                    setImmediate(() => this.emit("error", error));
                 }
             }
         }
