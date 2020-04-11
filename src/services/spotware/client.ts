@@ -113,6 +113,10 @@ export class SpotwareClient extends EventEmitter {
         this.awaitResponse(clientMsgId, isResponse, cb);
     }
 
+    // TODO: ProtoOAAmendOrderReq
+
+    // TODO: ProtoOAAmendPositionSLTPReq
+
     applicationAuth(payload: $.ProtoOAApplicationAuthReq, cb: Callback<$.ProtoOAApplicationAuthRes>) {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_REQ, payload, clientMsgId })
@@ -133,6 +137,17 @@ export class SpotwareClient extends EventEmitter {
         const isResponse = testResponse<$.ProtoMessage2113>($.ProtoOAPayloadType.PROTO_OA_ASSET_LIST_RES)
         this.awaitResponse(clientMsgId, isResponse, cb);
     }
+
+    // TODO: ProtoOACancelOrderReq
+
+    cashFlowHistoryList(payload: $.ProtoOACashFlowHistoryListReq, cb: Callback<$.ProtoOACashFlowHistoryListRes>) {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_CASH_FLOW_HISTORY_LIST_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2144>($.ProtoOAPayloadType.PROTO_OA_CASH_FLOW_HISTORY_LIST_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
+    }
+
+    // TODO: ProtoOAClosePositionReq
 
     dealList(payload: $.ProtoOADealListReq, cb: Callback<$.ProtoOADealListRes>) {
         const clientMsgId = v4()
@@ -162,6 +177,20 @@ export class SpotwareClient extends EventEmitter {
         this.awaitResponse(clientMsgId, isResponse, cb);
     }
 
+    getTickData(payload: $.ProtoOAGetTickDataReq, cb: Callback<$.ProtoOAGetTickDataRes>) {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_GET_TICKDATA_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2146>($.ProtoOAPayloadType.PROTO_OA_GET_TICKDATA_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
+    }
+
+    getTrendbars(payload: $.ProtoOAGetTrendbarsReq, cb: Callback<$.ProtoOAGetTrendbarsRes>) {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2138>($.ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
+    }
+
     marginCallList(payload: $.ProtoOAMarginCallListReq, cb: Callback<$.ProtoOAMarginCallListRes>) {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_MARGIN_CALL_LIST_REQ, payload, clientMsgId })
@@ -169,10 +198,47 @@ export class SpotwareClient extends EventEmitter {
         this.awaitResponse(clientMsgId, isResponse, cb);
     }
 
+    marginCallUpdate(payload: $.ProtoOAMarginCallUpdateReq, cb: Callback<$.ProtoOAMarginCallUpdateRes>) {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_MARGIN_CALL_UPDATE_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2170>($.ProtoOAPayloadType.PROTO_OA_MARGIN_CALL_UPDATE_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
+    }
+
+    // TODO: ProtoOANewOrderReq
+
+    reconcile(payload: $.ProtoOAReconcileReq, cb: Callback<$.ProtoOAReconcileRes>) {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_RECONCILE_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2125>($.ProtoOAPayloadType.PROTO_OA_RECONCILE_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
+    }
+
     refreshToken(payload: $.ProtoOARefreshTokenReq, cb: Callback<$.ProtoOARefreshTokenRes>) {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_REFRESH_TOKEN_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2174>($.ProtoOAPayloadType.PROTO_OA_REFRESH_TOKEN_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
+    }
+
+    subscribeDepthQuotes(payload: $.ProtoOASubscribeDepthQuotesReq, cb: Callback<$.ProtoOASubscribeDepthQuotesRes>) {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_DEPTH_QUOTES_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2157>($.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_DEPTH_QUOTES_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
+    }
+
+    subscribeLiveTrendbar(payload: $.ProtoOASubscribeLiveTrendbarReq, cb: Callback<$.ProtoOASubscribeLiveTrendbarRes>) {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_LIVE_TRENDBAR_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2165>($.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_LIVE_TRENDBAR_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
+    }
+
+    subscribeSpots(payload: $.ProtoOASubscribeSpotsReq, cb: Callback<$.ProtoOASubscribeSpotsRes>) {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2128>($.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_RES)
         this.awaitResponse(clientMsgId, isResponse, cb);
     }
 
@@ -208,6 +274,27 @@ export class SpotwareClient extends EventEmitter {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_TRADER_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2122>($.ProtoOAPayloadType.PROTO_OA_TRADER_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
+    }
+
+    unsubscribeDepthQuotes(payload: $.ProtoOAUnsubscribeDepthQuotesReq, cb: Callback<$.ProtoOAUnsubscribeDepthQuotesRes>) {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_UNSUBSCRIBE_DEPTH_QUOTES_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2159>($.ProtoOAPayloadType.PROTO_OA_UNSUBSCRIBE_DEPTH_QUOTES_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
+    }
+
+    unsubscribeLiveTrendbar(payload: $.ProtoOAUnsubscribeLiveTrendbarReq, cb: Callback<$.ProtoOAUnsubscribeLiveTrendbarRes>) {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_UNSUBSCRIBE_LIVE_TRENDBAR_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2166>($.ProtoOAPayloadType.PROTO_OA_UNSUBSCRIBE_LIVE_TRENDBAR_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
+    }
+
+    unsubscribeSpots(payload: $.ProtoOAUnsubscribeSpotsReq, cb: Callback<$.ProtoOAUnsubscribeSpotsRes>) {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_UNSUBSCRIBE_SPOTS_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2130>($.ProtoOAPayloadType.PROTO_OA_UNSUBSCRIBE_SPOTS_RES)
         this.awaitResponse(clientMsgId, isResponse, cb);
     }
 
