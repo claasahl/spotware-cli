@@ -148,6 +148,69 @@ export class SpotwareClient extends EventEmitter {
         this.awaitResponse(clientMsgId, isResponse, cb);
     }
 
+    getAccountListByAccessToken(payload: $.ProtoOAGetAccountListByAccessTokenReq, cb: Callback<$.ProtoOAGetAccountListByAccessTokenRes>) {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2150>($.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
+    }
+
+    getCtidProfileByToken(payload: $.ProtoOAGetCtidProfileByTokenReq, cb: Callback<$.ProtoOAGetCtidProfileByTokenRes>) {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_GET_CTID_PROFILE_BY_TOKEN_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2152>($.ProtoOAPayloadType.PROTO_OA_GET_CTID_PROFILE_BY_TOKEN_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
+    }
+
+    marginCallList(payload: $.ProtoOAMarginCallListReq, cb: Callback<$.ProtoOAMarginCallListRes>) {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_MARGIN_CALL_LIST_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2168>($.ProtoOAPayloadType.PROTO_OA_MARGIN_CALL_LIST_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
+    }
+
+    refreshToken(payload: $.ProtoOARefreshTokenReq, cb: Callback<$.ProtoOARefreshTokenRes>) {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_REFRESH_TOKEN_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2174>($.ProtoOAPayloadType.PROTO_OA_REFRESH_TOKEN_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
+    }
+
+    symbolById(payload: $.ProtoOASymbolByIdReq, cb: Callback<$.ProtoOASymbolByIdRes>) {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_SYMBOL_BY_ID_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2117>($.ProtoOAPayloadType.PROTO_OA_SYMBOL_BY_ID_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
+    }
+
+    symbolCategoryList(payload: $.ProtoOASymbolCategoryListReq, cb: Callback<$.ProtoOASymbolCategoryListRes>) {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_SYMBOL_CATEGORY_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2161>($.ProtoOAPayloadType.PROTO_OA_SYMBOL_CATEGORY_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
+    }
+
+    symbolsForConversion(payload: $.ProtoOASymbolsForConversionReq, cb: Callback<$.ProtoOASymbolsForConversionRes>) {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_FOR_CONVERSION_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2119>($.ProtoOAPayloadType.PROTO_OA_SYMBOLS_FOR_CONVERSION_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
+    }
+
+    symbolsList(payload: $.ProtoOASymbolsListReq, cb: Callback<$.ProtoOASymbolsListRes>) {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2115>($.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
+    }
+
+    trader(payload: $.ProtoOATraderReq, cb: Callback<$.ProtoOATraderRes>) {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_TRADER_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2122>($.ProtoOAPayloadType.PROTO_OA_TRADER_RES)
+        this.awaitResponse(clientMsgId, isResponse, cb);
+    }
+
     version(payload: $.ProtoOAVersionReq, cb: Callback<$.ProtoOAVersionRes>) {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_VERSION_REQ, payload, clientMsgId })
