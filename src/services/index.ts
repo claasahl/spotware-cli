@@ -16,6 +16,8 @@ import { SpotwareClient } from "./spotware/client";
 
 // implement insideBarMomentumStrategy
 
+// review all base/*.ts and local/*.ts files for "Promises vs callbacks" and "Promises vs 'sync' returns"
+
 function local() {
   const name = "BTC/EUR";
   const symbol = Symbol.for(name);
