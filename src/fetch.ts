@@ -39,18 +39,21 @@ function interpolate(msg: $.ProtoOAGetTickDataRes, type: $.ProtoOAQuoteType): (B
   return []
 }
 
-function fetch(client: SpotwareClient, ctidTraderAccountId: number, symbolId: number, type: $.ProtoOAQuoteType, interval: Interval, cb: (spots: (B.AskPriceChangedEvent | B.BidPriceChangedEvent)[]) => void) {
-  const spots: (B.AskPriceChangedEvent | B.BidPriceChangedEvent)[] = []
-  const wtf = (msg: $.ProtoOAGetTickDataRes) => {
-    spots.push(...interpolate(msg, type))
-    if(msg.hasMore) {
-      const toTimestamp = msg.tickData[0].timestamp;
-      client.getTickData({ ctidTraderAccountId, symbolId, ...interval, toTimestamp, type }, wtf)
-    } else {
-      cb(spots);
+async function fetch(client: SpotwareClient, ctidTraderAccountId: number, symbolId: number, type: $.ProtoOAQuoteType, interval: Interval): Promise<(B.AskPriceChangedEvent | B.BidPriceChangedEvent)[]> {
+    const spots: (B.AskPriceChangedEvent | B.BidPriceChangedEvent)[] = []
+    const {fromTimestamp} = interval
+    let {toTimestamp} = interval
+    while(fromTimestamp < toTimestamp) {
+      const msg = await client.getTickData({ ctidTraderAccountId, symbolId, type, fromTimestamp, toTimestamp })
+      spots.push(...interpolate(msg, type))
+      if(msg.hasMore) {
+        assert.notStrictEqual(spots[spots.length-1].timestamp, toTimestamp);
+        toTimestamp = spots[spots.length-1].timestamp;
+      } else {
+        return spots;
+      }
     }
-  }
-  client.getTickData({ ctidTraderAccountId, symbolId, ...interval, type }, wtf)
+    return []
 }
 
 function appendSpotPrices(path: string, spots: (B.AskPriceChangedEvent | B.BidPriceChangedEvent)[]) {
@@ -74,47 +77,37 @@ function appendSpotPrices(path: string, spots: (B.AskPriceChangedEvent | B.BidPr
   stream.close()
 }
 
-function main() {
+async function main() {
   const path = "./store/test4.json"
-  const from = new Date("2020-04-05T00:00:00.000Z").getTime()
-  const to = new Date("2020-04-05T12:00:00.000Z").getTime()
+  const from = new Date("2020-03-01T00:00:00.000Z").getTime()
+  const to = new Date("2020-04-01T00:00:00.000Z").getTime()
   const intervals = split(from, to)
 
   const symbolName = "BTC/EUR";
   const client = new SpotwareClient(config);
-  
-  const symbolsList = (ctidTraderAccountId: number) => client.symbolsList({...config, ctidTraderAccountId}, msg => {
-    const symbols = msg.symbol.filter(s => s.symbolName === symbolName);
-    assert.equal(symbols.length, 1)
-    const symbolId = symbols[0].symbolId
 
-    if(fs.existsSync(path)) {
-      fs.unlinkSync(path);
-    }
-    function nextInterval() {
-      const interval = intervals.shift();
-      if(interval) {
-        const F = (type: $.ProtoOAQuoteType, cb: (spots: (B.AskPriceChangedEvent | B.BidPriceChangedEvent)[]) => void) => fetch(client, ctidTraderAccountId, symbolId, type, interval, cb);
-        F($.ProtoOAQuoteType.ASK, askSpots => {
-          F($.ProtoOAQuoteType.BID, bidSpots => {
-            const spots: (B.AskPriceChangedEvent | B.BidPriceChangedEvent)[] = []
-            spots.push(...askSpots)
-            spots.push(...bidSpots)
-            appendSpotPrices(path, spots);
-            nextInterval();
-          });
-        });
-      } else {
-        client.end();
-      }
-    }
-    nextInterval();
-  })
-  const authAccount = (ctidTraderAccountId: number) => client.accountAuth({...config, ctidTraderAccountId}, msg => symbolsList(msg.ctidTraderAccountId))
-  const lookupAccounts = () => client.getAccountListByAccessToken(config, msg => {
-    assert.strictEqual(msg.ctidTraderAccount.length, 1);
-    authAccount(msg.ctidTraderAccount[0].ctidTraderAccountId);
-  })
-  client.applicationAuth(config, lookupAccounts)
+  await client.applicationAuth(config);
+  const accounts = await client.getAccountListByAccessToken(config);
+  assert.strictEqual(accounts.ctidTraderAccount.length, 1);
+  const {ctidTraderAccountId} = accounts.ctidTraderAccount[0]
+  await client.accountAuth({...config, ctidTraderAccountId});
+  const symbolsList = await client.symbolsList({...config, ctidTraderAccountId});
+  const symbols = symbolsList.symbol.filter(s => s.symbolName === symbolName);
+  assert.equal(symbols.length, 1)
+  const symbolId = symbols[0].symbolId
+
+  if(fs.existsSync(path)) {
+    fs.unlinkSync(path);
+  }
+  for(const interval of intervals) {
+      const F = (type: $.ProtoOAQuoteType) => fetch(client, ctidTraderAccountId, symbolId, type, interval);
+      const askSpots = await F($.ProtoOAQuoteType.ASK)
+      const bidSpots = await F($.ProtoOAQuoteType.BID)
+      const spots: (B.AskPriceChangedEvent | B.BidPriceChangedEvent)[] = []
+      spots.push(...askSpots)
+      spots.push(...bidSpots)
+      appendSpotPrices(path, spots);
+  }
+  client.end();
 }
 main();

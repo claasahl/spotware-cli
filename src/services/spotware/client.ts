@@ -17,10 +17,6 @@ function testResponse<T extends $.ProtoMessages>(payloadType: T["payloadType"]) 
     }
 }
 
-export interface Callback<T> {
-    (payload: T): void
-} 
-
 interface SpotwareClientProps {
     host: string,
     port: number
@@ -87,218 +83,221 @@ export class SpotwareClient extends EventEmitter {
         this.socket.on("error", () => this.socket.end());
     }
 
-    private awaitResponse<T extends $.ProtoMessages>(clientMsgId: string, isResponse: (msg: $.ProtoMessages) => msg is T, cb: (payload: T["payload"]) => void): void {
-        const response = (msg: $.ProtoMessages) => {
-            if (msg.clientMsgId === clientMsgId) {
-                this.socket.off("PROTO_MESSAGE.INPUT.*", response);
-                if (isResponse(msg)) {
-                    const event = $.ProtoOAPayloadType[msg.payloadType] || $.ProtoPayloadType[msg.payloadType]
-                    setImmediate(() => this.emit(event, msg.payload));
-                    setImmediate(() => cb(msg.payload));
-                } else if (isError(msg) || isOAError(msg)) {
-                    const { errorCode, description } = msg.payload;
-                    const error = new Error(`${errorCode}, ${description}`);
-                    setImmediate(() => this.emit("error", error));
+    private awaitResponse<T extends $.ProtoMessages>(clientMsgId: string, isResponse: (msg: $.ProtoMessages) => msg is T): Promise<T["payload"]> {
+        return new Promise((resolve, reject) => {
+            const response = (msg: $.ProtoMessages) => {
+                if (msg.clientMsgId === clientMsgId) {
+                    this.socket.off("PROTO_MESSAGE.INPUT.*", response);
+                    if (isResponse(msg)) {
+                        const event = $.ProtoOAPayloadType[msg.payloadType] || $.ProtoPayloadType[msg.payloadType]
+                        setImmediate(() => this.emit(event, msg.payload));
+                        resolve(msg.payload)
+                    } else if (isError(msg) || isOAError(msg)) {
+                        const { errorCode, description } = msg.payload;
+                        const error = new Error(`${errorCode}, ${description}`);
+                        setImmediate(() => this.emit("error", error));
+                        reject(error);
+                    }
                 }
             }
-        }
-        this.socket.on("PROTO_MESSAGE.INPUT.*", response);
+            this.socket.on("PROTO_MESSAGE.INPUT.*", response);
+        })
     }
 
-    accountAuth(payload: $.ProtoOAAccountAuthReq, cb: Callback<$.ProtoOAAccountAuthRes>) {
+    accountAuth(payload: $.ProtoOAAccountAuthReq): Promise<$.ProtoOAAccountAuthRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2103>($.ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    accountLogout(payload: $.ProtoOAAccountLogoutReq, cb: Callback<$.ProtoOAAccountLogoutRes>) {
+    accountLogout(payload: $.ProtoOAAccountLogoutReq): Promise<$.ProtoOAAccountLogoutRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_LOGOUT_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2163>($.ProtoOAPayloadType.PROTO_OA_ACCOUNT_LOGOUT_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    applicationAuth(payload: $.ProtoOAApplicationAuthReq, cb: Callback<$.ProtoOAApplicationAuthRes>) {
+    applicationAuth(payload: $.ProtoOAApplicationAuthReq): Promise<$.ProtoOAApplicationAuthRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2101>($.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_RES);
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    assetClassList(payload: $.ProtoOAAssetClassListReq, cb: Callback<$.ProtoOAAssetClassListRes>) {
+    assetClassList(payload: $.ProtoOAAssetClassListReq): Promise<$.ProtoOAAssetClassListRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_ASSET_CLASS_LIST_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2154>($.ProtoOAPayloadType.PROTO_OA_ASSET_CLASS_LIST_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    assetList(payload: $.ProtoOAAssetListReq, cb: Callback<$.ProtoOAAssetListRes>) {
+    assetList(payload: $.ProtoOAAssetListReq): Promise<$.ProtoOAAssetListRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_ASSET_LIST_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2113>($.ProtoOAPayloadType.PROTO_OA_ASSET_LIST_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    cashFlowHistoryList(payload: $.ProtoOACashFlowHistoryListReq, cb: Callback<$.ProtoOACashFlowHistoryListRes>) {
+    cashFlowHistoryList(payload: $.ProtoOACashFlowHistoryListReq): Promise<$.ProtoOACashFlowHistoryListRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_CASH_FLOW_HISTORY_LIST_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2144>($.ProtoOAPayloadType.PROTO_OA_CASH_FLOW_HISTORY_LIST_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    dealList(payload: $.ProtoOADealListReq, cb: Callback<$.ProtoOADealListRes>) {
+    dealList(payload: $.ProtoOADealListReq): Promise<$.ProtoOADealListRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_DEAL_LIST_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2134>($.ProtoOAPayloadType.PROTO_OA_DEAL_LIST_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    expectedMargin(payload: $.ProtoOAExpectedMarginReq, cb: Callback<$.ProtoOAExpectedMarginRes>) {
+    expectedMargin(payload: $.ProtoOAExpectedMarginReq): Promise<$.ProtoOAExpectedMarginRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_EXPECTED_MARGIN_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2140>($.ProtoOAPayloadType.PROTO_OA_EXPECTED_MARGIN_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    getAccountListByAccessToken(payload: $.ProtoOAGetAccountListByAccessTokenReq, cb: Callback<$.ProtoOAGetAccountListByAccessTokenRes>) {
+    getAccountListByAccessToken(payload: $.ProtoOAGetAccountListByAccessTokenReq): Promise<$.ProtoOAGetAccountListByAccessTokenRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2150>($.ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    getCtidProfileByToken(payload: $.ProtoOAGetCtidProfileByTokenReq, cb: Callback<$.ProtoOAGetCtidProfileByTokenRes>) {
+    getCtidProfileByToken(payload: $.ProtoOAGetCtidProfileByTokenReq): Promise<$.ProtoOAGetCtidProfileByTokenRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_GET_CTID_PROFILE_BY_TOKEN_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2152>($.ProtoOAPayloadType.PROTO_OA_GET_CTID_PROFILE_BY_TOKEN_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    getTickData(payload: $.ProtoOAGetTickDataReq, cb: Callback<$.ProtoOAGetTickDataRes>) {
+    getTickData(payload: $.ProtoOAGetTickDataReq): Promise<$.ProtoOAGetTickDataRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_GET_TICKDATA_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2146>($.ProtoOAPayloadType.PROTO_OA_GET_TICKDATA_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    getTrendbars(payload: $.ProtoOAGetTrendbarsReq, cb: Callback<$.ProtoOAGetTrendbarsRes>) {
+    getTrendbars(payload: $.ProtoOAGetTrendbarsReq): Promise<$.ProtoOAGetTrendbarsRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2138>($.ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    marginCallList(payload: $.ProtoOAMarginCallListReq, cb: Callback<$.ProtoOAMarginCallListRes>) {
+    marginCallList(payload: $.ProtoOAMarginCallListReq): Promise<$.ProtoOAMarginCallListRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_MARGIN_CALL_LIST_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2168>($.ProtoOAPayloadType.PROTO_OA_MARGIN_CALL_LIST_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    marginCallUpdate(payload: $.ProtoOAMarginCallUpdateReq, cb: Callback<$.ProtoOAMarginCallUpdateRes>) {
+    marginCallUpdate(payload: $.ProtoOAMarginCallUpdateReq): Promise<$.ProtoOAMarginCallUpdateRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_MARGIN_CALL_UPDATE_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2170>($.ProtoOAPayloadType.PROTO_OA_MARGIN_CALL_UPDATE_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    reconcile(payload: $.ProtoOAReconcileReq, cb: Callback<$.ProtoOAReconcileRes>) {
+    reconcile(payload: $.ProtoOAReconcileReq): Promise<$.ProtoOAReconcileRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_RECONCILE_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2125>($.ProtoOAPayloadType.PROTO_OA_RECONCILE_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    refreshToken(payload: $.ProtoOARefreshTokenReq, cb: Callback<$.ProtoOARefreshTokenRes>) {
+    refreshToken(payload: $.ProtoOARefreshTokenReq): Promise<$.ProtoOARefreshTokenRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_REFRESH_TOKEN_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2174>($.ProtoOAPayloadType.PROTO_OA_REFRESH_TOKEN_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    subscribeDepthQuotes(payload: $.ProtoOASubscribeDepthQuotesReq, cb: Callback<$.ProtoOASubscribeDepthQuotesRes>) {
+    subscribeDepthQuotes(payload: $.ProtoOASubscribeDepthQuotesReq): Promise<$.ProtoOASubscribeDepthQuotesRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_DEPTH_QUOTES_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2157>($.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_DEPTH_QUOTES_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    subscribeLiveTrendbar(payload: $.ProtoOASubscribeLiveTrendbarReq, cb: Callback<$.ProtoOASubscribeLiveTrendbarRes>) {
+    subscribeLiveTrendbar(payload: $.ProtoOASubscribeLiveTrendbarReq): Promise<$.ProtoOASubscribeLiveTrendbarRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_LIVE_TRENDBAR_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2165>($.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_LIVE_TRENDBAR_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    subscribeSpots(payload: $.ProtoOASubscribeSpotsReq, cb: Callback<$.ProtoOASubscribeSpotsRes>) {
+    subscribeSpots(payload: $.ProtoOASubscribeSpotsReq): Promise<$.ProtoOASubscribeSpotsRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2128>($.ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    symbolById(payload: $.ProtoOASymbolByIdReq, cb: Callback<$.ProtoOASymbolByIdRes>) {
+    symbolById(payload: $.ProtoOASymbolByIdReq): Promise<$.ProtoOASymbolByIdRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_SYMBOL_BY_ID_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2117>($.ProtoOAPayloadType.PROTO_OA_SYMBOL_BY_ID_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    symbolCategoryList(payload: $.ProtoOASymbolCategoryListReq, cb: Callback<$.ProtoOASymbolCategoryListRes>) {
+    symbolCategoryList(payload: $.ProtoOASymbolCategoryListReq): Promise<$.ProtoOASymbolCategoryListRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_SYMBOL_CATEGORY_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2161>($.ProtoOAPayloadType.PROTO_OA_SYMBOL_CATEGORY_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    symbolsForConversion(payload: $.ProtoOASymbolsForConversionReq, cb: Callback<$.ProtoOASymbolsForConversionRes>) {
+    symbolsForConversion(payload: $.ProtoOASymbolsForConversionReq): Promise<$.ProtoOASymbolsForConversionRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_FOR_CONVERSION_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2119>($.ProtoOAPayloadType.PROTO_OA_SYMBOLS_FOR_CONVERSION_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    symbolsList(payload: $.ProtoOASymbolsListReq, cb: Callback<$.ProtoOASymbolsListRes>) {
+    symbolsList(payload: $.ProtoOASymbolsListReq): Promise<$.ProtoOASymbolsListRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2115>($.ProtoOAPayloadType.PROTO_OA_SYMBOLS_LIST_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    trader(payload: $.ProtoOATraderReq, cb: Callback<$.ProtoOATraderRes>) {
+    trader(payload: $.ProtoOATraderReq): Promise<$.ProtoOATraderRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_TRADER_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2122>($.ProtoOAPayloadType.PROTO_OA_TRADER_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    unsubscribeDepthQuotes(payload: $.ProtoOAUnsubscribeDepthQuotesReq, cb: Callback<$.ProtoOAUnsubscribeDepthQuotesRes>) {
+    unsubscribeDepthQuotes(payload: $.ProtoOAUnsubscribeDepthQuotesReq): Promise<$.ProtoOAUnsubscribeDepthQuotesRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_UNSUBSCRIBE_DEPTH_QUOTES_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2159>($.ProtoOAPayloadType.PROTO_OA_UNSUBSCRIBE_DEPTH_QUOTES_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    unsubscribeLiveTrendbar(payload: $.ProtoOAUnsubscribeLiveTrendbarReq, cb: Callback<$.ProtoOAUnsubscribeLiveTrendbarRes>) {
+    unsubscribeLiveTrendbar(payload: $.ProtoOAUnsubscribeLiveTrendbarReq): Promise<$.ProtoOAUnsubscribeLiveTrendbarRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_UNSUBSCRIBE_LIVE_TRENDBAR_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2166>($.ProtoOAPayloadType.PROTO_OA_UNSUBSCRIBE_LIVE_TRENDBAR_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    unsubscribeSpots(payload: $.ProtoOAUnsubscribeSpotsReq, cb: Callback<$.ProtoOAUnsubscribeSpotsRes>) {
+    unsubscribeSpots(payload: $.ProtoOAUnsubscribeSpotsReq): Promise<$.ProtoOAUnsubscribeSpotsRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_UNSUBSCRIBE_SPOTS_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2130>($.ProtoOAPayloadType.PROTO_OA_UNSUBSCRIBE_SPOTS_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
-    version(payload: $.ProtoOAVersionReq, cb: Callback<$.ProtoOAVersionRes>) {
+    version(payload: $.ProtoOAVersionReq): Promise<$.ProtoOAVersionRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_VERSION_REQ, payload, clientMsgId })
         const isResponse = testResponse<$.ProtoMessage2105>($.ProtoOAPayloadType.PROTO_OA_VERSION_RES)
-        this.awaitResponse(clientMsgId, isResponse, cb);
+        return this.awaitResponse(clientMsgId, isResponse);
     }
 
     // TODO:

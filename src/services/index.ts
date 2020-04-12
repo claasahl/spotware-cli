@@ -47,8 +47,9 @@ function insideBar() {
 }
 insideBar;
 
-function spotware() {
+async function spotware() {
   const client = new SpotwareClient(config);
-  client.applicationAuth(config, p => console.log(p))
+  console.log(await client.applicationAuth(config))
+  client.on("PROTO_OA_APPLICATION_AUTH_RES", console.error)
 }
 spotware();
