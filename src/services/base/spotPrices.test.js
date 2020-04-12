@@ -74,74 +74,56 @@ describe("DebugSpotPricesStream", () => {
     })
 
     describe("access cached events", () => {
-        test("should call cb with ask (not cached)", done => {
+        test("should call cb with ask (not cached)", () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
             const event = { ask: 23, timestamp: 123 };
-            stream.ask(e => {
-                expect(e).toBe(event);
-                done()
-            })
+            expect(stream.ask()).resolves.toBe(event);
             setTimeout(() => stream.emit("ask", event), 100)
         })
     
-        test("should call cb with ask (cached)", done => {
+        test("should call cb with ask (cached)", () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
             const event = { ask: 23, timestamp: 123 };
             stream.once("ask", () => {
-                stream.ask(e => {
-                    expect(e).toBe(event);
-                    done()
-                })
+                expect(stream.ask()).resolves.toBe(event);
             })
             stream.emit("ask", event);
         })
 
-        test("should call cb with bid (not cached)", done => {
+        test("should call cb with bid (not cached)", () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
             const event = { bid: 23, timestamp: 123 };
-            stream.bid(e => {
-                expect(e).toBe(event);
-                done()
-            })
+            expect(stream.bid()).resolves.toBe(event);
             setTimeout(() => stream.emit("bid", event), 100)
         })
     
-        test("should call cb with bid (cached)", done => {
+        test("should call cb with bid (cached)", () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
             const event = { bid: 23, timestamp: 123 };
             stream.once("bid", () => {
-                stream.bid(e => {
-                    expect(e).toBe(event);
-                    done()
-                })
+                expect(stream.bid()).resolves.toBe(event);
             })
             stream.emit("bid", event);
         })
 
-        test("should call cb with price (not cached)", done => {
+        test("should call cb with price (not cached)", () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
             const event = { ask: 22, bid: 23, timestamp: 123 };
-            stream.price(e => {
-                expect(e).toBe(event);
-                done()
-            })
+            expect(stream.price()).resolves.toBe(event);
             setTimeout(() => stream.emit("price", event), 100)
         })
     
-        test("should call cb with price (cached)", done => {
+        test("should call cb with price (cached)", () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
             const event = { ask: 22, bid: 23, timestamp: 123 };
             stream.once("price", () => {
-                stream.price(e => {
-                    expect(e).toBe(event);
-                    done()
-                })
+                expect(stream.price()).resolves.toBe(event);
             })
             stream.emit("price", event);
         })

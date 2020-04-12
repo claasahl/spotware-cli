@@ -119,194 +119,146 @@ describe("DebugOrderStream", () => {
     })
 
     describe("access cached events", () => {
-        test("should call cb with accepted (not cached)", done => {
+        test("should call cb with accepted (not cached)", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
             const event = { timestamp: 123 };
-            stream.accepted(e => {
-                expect(e).toBe(event);
-                done()
-            })
+            expect(stream.accepted()).resolves.toBe(event);
             setTimeout(() => stream.emit("accepted", event), 100)
         })
     
-        test("should call cb with accepted (cached)", done => {
+        test("should call cb with accepted (cached)", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
             const event = { timestamp: 123 };
             stream.once("accepted", () => {
-                stream.accepted(e => {
-                    expect(e).toBe(event);
-                    done()
-                })
+                expect(stream.accepted()).resolves.toBe(event);
             })
             stream.emit("accepted", event);
         })
 
-        test("should call cb with created (not cached)", done => {
+        test("should call cb with created (not cached)", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
             const event = { timestamp: 123 };
-            stream.created(e => {
-                expect(e).toBe(event);
-                done()
-            })
+            expect(stream.created()).resolves.toBe(event);
             setTimeout(() => stream.emit("created", event), 100)
         })
     
-        test("should call cb with created (cached)", done => {
+        test("should call cb with created (cached)", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
             const event = { timestamp: 123 };
             stream.once("created", () => {
-                stream.created(e => {
-                    expect(e).toBe(event);
-                    done()
-                })
+                expect(stream.created()).resolves.toBe(event);
             })
             stream.emit("created", event);
         })
 
-        test("should call cb with rejected (not cached)", done => {
+        test("should call cb with rejected (not cached)", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
             const event = { timestamp: 123 };
-            stream.rejected(e => {
-                expect(e).toBe(event);
-                done()
-            })
+            expect(stream.rejected()).resolves.toBe(event);
             setTimeout(() => stream.emit("rejected", event), 100)
         })
     
-        test("should call cb with rejected (cached)", done => {
+        test("should call cb with rejected (cached)", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
             const event = { timestamp: 123 };
             stream.once("rejected", () => {
-                stream.rejected(e => {
-                    expect(e).toBe(event);
-                    done()
-                })
+                expect(stream.rejected()).resolves.toBe(event);
             })
             stream.emit("rejected", event);
         })
 
-        test("should call cb with filled (not cached)", done => {
+        test("should call cb with filled (not cached)", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
             const event = { entry: 23, timestamp: 123 };
-            stream.filled(e => {
-                expect(e).toBe(event);
-                done()
-            })
+            expect(stream.filled()).resolves.toBe(event);
             setTimeout(() => stream.emit("filled", event), 100)
         })
     
-        test("should call cb with filled (cached)", done => {
+        test("should call cb with filled (cached)", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
             const event = { entry: 23, timestamp: 123 };
             stream.once("filled", () => {
-                stream.filled(e => {
-                    expect(e).toBe(event);
-                    done()
-                })
+                expect(stream.filled()).resolves.toBe(event);
             })
             stream.emit("filled", event);
         })
 
-        test("should call cb with profitLoss (not cached)", done => {
+        test("should call cb with profitLoss (not cached)", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
             const event = { price: 123, profitLoss: 23, timestamp: 123 };
-            stream.profitLoss(e => {
-                expect(e).toBe(event);
-                done()
-            })
+            expect(stream.profitLoss()).resolves.toBe(event);
             setTimeout(() => stream.emit("profitLoss", event), 100)
         })
     
-        test("should call cb with profitLoss (cached)", done => {
+        test("should call cb with profitLoss (cached)", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
             const event = { price: 123, profitLoss: 23, timestamp: 123 };
             stream.once("profitLoss", () => {
-                stream.profitLoss(e => {
-                    expect(e).toBe(event);
-                    done()
-                })
+                expect(stream.profitLoss()).resolves.toBe(event);
             })
             stream.emit("profitLoss", event);
         })
         
-        test("should call cb with closed (not cached)", done => {
+        test("should call cb with closed (not cached)", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
             const event = { exit: 42, profitLoss: 23, timestamp: 123 };
-            stream.closed(e => {
-                expect(e).toBe(event);
-                done()
-            })
+            expect(stream.closed()).resolves.toBe(event);
             setTimeout(() => stream.emit("closed", event), 100)
         })
     
-        test("should call cb with closed (cached)", done => {
+        test("should call cb with closed (cached)", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
             const event = { exit: 42, profitLoss: 23, timestamp: 123 };
             stream.once("closed", () => {
-                stream.closed(e => {
-                    expect(e).toBe(event);
-                    done()
-                })
+                expect(stream.closed()).resolves.toBe(event);
             })
             stream.emit("closed", event);
         })
         
-        test("should call cb with canceled (not cached)", done => {
+        test("should call cb with canceled (not cached)", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
             const event = { timestamp: 123 };
-            stream.canceled(e => {
-                expect(e).toBe(event);
-                done()
-            })
+            expect(stream.canceled()).resolves.toBe(event);
             setTimeout(() => stream.emit("canceled", event), 100)
         })
     
-        test("should call cb with canceled (cached)", done => {
+        test("should call cb with canceled (cached)", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
             const event = { timestamp: 123 };
             stream.once("canceled", () => {
-                stream.canceled(e => {
-                    expect(e).toBe(event);
-                    done()
-                })
+                expect(stream.canceled()).resolves.toBe(event);
             })
             stream.emit("canceled", event);
         })
 
-        test("should call cb with ended (not cached)", done => {
+        test("should call cb with ended (not cached)", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
             const event = { exit: 42, profitLoss: 23, timestamp: 123 };
-            stream.ended(e => {
-                expect(e).toBe(event);
-                done()
-            })
+            expect(stream.ended()).resolves.toBe(event);
             setTimeout(() => stream.emit("ended", event), 100)
         })
     
-        test("should call cb with ended (cached)", done => {
+        test("should call cb with ended (cached)", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
             const event = { exit: 42, profitLoss: 23, timestamp: 123 };
             stream.once("ended", () => {
-                stream.ended(e => {
-                    expect(e).toBe(event);
-                    done()
-                })
+                expect(stream.ended()).resolves.toBe(event);
             })
             stream.emit("ended", event);
         })

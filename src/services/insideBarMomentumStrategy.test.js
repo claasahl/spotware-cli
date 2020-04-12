@@ -3,7 +3,7 @@ const { DebugSpotPricesStream } = require("../../build/services/base/spotPrices"
 const ms = require("ms");
 
 describe("insideBarMomentumStrategy", () => {
-    test("bullish pattern", done => {
+    test("bullish pattern", async done => {
         const currency = Symbol.for("EUR");
         const initialBalance = 1000;
         const period = ms("1s");
@@ -15,8 +15,8 @@ describe("insideBarMomentumStrategy", () => {
         const volume = 0.1;
         const spotPrices = new DebugSpotPricesStream({symbol})
         const spots = () => spotPrices;
-        const account = insideBarMomentumStrategy({ currency, initialBalance, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, spots })
-        const trendbars = account.trendbars({ period, symbol })
+        const account = await insideBarMomentumStrategy({ currency, initialBalance, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, spots })
+        const trendbars = await account.trendbars({ period, symbol })
 
         let trendbarNo = 0;
         trendbars.on("trendbar", e => {
@@ -54,7 +54,7 @@ describe("insideBarMomentumStrategy", () => {
 
         spotPrices.emitAsk({ timestamp: 1002000, ask: 0})
     })
-    test("bearish pattern", done => {
+    test("bearish pattern", async done => {
         const currency = Symbol.for("EUR");
         const initialBalance = 1000;
         const period = ms("1s");
@@ -66,8 +66,8 @@ describe("insideBarMomentumStrategy", () => {
         const volume = 0.1;
         const spotPrices = new DebugSpotPricesStream({symbol})
         const spots = () => spotPrices;
-        const account = insideBarMomentumStrategy({ currency, initialBalance, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, spots })
-        const trendbars = account.trendbars({ period, symbol })
+        const account = await insideBarMomentumStrategy({ currency, initialBalance, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, spots })
+        const trendbars = await account.trendbars({ period, symbol })
 
         let trendbarNo = 0;
         trendbars.on("trendbar", e => {
@@ -105,7 +105,7 @@ describe("insideBarMomentumStrategy", () => {
 
         spotPrices.emitAsk({ timestamp: 1002000, ask: 0})
     })
-    test("cancel previous (BUY) order", done => {
+    test("cancel previous (BUY) order", async done => {
         const currency = Symbol.for("EUR");
         const initialBalance = 1000;
         const period = ms("1s");
@@ -117,7 +117,7 @@ describe("insideBarMomentumStrategy", () => {
         const volume = 0.1;
         const spotPrices = new DebugSpotPricesStream({symbol})
         const spots = () => spotPrices;
-        const account = insideBarMomentumStrategy({ currency, initialBalance, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, spots })
+        const account = await insideBarMomentumStrategy({ currency, initialBalance, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, spots })
         
         const orders = {
             "1": [
@@ -165,7 +165,7 @@ describe("insideBarMomentumStrategy", () => {
 
         spotPrices.emitAsk({ timestamp: 1004000, ask: 0})
     })
-    test("cancel previous (SELL) order", done => {
+    test("cancel previous (SELL) order", async done => {
         const currency = Symbol.for("EUR");
         const initialBalance = 1000;
         const period = ms("1s");
@@ -177,7 +177,7 @@ describe("insideBarMomentumStrategy", () => {
         const volume = 0.1;
         const spotPrices = new DebugSpotPricesStream({symbol})
         const spots = () => spotPrices;
-        const account = insideBarMomentumStrategy({ currency, initialBalance, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, spots })
+        const account = await insideBarMomentumStrategy({ currency, initialBalance, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, spots })
 
         const orders = {
             "1": [

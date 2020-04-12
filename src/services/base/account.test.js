@@ -83,98 +83,74 @@ describe("DebugAccountStream", () => {
     })
 
     describe("access cached events", () => {
-        test("should call cb with balance (not cached)", done => {
+        test("should call cb with balance (not cached)", () => {
             const props = { currency: Symbol.for("abc"), a: 2 }
             const stream = new DebugAccountStream(props)
             const event = { balance: 23, timestamp: 123 };
-            stream.balance(e => {
-                expect(e).toBe(event);
-                done()
-            })
+            expect(stream.balance()).resolves.toBe(event);
             setTimeout(() => stream.emit("balance", event), 100)
         })
     
-        test("should call cb with balance (cached)", done => {
+        test("should call cb with balance (cached)", () => {
             const props = { currency: Symbol.for("abc"), a: 2 }
             const stream = new DebugAccountStream(props)
             const event = { balance: 23, timestamp: 123 };
             stream.once("balance", () => {
-                stream.balance(e => {
-                    expect(e).toBe(event);
-                    done()
-                })
+                expect(stream.balance()).resolves.toBe(event);
             })
             stream.emit("balance", event);
         })
 
-        test("should call cb with transaction (not cached)", done => {
+        test("should call cb with transaction (not cached)", () => {
             const props = { currency: Symbol.for("abc"), a: 2 }
             const stream = new DebugAccountStream(props)
             const event = { amount: 23, timestamp: 123 };
-            stream.transaction(e => {
-                expect(e).toBe(event);
-                done()
-            })
+            expect(stream.transaction()).resolves.toBe(event);
             setTimeout(() => stream.emit("transaction", event), 100)
         })
     
-        test("should call cb with transaction (cached)", done => {
+        test("should call cb with transaction (cached)", () => {
             const props = { currency: Symbol.for("abc"), a: 2 }
             const stream = new DebugAccountStream(props)
             const event = { amount: 23, timestamp: 123 };
             stream.once("transaction", () => {
-                stream.transaction(e => {
-                    expect(e).toBe(event);
-                    done()
-                })
+                expect(stream.transaction()).resolves.toBe(event);
             })
             stream.emit("transaction", event);
         })
 
-        test("should call cb with equity (not cached)", done => {
+        test("should call cb with equity (not cached)", () => {
             const props = { currency: Symbol.for("abc"), a: 2 }
             const stream = new DebugAccountStream(props)
             const event = { equity: 23, timestamp: 123 };
-            stream.equity(e => {
-                expect(e).toBe(event);
-                done()
-            })
+            expect(stream.equity()).resolves.toBe(event);
             setTimeout(() => stream.emit("equity", event), 100)
         })
     
-        test("should call cb with equity (cached)", done => {
+        test("should call cb with equity (cached)", () => {
             const props = { currency: Symbol.for("abc"), a: 2 }
             const stream = new DebugAccountStream(props)
             const event = { equity: 23, timestamp: 123 };
             stream.once("equity", () => {
-                stream.equity(e => {
-                    expect(e).toBe(event);
-                    done()
-                })
+                expect(stream.equity()).resolves.toBe(event);
             })
             stream.emit("equity", event);
         })
 
-        test("should call cb with order (not cached)", done => {
+        test("should call cb with order (not cached)", () => {
             const props = { currency: Symbol.for("abc"), a: 2 }
             const stream = new DebugAccountStream(props)
             const event = { timestamp: 123, status: "CREATED" };
-            stream.order(e => {
-                expect(e).toBe(event);
-                done()
-            })
+            expect(stream.order()).resolves.toBe(event);
             setTimeout(() => stream.emit("order", event), 100)
         })
     
-        test("should call cb with order (cached)", done => {
+        test("should call cb with order (cached)", () => {
             const props = { currency: Symbol.for("abc"), a: 2 }
             const stream = new DebugAccountStream(props)
             const event = { timestamp: 123, status: "CREATED" };
             stream.once("order", () => {
-                stream.order(e => {
-                    expect(e).toBe(event);
-                    done()
-                })
+                expect(stream.order()).resolves.toBe(event);
             })
             stream.emit("order", event);
         })

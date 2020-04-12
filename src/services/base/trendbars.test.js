@@ -56,26 +56,20 @@ describe("DebugTrendbarsStream", () => {
     })
 
     describe("access cached events", () => {
-        test("should call cb with trendbar (not cached)", done => {
+        test("should call cb with trendbar (not cached)", () => {
             const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
             const stream = new DebugTrendbarsStream(props)
             const event = { open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
-            stream.trendbar(e => {
-                expect(e).toBe(event);
-                done()
-            })
+            expect(stream.trendbar()).resolves.toBe(event);
             setTimeout(() => stream.emit("trendbar", event), 100)
         })
     
-        test("should call cb with trendbar (cached)", done => {
+        test("should call cb with trendbar (cached)", () => {
             const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
             const stream = new DebugTrendbarsStream(props)
             const event = { open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
             stream.once("trendbar", () => {
-                stream.trendbar(e => {
-                    expect(e).toBe(event);
-                    done()
-                })
+                expect(stream.trendbar()).resolves.toBe(event);
             })
             stream.emit("trendbar", event);
         })
