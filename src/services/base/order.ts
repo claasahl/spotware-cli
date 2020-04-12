@@ -62,14 +62,14 @@ export interface OrderActions {
 }
 
 export declare interface OrderStream<Props extends OrderProps> extends EventEmitter {
-  created(cb: (e: OrderCreatedEvent) => void): void;
-  accepted(cb: (e: OrderAcceptedEvent) => void): void;
-  rejected(cb: (e: OrderAcceptedEvent) => void): void;
-  filled(cb: (e: OrderFilledEvent) => void): void;
-  profitLoss(cb: (e: OrderProfitLossEvent) => void): void
-  closed(cb: (e: OrderClosedEvent) => void): void
-  canceled(cb: (e: OrderCanceledEvent) => void): void
-  ended(cb: (e: OrderEndedEvent) => void): void
+  created(): Promise<OrderCreatedEvent>;
+  accepted(): Promise<OrderAcceptedEvent>;
+  rejected(): Promise<OrderAcceptedEvent>;
+  filled(): Promise<OrderFilledEvent>;
+  profitLoss(): Promise<OrderProfitLossEvent>
+  closed(): Promise<OrderClosedEvent>
+  canceled(): Promise<OrderCanceledEvent>
+  ended(): Promise<OrderEndedEvent>
 
   addListener(event: string, listener: (...args: any[]) => void): this;
   addListener(event: "created", listener: (e: OrderCreatedEvent) => void): this;
@@ -146,84 +146,68 @@ export abstract class OrderStream<Props extends OrderProps> extends EventEmitter
     this.on("ended", e => this.cachedEnded = e)
   }
 
-  created(cb: (e: OrderCreatedEvent) => void): void {
-    setImmediate(() => {
-      if (this.cachedCreated) {
-        cb(this.cachedCreated);
-      } else {
-        this.once("created", cb)
-      }
-    })
+  created(): Promise<OrderCreatedEvent> {
+    if (this.cachedCreated) {
+      return Promise.resolve(this.cachedCreated);
+    } else {
+      return new Promise(resolve => this.once("created", resolve));
+    }
   }
 
-  accepted(cb: (e: OrderAcceptedEvent) => void): void {
-    setImmediate(() => {
-      if (this.cachedAccepted) {
-        cb(this.cachedAccepted);
-      } else {
-        this.once("accepted", cb)
-      }
-    })
+  accepted(): Promise<OrderAcceptedEvent> {
+    if (this.cachedAccepted) {
+      return Promise.resolve(this.cachedAccepted);
+    } else {
+      return new Promise(resolve => this.once("accepted", resolve));
+    }
   }
 
-  rejected(cb: (e: OrderRejectedEvent) => void): void {
-    setImmediate(() => {
-      if (this.cachedRejected) {
-        cb(this.cachedRejected);
-      } else {
-        this.once("rejected", cb)
-      }
-    })
+  rejected(): Promise<OrderRejectedEvent> {
+    if (this.cachedRejected) {
+      return Promise.resolve(this.cachedRejected);
+    } else {
+      return new Promise(resolve => this.once("rejected", resolve));
+    }
   }
 
-  filled(cb: (e: OrderFilledEvent) => void): void {
-    setImmediate(() => {
-      if (this.cachedFilled) {
-        cb(this.cachedFilled);
-      } else {
-        this.once("filled", cb)
-      }
-    })
+  filled(): Promise<OrderFilledEvent> {
+    if (this.cachedFilled) {
+      return Promise.resolve(this.cachedFilled);
+    } else {
+      return new Promise(resolve => this.once("filled", resolve));
+    }
   }
 
-  profitLoss(cb: (e: OrderProfitLossEvent) => void): void {
-    setImmediate(() => {
-      if (this.cachedProfitLoss) {
-        cb(this.cachedProfitLoss);
-      } else {
-        this.once("profitLoss", cb)
-      }
-    })
+  profitLoss(): Promise<OrderProfitLossEvent> {
+    if (this.cachedProfitLoss) {
+      return Promise.resolve(this.cachedProfitLoss);
+    } else {
+      return new Promise(resolve => this.once("profitLoss", resolve));
+    }
   }
 
-  closed(cb: (e: OrderClosedEvent) => void): void {
-    setImmediate(() => {
-      if (this.cachedClosed) {
-        cb(this.cachedClosed);
-      } else {
-        this.once("closed", cb)
-      }
-    })
+  closed(): Promise<OrderClosedEvent> {
+    if (this.cachedClosed) {
+      return Promise.resolve(this.cachedClosed);
+    } else {
+      return new Promise(resolve => this.once("closed", resolve));
+    }
   }
 
-  canceled(cb: (e: OrderCanceledEvent) => void): void {
-    setImmediate(() => {
-      if (this.cachedCanceled) {
-        cb(this.cachedCanceled);
-      } else {
-        this.once("canceled", cb)
-      }
-    })
+  canceled(): Promise<OrderCanceledEvent> {
+    if (this.cachedCanceled) {
+      return Promise.resolve(this.cachedCanceled);
+    } else {
+      return new Promise(resolve => this.once("canceled", resolve));
+    }
   }
 
-  ended(cb: (e: OrderEndedEvent) => void): void {
-    setImmediate(() => {
-      if (this.cachedEnded) {
-        cb(this.cachedEnded);
-      } else {
-        this.once("ended", cb)
-      }
-    })
+  ended(): Promise<OrderEndedEvent> {
+    if (this.cachedEnded) {
+      return Promise.resolve(this.cachedEnded);
+    } else {
+      return new Promise(resolve => this.once("ended", resolve));
+    }
   }
 
   abstract close(): this;
@@ -239,7 +223,7 @@ export class DebugOrderStream<Props extends OrderProps> extends OrderStream<Prop
 
     const created = log.extend("created");
     this.prependListener("created", e => created("%j", e));
-    
+
     const accepted = log.extend("accepted");
     this.prependListener("accepted", e => accepted("%j", e));
 

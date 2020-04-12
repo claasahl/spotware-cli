@@ -28,9 +28,9 @@ export interface SpotPricesActions {
 }
 
 export declare interface SpotPricesStream extends EventEmitter {
-  ask(cb: (e: AskPriceChangedEvent) => void): void;
-  bid(cb: (e: BidPriceChangedEvent) => void): void;
-  price(cb: (e: PriceChangedEvent) => void): void;
+  ask(): Promise<AskPriceChangedEvent>;
+  bid(): Promise<BidPriceChangedEvent>;
+  price(): Promise<PriceChangedEvent>;
 
   addListener(event: string, listener: (...args: any[]) => void): this;
   addListener(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
@@ -70,32 +70,26 @@ export abstract class SpotPricesStream extends EventEmitter implements SpotPrice
     this.on("bid", e => this.cachedBidPrice = e)
     this.on("price", e => this.cachedPrice = e)
   }
-  ask(cb: (e: AskPriceChangedEvent) => void): void {
-    setImmediate(() => {
-      if (this.cachedAskPrice) {
-        cb(this.cachedAskPrice)
-      } else {
-        this.once("ask", cb)
-      }
-    })
+  ask(): Promise<AskPriceChangedEvent> {
+    if (this.cachedAskPrice) {
+      return Promise.resolve(this.cachedAskPrice);
+    } else {
+      return new Promise(resolve => this.once("ask", resolve));
+    }
   }
-  bid(cb: (e: BidPriceChangedEvent) => void): void {
-    setImmediate(() => {
-      if (this.cachedBidPrice) {
-        cb(this.cachedBidPrice)
-      } else {
-        this.once("bid", cb)
-      }
-    })
+  bid(): Promise<BidPriceChangedEvent> {
+    if (this.cachedBidPrice) {
+      return Promise.resolve(this.cachedBidPrice);
+    } else {
+      return new Promise(resolve => this.once("bid", resolve));
+    }
   }
-  price(cb: (e: PriceChangedEvent) => void): void {
-    setImmediate(() => {
-      if (this.cachedPrice) {
-        cb(this.cachedPrice)
-      } else {
-        this.once("price", cb)
-      }
-    })
+  price(): Promise<PriceChangedEvent> {
+    if (this.cachedPrice) {
+      return Promise.resolve(this.cachedPrice);
+    } else {
+      return new Promise(resolve => this.once("price", resolve));
+    }
   }
   abstract trendbars(props: SpotPricesSimpleTrendbarsProps): TrendbarsStream;
 }

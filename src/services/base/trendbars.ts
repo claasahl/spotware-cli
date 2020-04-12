@@ -22,7 +22,7 @@ export interface TrendbarsActions {
 }
 
 export declare interface TrendbarsStream extends EventEmitter {
-  trendbar(cb: (e: TrendbarEvent) => void): void;
+  trendbar(): Promise<TrendbarEvent>;
 
   addListener(event: string, listener: (...args: any[]) => void): this;
   addListener(event: "trendbar", listener: (e: TrendbarEvent) => void): this;
@@ -34,10 +34,10 @@ export declare interface TrendbarsStream extends EventEmitter {
   once(event: "trendbar", listener: (e: TrendbarEvent) => void): this;
 
   prependListener(event: string, listener: (...args: any[]) => void): this;
-    prependListener(event: "trendbar", listener: (e: TrendbarEvent) => void): this;
+  prependListener(event: "trendbar", listener: (e: TrendbarEvent) => void): this;
 
   prependOnceListener(event: string, listener: (...args: any[]) => void): this;
-    prependOnceListener(event: "trendbar", listener: (e: TrendbarEvent) => void): this;
+  prependOnceListener(event: "trendbar", listener: (e: TrendbarEvent) => void): this;
 }
 
 export class TrendbarsStream extends EventEmitter implements TrendbarsActions {
@@ -49,14 +49,12 @@ export class TrendbarsStream extends EventEmitter implements TrendbarsActions {
     this.on("trendbar", e => this.cachedTrendbar = e)
   }
 
-  trendbar(cb: (e: TrendbarEvent) => void): void {
-    setImmediate(() => {
-      if(this.cachedTrendbar) {
-        cb(this.cachedTrendbar);
-      } else {
-        this.once("trendbar", cb);
-      }
-    })
+  trendbar(): Promise<TrendbarEvent> {
+    if (this.cachedTrendbar) {
+      return Promise.resolve(this.cachedTrendbar);
+    } else {
+      return new Promise(resolve => this.once("trendbar", resolve));;
+    }
   }
 }
 

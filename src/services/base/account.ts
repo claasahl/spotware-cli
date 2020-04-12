@@ -37,10 +37,10 @@ export interface AccountActions {
   trendbars(props: AccountSimpleTrendbarsProps): TrendbarsStream;
 }
 export declare interface AccountStream extends EventEmitter {
-  balance(cb: (e: BalanceChangedEvent) => void): void
-  transaction(cb: (e: TransactionEvent) => void): void
-  equity(cb: (e: EquityChangedEvent) => void): void
-  order(cb: (e: OrderEvent) => void): void
+  balance(): Promise<BalanceChangedEvent>
+  transaction(): Promise<TransactionEvent>
+  equity(): Promise<EquityChangedEvent>
+  order(): Promise<OrderEvent>
 
   addListener(event: string, listener: (...args: any[]) => void): this;
   addListener(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
@@ -88,52 +88,44 @@ export abstract class AccountStream extends EventEmitter implements AccountActio
     this.on("order", e => this.cachedOrder = e)
     this.on("transaction", e => {
       setImmediate(() => {
-        const {timestamp, amount} = e;
+        const { timestamp, amount } = e;
         const oldBalance = this.cachedBalance ? this.cachedBalance.balance : 0;
         const balance = Math.round((oldBalance + amount) * 100) / 100;
-        this.emit("balance", {timestamp, balance})
+        this.emit("balance", { timestamp, balance })
       })
-  })
-  }
-
-  balance(cb: (e: BalanceChangedEvent) => void): void {
-    setImmediate(() => {
-      if(this.cachedBalance) {
-        cb(this.cachedBalance);
-      } else {
-        this.once("balance", cb)
-      }
     })
   }
 
-  transaction(cb: (e: TransactionEvent) => void): void {
-    setImmediate(() => {
-      if(this.cachedTransaction) {
-        cb(this.cachedTransaction);
-      } else {
-        this.once("transaction", cb)
-      }
-    })
+  balance() {
+    if (this.cachedBalance) {
+      return Promise.resolve(this.cachedBalance);
+    } else {
+      return new Promise(resolve => this.once("balance", resolve))
+    }
   }
 
-  equity(cb: (e: EquityChangedEvent) => void): void {
-    setImmediate(() => {
-      if(this.cachedEquity) {
-        cb(this.cachedEquity);
-      } else {
-        this.once("equity", cb)
-      }
-    })
+  transaction() {
+    if (this.cachedTransaction) {
+      return Promise.resolve(this.cachedTransaction);
+    } else {
+      return new Promise(resolve => this.once("transaction", resolve))
+    }
   }
 
-  order(cb: (e: OrderEvent) => void): void {
-    setImmediate(() => {
-      if(this.cachedOrder) {
-        cb(this.cachedOrder);
-      } else {
-        this.once("order", cb)
-      }
-    })
+  equity() {
+    if (this.cachedEquity) {
+      return Promise.resolve(this.cachedEquity);
+    } else {
+      return new Promise(resolve => this.once("equity", resolve))
+    }
+  }
+
+  order() {
+    if (this.cachedOrder) {
+      return Promise.resolve(this.cachedOrder);
+    } else {
+      return new Promise(resolve => this.once("order", resolve))
+    }
   }
 
   abstract marketOrder(props: AccountSimpleMarketOrderProps): OrderStream<MarketOrderProps>;
