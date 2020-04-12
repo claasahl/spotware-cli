@@ -80,6 +80,7 @@ export class SpotwareClient extends EventEmitter {
             }
             pacemaker = setTimeout(() => this.publish(heartbeat), 10000);
         });
+        this.socket.on("close", () => {if(pacemaker) clearTimeout(pacemaker)});
     }
 
     private endOnError() {
