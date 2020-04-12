@@ -8,7 +8,7 @@ import { trendbarsFromSpotPrices } from "./trendbars";
 const log = debug("local-data");
 
 class LocalSpotPricesStream extends B.DebugSpotPricesStream {
-  trendbars(props: B.SpotPricesSimpleTrendbarsProps): B.TrendbarsStream {
+  trendbars(props: B.SpotPricesSimpleTrendbarsProps): Promise<B.TrendbarsStream> {
     return trendbarsFromSpotPrices({...props, ...this.props, spots: this});
   }
 }

@@ -46,7 +46,7 @@ function toTrendbar(
     return events.reduce(accumulateTrendbar, seed);
 }
 
-export function trendbarsFromSpotPrices(props: B.TrendbarsProps & { spots: B.SpotPricesStream }): B.TrendbarsStream {
+export function trendbarsFromSpotPrices(props: B.TrendbarsProps & { spots: B.SpotPricesStream }): Promise<B.TrendbarsStream> {
     const stream = new B.DebugTrendbarsStream(props)
     const bucked = (timestamp: B.Timestamp): Bucket => bucket(timestamp, props.period);
     const values: B.BidPriceChangedEvent[] = [];
@@ -76,5 +76,5 @@ export function trendbarsFromSpotPrices(props: B.TrendbarsProps & { spots: B.Spo
             stream.emitTrendbar(toTrendbar(bucket1.begin, eventsInBucket))
         }
     });
-    return stream;
+    return Promise.resolve(stream);
 }

@@ -26,36 +26,40 @@ class LocalOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream<Pr
         this.on("canceled", () => reset())
         this.on("ended", () => reset())
     }
-    close(): this {
+    async close(): Promise<B.OrderClosedEvent> {
         if(this.canBeClosed) {
-            this.profitLoss(e => {
-                this.emitClosed({ timestamp: e.timestamp, exit: e.price, profitLoss: e.profitLoss})
-                this.emitEnded({ timestamp: e.timestamp, exit: e.price, profitLoss: e.profitLoss})
-            })
-            return this;
+            const {timestamp, price: exit, profitLoss} = await this.profitLoss()
+            this.emitClosed({ timestamp, exit, profitLoss})
+            this.emitEnded({ timestamp, exit, profitLoss})
+            return { timestamp, exit, profitLoss}
         }
         throw new Error(`order ${this.props.id} cannot be closed ${JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled, canBeAmended: this.canBeAmended})}`);
     }
-    cancel(): this {
+    cancel(): Promise<B.OrderCanceledEvent> {
         if(this.canBeCanceled) {
             this.emitCanceled({timestamp: Date.now()})
             this.emitEnded({timestamp: Date.now()})
-            return this;
+            return Promise.resolve({timestamp: Date.now()})
         }
         throw new Error(`order ${this.props.id} cannot be canceled ${JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled, canBeAmended: this.canBeAmended})}`);
     }
-    end(): this {
+    async end(): Promise<B.OrderEndedEvent> {
         if(this.canBeCanceled) {
-            return this.cancel();
+            await this.cancel();
         } else if(this.canBeClosed) {
-            return this.close();
-        } else {
-            return this;
+            await this.close();
         }
+        return this.ended()
+    }
+    amend(): Promise<B.OrderAmendedEvent> {
+        if(this.canBeAmended) {
+            throw new Error("not implemented");
+        }
+        throw new Error(`order ${this.props.id} cannot be amended`);
     }
 }
 
-function fromSpotPrices<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream, buyCond: (e: B.AskPriceChangedEvent) => boolean, sellCond: (e: B.BidPriceChangedEvent) => boolean): B.OrderStream<Props> {
+async function fromSpotPrices<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream, buyCond: (e: B.AskPriceChangedEvent) => boolean, sellCond: (e: B.BidPriceChangedEvent) => boolean): Promise<B.OrderStream<Props>> {
     const stream = new LocalOrderStream<Props>(props);
     if (props.tradeSide === "BUY") {
         const fill = (e: B.AskPriceChangedEvent): boolean => {
@@ -74,7 +78,7 @@ function fromSpotPrices<Props extends B.OrderProps>(props: Props, spots: B.SpotP
                         stream.emitEnded({timestamp, exit: e.bid, profitLoss})
                     }
                 }
-                spots.bid(e => {
+                spots.bid().then(e => {
                     update(e);
                     spots.on("bid", update)
                 })
@@ -83,7 +87,7 @@ function fromSpotPrices<Props extends B.OrderProps>(props: Props, spots: B.SpotP
             }
             return false;
         }
-        spots.ask(e => {
+        spots.ask().then(e => {
             if(!fill(e)) {
                 spots.on("ask", fill);
                 stream.once("filled", () => spots.off("ask", fill))
@@ -107,7 +111,7 @@ function fromSpotPrices<Props extends B.OrderProps>(props: Props, spots: B.SpotP
                         stream.emitEnded({timestamp, exit: e.ask, profitLoss})
                     }
                 }
-                spots.ask(e => {
+                spots.ask().then(e => {
                     update(e);
                     spots.on("ask", update)
                 })
@@ -116,7 +120,7 @@ function fromSpotPrices<Props extends B.OrderProps>(props: Props, spots: B.SpotP
             }
             return false;
         }
-        spots.bid(e => {
+        spots.bid().then(e => {
             if(!fill(e)) {
                 spots.on("bid", fill)
                 stream.once("filled", () => spots.off("bid", fill))
@@ -128,7 +132,7 @@ function fromSpotPrices<Props extends B.OrderProps>(props: Props, spots: B.SpotP
     return stream;
 }
 
-export function marketOrderFromSpotPrices(props: B.MarketOrderProps & { spots: B.SpotPricesStream }): B.OrderStream<B.MarketOrderProps> {
+export function marketOrderFromSpotPrices(props: B.MarketOrderProps & { spots: B.SpotPricesStream }): Promise<B.OrderStream<B.MarketOrderProps>> {
     const {spots, ...rest} = props;
     const buyCond = () => true
     const sellCond = () => true
@@ -136,7 +140,7 @@ export function marketOrderFromSpotPrices(props: B.MarketOrderProps & { spots: B
 }
 
 
-export function stopOrderFromSpotPrices(props: B.StopOrderProps & { spots: B.SpotPricesStream }): B.OrderStream<B.StopOrderProps> {
+export function stopOrderFromSpotPrices(props: B.StopOrderProps & { spots: B.SpotPricesStream }): Promise<B.OrderStream<B.StopOrderProps>> {
     const {spots, ...rest} = props;
     const buyCond = ({ask: entry}: B.AskPriceChangedEvent) => entry >= props.enter
     const sellCond = ({bid: entry}: B.BidPriceChangedEvent) => entry <= props.enter

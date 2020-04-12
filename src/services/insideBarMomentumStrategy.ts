@@ -28,7 +28,7 @@ interface PlaceOrderProps {
   takeProfit: B.Price,
   account: B.AccountStream,
 }
-function placeOrder(props: PlaceOrderProps): B.OrderStream<B.StopOrderProps> {
+function placeOrder(props: PlaceOrderProps): Promise<B.OrderStream<B.StopOrderProps>> {
   const { account, ...rest } = props;
   return account.stopOrder(rest)
 }
@@ -52,10 +52,10 @@ export interface Props {
   spots: (props: B.AccountSimpleSpotPricesProps) => B.SpotPricesStream;
 }
 
-export function insideBarMomentumStrategy(props: Props): B.AccountStream {
+export async function insideBarMomentumStrategy(props: Props): Promise<B.AccountStream> {
   const { currency, initialBalance, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, spots } = props
   const account = fromNothing({ currency, initialBalance, spots })
-  const trendbars = account.trendbars({ period, symbol })
+  const trendbars = await account.trendbars({ period, symbol })
   let id = 1
 
   let lastOrder: B.OrderStream<B.StopOrderProps> | undefined = undefined;
@@ -75,13 +75,13 @@ export function insideBarMomentumStrategy(props: Props): B.AccountStream {
         const stopLoss = roundPrice(first.high - r * stopLossOffset);
         const takeProfit = roundPrice(first.high + r * takeProfitOffset);
         endLastOrder(lastOrder);
-        lastOrder = placeBuyOrder(enter, stopLoss, takeProfit)
+        placeBuyOrder(enter, stopLoss, takeProfit).then(order => lastOrder = order)
       } else if (bearish(first) && engulfed(first, second)) {
         const enter = roundPrice(first.low - r * enterOffset);
         const stopLoss = roundPrice(first.low + r * stopLossOffset);
         const takeProfit = roundPrice(first.low - r * takeProfitOffset);
         endLastOrder(lastOrder);
-        lastOrder = placeSellOrder(enter, stopLoss, takeProfit)
+        placeSellOrder(enter, stopLoss, takeProfit).then(order => lastOrder = order)
       }
       trendbarEvents.shift()
     }
