@@ -1,4 +1,5 @@
 import * as $ from "@claasahl/spotware-adapter";
+import Lock from "async-lock"
 
 import * as B from "../base";
 import { SpotwareClient } from "./client";
@@ -12,8 +13,11 @@ interface SpotwareAccountProps extends B.AccountProps {
     accessToken: string
 }
 class SpotwareAccountStream extends B.DebugAccountStream {
+    private readonly lock = new Lock();
     private readonly clientProps: Omit<SpotwareAccountProps, keyof B.AccountProps>;
     private readonly client: SpotwareClient;
+    private ctidTraderAccountId?: number;
+    private subscribed: Set<B.Symbol> = new Set();
 
     constructor({currency, ...props}: SpotwareAccountProps) {
         super({currency})
@@ -21,15 +25,26 @@ class SpotwareAccountStream extends B.DebugAccountStream {
         this.client = new SpotwareClient(props);
     }
 
+    private async traderId(): Promise<number> {
+        return this.lock.acquire("traderId", async () => {
+            if(this.ctidTraderAccountId) {
+                return this.ctidTraderAccountId;
+            }
+            const { clientId, clientSecret, accessToken } = this.clientProps
+            await this.client.applicationAuth({clientId, clientSecret})
+            const accounts = await this.client.getAccountListByAccessToken({accessToken})
+            if(accounts.ctidTraderAccount.length !== 1) {
+                throw new Error(`can only handle exactly one account. supplied accessToken has access to ${accounts.ctidTraderAccount.length} accounts`)
+            }
+            const { ctidTraderAccountId } = accounts.ctidTraderAccount[0]
+            await this.client.accountAuth({ctidTraderAccountId, accessToken})
+            this.ctidTraderAccountId = ctidTraderAccountId;
+            return ctidTraderAccountId;
+        })
+    }
+
     async spotPrices(props: B.AccountSimpleSpotPricesProps): Promise<B.SpotPricesStream> {
-        const { clientId, clientSecret, accessToken } = this.clientProps
-        await this.client.applicationAuth({clientId, clientSecret})
-        const accounts = await this.client.getAccountListByAccessToken({accessToken})
-        if(accounts.ctidTraderAccount.length !== 1) {
-            throw new Error(`can only handle exactly one account. supplied accessToken has access to ${accounts.ctidTraderAccount.length} accounts`)
-        }
-        const { ctidTraderAccountId } = accounts.ctidTraderAccount[0]
-        await this.client.accountAuth({ctidTraderAccountId, accessToken})
+        const ctidTraderAccountId = await this.traderId();
         const symbols = await this.client.symbolsList({ctidTraderAccountId})
         const [symbol, ...rest] = symbols.symbol.filter(s => props.symbol.toString() === `Symbol(${s.symbolName})`)
         if(!symbol) {
@@ -38,7 +53,14 @@ class SpotwareAccountStream extends B.DebugAccountStream {
         if(rest.length !== 0) {
             throw new Error(`found multiple symbols matching ${props.symbol.toString()}`)
         }
-        await this.client.subscribeSpots({ctidTraderAccountId, symbolId: [symbol.symbolId]})
+        await this.lock.acquire("subscription", async () => {
+            if(this.subscribed.has(props.symbol)) {
+                return;
+            }
+            await this.client.subscribeSpots({ctidTraderAccountId, symbolId: [symbol.symbolId]})
+            this.subscribed.add(props.symbol);
+        })
+        
         const PRECISION = 5;
         const fact0r = Math.pow(10, PRECISION)
 
