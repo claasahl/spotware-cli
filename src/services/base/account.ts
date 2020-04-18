@@ -160,7 +160,7 @@ export class DebugAccountStream extends AccountStream {
   spotPrices(_props: AccountSimpleSpotPricesProps): Promise<SpotPricesStream> {
     throw new Error("not implemented");
   }
-  trendbars(_props: AccountSimpleSpotPricesProps): Promise<TrendbarsStream> {
+  trendbars(_props: AccountSimpleTrendbarsProps): Promise<TrendbarsStream> {
     throw new Error("not implemented");
   }
 

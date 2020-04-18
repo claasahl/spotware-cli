@@ -2,6 +2,7 @@ import * as $ from "@claasahl/spotware-adapter";
 
 import * as B from "../base";
 import { SpotwareClient } from "./client";
+import {trendbarsFromSpotPrices} from "../local/trendbars"
 
 interface SpotwareAccountProps extends B.AccountProps {
     host: string,
@@ -59,6 +60,11 @@ class SpotwareAccountStream extends B.DebugAccountStream {
             }
         })
         return stream;
+    }
+
+    async trendbars(props: B.AccountSimpleTrendbarsProps): Promise<B.TrendbarsStream> {
+        const spots = await this.spotPrices(props)
+        return trendbarsFromSpotPrices({...props, spots})
     }
 }
 

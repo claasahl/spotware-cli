@@ -52,7 +52,9 @@ insideBar;
 async function spotware() {
   const currency = Symbol.for("EUR");
   const symbol = Symbol.for("BTC/EUR");
+  const period = 1000;
   const account = fromSomething({...config, currency})
-  await account.spotPrices({symbol})
+  // await account.spotPrices({symbol})
+  await account.trendbars({symbol, period})
 }
 spotware();
