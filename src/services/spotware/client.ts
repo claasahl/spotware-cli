@@ -11,7 +11,11 @@ function isOAError(msg: $.ProtoMessages): msg is $.ProtoMessage2142 {
     return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_ERROR_RES;
 }
 
-function toError(msg: $.ProtoMessage50 | $.ProtoMessage2142): Error {
+function isOrderError(msg: $.ProtoMessages): msg is $.ProtoMessage2132 {
+    return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_ORDER_ERROR_EVENT;
+}
+
+function toError(msg: $.ProtoMessage50 | $.ProtoMessage2142 | $.ProtoMessage2132): Error {
     const { errorCode, description } = msg.payload;
     return new Error(`${errorCode}, ${description}`);
 }
@@ -105,7 +109,7 @@ export class SpotwareClient extends EventEmitter {
                     this.socket.off("PROTO_MESSAGE.INPUT.*", response);
                     if (isResponse(msg)) {
                         resolve(msg.payload)
-                    } else if (isError(msg) || isOAError(msg)) {
+                    } else if (isError(msg) || isOAError(msg) || isOrderError(msg)) {
                         reject(toError(msg));
                     }
                 }
@@ -212,6 +216,13 @@ export class SpotwareClient extends EventEmitter {
         return this.awaitResponse(clientMsgId, isResponse);
     }
 
+    newOrder(payload: $.ProtoOANewOrderReq): Promise<$.ProtoOAExecutionEvent> {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_NEW_ORDER_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2126>($.ProtoOAPayloadType.PROTO_OA_EXECUTION_EVENT)
+        return this.awaitResponse(clientMsgId, isResponse);
+    }
+
     reconcile(payload: $.ProtoOAReconcileReq): Promise<$.ProtoOAReconcileRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_RECONCILE_REQ, payload, clientMsgId })
@@ -311,7 +322,6 @@ export class SpotwareClient extends EventEmitter {
     }
 
     // TODO:
-    // PROTO_OA_NEW_ORDER_REQ = 2106,
     // PROTO_OA_CANCEL_ORDER_REQ = 2108,
     // PROTO_OA_AMEND_ORDER_REQ = 2109,
     // PROTO_OA_AMEND_POSITION_SLTP_REQ = 2110,
