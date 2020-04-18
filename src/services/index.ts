@@ -1,7 +1,7 @@
 import { fromSampleData, fromFile, fromNothing } from "./local";
 import { insideBarMomentumStrategy } from "./insideBarMomentumStrategy";
 import config from "../config";
-import { SpotwareClient } from "./spotware/client";
+import { fromSomething } from "./spotware/account";
 
 // Idea: Write services which consume events (from other services) and produce events (for other services to consume).
 
@@ -37,21 +37,22 @@ local;
 function insideBar() {
   const currency = Symbol.for("EUR");
   const initialBalance = 1000;
-  const period = 60000;
+  const period = 900000;
   const symbol = Symbol.for("BTC/EUR");
   const enterOffset = 0.1;
   const stopLossOffset = 0.4;
   const takeProfitOffset = 0.8;
   const minTrendbarRange = 15;
-  const volume = 0.1;
-  const spots = () => fromFile({path: "./store/test3.json", symbol});
+  const volume = 0.01;
+  const spots = () => fromFile({path: "./store/test4.json", symbol});
   insideBarMomentumStrategy({ currency, initialBalance, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, spots })
 }
 insideBar;
 
 async function spotware() {
-  const client = new SpotwareClient(config);
-  console.log(await client.applicationAuth(config))
-  client.on("PROTO_OA_APPLICATION_AUTH_RES", console.error)
+  const currency = Symbol.for("EUR");
+  const symbol = Symbol.for("BTC/EUR");
+  const account = fromSomething({...config, currency})
+  await account.spotPrices({symbol})
 }
 spotware();
