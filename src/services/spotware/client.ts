@@ -11,6 +11,11 @@ function isOAError(msg: $.ProtoMessages): msg is $.ProtoMessage2142 {
     return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_ERROR_RES;
 }
 
+function toError(msg: $.ProtoMessage50 | $.ProtoMessage2142): Error {
+    const { errorCode, description } = msg.payload;
+    return new Error(`${errorCode}, ${description}`);
+}
+
 function testResponse<T extends $.ProtoMessages>(payloadType: T["payloadType"]) {
     return (msg: $.ProtoMessages): msg is T => {
         return msg.payloadType === payloadType;
@@ -20,19 +25,14 @@ function testResponse<T extends $.ProtoMessages>(payloadType: T["payloadType"]) 
 interface SpotwareClientProps {
     host: string,
     port: number
-    clientId: string,
-    clientSecret: string,
-    accessToken: string
 }
 export class SpotwareClient extends EventEmitter {
-    // private readonly props: SpotwareClientProps;
     private readonly socket: $.SpotwareSocket;
     private readonly log: debug.Debugger;
     private readonly messages: $.ProtoMessages[] = [];
 
     constructor(props: SpotwareClientProps) {
         super();
-        // this.props = Object.freeze(props);
         this.socket = $.connect(props.port, props.host);
 
         this.log = debug("spotware");
@@ -47,6 +47,7 @@ export class SpotwareClient extends EventEmitter {
 
         this.throttledPublisher();
         this.pacemaker();
+        this.mirrorIO();
         this.endOnError();
     }
 
@@ -79,24 +80,33 @@ export class SpotwareClient extends EventEmitter {
         this.socket.on("close", () => {if(pacemaker) clearTimeout(pacemaker)});
     }
 
+    private mirrorIO() {
+        this.socket.on("PROTO_MESSAGE.INPUT.*", msg => {
+            const event = $.ProtoOAPayloadType[msg.payloadType] || $.ProtoPayloadType[msg.payloadType]
+            setImmediate(() => this.emit(event, msg.payload));
+            if (isError(msg) || isOAError(msg)) {
+                setImmediate(() => this.emit("error", toError(msg)));
+            }
+        });
+        this.socket.on("PROTO_MESSAGE.OUTPUT.*", msg => {
+            const event = $.ProtoOAPayloadType[msg.payloadType] || $.ProtoPayloadType[msg.payloadType]
+            setImmediate(() => this.emit(event, msg.payload));
+        });
+    }
+
     private endOnError() {
         this.socket.on("error", () => this.socket.end());
     }
 
-    private awaitResponse<T extends $.ProtoMessages>(clientMsgId: string, isResponse: (msg: $.ProtoMessages) => msg is T): Promise<T["payload"]> {
+    private async awaitResponse<T extends $.ProtoMessages>(clientMsgId: string, isResponse: (msg: $.ProtoMessages) => msg is T): Promise<T["payload"]> {
         return new Promise((resolve, reject) => {
             const response = (msg: $.ProtoMessages) => {
                 if (msg.clientMsgId === clientMsgId) {
                     this.socket.off("PROTO_MESSAGE.INPUT.*", response);
                     if (isResponse(msg)) {
-                        const event = $.ProtoOAPayloadType[msg.payloadType] || $.ProtoPayloadType[msg.payloadType]
-                        setImmediate(() => this.emit(event, msg.payload));
                         resolve(msg.payload)
                     } else if (isError(msg) || isOAError(msg)) {
-                        const { errorCode, description } = msg.payload;
-                        const error = new Error(`${errorCode}, ${description}`);
-                        setImmediate(() => this.emit("error", error));
-                        reject(error);
+                        reject(toError(msg));
                     }
                 }
             }
