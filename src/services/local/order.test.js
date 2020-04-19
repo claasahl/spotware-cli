@@ -7,14 +7,15 @@ describe("marketOrderFromSpotPrices", () => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await marketOrderFromSpotPrices({ id: 1, symbol, tradeSide: "SELL", volume: 2, spots })
+            const event = {timestamp: expect.anything(Number)};
             stream.on("accepted", () => {
-                expect(stream.cancel()).resolves.toStrictEqual({timestamp: expect.anything(Number)})
+                expect(stream.cancel()).resolves.toStrictEqual(event)
             })
             stream.on("canceled", e => {
-                expect(e).toStrictEqual({timestamp: expect.anything(Number)})
+                expect(e).toStrictEqual(event)
             })
             stream.on("ended", e => {
-                expect(e).toStrictEqual({timestamp: expect.anything(Number)})
+                expect(e).toStrictEqual(event)
                 done();
             })
         })
@@ -22,14 +23,15 @@ describe("marketOrderFromSpotPrices", () => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await marketOrderFromSpotPrices({ id: 1, symbol, tradeSide: "SELL", volume: 2, spots })
+            const event = {timestamp: expect.anything(Number), exit: 1, profitLoss: 8};
             stream.on("filled", () => {
-                expect(stream.close()).resolves.toStrictEqual({timestamp: expect.anything(Number), exit: 1, profitLoss: 8})
+                expect(stream.close()).resolves.toStrictEqual(event)
             })
             stream.on("closed", e => {
-                expect(e).toStrictEqual({timestamp: expect.anything(Number), exit: 1, profitLoss: 8})
+                expect(e).toStrictEqual(event)
             })
             stream.on("ended", e => {
-                expect(e).toStrictEqual({timestamp: expect.anything(Number), exit: 1, profitLoss: 8})
+                expect(e).toStrictEqual(event)
                 done();
             })
             spots.emitBid({ timestamp: 0, bid: 5 })
@@ -39,11 +41,12 @@ describe("marketOrderFromSpotPrices", () => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await marketOrderFromSpotPrices({ id: 1, symbol, tradeSide: "BUY", volume: 2, spots })
+            const event = {timestamp: expect.anything(Number)};
             stream.on("accepted", () => {
-                expect(stream.end()).resolves.toStrictEqual({timestamp: expect.anything(Number)})
+                expect(stream.end()).resolves.toStrictEqual(event)
             })
             stream.on("canceled", e => {
-                expect(e).toStrictEqual({timestamp: expect.anything(Number)})
+                expect(e).toStrictEqual(event)
                 done();
             })
         })
@@ -51,11 +54,12 @@ describe("marketOrderFromSpotPrices", () => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await marketOrderFromSpotPrices({ id: 1, symbol, tradeSide: "BUY", volume: 2, spots })
+            const event = {timestamp: expect.anything(Number), exit: 1, profitLoss: -8};
             stream.on("filled", () => {
-                expect(stream.end()).resolves.toStrictEqual({timestamp: expect.anything(Number), exit: 1, profitLoss: -8})
+                expect(stream.end()).resolves.toStrictEqual(event)
             })
             stream.on("closed", e => {
-                expect(e).toStrictEqual({timestamp: expect.anything(Number), exit: 1, profitLoss: -8})
+                expect(e).toStrictEqual(event)
                 done();
             })
             spots.emitAsk({ timestamp: 0, ask: 5 })
@@ -328,14 +332,15 @@ describe("stopOrderFromSpotPrices", () => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await stopOrderFromSpotPrices({ id: 1, symbol, tradeSide: "SELL", volume: 2, enter: 6, spots })
+            const event = {timestamp: expect.anything(Number)};
             stream.on("accepted", () => {
-                expect(stream.cancel()).resolves.toStrictEqual({timestamp: expect.anything(Number)})
+                expect(stream.cancel()).resolves.toStrictEqual(event)
             })
             stream.on("canceled", e => {
-                expect(e).toStrictEqual({timestamp: expect.anything(Number)})
+                expect(e).toStrictEqual(event)
             })
             stream.on("ended", e => {
-                expect(e).toStrictEqual({timestamp: expect.anything(Number)})
+                expect(e).toStrictEqual(event)
                 done();
             })
         })
@@ -343,14 +348,15 @@ describe("stopOrderFromSpotPrices", () => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await stopOrderFromSpotPrices({ id: 1, symbol, tradeSide: "SELL", volume: 2, enter: 4.5, spots })
+            const event = {timestamp: expect.anything(Number), exit: 2, profitLoss: 4};
             stream.on("filled", () => {
-                expect(stream.close()).resolves.toStrictEqual({timestamp: expect.anything(Number), exit: 2, profitLoss: 4})
+                expect(stream.close()).resolves.toStrictEqual(event)
             })
             stream.on("closed", e => {
-                expect(e).toStrictEqual({timestamp: expect.anything(Number), exit: 2, profitLoss: 4})
+                expect(e).toStrictEqual(event)
             })
             stream.on("ended", e => {
-                expect(e).toStrictEqual({timestamp: expect.anything(Number), exit: 2, profitLoss: 4})
+                expect(e).toStrictEqual(event)
                 done();
             })
             spots.emitBid({ timestamp: 0, bid: 5 })
@@ -361,11 +367,12 @@ describe("stopOrderFromSpotPrices", () => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await stopOrderFromSpotPrices({ id: 1, symbol, tradeSide: "BUY", volume: 2, enter: 6, spots })
+            const event = {timestamp: expect.anything(Number)};
             stream.on("accepted", () => {
-                expect(stream.end()).resolves.toStrictEqual({timestamp: expect.anything(Number)})
+                expect(stream.end()).resolves.toStrictEqual(event)
             })
             stream.on("canceled", e => {
-                expect(e).toStrictEqual({timestamp: expect.anything(Number)})
+                expect(e).toStrictEqual(event)
                 done();
             })
         })
@@ -373,11 +380,12 @@ describe("stopOrderFromSpotPrices", () => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await stopOrderFromSpotPrices({ id: 1, symbol, tradeSide: "BUY", volume: 2, enter: 6, spots })
+            const event = {timestamp: expect.anything(Number), exit: 10, profitLoss: 6};
             stream.on("filled", () => {
-                expect(stream.end()).resolves.toStrictEqual({timestamp: expect.anything(Number), exit: 10, profitLoss: 6})
+                expect(stream.end()).resolves.toStrictEqual(event)
             })
             stream.on("closed", e => {
-                expect(e).toStrictEqual({timestamp: expect.anything(Number), exit: 10, profitLoss: 6})
+                expect(e).toStrictEqual(event)
                 done();
             })
             spots.emitAsk({ timestamp: 0, ask: 5 })
