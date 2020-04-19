@@ -72,10 +72,10 @@ async function fromSpotPrices<Props extends B.OrderProps>(props: Props, spots: B
                     const profitLoss = (price - entry) * stream.props.volume;
                     stream.emitProfitLoss({ timestamp, price, profitLoss })
 
-                    if(props.stopLoss && props.stopLoss >= e.bid ||
-                        props.takeProfit && props.takeProfit <= e.bid) {
-                        stream.emitClosed({timestamp, exit: e.bid, profitLoss})
-                        stream.emitEnded({timestamp, exit: e.bid, profitLoss})
+                    if(props.stopLoss && props.stopLoss >= price ||
+                        props.takeProfit && props.takeProfit <= price) {
+                        stream.emitClosed({timestamp, exit: price, profitLoss})
+                        stream.emitEnded({timestamp, exit: price, profitLoss})
                     }
                 }
                 spots.bid().then(e => {
@@ -102,13 +102,13 @@ async function fromSpotPrices<Props extends B.OrderProps>(props: Props, spots: B
 
                 const update = (e: B.AskPriceChangedEvent) => {
                     const {timestamp, ask: price} = e
-                    const profitLoss = (entry - e.ask) * stream.props.volume;
+                    const profitLoss = (entry - price) * stream.props.volume;
                     stream.emitProfitLoss({ timestamp, price, profitLoss })
 
-                    if(props.stopLoss && props.stopLoss <= e.ask ||
-                        props.takeProfit && props.takeProfit >= e.ask) {
-                        stream.emitClosed({timestamp, exit: e.ask, profitLoss})
-                        stream.emitEnded({timestamp, exit: e.ask, profitLoss})
+                    if(props.stopLoss && props.stopLoss <= price ||
+                        props.takeProfit && props.takeProfit >= price) {
+                        stream.emitClosed({timestamp, exit: price, profitLoss})
+                        stream.emitEnded({timestamp, exit: price, profitLoss})
                     }
                 }
                 spots.ask().then(e => {
