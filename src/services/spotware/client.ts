@@ -153,6 +153,20 @@ export class SpotwareClient extends EventEmitter {
         return this.awaitResponse(clientMsgId, isResponse);
     }
 
+    cancelOrder(payload: $.ProtoOACancelOrderReq): Promise<$.ProtoOAExecutionEvent> {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_CANCEL_ORDER_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2126>($.ProtoOAPayloadType.PROTO_OA_EXECUTION_EVENT)
+        return this.awaitResponse(clientMsgId, isResponse);
+    }
+
+    closePosition(payload: $.ProtoOAClosePositionReq): Promise<$.ProtoOAExecutionEvent> {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_CLOSE_POSITION_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2126>($.ProtoOAPayloadType.PROTO_OA_EXECUTION_EVENT)
+        return this.awaitResponse(clientMsgId, isResponse);
+    }
+
     cashFlowHistoryList(payload: $.ProtoOACashFlowHistoryListReq): Promise<$.ProtoOACashFlowHistoryListRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_CASH_FLOW_HISTORY_LIST_REQ, payload, clientMsgId })
@@ -322,10 +336,8 @@ export class SpotwareClient extends EventEmitter {
     }
 
     // TODO:
-    // PROTO_OA_CANCEL_ORDER_REQ = 2108,
     // PROTO_OA_AMEND_ORDER_REQ = 2109,
     // PROTO_OA_AMEND_POSITION_SLTP_REQ = 2110,
-    // PROTO_OA_CLOSE_POSITION_REQ = 2111,
 
     end() {
         this.socket.end();
