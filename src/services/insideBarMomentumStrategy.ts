@@ -1,9 +1,5 @@
-import { fromNothing } from "./local"
-import { fromSomething } from "./spotware"
-
 import * as B from "./base"
 import { bullish, bearish, range } from "indicators"
-import CONFIG from "../config"
 
 function engulfed(candleA: B.TrendbarEvent, candleB: B.TrendbarEvent): boolean {
   const upperA = candleA.high;
@@ -42,8 +38,7 @@ function endLastOrder(lastOrder?: B.OrderStream<B.StopOrderProps>) {
 }
 
 export interface Props {
-  currency: B.Currency,
-  initialBalance: B.Price,
+  account: B.AccountStream,
   period: B.Period,
   symbol: B.Symbol,
   enterOffset: B.Price,
@@ -51,17 +46,10 @@ export interface Props {
   takeProfitOffset: B.Price,
   minTrendbarRange: B.Price,
   volume: B.Volume,
-  spots: (props: B.AccountSimpleSpotPricesProps) => B.SpotPricesStream;
 }
 
-export async function insideBarMomentumStrategy(base: "local" | "spotware", props: Props): Promise<B.AccountStream> {
-  const { currency, initialBalance, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, spots } = props
-  const account = (() => {
-    if(base === "local") {
-      return fromNothing({ currency, initialBalance, spots })
-    }
-    return fromSomething({ currency, ...CONFIG });
-  })()
+export async function insideBarMomentumStrategy(props: Props): Promise<B.AccountStream> {
+  const { account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume } = props
   const trendbars = await account.trendbars({ period, symbol })
   let id = 1
 

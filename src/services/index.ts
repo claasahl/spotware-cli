@@ -2,6 +2,7 @@ import { fromSampleData, fromFile, fromNothing } from "./local";
 import { insideBarMomentumStrategy } from "./insideBarMomentumStrategy";
 import config from "../config";
 import { fromSomething } from "./spotware/account";
+import { periodToMillis } from "../utils";
 
 // Idea: Write services which consume events (from other services) and produce events (for other services to consume).
 
@@ -34,10 +35,10 @@ function local() {
 }
 local;
 
-function insideBar() {
+function insideBarLocal() {
   const currency = Symbol.for("EUR");
   const initialBalance = 1000;
-  const period = 900000;
+  const period = 60000;
   const symbol = Symbol.for("BTC/EUR");
   const enterOffset = 0.1;
   const stopLossOffset = 0.4;
@@ -45,9 +46,19 @@ function insideBar() {
   const minTrendbarRange = 15;
   const volume = 0.01;
   const spots = () => fromFile({path: "./store/test4.json", symbol});
-  insideBarMomentumStrategy({ currency, initialBalance, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, spots })
+  const account = fromNothing({currency, initialBalance, spots})
+  insideBarMomentumStrategy({ account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume })
 }
-insideBar;
+insideBarLocal;
+
+async function insideBarSpotware() {
+  const currency = Symbol.for("EUR");
+  const symbol = Symbol.for(config.symbol)
+  const account = fromSomething({currency, ...config})
+  const period = periodToMillis(config.period);
+  insideBarMomentumStrategy({ ...config, account, symbol, period })
+}
+insideBarSpotware();
 
 async function spotware() {
   const currency = Symbol.for("EUR");
@@ -56,5 +67,10 @@ async function spotware() {
   const account = fromSomething({...config, currency})
   await account.spotPrices({symbol})
   await account.trendbars({symbol, period})
+  // const stream = await account.marketOrder({id: "1", symbol, tradeSide: "SELL", volume: 0.01})
+  const stream = await account.stopOrder({id: "1", symbol, tradeSide: "SELL", volume: 0.01, enter: 6000})
+  setTimeout(async () => {
+    console.log(await stream.cancel())
+  }, 10000)
 }
-spotware();
+spotware;

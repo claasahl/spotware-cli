@@ -37,6 +37,10 @@ const config = {
   minOffsetToTakeProfit: Number(
     process.env.minOffsetToTakeProfit ||
       "configure env. variable 'minOffsetToTakeProfit'"
-  )
+  ),
+  minTrendbarRange: Number(
+    process.env.minTrendbarRange ||
+      "configure env. variable 'minTrendbarRange'"
+  ),
 };
 export default config;
