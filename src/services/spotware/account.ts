@@ -94,8 +94,12 @@ class SpotwareAccountStream extends B.DebugAccountStream {
         const spots = await this.spotPrices(props);
         const stream = new B.DebugOrderStream({ ...props, orderType: "MARKET" });
         stream.emitCreated({timestamp: Date.now()})
+        const round = (price: number) => {
+            const factor = Math.pow(10, details.digits);
+            return Math.round(price * factor) / factor
+        }
         this.client.on("PROTO_OA_EXECUTION_EVENT", (msg: $.ProtoOAExecutionEvent) => {
-            if (!msg.order || !event.order || msg.order.orderId !== event.order.orderId) {
+            if (!msg.deal || !event.position || msg.deal.positionId !== event.position.positionId) {
                 return
             }
             const timestamp = Date.now();
@@ -108,20 +112,34 @@ class SpotwareAccountStream extends B.DebugAccountStream {
                     stream.emitCanceled({ timestamp });
                     break;
                 case $.ProtoOAExecutionType.ORDER_FILLED:
-                    const entry = msg.position?.price || 0;
-                    stream.emitFilled({ timestamp, entry });
+                    const executionPrice = msg.deal.executionPrice || 0;
+                    if(msg.deal.closePositionDetail) {
+                        const profitLoss = msg.deal.closePositionDetail.grossProfit / Math.pow(10, details.digits);
+                        const balance = msg.deal.closePositionDetail.balance / Math.pow(10, details.digits);
+                        stream.emitClosed({ timestamp, exit: executionPrice, profitLoss });
+                        stream.emitEnded({ timestamp, exit: executionPrice, profitLoss });
+                        this.emitTransaction({timestamp, amount: profitLoss})
+                        this.emitBalance({timestamp, balance})
+                        break;
+                    }
+
+                    stream.emitFilled({ timestamp, entry: executionPrice });
                     if(props.tradeSide === "BUY") {
-                        spots.on("bid", e => {
+                        const update = (e: B.BidPriceChangedEvent) => {
                             const {timestamp, bid: price} = e
-                            const profitLoss = (price - entry) * stream.props.volume;
+                            const profitLoss = round((price - executionPrice) * stream.props.volume);
                             stream.emitProfitLoss({ timestamp, price, profitLoss })
-                        })
+                        }
+                        spots.on("bid", update);
+                        stream.once("ended", () => spots.off("bid", update))
                     } else if(props.tradeSide === "SELL") {
-                        spots.on("ask", e => {
+                        const update = (e: B.AskPriceChangedEvent) => {
                             const {timestamp, ask: price} = e
-                            const profitLoss = (entry - price) * stream.props.volume;
+                            const profitLoss = round((executionPrice - price) * stream.props.volume);
                             stream.emitProfitLoss({ timestamp, price, profitLoss })
-                        })
+                        }
+                        spots.on("ask", update);
+                        stream.once("ended", () => spots.off("ask", update))
                     }
                     break;
                 case $.ProtoOAExecutionType.ORDER_REJECTED:
