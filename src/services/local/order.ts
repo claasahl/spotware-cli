@@ -132,17 +132,17 @@ async function fromSpotPrices<Props extends B.OrderProps>(props: Props, spots: B
     return stream;
 }
 
-export function marketOrderFromSpotPrices(props: B.MarketOrderProps & { spots: B.SpotPricesStream }): Promise<B.OrderStream<B.MarketOrderProps>> {
+export function marketOrderFromSpotPrices(props: Omit<B.MarketOrderProps & { spots: B.SpotPricesStream }, "orderType">): Promise<B.OrderStream<B.MarketOrderProps>> {
     const {spots, ...rest} = props;
     const buyCond = () => true
     const sellCond = () => true
-    return fromSpotPrices(rest, spots, buyCond, sellCond)  
+    return fromSpotPrices({...rest, orderType: "MARKET"}, spots, buyCond, sellCond)
 }
 
 
-export function stopOrderFromSpotPrices(props: B.StopOrderProps & { spots: B.SpotPricesStream }): Promise<B.OrderStream<B.StopOrderProps>> {
+export function stopOrderFromSpotPrices(props: Omit<B.StopOrderProps & { spots: B.SpotPricesStream }, "orderType">): Promise<B.OrderStream<B.StopOrderProps>> {
     const {spots, ...rest} = props;
     const buyCond = ({ask: entry}: B.AskPriceChangedEvent) => entry >= props.enter
     const sellCond = ({bid: entry}: B.BidPriceChangedEvent) => entry <= props.enter
-    return fromSpotPrices(rest, spots, buyCond, sellCond)   
+    return fromSpotPrices({...rest, orderType: "STOP"}, spots, buyCond, sellCond)
 }
