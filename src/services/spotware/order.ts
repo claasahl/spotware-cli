@@ -8,7 +8,7 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream
     private readonly lotSize: number;
     private readonly positionId: number;
     private readonly orderId: number;
-    
+
     constructor(props: Props & { client: SpotwareClient, ctidTraderAccountId: number, lotSize: number, positionId: number, orderId: number }) {
         super(props);
         this.client = props.client;
@@ -100,6 +100,7 @@ async function order<Props extends B.OrderProps>(props: Props & { client: Spotwa
                     }
                     const timestamp = msg.order.utcLastUpdateTimestamp || 0;
                     stream.emitCanceled({ timestamp });
+                    stream.emitEnded({ timestamp });
                     break;
                 }
             case $.ProtoOAExecutionType.ORDER_FILLED:
