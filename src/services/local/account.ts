@@ -35,7 +35,7 @@ class LocalAccountStream extends B.DebugAccountStream {
         }
         const order: B.Order = { ...props, entry: 0, profitLoss: 0 }
         const spots = await this.spotPrices({ symbol: props.symbol })
-        const stream = await marketOrderFromSpotPrices({ ...props, orderType: "MARKET", spots })
+        const stream = await marketOrderFromSpotPrices({ ...props, spots })
         const update = (e: B.OrderProfitLossEvent) => {
             order.profitLoss = e.profitLoss;
             this.updateEquity(e)
@@ -78,7 +78,7 @@ class LocalAccountStream extends B.DebugAccountStream {
         }
         const order: B.Order = { ...props, entry: 0, profitLoss: 0 }
         const spots = await this.spotPrices({ symbol: props.symbol })
-        const stream = await stopOrderFromSpotPrices({ ...props, orderType: "STOP", spots })
+        const stream = await stopOrderFromSpotPrices({ ...props, spots })
         const update = (e: B.OrderProfitLossEvent) => {
             order.profitLoss = e.profitLoss;
             this.updateEquity(e)
