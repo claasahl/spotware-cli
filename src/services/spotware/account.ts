@@ -41,6 +41,10 @@ class SpotwareAccountStream extends B.DebugAccountStream {
             const { ctidTraderAccountId } = accounts.ctidTraderAccount[0]
             await this.client.accountAuth({ ctidTraderAccountId, accessToken })
             this.ctidTraderAccountId = ctidTraderAccountId;
+            const trader = await this.client.trader({ctidTraderAccountId})
+            const timestamp = Date.now();
+            const balance = trader.trader.balance / 100;
+            this.emitBalance({timestamp, balance})
             return ctidTraderAccountId;
         })
     }
