@@ -91,6 +91,7 @@ class SpotwareAccountStream extends B.DebugAccountStream {
             takeProfit: props.takeProfit,
             stopLoss: props.stopLoss
         })
+        const spots = await this.spotPrices(props);
         const stream = new B.DebugOrderStream({ ...props, orderType: "MARKET" });
         stream.emitCreated({timestamp: Date.now()})
         this.client.on("PROTO_OA_EXECUTION_EVENT", (msg: $.ProtoOAExecutionEvent) => {
@@ -109,6 +110,19 @@ class SpotwareAccountStream extends B.DebugAccountStream {
                 case $.ProtoOAExecutionType.ORDER_FILLED:
                     const entry = msg.position?.price || 0;
                     stream.emitFilled({ timestamp, entry });
+                    if(props.tradeSide === "BUY") {
+                        spots.on("bid", e => {
+                            const {timestamp, bid: price} = e
+                            const profitLoss = (price - entry) * stream.props.volume;
+                            stream.emitProfitLoss({ timestamp, price, profitLoss })
+                        })
+                    } else if(props.tradeSide === "SELL") {
+                        spots.on("ask", e => {
+                            const {timestamp, ask: price} = e
+                            const profitLoss = (entry - price) * stream.props.volume;
+                            stream.emitProfitLoss({ timestamp, price, profitLoss })
+                        })
+                    }
                     break;
                 case $.ProtoOAExecutionType.ORDER_REJECTED:
                     stream.emitRejected({ timestamp });
