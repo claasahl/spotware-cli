@@ -2,8 +2,8 @@ import * as $ from "@claasahl/spotware-adapter"
 import * as B from "../base"
 import { SpotwareClient } from "./client";
 
-async function order<Props extends B.OrderProps>(props: Props & {client: SpotwareClient, spots: B.SpotPricesStream, ctidTraderAccountId: number, symbolId: number, details: $.ProtoOASymbol, partial: Partial<$.ProtoOANewOrderReq> }): Promise<B.OrderStream<Props>> {
-    const { ctidTraderAccountId, symbolId, details } = props;
+async function order<Props extends B.OrderProps>(props: Props & {client: SpotwareClient, spots: B.SpotPricesStream, ctidTraderAccountId: number, symbolId: number, lotSize: number, digits: number, partial: Partial<$.ProtoOANewOrderReq> }): Promise<B.OrderStream<Props>> {
+    const { ctidTraderAccountId, symbolId } = props;
     const tradeSide = (() => {
         switch (props.tradeSide) {
             case "SELL":
@@ -19,14 +19,14 @@ async function order<Props extends B.OrderProps>(props: Props & {client: Spotwar
         orderType: $.ProtoOAOrderType.MARKET,
         symbolId,
         tradeSide,
-        volume: props.volume * (details.lotSize || 1),
+        volume: props.volume * props.lotSize,
         takeProfit: props.takeProfit,
         stopLoss: props.stopLoss
     })
     const stream = new B.DebugOrderStream(props);
     stream.emitCreated({ timestamp: Date.now() })
     const round = (price: number) => {
-        const factor = Math.pow(10, details.digits);
+        const factor = Math.pow(10, props.digits);
         return Math.round(price * factor) / factor
     }
     props.client.on("PROTO_OA_EXECUTION_EVENT", (msg: $.ProtoOAExecutionEvent) => {
@@ -45,7 +45,7 @@ async function order<Props extends B.OrderProps>(props: Props & {client: Spotwar
             case $.ProtoOAExecutionType.ORDER_FILLED:
                 const executionPrice = msg.deal.executionPrice || 0;
                 if (msg.deal.closePositionDetail) {
-                    const profitLoss = msg.deal.closePositionDetail.grossProfit / Math.pow(10, details.digits);
+                    const profitLoss = msg.deal.closePositionDetail.grossProfit / Math.pow(10, props.digits);
                     stream.emitClosed({ timestamp, exit: executionPrice, profitLoss });
                     stream.emitEnded({ timestamp, exit: executionPrice, profitLoss });
                     break;
@@ -82,10 +82,10 @@ async function order<Props extends B.OrderProps>(props: Props & {client: Spotwar
     return stream;
 }
 
-export async function marketOrder(props: Omit<B.MarketOrderProps & {client: SpotwareClient, spots: B.SpotPricesStream, ctidTraderAccountId: number, symbolId: number, details: $.ProtoOASymbol  }, "orderType">): Promise<B.OrderStream<B.MarketOrderProps>> {
+export async function marketOrder(props: Omit<B.MarketOrderProps & {client: SpotwareClient, spots: B.SpotPricesStream, ctidTraderAccountId: number, symbolId: number, lotSize: number, digits: number }, "orderType">): Promise<B.OrderStream<B.MarketOrderProps>> {
     return order({...props, orderType: "MARKET", partial: {}})
 }
-export async function stopOrder(props: Omit<B.StopOrderProps & {client: SpotwareClient, spots: B.SpotPricesStream, ctidTraderAccountId: number, symbolId: number, details: $.ProtoOASymbol  }, "orderType">): Promise<B.OrderStream<B.StopOrderProps>> {
+export async function stopOrder(props: Omit<B.StopOrderProps & {client: SpotwareClient, spots: B.SpotPricesStream, ctidTraderAccountId: number, symbolId: number, lotSize: number, digits: number }, "orderType">): Promise<B.OrderStream<B.StopOrderProps>> {
     return order({...props, orderType: "STOP", partial: {
         stopPrice: props.enter
     }})

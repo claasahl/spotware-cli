@@ -74,9 +74,11 @@ class SpotwareAccountStream extends B.DebugAccountStream {
         const ctidTraderAccountId = await this.traderId();
         const symbolId = await this.symbolId(props.symbol);
         const details = await this.symbol(props.symbol);
+        const {lotSize = 1, digits} = details;
+        const client = this.client;
 
         const spots = await this.spotPrices(props);
-        const stream = await marketOrder({...props, spots, client: this.client, ctidTraderAccountId, symbolId, details})
+        const stream = await marketOrder({...props, spots, client, ctidTraderAccountId, symbolId, lotSize, digits})
         stream.once("ended", e => {
             const {timestamp, profitLoss} = e;
             if(profitLoss) {
@@ -89,9 +91,11 @@ class SpotwareAccountStream extends B.DebugAccountStream {
         const ctidTraderAccountId = await this.traderId();
         const symbolId = await this.symbolId(props.symbol);
         const details = await this.symbol(props.symbol);
+        const {lotSize = 1, digits} = details;
+        const client = this.client;
 
         const spots = await this.spotPrices(props);
-        const stream = await stopOrder({...props, spots, client: this.client, ctidTraderAccountId, symbolId, details})
+        const stream = await stopOrder({...props, spots, client, ctidTraderAccountId, symbolId, lotSize, digits})
         stream.once("ended", e => {
             const {timestamp, profitLoss} = e;
             if(profitLoss) {
