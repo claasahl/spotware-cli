@@ -89,6 +89,13 @@ class SpotwareAccountStream extends B.DebugAccountStream {
                 this.emitTransaction({ timestamp, amount: profitLoss })
             }
         })
+        stream.once("accepted", e => this.emitOrder({ timestamp: e.timestamp, status: "ACCEPTED", ...stream.props }))
+        stream.once("rejected", e => this.emitOrder({ timestamp: e.timestamp, status: "REJECTED", ...stream.props }))
+        stream.once("canceled", e => this.emitOrder({ timestamp: e.timestamp, status: "CANCELED", ...stream.props }))
+        stream.once("filled", e => this.emitOrder({ timestamp: e.timestamp, status: "FILLED", ...stream.props }))
+        stream.once("closed", e => this.emitOrder({ timestamp: e.timestamp, status: "CLOSED", ...stream.props }))
+        stream.once("ended", e => this.emitOrder({ timestamp: e.timestamp, status: "ENDED", ...stream.props }))
+        this.emitOrder({ timestamp: Date.now(), status: "CREATED", ...stream.props })
         return stream;
     }
     async stopOrder(props: B.AccountSimpleStopOrderProps): Promise<B.OrderStream<B.StopOrderProps>> {
@@ -106,6 +113,13 @@ class SpotwareAccountStream extends B.DebugAccountStream {
                 this.emitTransaction({ timestamp, amount: profitLoss })
             }
         })
+        stream.once("accepted", e => this.emitOrder({ timestamp: e.timestamp, status: "ACCEPTED", ...stream.props }))
+        stream.once("rejected", e => this.emitOrder({ timestamp: e.timestamp, status: "REJECTED", ...stream.props }))
+        stream.once("canceled", e => this.emitOrder({ timestamp: e.timestamp, status: "CANCELED", ...stream.props }))
+        stream.once("filled", e => this.emitOrder({ timestamp: e.timestamp, status: "FILLED", ...stream.props }))
+        stream.once("closed", e => this.emitOrder({ timestamp: e.timestamp, status: "CLOSED", ...stream.props }))
+        stream.once("ended", e => this.emitOrder({ timestamp: e.timestamp, status: "ENDED", ...stream.props }))
+        this.emitOrder({ timestamp: Date.now(), status: "CREATED", ...stream.props })
         return stream;
     }
 
