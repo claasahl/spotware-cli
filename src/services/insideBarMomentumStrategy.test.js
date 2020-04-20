@@ -1,5 +1,6 @@
 const { insideBarMomentumStrategy } = require("../../build/services/insideBarMomentumStrategy")
 const { DebugSpotPricesStream } = require("../../build/services/base/spotPrices")
+const { fromNothing } = require("../../build/services/local/account")
 const ms = require("ms");
 
 describe("insideBarMomentumStrategy", () => {
@@ -15,7 +16,8 @@ describe("insideBarMomentumStrategy", () => {
         const volume = 0.1;
         const spotPrices = new DebugSpotPricesStream({symbol})
         const spots = () => spotPrices;
-        const account = await insideBarMomentumStrategy({ currency, initialBalance, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, spots })
+        const account = fromNothing({ currency, initialBalance, spots })
+        await insideBarMomentumStrategy({ account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume })
         const trendbars = await account.trendbars({ period, symbol })
 
         let trendbarNo = 0;
@@ -66,7 +68,8 @@ describe("insideBarMomentumStrategy", () => {
         const volume = 0.1;
         const spotPrices = new DebugSpotPricesStream({symbol})
         const spots = () => spotPrices;
-        const account = await insideBarMomentumStrategy({ currency, initialBalance, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, spots })
+        const account = fromNothing({ currency, initialBalance, spots })
+        await insideBarMomentumStrategy({ account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume })
         const trendbars = await account.trendbars({ period, symbol })
 
         let trendbarNo = 0;
@@ -117,7 +120,8 @@ describe("insideBarMomentumStrategy", () => {
         const volume = 0.1;
         const spotPrices = new DebugSpotPricesStream({symbol})
         const spots = () => spotPrices;
-        const account = await insideBarMomentumStrategy({ currency, initialBalance, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, spots })
+        const account = fromNothing({ currency, initialBalance, spots })
+        await insideBarMomentumStrategy({ account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume })
         
         const orders = {
             "1": [
@@ -177,7 +181,8 @@ describe("insideBarMomentumStrategy", () => {
         const volume = 0.1;
         const spotPrices = new DebugSpotPricesStream({symbol})
         const spots = () => spotPrices;
-        const account = await insideBarMomentumStrategy({ currency, initialBalance, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, spots })
+        const account = fromNothing({ currency, initialBalance, spots })
+        await insideBarMomentumStrategy({ account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume })
 
         const orders = {
             "1": [
