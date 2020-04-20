@@ -33,7 +33,7 @@ describe("DebugOrderStream", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             new DebugOrderStream(props)
             expect(debug).toHaveBeenCalledTimes(1)
-            expect(extend).toHaveBeenCalledTimes(8)
+            expect(extend).toHaveBeenCalledTimes(9)
             expect(log).toHaveBeenCalledTimes(0)
         })
 
@@ -96,6 +96,15 @@ describe("DebugOrderStream", () => {
             const stream = new DebugOrderStream(props)
             const event = { timestamp: 123 };
             stream.emit("canceled", event)
+            expect(log).toHaveBeenCalledTimes(1)
+            expect(log).toHaveBeenCalledWith(expect.any(String), event);
+        })
+
+        test("log 'expired' events", () => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { timestamp: 123 };
+            stream.emit("expired", event)
             expect(log).toHaveBeenCalledTimes(1)
             expect(log).toHaveBeenCalledWith(expect.any(String), event);
         })
@@ -245,6 +254,24 @@ describe("DebugOrderStream", () => {
             stream.emit("canceled", event);
         })
 
+        test("should call cb with expired (not cached)", () => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { timestamp: 123 };
+            expect(stream.expired()).resolves.toBe(event);
+            setTimeout(() => stream.emit("expired", event), 100)
+        })
+    
+        test("should call cb with expired (cached)", () => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { timestamp: 123 };
+            stream.once("expired", () => {
+                expect(stream.expired()).resolves.toBe(event);
+            })
+            stream.emit("expired", event);
+        })
+
         test("should call cb with ended (not cached)", () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
@@ -363,6 +390,17 @@ describe("DebugOrderStream", () => {
                 done()
             })
             stream.emitCanceled(event)
+        })
+
+        test("should emit 'expired' event", done => {
+            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
+            const stream = new DebugOrderStream(props)
+            const event = { timestamp: 123 };
+            stream.once("expired", e => {
+                expect(e).toBe(event);
+                done()
+            })
+            stream.emitExpired(event)
         })
 
         test("should emit 'ended' event", done => {

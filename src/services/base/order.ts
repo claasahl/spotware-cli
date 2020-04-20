@@ -15,6 +15,10 @@ export interface OrderRejectedEvent {
 export interface OrderCanceledEvent {
   timestamp: Timestamp;
 }
+
+export interface OrderExpiredEvent {
+  timestamp: Timestamp;
+}
 export interface OrderFilledEvent {
   timestamp: Timestamp;
   entry: Price;
@@ -47,6 +51,7 @@ interface CommonOrderProps {
   readonly takeProfit?: Price;
   readonly stopLoss?: Price;
   readonly orderType: OrderType
+  readonly expiresAt?: Timestamp
 }
 
 export interface MarketOrderProps extends CommonOrderProps {
@@ -73,6 +78,7 @@ export declare interface OrderStream<Props extends OrderProps> extends EventEmit
   profitLoss(): Promise<OrderProfitLossEvent>
   closed(): Promise<OrderClosedEvent>
   canceled(): Promise<OrderCanceledEvent>
+  expired(): Promise<OrderExpiredEvent>
   ended(): Promise<OrderEndedEvent>
 
   addListener(event: string, listener: (...args: any[]) => void): this;
@@ -83,6 +89,7 @@ export declare interface OrderStream<Props extends OrderProps> extends EventEmit
   addListener(event: "profitLoss", listener: (e: OrderProfitLossEvent) => void): this;
   addListener(event: "closed", listener: (e: OrderClosedEvent) => void): this;
   addListener(event: "canceled", listener: (e: OrderCanceledEvent) => void): this;
+  addListener(event: "expired", listener: (e: OrderExpiredEvent) => void): this;
   addListener(event: "ended", listener: (e: OrderEndedEvent) => void): this;
 
   on(event: string, listener: (...args: any[]) => void): this;
@@ -93,6 +100,7 @@ export declare interface OrderStream<Props extends OrderProps> extends EventEmit
   on(event: "profitLoss", listener: (e: OrderProfitLossEvent) => void): this;
   on(event: "closed", listener: (e: OrderClosedEvent) => void): this;
   on(event: "canceled", listener: (e: OrderCanceledEvent) => void): this;
+  on(event: "expired", listener: (e: OrderExpiredEvent) => void): this;
   on(event: "ended", listener: (e: OrderEndedEvent) => void): this;
 
   once(event: string, listener: (...args: any[]) => void): this;
@@ -103,6 +111,7 @@ export declare interface OrderStream<Props extends OrderProps> extends EventEmit
   once(event: "profitLoss", listener: (e: OrderProfitLossEvent) => void): this;
   once(event: "closed", listener: (e: OrderClosedEvent) => void): this;
   once(event: "canceled", listener: (e: OrderCanceledEvent) => void): this;
+  once(event: "expired", listener: (e: OrderExpiredEvent) => void): this;
   once(event: "ended", listener: (e: OrderEndedEvent) => void): this;
 
   prependListener(event: string, listener: (...args: any[]) => void): this;
@@ -113,6 +122,7 @@ export declare interface OrderStream<Props extends OrderProps> extends EventEmit
   prependListener(event: "profitLoss", listener: (e: OrderProfitLossEvent) => void): this;
   prependListener(event: "closed", listener: (e: OrderClosedEvent) => void): this;
   prependListener(event: "canceled", listener: (e: OrderCanceledEvent) => void): this;
+  prependListener(event: "expired", listener: (e: OrderExpiredEvent) => void): this;
   prependListener(event: "ended", listener: (e: OrderEndedEvent) => void): this;
 
   prependOnceListener(event: string, listener: (...args: any[]) => void): this;
@@ -123,6 +133,7 @@ export declare interface OrderStream<Props extends OrderProps> extends EventEmit
   prependOnceListener(event: "profitLoss", listener: (e: OrderProfitLossEvent) => void): this;
   prependOnceListener(event: "closed", listener: (e: OrderClosedEvent) => void): this;
   prependOnceListener(event: "canceled", listener: (e: OrderCanceledEvent) => void): this;
+  prependOnceListener(event: "expired", listener: (e: OrderExpiredEvent) => void): this;
   prependOnceListener(event: "ended", listener: (e: OrderEndedEvent) => void): this;
 }
 
@@ -136,6 +147,7 @@ export abstract class OrderStream<Props extends OrderProps> extends EventEmitter
   private cachedProfitLoss?: OrderProfitLossEvent;
   private cachedClosed?: OrderClosedEvent;
   private cachedCanceled?: OrderCanceledEvent;
+  private cachedExpired?: OrderExpiredEvent;
   private cachedEnded?: OrderEndedEvent;
   constructor(props: Props) {
     super();
@@ -147,6 +159,7 @@ export abstract class OrderStream<Props extends OrderProps> extends EventEmitter
     this.on("profitLoss", e => this.cachedProfitLoss = e)
     this.on("closed", e => this.cachedClosed = e)
     this.on("canceled", e => this.cachedCanceled = e)
+    this.on("expired", e => this.cachedExpired = e)
     this.on("ended", e => this.cachedEnded = e)
   }
 
@@ -206,6 +219,14 @@ export abstract class OrderStream<Props extends OrderProps> extends EventEmitter
     }
   }
 
+  expired(): Promise<OrderExpiredEvent> {
+    if (this.cachedExpired) {
+      return Promise.resolve(this.cachedExpired);
+    } else {
+      return new Promise(resolve => this.once("expired", resolve));
+    }
+  }
+
   ended(): Promise<OrderEndedEvent> {
     if (this.cachedEnded) {
       return Promise.resolve(this.cachedEnded);
@@ -245,6 +266,9 @@ export class DebugOrderStream<Props extends OrderProps> extends OrderStream<Prop
 
     const canceled = log.extend("canceled");
     this.prependListener("canceled", e => canceled("%j", e));
+
+    const expired = log.extend("expired");
+    this.prependListener("expired", e => expired("%j", e));
 
     const end = log.extend("ended");
     this.prependListener("ended", e => end("%j", e));
@@ -289,6 +313,10 @@ export class DebugOrderStream<Props extends OrderProps> extends OrderStream<Prop
 
   emitCanceled(e: OrderCanceledEvent): void {
     setImmediate(() => this.emit("canceled", e));
+  }
+
+  emitExpired(e: OrderExpiredEvent): void {
+    setImmediate(() => this.emit("expired", e));
   }
 
   emitEnded(e: OrderEndedEvent): void {

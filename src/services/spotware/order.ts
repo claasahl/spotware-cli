@@ -68,7 +68,8 @@ async function order<Props extends B.OrderProps>(props: Props & { client: Spotwa
         tradeSide,
         volume: props.volume * props.lotSize,
         takeProfit: props.takeProfit,
-        stopLoss: props.stopLoss
+        stopLoss: props.stopLoss,
+        expirationTimestamp: props.expiresAt
     })
     const positionId = event.order?.positionId || 0;
     const orderId = event.order?.orderId || 0;
@@ -93,6 +94,15 @@ async function order<Props extends B.OrderProps>(props: Props & { client: Spotwa
                     break;
                 }
             case $.ProtoOAExecutionType.ORDER_EXPIRED:
+                {
+                    if (!msg.order || !event.position || msg.order.positionId !== event.position.positionId) {
+                        return
+                    }
+                    const timestamp = msg.order.utcLastUpdateTimestamp || 0;
+                    stream.emitExpired({ timestamp });
+                    stream.emitEnded({ timestamp });
+                    break;
+                }
             case $.ProtoOAExecutionType.ORDER_CANCELLED:
                 {
                     if (!msg.order || !event.position || msg.order.positionId !== event.position.positionId) {

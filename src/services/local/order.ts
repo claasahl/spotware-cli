@@ -4,12 +4,23 @@ class LocalOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream<Pr
     private canBeClosed: boolean = false;
     private canBeCanceled: boolean = true;
     private canBeAmended: boolean = true;
+    private expires?: NodeJS.Timeout;
     constructor(props: Props) {
         super(props);
+        if(props.expiresAt) {
+            this.expires = setTimeout(() => {
+                const timestamp = Date.now();
+                this.emitExpired({ timestamp })
+                this.emitEnded({ timestamp })
+            }, props.expiresAt - Date.now())
+        }
         const reset = () => {
             this.canBeClosed = false;
             this.canBeCanceled = false;
             this.canBeAmended = false;
+            if(this.expires) {
+                clearTimeout(this.expires);
+            }
         }
         this.on("accepted", () => {
             this.canBeClosed = false;
@@ -61,6 +72,7 @@ class LocalOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream<Pr
 
 async function fromSpotPrices<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream, buyCond: (e: B.AskPriceChangedEvent) => boolean, sellCond: (e: B.BidPriceChangedEvent) => boolean): Promise<B.OrderStream<Props>> {
     const stream = new LocalOrderStream<Props>(props);
+    stream.emitCreated({ timestamp: Date.now() })
     if (props.tradeSide === "BUY") {
         const fill = (e: B.AskPriceChangedEvent): boolean => {
             const { timestamp, ask: entry } = e;
