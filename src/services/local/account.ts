@@ -4,19 +4,27 @@ import { marketOrderFromSpotPrices, stopOrderFromSpotPrices } from "./order";
 import { includesCurrency } from "./util";
 import { trendbarsFromSpotPrices } from "./trendbars";
 
+interface Order {
+    symbol: Symbol;
+    entry: B.Price;
+    volume: B.Volume;
+    tradeSide: B.TradeSide;
+    profitLoss: B.Price;
+}
+
 interface LocalAccountProps extends B.AccountProps {
     spots: (props: B.AccountSimpleSpotPricesProps) => B.SpotPricesStream;
     initialBalance: B.Price;
 }
 class LocalAccountStream extends B.DebugAccountStream {
     private readonly spots: (props: B.AccountSimpleSpotPricesProps) => B.SpotPricesStream;
-    private readonly orders: Map<string, B.Order[]> = new Map();
+    private readonly orders: Map<string, Order[]> = new Map();
     private myBalance?: B.Price;
 
     constructor(props: LocalAccountProps) {
         super(props);
         const cacheKey = (arguments_: any) => JSON.stringify(arguments_.symbol);
-        this.spots = mem(props.spots, {cacheKey})
+        this.spots = mem(props.spots, { cacheKey })
         this.on("balance", e => this.myBalance = e.balance)
         this.on("balance", this.updateEquity)
     }
@@ -33,7 +41,7 @@ class LocalAccountStream extends B.DebugAccountStream {
         if (!this.orders.has(props.id)) {
             this.orders.set(props.id, [])
         }
-        const order: B.Order = { ...props, entry: 0, profitLoss: 0 }
+        const order: Order = { ...props, entry: 0, profitLoss: 0 }
         const spots = await this.spotPrices({ symbol: props.symbol })
         const stream = await marketOrderFromSpotPrices({ ...props, spots })
         const update = (e: B.OrderProfitLossEvent) => {
@@ -77,7 +85,7 @@ class LocalAccountStream extends B.DebugAccountStream {
         if (!this.orders.has(props.id)) {
             this.orders.set(props.id, [])
         }
-        const order: B.Order = { ...props, entry: 0, profitLoss: 0 }
+        const order: Order = { ...props, entry: 0, profitLoss: 0 }
         const spots = await this.spotPrices({ symbol: props.symbol })
         const stream = await stopOrderFromSpotPrices({ ...props, spots })
         const update = (e: B.OrderProfitLossEvent) => {
@@ -116,7 +124,7 @@ class LocalAccountStream extends B.DebugAccountStream {
     async trendbars(props: B.AccountSimpleTrendbarsProps): Promise<B.TrendbarsStream> {
         const { symbol } = props;
         const spots = await this.spotPrices({ symbol });
-        return trendbarsFromSpotPrices({...props, spots})
+        return trendbarsFromSpotPrices({ ...props, spots })
     }
 
     private updateEquity(e: { timestamp: B.Timestamp }): void {
