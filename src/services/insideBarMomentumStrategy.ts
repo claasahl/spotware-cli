@@ -25,9 +25,14 @@ interface PlaceOrderProps {
   stopLoss: B.Price,
   takeProfit: B.Price,
   account: B.AccountStream,
+  expiresIn?: number
 }
 function placeOrder(props: PlaceOrderProps): Promise<B.OrderStream<B.StopOrderProps>> {
-  const { account, ...rest } = props;
+  const { account, expiresIn, ...rest } = props;
+  if(expiresIn) {
+    const expiresAt = Date.now() + expiresIn;
+    return account.stopOrder({...rest, expiresAt})
+  }
   return account.stopOrder(rest)
 }
 
@@ -46,16 +51,17 @@ export interface Props {
   takeProfitOffset: B.Price,
   minTrendbarRange: B.Price,
   volume: B.Volume,
+  expiresIn?: number
 }
 
 export async function insideBarMomentumStrategy(props: Props): Promise<B.AccountStream> {
-  const { account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume } = props
+  const { account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, expiresIn } = props
   const trendbars = await account.trendbars({ period, symbol })
   let id = 1
 
   let lastOrder: B.OrderStream<B.StopOrderProps> | undefined = undefined;
-  const placeBuyOrder = (enter: B.Price, stopLoss: B.Price, takeProfit: B.Price) => placeOrder({ id: `${id++}`, symbol, enter, tradeSide: "BUY", volume, stopLoss, takeProfit, account })
-  const placeSellOrder = (enter: B.Price, stopLoss: B.Price, takeProfit: B.Price) => placeOrder({ id: `${id++}`, symbol, enter, tradeSide: "SELL", volume, stopLoss, takeProfit, account })
+  const placeBuyOrder = (enter: B.Price, stopLoss: B.Price, takeProfit: B.Price) => placeOrder({ id: `${id++}`, symbol, enter, tradeSide: "BUY", volume, stopLoss, takeProfit, account, expiresIn })
+  const placeSellOrder = (enter: B.Price, stopLoss: B.Price, takeProfit: B.Price) => placeOrder({ id: `${id++}`, symbol, enter, tradeSide: "SELL", volume, stopLoss, takeProfit, account, expiresIn })
 
   const trendbarEvents: B.TrendbarEvent[] = []
   trendbars.on("trendbar", e => {
