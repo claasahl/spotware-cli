@@ -12,7 +12,7 @@
     "prestart": "npm run build",
     "start": "node -r dotenv/config ./build/services/index.js 2>&1 | multilog s16777215 n100 dir ./logs",
     "cleanupLogs": "ls -1 logs/@* | grep -v \".tar.gz\" | xargs -I{} tar -czf \"{}.tar.gz\" \"{}\"",
-    "postcleanupLogs": "ls -1 logs/*.tar.gz | cut -d'.' -f1,2 | xargs rm",
+    "postcleanupLogs": "ls -1 logs/*.tar.gz | cut -d'.' -f1,2 | xargs rm -f",
     "fetch": "ts-node -r dotenv/config ./src/fetch.ts > fetch.log 2>&1",
     "refresh": "ts-node -r dotenv/config ./src/refresh.ts",
     "dev": "ts-node -r dotenv/config ./src/services/index.ts > dev.log 2>&1",
