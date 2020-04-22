@@ -10,7 +10,7 @@
     "prepare": "npm run build",
     "build": "tsc",
     "prestart": "npm run build",
-    "start": "node -r dotenv/config ./build/services/index.js 2>&1 | multilog ssize 16777215 dir ./logs",
+    "start": "node -r dotenv/config ./build/services/index.js 2>&1 | multilog s16777215 n100 dir ./logs",
     "fetch": "ts-node -r dotenv/config ./src/fetch.ts > fetch.log 2>&1",
     "refresh": "ts-node -r dotenv/config ./src/refresh.ts",
     "dev": "ts-node -r dotenv/config ./src/services/index.ts > dev.log 2>&1",
