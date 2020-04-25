@@ -1,5 +1,6 @@
 import * as $ from "@claasahl/spotware-adapter";
 import Lock from "async-lock"
+import mem from "mem";
 
 import * as B from "../base";
 import { SpotwareClient } from "./client";
@@ -180,7 +181,9 @@ class SpotwareAccountStream extends B.DebugAccountStream {
         return stream;
     }
 
-    async spotPrices(props: B.AccountSimpleSpotPricesProps): Promise<B.SpotPricesStream> {
+    spotPrices = mem(this.sp0ts, { cacheKey: (arguments_: any) => JSON.stringify(arguments_.symbol) })
+
+    private async sp0ts(props: B.AccountSimpleSpotPricesProps): Promise<B.SpotPricesStream> {
         const ctidTraderAccountId = await this.traderId();
         const symbolId = await this.symbolId(props.symbol);
         await this.lock.acquire("subscription", async () => {
