@@ -244,7 +244,7 @@ export abstract class OrderStream<Props extends OrderProps> extends EventEmitter
 export class DebugOrderStream<Props extends OrderProps> extends OrderStream<Props> {
   constructor(props: Props) {
     super(props);
-    const log = debug("order");
+    const log = debug("order").extend(props.id);
 
     const created = log.extend("created");
     this.prependListener("created", e => created("%j", e));
