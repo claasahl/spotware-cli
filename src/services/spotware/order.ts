@@ -8,6 +8,9 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream
     private readonly lotSize: number;
     private readonly positionId: number;
     private readonly orderId: number;
+    private canBeClosed: boolean = false;
+    private canBeCanceled: boolean = true;
+    private canBeAmended: boolean = true;
 
     constructor(props: Props, extras: { client: SpotwareClient, ctidTraderAccountId: number, lotSize: number, positionId: number, orderId: number }) {
         super(props);
@@ -16,33 +19,59 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream
         this.lotSize = extras.lotSize;
         this.positionId = extras.positionId;
         this.orderId = extras.orderId;
+        const reset = () => {
+            this.canBeClosed = false;
+            this.canBeCanceled = false;
+            this.canBeAmended = false;
+        }
+        this.on("accepted", () => {
+            this.canBeClosed = false;
+            this.canBeCanceled = true;
+            this.canBeAmended = true;
+        })
+        this.on("rejected", () => reset())
+        this.on("filled", () => {
+            this.canBeClosed = true;
+            this.canBeCanceled = false;
+            this.canBeAmended = false;
+        })
+        this.on("closed", () => reset())
+        this.on("canceled", () => reset())
+        this.on("ended", () => reset())
     }
 
     close(): Promise<B.OrderClosedEvent> {
-        const ctidTraderAccountId = this.ctidTraderAccountId;
-        const positionId = this.positionId;
-        const volume = this.props.volume * this.lotSize;
-        return new Promise((resolve) => {
-            this.client.closePosition({ctidTraderAccountId, positionId, volume})
-            this.once("closed", resolve)
-        })
+        if(this.canBeClosed) {
+            const ctidTraderAccountId = this.ctidTraderAccountId;
+            const positionId = this.positionId;
+            const volume = this.props.volume * this.lotSize;
+            return new Promise((resolve) => {
+                this.client.closePosition({ctidTraderAccountId, positionId, volume})
+                this.once("closed", resolve)
+            })
+        }
+        throw new Error(`order ${this.props.id} cannot be closed ${JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled, canBeAmended: this.canBeAmended})}`);
     }
 
     cancel(): Promise<B.OrderCanceledEvent> {
-        const ctidTraderAccountId = this.ctidTraderAccountId;
-        const orderId = this.orderId;
-        return new Promise((resolve) => {
-            this.client.cancelOrder({ctidTraderAccountId, orderId})
-            this.once("canceled", resolve)
-        })
-    }
-
-    async end(): Promise<B.OrderEndedEvent> {
-        try {
-            return await this.close();
-        } catch {
-            return this.cancel()
+        if(this.canBeCanceled) {
+            const ctidTraderAccountId = this.ctidTraderAccountId;
+            const orderId = this.orderId;
+            return new Promise((resolve) => {
+                this.client.cancelOrder({ctidTraderAccountId, orderId})
+                this.once("canceled", resolve)
+            })
         }
+        throw new Error(`order ${this.props.id} cannot be canceled ${JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled, canBeAmended: this.canBeAmended})}`);
+    }
+    
+    async end(): Promise<B.OrderEndedEvent> {
+        if(this.canBeCanceled) {
+            await this.cancel();
+        } else if(this.canBeClosed) {
+            await this.close();
+        }
+        return this.ended()
     }
     
     amend(): Promise<B.OrderAmendedEvent> {
