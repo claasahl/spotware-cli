@@ -52,6 +52,7 @@ export class SpotwareClient extends EventEmitter {
         this.throttledPublisher();
         this.pacemaker();
         this.mirrorIO();
+        this.errorOnAccountDisconnectEvent();
         this.endOnError();
     }
 
@@ -95,6 +96,18 @@ export class SpotwareClient extends EventEmitter {
         this.socket.on("PROTO_MESSAGE.OUTPUT.*", msg => {
             const event = $.ProtoOAPayloadType[msg.payloadType] || $.ProtoPayloadType[msg.payloadType]
             setImmediate(() => this.emit(event, msg.payload));
+        });
+    }
+
+    private errorOnAccountDisconnectEvent() {
+        const isDisconnectEvent = (msg: $.ProtoMessages): msg is $.ProtoMessage2164 => {
+            return msg.payloadType === $.ProtoOAPayloadType.PROTO_OA_ACCOUNT_DISCONNECT_EVENT
+        }
+        this.socket.on("PROTO_MESSAGE.INPUT.*", msg => {
+            if (isDisconnectEvent(msg)) {
+                const error = new Error(`Account ${msg.payload.ctidTraderAccountId} disconnected.`)
+                setImmediate(() => this.emit("error", error));
+            }
         });
     }
 
