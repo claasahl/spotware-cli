@@ -107,11 +107,6 @@ class SpotwareAccountStream extends B.DebugAccountStream {
         stream.on("profitLoss", update)
         stream.once("ended", e => {
             stream.off("profitLoss", update)
-            const {timestamp, profitLoss} = e;
-            if(profitLoss) {
-                this.emitTransaction({ timestamp, amount: profitLoss })
-            }
-
             const all = this.orders.get(props.id)!
             const toBeDeleted: number[] = [];
             all.forEach((o, index) => {
@@ -154,11 +149,6 @@ class SpotwareAccountStream extends B.DebugAccountStream {
         stream.on("profitLoss", update)
         stream.once("ended", e => {
             stream.off("profitLoss", update)
-            const {timestamp, profitLoss} = e;
-            if(profitLoss) {
-                this.emitTransaction({ timestamp, amount: profitLoss })
-            }
-            
             const all = this.orders.get(props.id)!
             const toBeDeleted: number[] = [];
             all.forEach((o, index) => {
