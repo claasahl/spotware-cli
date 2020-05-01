@@ -10,7 +10,6 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream
     private readonly orderId: number;
     private canBeClosed: boolean = false;
     private canBeCanceled: boolean = true;
-    private canBeAmended: boolean = true;
 
     constructor(props: Props, extras: { client: SpotwareClient, ctidTraderAccountId: number, lotSize: number, positionId: number, orderId: number }) {
         super(props);
@@ -22,18 +21,15 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream
         const reset = () => {
             this.canBeClosed = false;
             this.canBeCanceled = false;
-            this.canBeAmended = false;
         }
         this.on("accepted", () => {
             this.canBeClosed = false;
             this.canBeCanceled = true;
-            this.canBeAmended = true;
         })
         this.on("rejected", () => reset())
         this.on("filled", () => {
             this.canBeClosed = true;
             this.canBeCanceled = false;
-            this.canBeAmended = false;
         })
         this.on("closed", () => reset())
         this.on("canceled", () => reset())
@@ -50,7 +46,7 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream
                 this.once("closed", resolve)
             })
         }
-        throw new Error(`order ${this.props.id} cannot be closed ${JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled, canBeAmended: this.canBeAmended})}`);
+        throw new Error(`order ${this.props.id} cannot be closed ${JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled})}`);
     }
 
     async cancel(): Promise<B.OrderCanceledEvent> {
@@ -62,7 +58,7 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream
                 this.once("canceled", resolve)
             })
         }
-        throw new Error(`order ${this.props.id} cannot be canceled ${JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled, canBeAmended: this.canBeAmended})}`);
+        throw new Error(`order ${this.props.id} cannot be canceled ${JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled})}`);
     }
     
     async end(): Promise<B.OrderEndedEvent> {
@@ -72,10 +68,6 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream
             await this.close();
         }
         return this.ended()
-    }
-    
-    async amend(): Promise<B.OrderAmendedEvent> {
-        throw new Error("not implemented");
     }
 }
 

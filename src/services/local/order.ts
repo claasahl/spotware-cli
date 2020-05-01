@@ -3,24 +3,20 @@ import * as B from "../base"
 class LocalOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream<Props> {
     private canBeClosed: boolean = false;
     private canBeCanceled: boolean = true;
-    private canBeAmended: boolean = true;
     constructor(props: Props) {
         super(props);
         const reset = () => {
             this.canBeClosed = false;
             this.canBeCanceled = false;
-            this.canBeAmended = false;
         }
         this.on("accepted", () => {
             this.canBeClosed = false;
             this.canBeCanceled = true;
-            this.canBeAmended = true;
         })
         this.on("rejected", () => reset())
         this.on("filled", () => {
             this.canBeClosed = true;
             this.canBeCanceled = false;
-            this.canBeAmended = false;
         })
         this.on("closed", () => reset())
         this.on("canceled", () => reset())
@@ -33,7 +29,7 @@ class LocalOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream<Pr
             this.emitEnded({ timestamp, exit, profitLoss})
             return { timestamp, exit, profitLoss}
         }
-        throw new Error(`order ${this.props.id} cannot be closed ${JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled, canBeAmended: this.canBeAmended})}`);
+        throw new Error(`order ${this.props.id} cannot be closed ${JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled})}`);
     }
     async cancel(): Promise<B.OrderCanceledEvent> {
         if(this.canBeCanceled) {
@@ -41,7 +37,7 @@ class LocalOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream<Pr
             this.emitEnded({timestamp: Date.now()})
             return { timestamp: Date.now() }
         }
-        throw new Error(`order ${this.props.id} cannot be canceled ${JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled, canBeAmended: this.canBeAmended})}`);
+        throw new Error(`order ${this.props.id} cannot be canceled ${JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled})}`);
     }
     async end(): Promise<B.OrderEndedEvent> {
         if(this.canBeCanceled) {
@@ -50,12 +46,6 @@ class LocalOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream<Pr
             await this.close();
         }
         return this.ended()
-    }
-    async amend(): Promise<B.OrderAmendedEvent> {
-        if(this.canBeAmended) {
-            throw new Error("not implemented");
-        }
-        throw new Error(`order ${this.props.id} cannot be amended`);
     }
 }
 

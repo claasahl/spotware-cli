@@ -39,10 +39,6 @@ export interface OrderEndedEvent {
   profitLoss?: Price;
 }
 
-export interface OrderAmendedEvent {
-  timestamp: Timestamp;
-}
-
 interface CommonOrderProps {
   readonly id: string;
   readonly symbol: Symbol;
@@ -67,7 +63,6 @@ export interface OrderActions {
   close(): Promise<OrderClosedEvent>;
   cancel(): Promise<OrderCanceledEvent>;
   end(): Promise<OrderEndedEvent>;
-  amend(): Promise<OrderAmendedEvent>;
 }
 
 export declare interface OrderStream<Props extends OrderProps> extends EventEmitter {
@@ -238,7 +233,6 @@ export abstract class OrderStream<Props extends OrderProps> extends EventEmitter
   abstract close(): Promise<OrderClosedEvent>;
   abstract cancel(): Promise<OrderCanceledEvent>;
   abstract end(): Promise<OrderEndedEvent>;
-  abstract amend(): Promise<OrderAmendedEvent>;
 }
 
 export class DebugOrderStream<Props extends OrderProps> extends OrderStream<Props> {
@@ -281,9 +275,6 @@ export class DebugOrderStream<Props extends OrderProps> extends OrderStream<Prop
     throw new Error("not implemented");
   }
   end(): Promise<OrderEndedEvent> {
-    throw new Error("not implemented");
-  }
-  amend(): Promise<OrderAmendedEvent> {
     throw new Error("not implemented");
   }
 

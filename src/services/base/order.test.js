@@ -308,11 +308,6 @@ describe("DebugOrderStream", () => {
             const stream = new DebugOrderStream(props)
             expect(stream.end).toThrow("not implemented")
         })
-        test("amend", () => {
-            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
-            const stream = new DebugOrderStream(props)
-            expect(stream.amend).toThrow("not implemented")
-        })
     })
 
     describe("emitXXX helpers", () => {
