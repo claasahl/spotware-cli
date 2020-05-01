@@ -35,11 +35,11 @@ class LocalOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream<Pr
         }
         throw new Error(`order ${this.props.id} cannot be closed ${JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled, canBeAmended: this.canBeAmended})}`);
     }
-    cancel(): Promise<B.OrderCanceledEvent> {
+    async cancel(): Promise<B.OrderCanceledEvent> {
         if(this.canBeCanceled) {
             this.emitCanceled({timestamp: Date.now()})
             this.emitEnded({timestamp: Date.now()})
-            return Promise.resolve({timestamp: Date.now()})
+            return { timestamp: Date.now() }
         }
         throw new Error(`order ${this.props.id} cannot be canceled ${JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled, canBeAmended: this.canBeAmended})}`);
     }
@@ -51,7 +51,7 @@ class LocalOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream<Pr
         }
         return this.ended()
     }
-    amend(): Promise<B.OrderAmendedEvent> {
+    async amend(): Promise<B.OrderAmendedEvent> {
         if(this.canBeAmended) {
             throw new Error("not implemented");
         }

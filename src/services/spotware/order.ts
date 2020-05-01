@@ -40,7 +40,7 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream
         this.on("ended", () => reset())
     }
 
-    close(): Promise<B.OrderClosedEvent> {
+    async close(): Promise<B.OrderClosedEvent> {
         if(this.canBeClosed) {
             const ctidTraderAccountId = this.ctidTraderAccountId;
             const positionId = this.positionId;
@@ -53,7 +53,7 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream
         throw new Error(`order ${this.props.id} cannot be closed ${JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled, canBeAmended: this.canBeAmended})}`);
     }
 
-    cancel(): Promise<B.OrderCanceledEvent> {
+    async cancel(): Promise<B.OrderCanceledEvent> {
         if(this.canBeCanceled) {
             const ctidTraderAccountId = this.ctidTraderAccountId;
             const orderId = this.orderId;
@@ -74,7 +74,7 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream
         return this.ended()
     }
     
-    amend(): Promise<B.OrderAmendedEvent> {
+    async amend(): Promise<B.OrderAmendedEvent> {
         throw new Error("not implemented");
     }
 }
