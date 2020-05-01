@@ -25,12 +25,11 @@ interface PlaceOrderProps {
   stopLoss: B.Price,
   takeProfit: B.Price,
   account: B.AccountStream,
-  expiresIn?: number
+  expiresAt?: B.Timestamp
 }
 function placeOrder(props: PlaceOrderProps): Promise<B.OrderStream<B.StopOrderProps>> {
-  const { account, expiresIn, ...rest } = props;
-  if(expiresIn) {
-    const expiresAt = Date.now() + expiresIn;
+  const { account, expiresAt, ...rest } = props;
+  if(expiresAt) {
     return account.stopOrder({...rest, expiresAt})
   }
   return account.stopOrder(rest)
@@ -57,11 +56,15 @@ export interface Props {
 export async function insideBarMomentumStrategy(props: Props): Promise<B.AccountStream> {
   const { account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, expiresIn } = props
   const trendbars = await account.trendbars({ period, symbol })
-  let id = 1
+  let id = 1, timestamp = 0;
+
+  const spots = await account.spotPrices({symbol})
+  spots.on("ask", e => timestamp = e.timestamp);
+  spots.on("bid", e => timestamp = e.timestamp);
 
   let lastOrder: B.OrderStream<B.StopOrderProps> | undefined = undefined;
-  const placeBuyOrder = (enter: B.Price, stopLoss: B.Price, takeProfit: B.Price) => placeOrder({ id: `${id++}`, symbol, enter, tradeSide: "BUY", volume, stopLoss, takeProfit, account, expiresIn })
-  const placeSellOrder = (enter: B.Price, stopLoss: B.Price, takeProfit: B.Price) => placeOrder({ id: `${id++}`, symbol, enter, tradeSide: "SELL", volume, stopLoss, takeProfit, account, expiresIn })
+  const placeBuyOrder = (enter: B.Price, stopLoss: B.Price, takeProfit: B.Price) => placeOrder({ id: `${id++}`, symbol, enter, tradeSide: "BUY", volume, stopLoss, takeProfit, account, expiresAt: expiresIn ? timestamp + expiresIn : undefined })
+  const placeSellOrder = (enter: B.Price, stopLoss: B.Price, takeProfit: B.Price) => placeOrder({ id: `${id++}`, symbol, enter, tradeSide: "SELL", volume, stopLoss, takeProfit, account, expiresAt: expiresIn ? timestamp + expiresIn : undefined })
 
   const trendbarEvents: B.TrendbarEvent[] = []
   trendbars.on("trendbar", async e => {

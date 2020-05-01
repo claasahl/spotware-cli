@@ -4,23 +4,12 @@ class LocalOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream<Pr
     private canBeClosed: boolean = false;
     private canBeCanceled: boolean = true;
     private canBeAmended: boolean = true;
-    private expires?: NodeJS.Timeout;
     constructor(props: Props) {
         super(props);
-        if(props.expiresAt) {
-            this.expires = setTimeout(() => {
-                const timestamp = Date.now();
-                this.emitExpired({ timestamp })
-                this.emitEnded({ timestamp })
-            }, props.expiresAt - Date.now())
-        }
         const reset = () => {
             this.canBeClosed = false;
             this.canBeCanceled = false;
             this.canBeAmended = false;
-            if(this.expires) {
-                clearTimeout(this.expires);
-            }
         }
         this.on("accepted", () => {
             this.canBeClosed = false;
@@ -138,6 +127,27 @@ async function fromSpotPrices<Props extends B.OrderProps>(props: Props, spots: B
                 stream.once("filled", () => spots.off("bid", fill))
                 stream.once("ended", () => spots.off("bid", fill))
             }
+        })
+    }
+    if(props.expiresAt) {
+        const expiration = (e: B.AskPriceChangedEvent | B.BidPriceChangedEvent) => {
+            const { timestamp } = e;
+            if(timestamp >= props.expiresAt!) {
+                stream.emitExpired({ timestamp })
+                stream.emitEnded({ timestamp })
+            }
+        }
+        stream.once("accepted", () => {
+            spots.on("ask", expiration);
+            spots.on("bid", expiration);
+            stream.once("filled", () => {
+                spots.off("ask", expiration);
+                spots.off("bid", expiration);
+            });
+            stream.once("ended", () => {
+                spots.off("ask", expiration);
+                spots.off("bid", expiration);
+            });
         })
     }
     stream.emitAccepted({ timestamp: Date.now() })
