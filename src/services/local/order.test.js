@@ -19,6 +19,20 @@ describe("marketOrderFromSpotPrices", () => {
                 done();
             })
         })
+        test("should cancel order exactly once", async done => {
+            const symbol = Symbol.for("abc")
+            const spots = new DebugSpotPricesStream({ symbol })
+            const stream = await marketOrderFromSpotPrices({ id: 1, symbol, tradeSide: "SELL", volume: 2, spots })
+            let timer = undefined;
+            stream.on("accepted", () => {
+                stream.cancel()
+                stream.cancel()
+            })
+            stream.on("canceled", () => {
+                expect(timer).toBeUndefined();
+                timer = setTimeout(done, 50)
+            })
+        })
         test("should close order", async done => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
@@ -33,6 +47,22 @@ describe("marketOrderFromSpotPrices", () => {
             stream.on("ended", e => {
                 expect(e).toStrictEqual(event)
                 done();
+            })
+            spots.emitBid({ timestamp: 0, bid: 5 })
+            spots.emitAsk({ timestamp: 1, ask: 1 })
+        })
+        test("should close order exactly once", async done => {
+            const symbol = Symbol.for("abc")
+            const spots = new DebugSpotPricesStream({ symbol })
+            const stream = await marketOrderFromSpotPrices({ id: 1, symbol, tradeSide: "SELL", volume: 2, spots })
+            let timer = undefined;
+            stream.on("filled", () => {
+                stream.close()
+                stream.close()
+            })
+            stream.on("closed", () => {
+                expect(timer).toBeUndefined();
+                timer = setTimeout(done, 50)
             })
             spots.emitBid({ timestamp: 0, bid: 5 })
             spots.emitAsk({ timestamp: 1, ask: 1 })
@@ -61,6 +91,22 @@ describe("marketOrderFromSpotPrices", () => {
             stream.on("closed", e => {
                 expect(e).toStrictEqual(event)
                 done();
+            })
+            spots.emitAsk({ timestamp: 0, ask: 5 })
+            spots.emitBid({ timestamp: 1, bid: 1 })
+        })
+        test("should 'end' order exactly once", async done => {
+            const symbol = Symbol.for("abc")
+            const spots = new DebugSpotPricesStream({ symbol })
+            const stream = await marketOrderFromSpotPrices({ id: 1, symbol, tradeSide: "BUY", volume: 2, spots })
+            let timer = undefined;
+            stream.on("filled", () => {
+                stream.end()
+                stream.end()
+            })
+            stream.on("ended", () => {
+                expect(timer).toBeUndefined();
+                timer = setTimeout(done, 50)
             })
             spots.emitAsk({ timestamp: 0, ask: 5 })
             spots.emitBid({ timestamp: 1, bid: 1 })
@@ -344,6 +390,20 @@ describe("stopOrderFromSpotPrices", () => {
                 done();
             })
         })
+        test("should cancel order exactly once", async done => {
+            const symbol = Symbol.for("abc")
+            const spots = new DebugSpotPricesStream({ symbol })
+            const stream = await stopOrderFromSpotPrices({ id: 1, symbol, tradeSide: "SELL", volume: 2, enter: 6, spots })
+            let timer = undefined;
+            stream.on("accepted", () => {
+                stream.cancel()
+                stream.cancel()
+            })
+            stream.on("canceled", e => {
+                expect(timer).toBeUndefined();
+                timer = setTimeout(done, 50)
+            })
+        })
         test("should close order", async done => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
@@ -358,6 +418,23 @@ describe("stopOrderFromSpotPrices", () => {
             stream.on("ended", e => {
                 expect(e).toStrictEqual(event)
                 done();
+            })
+            spots.emitBid({ timestamp: 0, bid: 5 })
+            spots.emitBid({ timestamp: 1, bid: 4 })
+            spots.emitAsk({ timestamp: 2, ask: 2 })
+        })
+        test("should close order exactly once", async done => {
+            const symbol = Symbol.for("abc")
+            const spots = new DebugSpotPricesStream({ symbol })
+            const stream = await stopOrderFromSpotPrices({ id: 1, symbol, tradeSide: "SELL", volume: 2, enter: 4.5, spots })
+            let timer = undefined;
+            stream.on("filled", () => {
+                stream.close()
+                stream.close()
+            })
+            stream.on("closed", e => {
+                expect(timer).toBeUndefined();
+                timer = setTimeout(done, 50)
             })
             spots.emitBid({ timestamp: 0, bid: 5 })
             spots.emitBid({ timestamp: 1, bid: 4 })
@@ -387,6 +464,23 @@ describe("stopOrderFromSpotPrices", () => {
             stream.on("closed", e => {
                 expect(e).toStrictEqual(event)
                 done();
+            })
+            spots.emitAsk({ timestamp: 0, ask: 5 })
+            spots.emitAsk({ timestamp: 1, ask: 7 })
+            spots.emitBid({ timestamp: 2, bid: 10 })
+        })
+        test("should 'end' order exactly once", async done => {
+            const symbol = Symbol.for("abc")
+            const spots = new DebugSpotPricesStream({ symbol })
+            const stream = await stopOrderFromSpotPrices({ id: 1, symbol, tradeSide: "BUY", volume: 2, enter: 6, spots })
+            let timer = undefined;
+            stream.on("filled", () => {
+                stream.end()
+                stream.end()
+            })
+            stream.on("ended", e => {
+                expect(timer).toBeUndefined();
+                timer = setTimeout(done, 50)
             })
             spots.emitAsk({ timestamp: 0, ask: 5 })
             spots.emitAsk({ timestamp: 1, ask: 7 })
