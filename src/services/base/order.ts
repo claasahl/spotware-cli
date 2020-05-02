@@ -33,11 +33,7 @@ export interface OrderClosedEvent {
   exit: Price;
   profitLoss: Price;
 }
-export interface OrderEndedEvent {
-  timestamp: Timestamp;
-  exit?: Price;
-  profitLoss?: Price;
-}
+export type OrderEndedEvent = OrderClosedEvent | OrderCanceledEvent | OrderExpiredEvent;
 
 interface CommonOrderProps {
   readonly id: string;
