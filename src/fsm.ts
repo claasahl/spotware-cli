@@ -6,13 +6,13 @@ import * as B from "./services/base"
 type Context = {};
 
 type Event =
-  | { type: 'ACCEPT', onSuccess?: () => void, onError?: () => void }
-  | { type: 'REJECT', onSuccess?: () => void, onError?: () => void }
-  | { type: 'FILL', onSuccess?: () => void, onError?: () => void }
-  | { type: 'CLOSE', onSuccess?: () => void, onError?: () => void }
-  | { type: 'CANCEL', onSuccess?: () => void, onError?: () => void }
-  | { type: 'EXPIRE', onSuccess?: () => void, onError?: () => void }
-  | { type: 'END', onSuccess?: () => void, onError?: () => void };
+  | { type: 'ACCEPT' }
+  | { type: 'REJECT' }
+  | { type: 'FILL' }
+  | { type: 'CLOSE' }
+  | { type: 'CANCEL' }
+  | { type: 'EXPIRE' }
+  | { type: 'END' };
 
 type State =
   | { value: 'created', context: B.OrderCreatedEvent }
