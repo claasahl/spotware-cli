@@ -51,7 +51,6 @@ const machine = createMachine<Context, Event, State>({
   }
 });
 
-// console.log("----->", service.send({type: "END", cb: () => {}}));
 async function ksdjfh(service: StateMachine.Service<Context, Event, State>, type: Event['type'], goal: State['value']): Promise<void> {
   service.send(type)
   console.log(service.state.value)
@@ -62,12 +61,7 @@ async function ksdjfh(service: StateMachine.Service<Context, Event, State>, type
   }
   throw new Error(`did not change state`)
 }
-// async function ksdjfh(service: StateMachine.Service<Context, Event, State>, type: Event['type']): Promise<void> {
-//   await new Promise<void>((resolve, reject) => {
-//     service.send({ type, onSuccess: resolve, onError: reject })
-//   })
-//   console.log("magic did happen")
-// }
+
 async function main() {
   const service = interpret(machine);
   service.start();
