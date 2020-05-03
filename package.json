@@ -41,6 +41,7 @@
   },
   "dependencies": {
     "@claasahl/spotware-adapter": "^1.2.0",
+    "@xstate/fsm": "^1.4.0",
     "async-lock": "^1.2.2",
     "debug": "^4.1.1",
     "indicators": "^0.1.5",
