@@ -11,8 +11,7 @@ type Event =
   | { type: 'FILL' }
   | { type: 'CLOSE' }
   | { type: 'CANCEL' }
-  | { type: 'EXPIRE' }
-  | { type: 'END' };
+  | { type: 'EXPIRE' };
 
 type State =
   | { value: 'created', context: B.OrderCreatedEvent }
@@ -22,7 +21,6 @@ type State =
   | { value: 'closed', context: B.OrderClosedEvent }
   | { value: 'canceled', context: B.OrderCanceledEvent }
   | { value: 'expired', context: B.OrderExpiredEvent }
-  | { value: 'ended', context: B.OrderEndedEvent }
 
 const machine = createMachine<Context, Event, State>({
   initial: "created",
@@ -41,33 +39,15 @@ const machine = createMachine<Context, Event, State>({
         EXPIRE: 'expired'
       }
     },
-    rejected: {
-      on: {
-        END: 'ended'
-      }
-    },
     filled: {
       on: {
         CLOSE: 'closed'
       }
     },
-    closed: {
-      on: {
-        END: 'ended'
-      }
-    },
-    canceled: {
-      on: {
-        END: 'ended'
-      }
-    },
-    expired: {
-      on: {
-        END: 'ended'
-      }
-    },
-    ended: {
-    }
+    rejected: {},
+    closed: {},
+    canceled: {},
+    expired: {}
   }
 });
 
@@ -93,7 +73,5 @@ async function main() {
   service.start();
   await ksdjfh(service, "REJECT", "rejected"); console.log(2)
   await ksdjfh(service, "REJECT", "rejected"); console.log(2)
-  await ksdjfh(service, "END", "ended"); console.log(2)
-  await ksdjfh(service, "END", "ended"); console.log(2)
 }
 main();
