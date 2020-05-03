@@ -28,7 +28,6 @@ const machine = createMachine<Context, Event, State>({
   initial: "created",
   states: {
     created: {
-      entry: ['emitCreated', 'success'],
       on: {
         ACCEPT: 'accepted',
         REJECT: 'rejected',
@@ -36,7 +35,6 @@ const machine = createMachine<Context, Event, State>({
       }
     },
     accepted: {
-      entry: ['emitAccepted', 'success'],
       on: {
         FILL: 'filled',
         CANCEL: 'canceled',
@@ -44,55 +42,34 @@ const machine = createMachine<Context, Event, State>({
       }
     },
     rejected: {
-      entry: ['emitRejected', 'success'],
       on: {
-        REJECT: {actions: ['success']},
         END: 'ended'
       }
     },
     filled: {
-      entry: ['emitFilled', 'success'],
       on: {
         CLOSE: 'closed'
       }
     },
     closed: {
-      entry: ['emitClosed', 'success'],
       on: {
         END: 'ended'
       }
     },
     canceled: {
-      entry: ['emitCanceled', 'success'],
       on: {
         END: 'ended'
       }
     },
     expired: {
-      entry: ['emitExpired', 'success'],
       on: {
         END: 'ended'
       }
     },
     ended: {
-      entry: ['emitEnded', 'success'],
     }
   }
-},
-  {
-    actions: {
-      emitCreated: (_context, event) => { console.log('created...', event); },
-      emitAccepted: (_context, event) => { console.log('accepted...', event); },
-      emitRejected: (_context, event) => { console.log('rejected...', event); },
-      emitFilled: (_context, event) => { console.log('filled...', event); },
-      emitClosed: (_context, event) => { console.log('closed...', event); },
-      emitCanceled: (_context, event) => { console.log('canceled...', event); },
-      emitExpired: (_context, event) => { console.log('expired...', event); },
-      emitEnded: (_context, event) => { console.log('ended...', event); },
-      success: (_context, event) => { if("onSuccess" in event && event.onSuccess) event.onSuccess(); },
-      error: (_context, event) => { if("onError" in event && event.onError) event.onError(); },
-    }
-  });
+});
 
 // console.log("----->", service.send({type: "END", cb: () => {}}));
 async function ksdjfh(service: StateMachine.Service<Context, Event, State>, type: Event['type'], goal: State['value']): Promise<void> {
