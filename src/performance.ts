@@ -3,9 +3,9 @@ import {EventEmitter} from "events"
 import ms from "ms";
 
 function main() {
-  // about 25s (with DEBUG="*")
-  // about 7s (without DEBUG="*")
-  // about 7s (with DEBUG="account:*,order:*")
+  // about 24s (with DEBUG="*")
+  // still about 7s (without DEBUG="*")
+  // still about 7s (with DEBUG="account:*,order:*")
   const time = Date.now();
   process.on("exit", () => console.log(ms(Date.now() - time)))
   
@@ -20,10 +20,10 @@ function main() {
   spots.on("ask", () => {})
   spots.on("bid", () => {})
 }
-main;
+main();
 
 async function main2() {
-  // about 3s
+  // still about 3s
   const time = Date.now();
   process.on("exit", () => console.log(ms(Date.now() - time)))
   
@@ -41,7 +41,7 @@ async function main2() {
   }
   console.log(count)
 }
-main2();
+main2;
 
 
 function main3() {

@@ -58,9 +58,11 @@ export async function* fr0mLogFiles(
         if (!line.includes("spotPrices:ask") && !line.includes("spotPrices:bid")) {
           continue;
         }
-        const logEntry = /({.*})/.exec(line)
-        if (logEntry) {
-          const data = JSON.parse(logEntry[1]);
+        const start = line.indexOf("{")
+        const end = line.lastIndexOf("}")
+        if (start >= 0 && end > start) {
+          const json = line.slice(start, end+1);
+          const data = JSON.parse(json);
           if (typeof data === "object") {
             yield data;
           }
