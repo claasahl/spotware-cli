@@ -1,0 +1,19 @@
+import { fromLogFiles } from "./services/local";
+import ms from "ms";
+
+function main() {
+  const time = Date.now();
+  process.on("exit", () => console.log(ms(Date.now() - time)))
+  
+  const symbol = Symbol.for("BTC/EUR");
+  const spots = fromLogFiles({paths: [
+    "./store/2020-04-27.log",
+    "./store/2020-04-28.log",
+    "./store/2020-04-29.log",
+    "./store/2020-04-30.log",
+    "./store/2020-05-01.log",
+  ], symbol});
+  spots.on("ask", () => {})
+  spots.on("bid", () => {})
+}
+main();
