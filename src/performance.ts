@@ -1,4 +1,5 @@
 import { fromLogFiles, fr0mLogFiles } from "./services/local";
+import {EventEmitter} from "events"
 import ms from "ms";
 
 function main() {
@@ -19,7 +20,7 @@ function main() {
   spots.on("ask", () => {})
   spots.on("bid", () => {})
 }
-main();
+main;
 
 async function main2() {
   // about 3s
@@ -40,4 +41,14 @@ async function main2() {
   }
   console.log(count)
 }
-main2;
+main2();
+
+
+function main3() {
+  const emitter = new EventEmitter()
+  emitter.on("e", () => console.log("1"))
+  emitter.on("e", () => console.log("2"))
+  emitter.emit("e")
+  console.log(3)
+}
+main3;
