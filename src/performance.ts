@@ -1,5 +1,4 @@
 import { fromLogFiles, fr0mLogFiles } from "./services/local";
-import {EventEmitter} from "events"
 import ms from "ms";
 
 function main() {
@@ -42,13 +41,3 @@ async function main2() {
   console.log(count)
 }
 main2();
-
-
-function main3() {
-  const emitter = new EventEmitter()
-  emitter.on("e", () => console.log("1"))
-  emitter.on("e", () => console.log("2"))
-  emitter.emit("e")
-  console.log(3)
-}
-main3;
