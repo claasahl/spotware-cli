@@ -38,7 +38,7 @@ async function* sampleData(): AsyncGenerator<
   yield { timestamp: 1577663993516, ask: 6612.72 };
 }
 
-async function* fr0mLogFiles(
+export async function* fr0mLogFiles(
   paths: fs.PathLike[]
 ): AsyncGenerator<
   B.AskPriceChangedEvent | B.BidPriceChangedEvent | B.PriceChangedEvent,
