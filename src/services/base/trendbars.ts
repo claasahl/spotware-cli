@@ -1,5 +1,6 @@
 import { EventEmitter } from "events";
 import debug from "debug";
+import ms from "ms";
 
 import { Price, Volume, Period, Timestamp, Symbol } from "./types";
 
@@ -61,7 +62,7 @@ export class TrendbarsStream extends EventEmitter implements TrendbarsActions {
 export class DebugTrendbarsStream extends TrendbarsStream {
   constructor(props: TrendbarsProps) {
     super(props);
-    const log = debug("trendbars");
+    const log = debug("trendbars").extend(ms(props.period));
 
     const trendbar = log.extend("trendbar");
     this.prependListener("trendbar", e => trendbar("%j", e));
