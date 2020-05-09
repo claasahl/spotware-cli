@@ -31,10 +31,10 @@ export interface AccountProps {
   readonly currency: Currency;
 }
 export interface AccountActions {
-  marketOrder(props: AccountSimpleMarketOrderProps): OrderStream<MarketOrderProps>;
-  stopOrder(props: AccountSimpleStopOrderProps): OrderStream<StopOrderProps>;
-  spotPrices(props: AccountSimpleSpotPricesProps): SpotPricesStream;
-  trendbars(props: AccountSimpleTrendbarsProps): TrendbarsStream;
+  marketOrder(props: AccountSimpleMarketOrderProps): Promise<OrderStream<MarketOrderProps>>;
+  stopOrder(props: AccountSimpleStopOrderProps): Promise<OrderStream<StopOrderProps>>;
+  spotPrices(props: AccountSimpleSpotPricesProps): Promise<SpotPricesStream>;
+  trendbars(props: AccountSimpleTrendbarsProps): Promise<TrendbarsStream>;
 }
 export declare interface AccountStream extends EventEmitter {
   balance(): Promise<BalanceChangedEvent>
@@ -128,10 +128,10 @@ export abstract class AccountStream extends EventEmitter implements AccountActio
     }
   }
 
-  abstract marketOrder(props: AccountSimpleMarketOrderProps): OrderStream<MarketOrderProps>;
-  abstract stopOrder(props: AccountSimpleStopOrderProps): OrderStream<StopOrderProps>;
-  abstract spotPrices(props: AccountSimpleSpotPricesProps): SpotPricesStream;
-  abstract trendbars(props: AccountSimpleTrendbarsProps): TrendbarsStream;
+  abstract marketOrder(props: AccountSimpleMarketOrderProps): Promise<OrderStream<MarketOrderProps>>;
+  abstract stopOrder(props: AccountSimpleStopOrderProps): Promise<OrderStream<StopOrderProps>>;
+  abstract spotPrices(props: AccountSimpleSpotPricesProps): Promise<SpotPricesStream>;
+  abstract trendbars(props: AccountSimpleTrendbarsProps): Promise<TrendbarsStream>;
 }
 
 export class DebugAccountStream extends AccountStream {
@@ -151,16 +151,16 @@ export class DebugAccountStream extends AccountStream {
     const order = log.extend("order");
     this.prependListener("order", e => order("%j", e));
   }
-  marketOrder(_props: AccountSimpleMarketOrderProps): OrderStream<MarketOrderProps> {
+  marketOrder(_props: AccountSimpleMarketOrderProps): Promise<OrderStream<MarketOrderProps>> {
     throw new Error("not implemented");
   }
-  stopOrder(_props: AccountSimpleStopOrderProps): OrderStream<StopOrderProps> {
+  stopOrder(_props: AccountSimpleStopOrderProps): Promise<OrderStream<StopOrderProps>> {
     throw new Error("not implemented");
   }
-  spotPrices(_props: AccountSimpleSpotPricesProps): SpotPricesStream {
+  spotPrices(_props: AccountSimpleSpotPricesProps): Promise<SpotPricesStream> {
     throw new Error("not implemented");
   }
-  trendbars(_props: AccountSimpleTrendbarsProps): TrendbarsStream {
+  trendbars(_props: AccountSimpleTrendbarsProps): Promise<TrendbarsStream> {
     throw new Error("not implemented");
   }
 
