@@ -24,7 +24,7 @@ export interface SpotPricesProps {
 }
 
 export interface SpotPricesActions {
-  trendbars(props: SpotPricesSimpleTrendbarsProps): Promise<TrendbarsStream>;
+  trendbars(props: SpotPricesSimpleTrendbarsProps): TrendbarsStream;
 }
 
 export declare interface SpotPricesStream extends EventEmitter {
@@ -91,7 +91,7 @@ export abstract class SpotPricesStream extends EventEmitter implements SpotPrice
       return new Promise(resolve => this.once("price", resolve));
     }
   }
-  abstract trendbars(props: SpotPricesSimpleTrendbarsProps): Promise<TrendbarsStream>;
+  abstract trendbars(props: SpotPricesSimpleTrendbarsProps): TrendbarsStream;
 }
 
 export class DebugSpotPricesStream extends SpotPricesStream {
@@ -109,7 +109,7 @@ export class DebugSpotPricesStream extends SpotPricesStream {
     this.prependListener("price", e => price("%j", e));
   }
 
-  trendbars(_props: SpotPricesSimpleTrendbarsProps): Promise<TrendbarsStream> {
+  trendbars(_props: SpotPricesSimpleTrendbarsProps): TrendbarsStream {
     throw new Error("not implemented");
   }
 

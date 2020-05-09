@@ -56,9 +56,9 @@ export interface StopOrderProps extends CommonOrderProps {
 export type OrderProps = MarketOrderProps | StopOrderProps
 
 export interface OrderActions {
-  close(): Promise<OrderClosedEvent>;
-  cancel(): Promise<OrderCanceledEvent>;
-  end(): Promise<OrderEndedEvent>;
+  close(): OrderClosedEvent;
+  cancel(): OrderCanceledEvent;
+  end(): OrderEndedEvent;
 }
 
 export declare interface OrderStream<Props extends OrderProps> extends EventEmitter {
@@ -226,9 +226,9 @@ export abstract class OrderStream<Props extends OrderProps> extends EventEmitter
     }
   }
 
-  abstract close(): Promise<OrderClosedEvent>;
-  abstract cancel(): Promise<OrderCanceledEvent>;
-  abstract end(): Promise<OrderEndedEvent>;
+  abstract close(): OrderClosedEvent;
+  abstract cancel(): OrderCanceledEvent;
+  abstract end(): OrderEndedEvent;
 }
 
 export class DebugOrderStream<Props extends OrderProps> extends OrderStream<Props> {
@@ -264,13 +264,13 @@ export class DebugOrderStream<Props extends OrderProps> extends OrderStream<Prop
     this.prependListener("ended", e => end("%j", e));
   }
 
-  close(): Promise<OrderClosedEvent> {
+  close(): OrderClosedEvent {
     throw new Error("not implemented");
   }
-  cancel(): Promise<OrderCanceledEvent> {
+  cancel(): OrderCanceledEvent {
     throw new Error("not implemented");
   }
-  end(): Promise<OrderEndedEvent> {
+  end(): OrderEndedEvent {
     throw new Error("not implemented");
   }
 
