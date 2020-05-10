@@ -34,9 +34,9 @@ describe("insideBarMomentumStrategy", () => {
         let orderNo = 0;
         account.on("order", e => {
             if(orderNo === 0) {
-                expect(e).toStrictEqual({timestamp: expect.any(Number), status: "CREATED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916});
+                expect(e).toStrictEqual({timestamp: expect.any(Number), status: "CREATED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916, expiresAt: undefined});
             } else if(orderNo ===  1) {
-                expect(e).toStrictEqual({timestamp: expect.any(Number), status: "ACCEPTED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916});
+                expect(e).toStrictEqual({timestamp: expect.any(Number), status: "ACCEPTED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916, expiresAt: undefined});
                 done();
             } else {
                 fail(new Error(`unexpected order-event: ${JSON.stringify(e)}`))
@@ -86,9 +86,9 @@ describe("insideBarMomentumStrategy", () => {
         let orderNo = 0;
         account.on("order", e => {
             if(orderNo === 0) {
-                expect(e).toStrictEqual({timestamp: expect.any(Number), status: "CREATED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564});
+                expect(e).toStrictEqual({timestamp: expect.any(Number), status: "CREATED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564, expiresAt: undefined});
             } else if(orderNo === 1) {
-                expect(e).toStrictEqual({timestamp: expect.any(Number), status: "ACCEPTED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564});
+                expect(e).toStrictEqual({timestamp: expect.any(Number), status: "ACCEPTED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564, expiresAt: undefined});
                 done();
             } else {
                 fail(new Error(`unexpected order-event: ${JSON.stringify(e)}`))
@@ -125,14 +125,14 @@ describe("insideBarMomentumStrategy", () => {
         
         const orders = {
             "1": [
-                {timestamp: expect.any(Number), status: "CREATED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916},
-                {timestamp: expect.any(Number), status: "ACCEPTED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916},
-                {timestamp: expect.any(Number), status: "CANCELED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916},
-                {timestamp: expect.any(Number), status: "ENDED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916}
+                {timestamp: expect.any(Number), status: "CREATED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916, expiresAt: undefined},
+                {timestamp: expect.any(Number), status: "ACCEPTED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916, expiresAt: undefined},
+                {timestamp: expect.any(Number), status: "CANCELED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916, expiresAt: undefined},
+                {timestamp: expect.any(Number), status: "ENDED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916, expiresAt: undefined}
             ],
             "2": [
-                {timestamp: expect.any(Number), status: "CREATED", id: "2", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564},
-                {timestamp: expect.any(Number), status: "ACCEPTED", id: "2", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564}
+                {timestamp: expect.any(Number), status: "CREATED", id: "2", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564, expiresAt: undefined},
+                {timestamp: expect.any(Number), status: "ACCEPTED", id: "2", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564, expiresAt: undefined}
             ]
         }
         account.on("order", e => {
@@ -186,14 +186,14 @@ describe("insideBarMomentumStrategy", () => {
 
         const orders = {
             "1": [
-                {timestamp: expect.any(Number), status: "CREATED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564},
-                {timestamp: expect.any(Number), status: "ACCEPTED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564},
-                {timestamp: expect.any(Number), status: "CANCELED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564},
-                {timestamp: expect.any(Number), status: "ENDED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564}
+                {timestamp: expect.any(Number), status: "CREATED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564, expiresAt: undefined},
+                {timestamp: expect.any(Number), status: "ACCEPTED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564, expiresAt: undefined},
+                {timestamp: expect.any(Number), status: "CANCELED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564, expiresAt: undefined},
+                {timestamp: expect.any(Number), status: "ENDED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564, expiresAt: undefined}
             ],
             "2": [
-                {timestamp: expect.any(Number), status: "CREATED", id: "2", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916},
-                {timestamp: expect.any(Number), status: "ACCEPTED", id: "2", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916}
+                {timestamp: expect.any(Number), status: "CREATED", id: "2", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916, expiresAt: undefined},
+                {timestamp: expect.any(Number), status: "ACCEPTED", id: "2", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916, expiresAt: undefined}
             ]
         }
         account.on("order", e => {
@@ -229,5 +229,88 @@ describe("insideBarMomentumStrategy", () => {
         spotPrices.emitBid({ timestamp: 1003750, bid: 15000})
 
         spotPrices.emitAsk({ timestamp: 1004000, ask: 0})
+    })
+    test("close (BUY) order if outside of stopLoss / takeProfit range", async done => {
+        const currency = Symbol.for("EUR");
+        const initialBalance = 1000;
+        const period = ms("1s");
+        const symbol = Symbol.for("BTC/EUR");
+        const enterOffset = 0.1;
+        const stopLossOffset = 0.4;
+        const takeProfitOffset = 0.8;
+        const minTrendbarRange = 15;
+        const volume = 0.1;
+        const spotPrices = new DebugSpotPricesStream({symbol})
+        const spots = () => spotPrices;
+        const account = fromNothing({ currency, initialBalance, spots })
+        await insideBarMomentumStrategy({ account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume })
+        
+        const orders = [
+            {timestamp: expect.any(Number), status: "CREATED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916, expiresAt: undefined},
+            {timestamp: expect.any(Number), status: "ACCEPTED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916, expiresAt: undefined},
+            {timestamp: expect.any(Number), status: "FILLED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916, expiresAt: undefined},
+            {timestamp: expect.any(Number), status: "CLOSED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916, expiresAt: undefined},
+            {timestamp: expect.any(Number), status: "ENDED", id: "1", symbol, tradeSide: "BUY", volume, orderType: "STOP", enter: 15552, stopLoss: 15292, takeProfit: 15916, expiresAt: undefined}
+        ]
+        account.on("order", e => {
+            expect(e).toStrictEqual(orders.shift());
+            if(orders.length === 0) {
+                done();
+            }
+        })
+
+        spotPrices.emitBid({ timestamp: 1000000, bid: 15000})
+        spotPrices.emitBid({ timestamp: 1000250, bid: 15500})
+        spotPrices.emitBid({ timestamp: 1000500, bid: 14980})
+        spotPrices.emitBid({ timestamp: 1000750, bid: 15100})
+
+        spotPrices.emitBid({ timestamp: 1001000, bid: 15000})
+        spotPrices.emitBid({ timestamp: 1001250, bid: 15000})
+        spotPrices.emitBid({ timestamp: 1001500, bid: 15000})
+        spotPrices.emitBid({ timestamp: 1001750, bid: 15000})
+
+        spotPrices.emitAsk({ timestamp: 1002000, ask: 16000})
+    })
+    test("close (SELL) order if outside of stopLoss / takeProfit range", async done => {
+        const currency = Symbol.for("EUR");
+        const initialBalance = 1000;
+        const period = ms("1s");
+        const symbol = Symbol.for("BTC/EUR");
+        const enterOffset = 0.1;
+        const stopLossOffset = 0.4;
+        const takeProfitOffset = 0.8;
+        const minTrendbarRange = 15;
+        const volume = 0.1;
+        const spotPrices = new DebugSpotPricesStream({symbol})
+        const spots = () => spotPrices;
+        const account = fromNothing({ currency, initialBalance, spots })
+        await insideBarMomentumStrategy({ account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume })
+
+        const orders = [
+            {timestamp: expect.any(Number), status: "CREATED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564, expiresAt: undefined},
+            {timestamp: expect.any(Number), status: "ACCEPTED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564, expiresAt: undefined},
+            {timestamp: expect.any(Number), status: "FILLED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564, expiresAt: undefined},
+            {timestamp: expect.any(Number), status: "CLOSED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564, expiresAt: undefined},
+            {timestamp: expect.any(Number), status: "ENDED", id: "1", symbol, tradeSide: "SELL", volume, orderType: "STOP", enter: 14928, stopLoss: 15188, takeProfit: 14564, expiresAt: undefined}
+        ]
+        account.on("order", e => {
+            expect(e).toStrictEqual(orders.shift());
+            if(orders.length === 0) {
+                done();
+            }
+        })
+
+        spotPrices.emitBid({ timestamp: 1000000, bid: 15100})
+        spotPrices.emitBid({ timestamp: 1000250, bid: 15500})
+        spotPrices.emitBid({ timestamp: 1000500, bid: 14980})
+        spotPrices.emitBid({ timestamp: 1000750, bid: 15000})
+
+        spotPrices.emitBid({ timestamp: 1001000, bid: 15000})
+        spotPrices.emitBid({ timestamp: 1001250, bid: 15000})
+        spotPrices.emitBid({ timestamp: 1001500, bid: 15000})
+        spotPrices.emitBid({ timestamp: 1001750, bid: 15000})
+
+        spotPrices.emitAsk({ timestamp: 1002000, ask: 15200})
+        spotPrices.emitBid({ timestamp: 1002000, bid: 14000})
     })
 })

@@ -27,16 +27,21 @@ interface PlaceOrderProps {
   account: B.AccountStream,
   expiresAt?: B.Timestamp
 }
-function placeOrder(props: PlaceOrderProps): Promise<B.OrderStream<B.StopOrderProps>> {
-  const { account, expiresAt, ...rest } = props;
-  if(expiresAt) {
-    return account.stopOrder({...rest, expiresAt})
-  }
-  return account.stopOrder(rest)
+async function placeOrder(props: PlaceOrderProps): Promise<B.OrderStream<B.StopOrderProps>> {
+  const { account, ...rest } = props;
+  const order = await account.stopOrder(rest);
+  order.once("filled", e => {
+    if (props.tradeSide === "BUY" && (e.entry > props.takeProfit || e.entry < props.stopLoss)) {
+      order.close();
+    } else if (props.tradeSide === "SELL" && (e.entry < props.takeProfit || e.entry > props.stopLoss)) {
+      order.close();
+    }
+  })
+  return order;
 }
 
 async function endLastOrder(lastOrder?: B.OrderStream<B.StopOrderProps>): Promise<void> {
-  if(lastOrder) {
+  if (lastOrder) {
     await lastOrder.end();
   }
 }
@@ -58,7 +63,7 @@ export async function insideBarMomentumStrategy(props: Props): Promise<B.Account
   const trendbars = await account.trendbars({ period, symbol })
   let id = 1, timestamp = 0;
 
-  const spots = await account.spotPrices({symbol})
+  const spots = await account.spotPrices({ symbol })
   spots.on("ask", e => timestamp = e.timestamp);
   spots.on("bid", e => timestamp = e.timestamp);
 
