@@ -2,52 +2,52 @@ const { fromNothing } = require("../../../build/services/local/account");
 const { DebugSpotPricesStream } = require("../../../build/services/base/spotPrices")
 
 describe("fromNothing", () => {
-    test("'transaction' event with initial balance", async done => {
+    test("'transaction' event with initial balance", done => {
         const symbol = Symbol.for("abc/def")
         const spotPrices = new DebugSpotPricesStream({ symbol })
         const currency = Symbol.for("abc")
         const spots = () => spotPrices
         const initialBalance = 500;
-        const stream = await fromNothing({ currency, spots, initialBalance})
+        const stream = fromNothing({ currency, spots, initialBalance})
         const event = { timestamp: expect.any(Number), amount: 500 }
         stream.on("transaction", e => {
             expect(e).toStrictEqual(event);
             done()
         })
     })
-    test("'balance' event with initial balance", async done => {
+    test("'balance' event with initial balance", done => {
         const symbol = Symbol.for("abc/def")
         const spotPrices = new DebugSpotPricesStream({ symbol })
         const currency = Symbol.for("abc")
         const spots = () => spotPrices
         const initialBalance = 500;
-        const stream = await  fromNothing({ currency, spots, initialBalance})
+        const stream = fromNothing({ currency, spots, initialBalance})
         const event = { timestamp: expect.any(Number), balance: 500 }
         stream.on("balance", e => {
             expect(e).toStrictEqual(event);
             done()
         })
     })
-    test("'equity' event with initial balance", async done => {
+    test("'equity' event with initial balance", done => {
         const symbol = Symbol.for("abc/def")
         const spotPrices = new DebugSpotPricesStream({ symbol })
         const currency = Symbol.for("abc")
         const spots = () => spotPrices
         const initialBalance = 500;
-        const stream = await fromNothing({ currency, spots, initialBalance})
+        const stream = fromNothing({ currency, spots, initialBalance})
         const event = { timestamp: expect.any(Number), equity: 500 }
         stream.on("equity", e => {
             expect(e).toStrictEqual(event);
             done()
         })
     })
-    test("get spot prices", async () => {
+    test("get spot prices", () => {
         const symbol = Symbol.for("abc/def")
         const spotPrices = new DebugSpotPricesStream({ symbol })
         const currency = Symbol.for("abc")
         const spots = jest.fn(() => spotPrices)
         const initialBalance = 500;
-        const stream = await fromNothing({ currency, spots, initialBalance})
+        const stream = fromNothing({ currency, spots, initialBalance})
         expect(stream.spotPrices({ symbol })).toBeTruthy();
         expect(spots).toHaveBeenCalledWith({ symbol })
         expect(spots).toHaveBeenCalledTimes(1)
@@ -58,7 +58,7 @@ describe("fromNothing", () => {
         const currency = Symbol.for("abc")
         const spots = jest.fn(() => spotPrices)
         const initialBalance = 500;
-        const stream = await fromNothing({ currency, spots, initialBalance})
+        const stream = fromNothing({ currency, spots, initialBalance})
         const period = 1000;
         const trendbars = await stream.trendbars({ symbol, period });
         expect(trendbars.props).toStrictEqual({ symbol, period, spots: spotPrices });
@@ -66,12 +66,12 @@ describe("fromNothing", () => {
         expect(spots).toHaveBeenCalledTimes(1)
     })
     describe("market order", () => {
-        test("should emit 'order' event", async done => {
+        test("should emit 'order' event", done => {
             const symbol = Symbol.for("abc/def")
             const spotPrices = new DebugSpotPricesStream({ symbol })
             const currency = Symbol.for("abc")
             const spots = () => spotPrices
-            const stream = await fromNothing({ currency, spots, initialBalance: 500 })
+            const stream = fromNothing({ currency, spots, initialBalance: 500 })
             const order = {id: "346", symbol, tradeSide: "SELL", volume: 4, takeProfit: 8}
             stream.marketOrder(order)
             let orderNo = 0;
@@ -85,12 +85,12 @@ describe("fromNothing", () => {
                 orderNo++;
             })
         })
-        test("should produce 'equity' events", async done => {
+        test("should produce 'equity' events", done => {
             const symbol = Symbol.for("abc/def")
             const spotPrices = new DebugSpotPricesStream({ symbol })
             const currency = Symbol.for("abc")
             const spots = () => spotPrices
-            const stream = await fromNothing({ currency, spots, initialBalance: 500})
+            const stream = fromNothing({ currency, spots, initialBalance: 500})
             stream.marketOrder({ id: "346", symbol, tradeSide: "SELL", volume: 4, takeProfit: 8 })
             let no = 0;
             stream.on("equity", e => {
@@ -109,12 +109,12 @@ describe("fromNothing", () => {
             spotPrices.emitAsk({ timestamp: 1, ask: 10 })
             spotPrices.emitBid({ timestamp: 2, bid: 15 })
         })
-        test("should produce 'balance' event", async done => {
+        test("should produce 'balance' event", done => {
             const symbol = Symbol.for("abc/def")
             const spotPrices = new DebugSpotPricesStream({ symbol })
             const currency = Symbol.for("abc")
             const spots = () => spotPrices
-            const stream = await fromNothing({ currency, spots, initialBalance: 500})
+            const stream = fromNothing({ currency, spots, initialBalance: 500})
             stream.marketOrder({ id: "346", symbol, tradeSide: "SELL", volume: 4, takeProfit: 8 })
             let no = 0;
             stream.on("balance", e => {
@@ -129,12 +129,12 @@ describe("fromNothing", () => {
             spotPrices.emitAsk({ timestamp: 3, ask: 12 })
             spotPrices.emitAsk({ timestamp: 4, ask: 8 })
         })
-        test("should produce 'transaction' event", async done => {
+        test("should produce 'transaction' event", done => {
             const symbol = Symbol.for("abc/def")
             const spotPrices = new DebugSpotPricesStream({ symbol })
             const currency = Symbol.for("abc")
             const spots = () => spotPrices
-            const stream = await fromNothing({ currency, spots, initialBalance: 500})
+            const stream = fromNothing({ currency, spots, initialBalance: 500})
             stream.marketOrder({ id: "346", symbol, tradeSide: "SELL", volume: 4, takeProfit: 8 })
             let no = 0;
             stream.on("transaction", e => {
@@ -151,12 +151,12 @@ describe("fromNothing", () => {
         })
     })
     describe("stop order", () => {
-        test("should emit 'order' event", async done => {
+        test("should emit 'order' event", done => {
             const symbol = Symbol.for("abc/def")
             const spotPrices = new DebugSpotPricesStream({ symbol })
             const currency = Symbol.for("abc")
             const spots = () => spotPrices
-            const stream = await fromNothing({ currency, spots, initialBalance: 500 })
+            const stream = fromNothing({ currency, spots, initialBalance: 500 })
             const order = { id: "346", symbol, tradeSide: "BUY", volume: 4, enter: 6, takeProfit: 18 }
             stream.stopOrder(order)
             let orderNo = 0;
@@ -170,12 +170,12 @@ describe("fromNothing", () => {
                 orderNo++;
             })
         })
-        test("should produce 'equity' events", async done => {
+        test("should produce 'equity' events", done => {
             const symbol = Symbol.for("abc/def")
             const spotPrices = new DebugSpotPricesStream({ symbol })
             const currency = Symbol.for("abc")
             const spots = () => spotPrices
-            const stream = await fromNothing({ currency, spots, initialBalance: 500})
+            const stream = fromNothing({ currency, spots, initialBalance: 500})
             stream.stopOrder({ id: "346", symbol, tradeSide: "BUY", volume: 4, enter: 3, takeProfit: 18 })
             let no = 0;
             stream.on("equity", e => {
@@ -194,12 +194,12 @@ describe("fromNothing", () => {
             spotPrices.emitAsk({ timestamp: 1, ask: 10 })
             spotPrices.emitBid({ timestamp: 2, bid: 15 })
         })
-        test("should produce 'balance' event", async done => {
+        test("should produce 'balance' event", done => {
             const symbol = Symbol.for("abc/def")
             const spotPrices = new DebugSpotPricesStream({ symbol })
             const currency = Symbol.for("abc")
             const spots = () => spotPrices
-            const stream = await fromNothing({ currency, spots, initialBalance: 500})
+            const stream = fromNothing({ currency, spots, initialBalance: 500})
             stream.stopOrder({ id: "346", symbol, tradeSide: "BUY", volume: 4, enter: 3, takeProfit: 15 })
             let no = 0;
             stream.on("balance", e => {
@@ -212,12 +212,12 @@ describe("fromNothing", () => {
             spotPrices.emitAsk({ timestamp: 1, ask: 10 })
             spotPrices.emitBid({ timestamp: 2, bid: 15 })
         })
-        test("should produce 'transaction' event", async done => {
+        test("should produce 'transaction' event", done => {
             const symbol = Symbol.for("abc/def")
             const spotPrices = new DebugSpotPricesStream({ symbol })
             const currency = Symbol.for("abc")
             const spots = () => spotPrices
-            const stream = await fromNothing({ currency, spots, initialBalance: 500})
+            const stream = fromNothing({ currency, spots, initialBalance: 500})
             stream.stopOrder({ id: "346", symbol, tradeSide: "BUY", volume: 4, enter: 3, takeProfit: 15 })
             let no = 0;
             stream.on("transaction", e => {
