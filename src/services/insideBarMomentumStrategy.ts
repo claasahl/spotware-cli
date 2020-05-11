@@ -30,13 +30,15 @@ interface PlaceOrderProps {
 async function placeOrder(props: PlaceOrderProps): Promise<B.OrderStream<B.StopOrderProps>> {
   const { account, ...rest } = props;
   const order = await account.stopOrder(rest);
-  order.once("filled", e => {
-    if (props.tradeSide === "BUY" && (e.entry > props.takeProfit || e.entry < props.stopLoss)) {
+  const guard = (e: B.OrderProfitLossEvent) => {
+    if (props.tradeSide === "BUY" && (e.price >= props.takeProfit || e.price <= props.stopLoss)) {
       order.close();
-    } else if (props.tradeSide === "SELL" && (e.entry < props.takeProfit || e.entry > props.stopLoss)) {
+    } else if (props.tradeSide === "SELL" && (e.price <= props.takeProfit || e.price >= props.stopLoss)) {
       order.close();
     }
-  })
+  }
+  order.on("profitLoss", guard);
+  order.once("ended", () => order.off("profitLoss", guard))
   return order;
 }
 

@@ -267,9 +267,10 @@ describe("insideBarMomentumStrategy", () => {
         spotPrices.emitBid({ timestamp: 1001000, bid: 15000})
         spotPrices.emitBid({ timestamp: 1001250, bid: 15000})
         spotPrices.emitBid({ timestamp: 1001500, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001750, bid: 15300})
-
-        spotPrices.emitAsk({ timestamp: 1002000, ask: 16000})
+        spotPrices.emitBid({ timestamp: 1001750, bid: 15000})
+        
+        spotPrices.emitBid({ timestamp: 1002000, bid: 15916})
+        spotPrices.emitAsk({ timestamp: 1002000, ask: 15552})
     })
     test("close (SELL) order if entry price exceeds takeProfit", async done => {
         const currency = Symbol.for("EUR");
@@ -310,8 +311,8 @@ describe("insideBarMomentumStrategy", () => {
         spotPrices.emitBid({ timestamp: 1001500, bid: 15000})
         spotPrices.emitBid({ timestamp: 1001750, bid: 15000})
 
-        spotPrices.emitAsk({ timestamp: 1002000, ask: 15000})
-        spotPrices.emitBid({ timestamp: 1002000, bid: 14000})
+        spotPrices.emitBid({ timestamp: 1002000, bid: 14928})
+        spotPrices.emitAsk({ timestamp: 1002000, ask: 14564})
     })
     test("close (BUY) order if entry price exceeds stopLoss", async done => {
         const currency = Symbol.for("EUR");
@@ -352,7 +353,8 @@ describe("insideBarMomentumStrategy", () => {
         spotPrices.emitBid({ timestamp: 1001500, bid: 15000})
         spotPrices.emitBid({ timestamp: 1001750, bid: 15000})
 
-        spotPrices.emitAsk({ timestamp: 1002000, ask: 15600})
+        spotPrices.emitBid({ timestamp: 1002000, bid: 15292})
+        spotPrices.emitAsk({ timestamp: 1002000, ask: 15552})
     })
     test("close (SELL) order if entry price exceeds stopLoss", async done => {
         const currency = Symbol.for("EUR");
@@ -393,7 +395,7 @@ describe("insideBarMomentumStrategy", () => {
         spotPrices.emitBid({ timestamp: 1001500, bid: 15000})
         spotPrices.emitBid({ timestamp: 1001750, bid: 15000})
 
-        spotPrices.emitAsk({ timestamp: 1002000, ask: 15200})
-        spotPrices.emitBid({ timestamp: 1002000, bid: 14700})
+        spotPrices.emitBid({ timestamp: 1002000, bid: 14928})
+        spotPrices.emitAsk({ timestamp: 1002000, ask: 15188})
     })
 })
