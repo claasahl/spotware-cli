@@ -64,11 +64,11 @@ async function sell<Props extends B.OrderProps>(props: Props, spots: B.SpotPrice
 
             const update = (e: B.AskPriceChangedEvent) => {
                 const {timestamp, ask: price} = e
-                const profitLoss = Math.round((price - entry) * stream.props.volume * 100) / 100;
+                const profitLoss = Math.round((entry - price) * stream.props.volume * 100) / 100;
                 stream.push({type: "PROFITLOSS", timestamp, price, profitLoss})
 
-                if(props.stopLoss && props.stopLoss >= price ||
-                    props.takeProfit && props.takeProfit <= price) {
+                if(props.stopLoss && props.stopLoss <= price ||
+                    props.takeProfit && props.takeProfit >= price) {
                     spots.off("ask", update);
                     stream.push({type: "CLOSED", timestamp, exit: price, profitLoss})
                 }
