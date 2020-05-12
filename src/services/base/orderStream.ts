@@ -3,45 +3,45 @@ import debug from "debug";
 
 import { Symbol, Timestamp, TradeSide, Volume, Price, OrderType } from "./types";
 
-interface OrderCreatedEvent {
+export interface OrderCreatedEvent {
   type: "CREATED";
   timestamp: Timestamp;
 }
-interface OrderAcceptedEvent {
+export interface OrderAcceptedEvent {
   type: "ACCEPTED";
   timestamp: Timestamp;
 }
-interface OrderRejectedEvent {
+export interface OrderRejectedEvent {
   type: "REJECTED";
   timestamp: Timestamp;
 }
-interface OrderCanceledEvent {
+export interface OrderCanceledEvent {
   type: "CANCELED";
   timestamp: Timestamp;
 }
-interface OrderExpiredEvent {
+export interface OrderExpiredEvent {
   type: "EXPIRED";
   timestamp: Timestamp;
 }
-interface OrderFilledEvent {
+export interface OrderFilledEvent {
   type: "FILLED";
   timestamp: Timestamp;
   entry: Price;
 }
-interface OrderProfitLossEvent {
+export interface OrderProfitLossEvent {
   type: "PROFITLOSS";
   timestamp: Timestamp;
   price: Price;
   profitLoss: Price;
 }
-interface OrderClosedEvent {
+export interface OrderClosedEvent {
   type: "CLOSED";
   timestamp: Timestamp;
   exit: Price;
   profitLoss: Price;
 }
-type OrderEvent = OrderCreatedEvent | OrderAcceptedEvent | OrderRejectedEvent | OrderExpiredEvent | OrderCanceledEvent | OrderFilledEvent | OrderProfitLossEvent | OrderClosedEvent;
-type OrderEndedEvent = OrderClosedEvent | OrderCanceledEvent | OrderExpiredEvent;
+export type OrderEvent = OrderCreatedEvent | OrderAcceptedEvent | OrderRejectedEvent | OrderExpiredEvent | OrderCanceledEvent | OrderFilledEvent | OrderProfitLossEvent | OrderClosedEvent;
+export type OrderEndedEvent = OrderClosedEvent | OrderCanceledEvent | OrderExpiredEvent;
 const orderEventTypes: OrderEvent["type"][] = ["CREATED", "ACCEPTED", "REJECTED", "CANCELED", "EXPIRED", "FILLED", "PROFITLOSS", "CLOSED"]
 
 interface CommonOrderProps {
