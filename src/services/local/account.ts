@@ -4,6 +4,9 @@ import { marketOrderFromSpotPrices, stopOrderFromSpotPrices } from "./order";
 import { includesCurrency } from "./util";
 import { trendbarsFromSpotPrices } from "./trendbars";
 
+import { OrderStream } from "../base/orderStream";
+import { marketOrderFromSpotPrices as marketOrderFromSpotPrices2 } from "./orderStream";
+
 interface Order {
     symbol: Symbol;
     entry: B.Price;
@@ -27,6 +30,50 @@ class LocalAccountStream extends B.DebugAccountStream {
         this.spots = mem(props.spots, { cacheKey })
         this.on("balance", e => this.myBalance = e.balance)
         this.on("balance", this.updateEquity)
+    }
+
+    async magicOrder(props: B.AccountSimpleMarketOrderProps): Promise<OrderStream<B.MarketOrderProps>> {
+        if (!includesCurrency(props.symbol, this.props.currency)) {
+            const symbol = props.symbol.toString();
+            const currency = this.props.currency.toString()
+            throw new Error(
+                `symbol ${symbol} does not involve currency ${currency}. This account only supports currency pairs with ${currency}.`
+            );
+        }
+
+        if (!this.orders.has(props.id)) {
+            this.orders.set(props.id, [])
+        }
+        const order: Order = { ...props, entry: 0, profitLoss: 0 }
+        const spots = await this.spotPrices({ symbol: props.symbol })
+        const stream = await marketOrderFromSpotPrices2({ ...props, spots })
+        const update = (e: B.OrderProfitLossEvent) => {
+            order.profitLoss = e.profitLoss;
+            this.updateEquity(e)
+        }
+        stream.on("profitLoss", update)
+        stream.once("ended", e => {
+            stream.off("profitLoss", update)
+            const all = this.orders.get(props.id)!
+            const toBeDeleted: number[] = [];
+            all.forEach((o, index) => {
+                if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
+                    this.emitTransaction({ timestamp: e.timestamp, amount: o.profitLoss })
+                    toBeDeleted.push(index);
+                }
+            });
+            toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
+        })
+        stream.once("accepted", () => this.orders.get(props.id)!.push(order))
+        stream.once("created", e => this.emitOrder({ timestamp: e.timestamp, status: "CREATED", ...stream.props }))
+        stream.once("accepted", e => this.emitOrder({ timestamp: e.timestamp, status: "ACCEPTED", ...stream.props }))
+        stream.once("rejected", e => this.emitOrder({ timestamp: e.timestamp, status: "REJECTED", ...stream.props }))
+        stream.once("filled", e => this.emitOrder({ timestamp: e.timestamp, status: "FILLED", ...stream.props }))
+        stream.once("closed", e => this.emitOrder({ timestamp: e.timestamp, status: "CLOSED", ...stream.props }))
+        stream.once("canceled", e => this.emitOrder({ timestamp: e.timestamp, status: "CANCELED", ...stream.props }))
+        stream.once("expired", e => this.emitOrder({ timestamp: e.timestamp, status: "EXPIRED", ...stream.props }))
+        stream.once("ended", e => this.emitOrder({ timestamp: e.timestamp, status: "ENDED", ...stream.props }))
+        return stream;
     }
 
     async marketOrder(props: B.AccountSimpleMarketOrderProps): Promise<B.OrderStream<B.MarketOrderProps>> {
