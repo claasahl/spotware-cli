@@ -127,7 +127,7 @@ export abstract class OrderStream<Props extends OrderProps> extends Readable imp
   private readonly log: debug.Debugger;
 
   constructor(props: Props) {
-    super({ objectMode: true });
+    super({ objectMode: true, read: () => {} });
     this.props = Object.freeze(props);
     this.cachedEvents = new Map();
     this.log = debug("order").extend(props.id);
