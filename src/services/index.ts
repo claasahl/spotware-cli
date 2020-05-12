@@ -4,6 +4,8 @@ import config from "../config";
 import { fromSomething } from "./spotware/account";
 import { periodToMillis } from "../utils";
 import ms from "ms";
+import {execFile} from "child_process";
+import debug from "debug";
 
 // Idea: Write services which consume events (from other services) and produce events (for other services to consume).
 
@@ -19,6 +21,13 @@ import ms from "ms";
 // implement insideBarMomentumStrategy
 
 // review all base/*.ts and local/*.ts files for "Promises vs callbacks" and "Promises vs 'sync' returns"
+
+function header() {
+  execFile("git", ["rev-parse", "HEAD"], (_error, stdout, _stderr) => {
+    debug("CONFIG")("%j", {config, git: stdout, env: process.env})
+  })
+}
+header();
 
 function local() {
   const name = "BTC/EUR";
