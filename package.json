@@ -9,7 +9,7 @@
     "precommit": "pretty-quick --staged",
     "prepare": "npm run build",
     "build": "tsc",
-    "prestart": "npm run build",
+    "prestart": "npm run build && npm run refresh",
     "start": "node -r dotenv/config ./build/services/index.js 2>&1 | multilog s16777215 n100 dir ./logs",
     "fetch": "ts-node -r dotenv/config ./src/fetch.ts > fetch.log 2>&1",
     "refresh": "ts-node -r dotenv/config ./src/refresh.ts",
