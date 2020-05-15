@@ -150,7 +150,7 @@ export abstract class OrderStream<Props extends OrderProps> extends Readable imp
   }
 
   private cachedEvent<T extends OrderEvent>(type: T["type"]): Promise<T> {
-    if(orderEventTypes.includes(type)) {
+    if(!orderEventTypes.includes(type)) {
       const error = new Error(`event type '${type}' is not allowed. Only ${orderEventTypes.join(", ")} as allowed.`)
       return Promise.reject(error);
     }
