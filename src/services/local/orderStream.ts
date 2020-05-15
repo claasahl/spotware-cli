@@ -1,21 +1,21 @@
 import assert from "assert";
-import {OrderStream, OrderProps, OrderClosedEvent, OrderCanceledEvent, OrderExpiredEvent} from "../base/orderStream"
+import * as OS from "../base/orderStream"
 import * as B from "../base"
 import { AskPriceChangedEvent } from "../base";
 
-class LocalOrderStream<Props extends OrderProps> extends OrderStream<Props> {
-    close(): Promise<OrderClosedEvent> {
+class LocalOrderStream<Props extends OS.OrderProps> extends OS.OrderStream<Props> {
+    close(): Promise<OS.OrderClosedEvent> {
         throw new Error("Method not implemented.");
     }
-    cancel(): Promise<OrderCanceledEvent> {
+    cancel(): Promise<OS.OrderCanceledEvent> {
         throw new Error("Method not implemented.");
     }
-    end(): Promise<OrderClosedEvent | OrderCanceledEvent | OrderExpiredEvent> {
+    end(): Promise<OS.OrderEndedEvent> {
         throw new Error("Method not implemented.");
     }
 }
 
-async function buy<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream, condition: (e: B.AskPriceChangedEvent) => boolean): Promise<OrderStream<Props>> {
+async function buy<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream, condition: (e: B.AskPriceChangedEvent) => boolean): Promise<OS.OrderStream<Props>> {
     assert.strictEqual(props.tradeSide, "BUY");
     const stream = new LocalOrderStream<Props>(props);
     const fill = (e: AskPriceChangedEvent) => {
@@ -33,6 +33,7 @@ async function buy<Props extends B.OrderProps>(props: Props, spots: B.SpotPrices
                     props.takeProfit && props.takeProfit <= price) {
                     spots.off("bid", update);
                     stream.push({type: "CLOSED", timestamp, exit: price, profitLoss})
+                    stream.push({type: "ENDED", timestamp, exit: price, profitLoss})
                 }
             }
             spots.bid().then(e => {
@@ -53,7 +54,7 @@ async function buy<Props extends B.OrderProps>(props: Props, spots: B.SpotPrices
     return stream;
 }
 
-async function sell<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream, condition: (e: B.BidPriceChangedEvent) => boolean): Promise<OrderStream<Props>> {
+async function sell<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream, condition: (e: B.BidPriceChangedEvent) => boolean): Promise<OS.OrderStream<Props>> {
     assert.strictEqual(props.tradeSide, "SELL");
     const stream = new LocalOrderStream<Props>(props);
     const fill = (e: B.BidPriceChangedEvent) => {
@@ -71,6 +72,7 @@ async function sell<Props extends B.OrderProps>(props: Props, spots: B.SpotPrice
                     props.takeProfit && props.takeProfit >= price) {
                     spots.off("ask", update);
                     stream.push({type: "CLOSED", timestamp, exit: price, profitLoss})
+                    stream.push({type: "ENDED", timestamp, exit: price, profitLoss})
                 }
             }
             spots.ask().then(e => {
@@ -91,7 +93,7 @@ async function sell<Props extends B.OrderProps>(props: Props, spots: B.SpotPrice
     return stream;
 }
 
-export function marketOrderFromSpotPrices(props: Omit<B.MarketOrderProps & { spots: B.SpotPricesStream }, "orderType">): Promise<OrderStream<B.MarketOrderProps>> {
+export function marketOrderFromSpotPrices(props: Omit<B.MarketOrderProps & { spots: B.SpotPricesStream }, "orderType">): Promise<OS.OrderStream<B.MarketOrderProps>> {
     const {spots, ...rest} = props;
     if(props.tradeSide === "BUY") {
         return buy({...rest, orderType: "MARKET"}, spots, () => true)
@@ -99,7 +101,7 @@ export function marketOrderFromSpotPrices(props: Omit<B.MarketOrderProps & { spo
     return sell({...rest, orderType: "MARKET"}, spots, () => true)
 }
 
-export function stopOrderFromSpotPrices(props: Omit<B.StopOrderProps & { spots: B.SpotPricesStream }, "orderType">): Promise<OrderStream<B.StopOrderProps>> {
+export function stopOrderFromSpotPrices(props: Omit<B.StopOrderProps & { spots: B.SpotPricesStream }, "orderType">): Promise<OS.OrderStream<B.StopOrderProps>> {
     const {spots, ...rest} = props;
     if(props.tradeSide === "BUY") {
         return buy({...rest, orderType: "STOP"}, spots, e => e.ask >= props.enter)

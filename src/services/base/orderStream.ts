@@ -40,9 +40,17 @@ export interface OrderClosedEvent {
   exit: Price;
   profitLoss: Price;
 }
-export type OrderEvent = OrderCreatedEvent | OrderAcceptedEvent | OrderRejectedEvent | OrderExpiredEvent | OrderCanceledEvent | OrderFilledEvent | OrderProfitLossEvent | OrderClosedEvent;
-export type OrderEndedEvent = OrderClosedEvent | OrderCanceledEvent | OrderExpiredEvent;
-const orderEventTypes: OrderEvent["type"][] = ["CREATED", "ACCEPTED", "REJECTED", "CANCELED", "EXPIRED", "FILLED", "PROFITLOSS", "CLOSED"]
+export type OrderEndedEvent = {
+  type: "ENDED";
+  timestamp: Timestamp;
+  exit: Price;
+  profitLoss: Price;
+} | {
+  type: "ENDED";
+  timestamp: Timestamp;
+}
+export type OrderEvent = OrderCreatedEvent | OrderAcceptedEvent | OrderRejectedEvent | OrderExpiredEvent | OrderCanceledEvent | OrderFilledEvent | OrderProfitLossEvent | OrderClosedEvent | OrderEndedEvent;
+const orderEventTypes: OrderEvent["type"][] = ["CREATED", "ACCEPTED", "REJECTED", "CANCELED", "EXPIRED", "FILLED", "PROFITLOSS", "CLOSED", "ENDED"]
 
 interface CommonOrderProps {
   readonly id: string;
@@ -196,11 +204,7 @@ export abstract class OrderStream<Props extends OrderProps> extends Readable imp
   }
 
   ended(): Promise<OrderEndedEvent> {
-    return Promise.race([
-      this.cachedEvent<OrderClosedEvent>("CLOSED"),
-      this.cachedEvent<OrderCanceledEvent>("CANCELED"),
-      this.cachedEvent<OrderExpiredEvent>("EXPIRED")
-    ]);
+    return this.cachedEvent("ENDED");
   }
 
   abstract close(): Promise<OrderClosedEvent>;
