@@ -4,14 +4,7 @@ import * as OS from "../base/orderStream"
 import * as B from "../base"
 import { AskPriceChangedEvent } from "../base";
 
-type Context =
-    | OS.OrderCreatedEvent
-    | OS.OrderAcceptedEvent
-    | OS.OrderRejectedEvent
-    | OS.OrderFilledEvent
-    | OS.OrderClosedEvent
-    | OS.OrderCanceledEvent
-    | OS.OrderExpiredEvent
+type Context = {}
 
 type Event =
     | { type: 'CREATE', event: OS.OrderCreatedEvent }
@@ -24,14 +17,14 @@ type Event =
     | { type: 'EXPIRE', event: OS.OrderExpiredEvent }
 
 type State =
-    | { value: 'uninitialized', context: OS.OrderCreatedEvent }
-    | { value: 'created', context: OS.OrderCreatedEvent }
-    | { value: 'accepted', context: OS.OrderAcceptedEvent }
-    | { value: 'rejected', context: OS.OrderRejectedEvent }
-    | { value: 'filled', context: OS.OrderFilledEvent }
-    | { value: 'closed', context: OS.OrderClosedEvent }
-    | { value: 'canceled', context: OS.OrderCanceledEvent }
-    | { value: 'expired', context: OS.OrderExpiredEvent }
+    | { value: 'uninitialized', context: {} }
+    | { value: 'created', context: {} }
+    | { value: 'accepted', context: {} }
+    | { value: 'rejected', context: {} }
+    | { value: 'filled', context: {} }
+    | { value: 'closed', context: {} }
+    | { value: 'canceled', context: {} }
+    | { value: 'expired', context: {} }
 
 const machine = createMachine<Context, Event, State>({
     initial: "uninitialized",
