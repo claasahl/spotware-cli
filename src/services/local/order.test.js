@@ -454,7 +454,6 @@ describe("stopOrderFromSpotPrices", () => {
             const stream = await stopOrderFromSpotPrices({ id: "1", symbol, tradeSide: "SELL", volume: 2, enter: 6, spots })
             const event = {timestamp: 1};
             stream.on("data", e => {
-                console.log("-----", e)
                 if(e.type === "ACCEPTED") {
                     expect(stream.cancel()).resolves.toStrictEqual({...event, type: "CANCELED"})
                 } else if(e.type === "CANCELED") {
