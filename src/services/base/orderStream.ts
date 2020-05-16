@@ -1,5 +1,6 @@
 import { Readable } from "stream";
 import debug from "debug";
+import { createMachine, StateMachine } from '@xstate/fsm';
 
 import { Symbol, Timestamp, TradeSide, Volume, Price, OrderType } from "./types";
 
@@ -129,16 +130,75 @@ export declare interface OrderStream<Props extends OrderProps> extends Readable 
   removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
 }
 
+type Context = {}
+
+type Event =
+    | { type: 'CREATE', event: OrderCreatedEvent }
+    | { type: 'ACCEPT', event: OrderAcceptedEvent }
+    | { type: 'REJECT', event: OrderRejectedEvent }
+    | { type: 'FILL', event: OrderFilledEvent }
+    | { type: 'PROFITLOSS', event: OrderProfitLossEvent }
+    | { type: 'CLOSE', event: OrderClosedEvent }
+    | { type: 'CANCEL', event: OrderCanceledEvent }
+    | { type: 'EXPIRE', event: OrderExpiredEvent }
+
+type State =
+    | { value: 'uninitialized', context: {} }
+    | { value: 'created', context: {} }
+    | { value: 'accepted', context: {} }
+    | { value: 'rejected', context: {} }
+    | { value: 'filled', context: {} }
+    | { value: 'closed', context: {} }
+    | { value: 'canceled', context: {} }
+    | { value: 'expired', context: {} }
+
+const machine = createMachine<Context, Event, State>({
+    initial: "uninitialized",
+    states: {
+        uninitialized: {
+            on: {
+                CREATE: 'created'
+            }
+        },
+        created: {
+            on: {
+                ACCEPT: 'accepted',
+                REJECT: 'rejected',
+                CANCEL: 'canceled'
+            }
+        },
+        accepted: {
+            on: {
+                FILL: 'filled',
+                CANCEL: 'canceled',
+                EXPIRE: 'expired'
+            }
+        },
+        filled: {
+            on: {
+                CLOSE: 'closed',
+                PROFITLOSS: 'filled'
+            }
+        },
+        rejected: {},
+        closed: {},
+        canceled: {},
+        expired: {},
+    }
+});
+
 export abstract class OrderStream<Props extends OrderProps> extends Readable implements OrderActions {
   public readonly props: Props
   private readonly cachedEvents: Map<OrderEvent["type"], OrderEvent>;
   private readonly log: debug.Debugger;
+  protected state: StateMachine.State<Context, Event, State>;
 
   constructor(props: Props) {
     super({ objectMode: true, read: () => {} });
     this.props = Object.freeze(props);
     this.cachedEvents = new Map();
     this.log = debug("order").extend(props.id);
+    this.state = machine.initialState
   }
 
   push(event: OrderEvent): boolean {
@@ -210,4 +270,64 @@ export abstract class OrderStream<Props extends OrderProps> extends Readable imp
   abstract close(): Promise<OrderClosedEvent>;
   abstract cancel(): Promise<OrderCanceledEvent>;
   abstract end(): Promise<OrderEndedEvent>;
+
+  private event(e: Event) {
+    const oldState = this.state;
+    const newState = machine.transition(oldState, e);
+    this.state = newState;
+
+    if (newState.changed && e.type === "CREATE") {
+        this.push(e.event)
+    } else if (newState.changed && e.type === "ACCEPT") {
+        this.push(e.event)
+    } else if (newState.changed && e.type === "FILL") {
+        this.push(e.event)
+    } else if (newState.value === "filled" && e.type === "PROFITLOSS") {
+        this.push(e.event)
+    } else if (newState.changed && e.type === "REJECT") {
+        this.push(e.event)
+        this.push({ ...e.event, type: "ENDED" })
+    } else if (newState.changed && e.type === "CLOSE") {
+        this.push(e.event)
+        this.push({ ...e.event, type: "ENDED" })
+    } else if (newState.changed && e.type === "CANCEL") {
+        this.push(e.event)
+        this.push({ ...e.event, type: "ENDED" })
+    } else if (newState.changed && e.type === "EXPIRE") {
+        this.push(e.event)
+        this.push({ ...e.event, type: "ENDED" })
+    }
+}
+
+tryCreate(e: Omit<OrderCreatedEvent, "type">): void {
+    this.event({ type: "CREATE", event: { ...e, type: "CREATED" } })
+}
+
+tryAccept(e: Omit<OrderAcceptedEvent, "type">): void {
+    this.event({ type: "ACCEPT", event: { ...e, type: "ACCEPTED" } })
+}
+
+tryReject(e: Omit<OrderRejectedEvent, "type">): void {
+    this.event({ type: "REJECT", event: { ...e, type: "REJECTED" } })
+}
+
+tryFill(e: Omit<OrderFilledEvent, "type">): void {
+    this.event({ type: "FILL", event: { ...e, type: "FILLED" } })
+}
+
+tryProfitLoss(e: Omit<OrderProfitLossEvent, "type">): void {
+    this.event({ type: "PROFITLOSS", event: { ...e, type: "PROFITLOSS" } })
+}
+
+tryClose(e: Omit<OrderClosedEvent, "type">): void {
+    this.event({ type: "CLOSE", event: { ...e, type: "CLOSED" } })
+}
+
+tryCancel(e: Omit<OrderCanceledEvent, "type">): void {
+    this.event({ type: "CANCEL", event: { ...e, type: "CANCELED" } })
+}
+
+tryExpire(e: Omit<OrderExpiredEvent, "type">): void {
+    this.event({ type: "EXPIRE", event: { ...e, type: "EXPIRED" } })
+}
 }

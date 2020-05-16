@@ -1,102 +1,16 @@
 import assert from "assert";
-import { createMachine, StateMachine } from '@xstate/fsm';
 import * as OS from "../base/orderStream"
 import * as B from "../base"
 import { AskPriceChangedEvent } from "../base";
 
-type Context = {}
-
-type Event =
-    | { type: 'CREATE', event: OS.OrderCreatedEvent }
-    | { type: 'ACCEPT', event: OS.OrderAcceptedEvent }
-    | { type: 'REJECT', event: OS.OrderRejectedEvent }
-    | { type: 'FILL', event: OS.OrderFilledEvent }
-    | { type: 'PROFITLOSS', event: OS.OrderProfitLossEvent }
-    | { type: 'CLOSE', event: OS.OrderClosedEvent }
-    | { type: 'CANCEL', event: OS.OrderCanceledEvent }
-    | { type: 'EXPIRE', event: OS.OrderExpiredEvent }
-
-type State =
-    | { value: 'uninitialized', context: {} }
-    | { value: 'created', context: {} }
-    | { value: 'accepted', context: {} }
-    | { value: 'rejected', context: {} }
-    | { value: 'filled', context: {} }
-    | { value: 'closed', context: {} }
-    | { value: 'canceled', context: {} }
-    | { value: 'expired', context: {} }
-
-const machine = createMachine<Context, Event, State>({
-    initial: "uninitialized",
-    states: {
-        uninitialized: {
-            on: {
-                CREATE: 'created'
-            }
-        },
-        created: {
-            on: {
-                ACCEPT: 'accepted',
-                REJECT: 'rejected',
-                CANCEL: 'canceled'
-            }
-        },
-        accepted: {
-            on: {
-                FILL: 'filled',
-                CANCEL: 'canceled',
-                EXPIRE: 'expired'
-            }
-        },
-        filled: {
-            on: {
-                CLOSE: 'closed',
-                PROFITLOSS: 'filled'
-            }
-        },
-        rejected: {},
-        closed: {},
-        canceled: {},
-        expired: {},
-    }
-});
-
 class LocalOrderStream<Props extends OS.OrderProps> extends OS.OrderStream<Props> {
-    private state: StateMachine.State<Context, Event, State>;
     private timestamp: B.Timestamp = 0;
-    constructor(props: Props) {
-        super(props);
-        this.state = machine.initialState
+
+    push(event: OS.OrderEvent): boolean {
+        this.timestamp = event.timestamp;
+        return super.push(event)
     }
 
-    private event(e: Event) {
-        const oldState = this.state;
-        const newState = machine.transition(oldState, e);
-        this.state = newState;
-        this.timestamp = e.event.timestamp;
-
-        if (newState.changed && e.type === "CREATE") {
-            this.push(e.event)
-        } else if (newState.changed && e.type === "ACCEPT") {
-            this.push(e.event)
-        } else if (newState.changed && e.type === "FILL") {
-            this.push(e.event)
-        } else if (newState.value === "filled" && e.type === "PROFITLOSS") {
-            this.push(e.event)
-        } else if (newState.changed && e.type === "REJECT") {
-            this.push(e.event)
-            this.push({ ...e.event, type: "ENDED" })
-        } else if (newState.changed && e.type === "CLOSE") {
-            this.push(e.event)
-            this.push({ ...e.event, type: "ENDED" })
-        } else if (newState.changed && e.type === "CANCEL") {
-            this.push(e.event)
-            this.push({ ...e.event, type: "ENDED" })
-        } else if (newState.changed && e.type === "EXPIRE") {
-            this.push(e.event)
-            this.push({ ...e.event, type: "ENDED" })
-        }
-    }
     async close(): Promise<OS.OrderClosedEvent> {
         const { timestamp, price: exit, profitLoss } = await this.profitLoss();
         this.tryClose({ timestamp, exit, profitLoss })
@@ -119,38 +33,6 @@ class LocalOrderStream<Props extends OS.OrderProps> extends OS.OrderStream<Props
             await this.close();
         }
         return this.ended()
-    }
-
-    tryCreate(e: Omit<OS.OrderCreatedEvent, "type">): void {
-        this.event({ type: "CREATE", event: { ...e, type: "CREATED" } })
-    }
-
-    tryAccept(e: Omit<OS.OrderAcceptedEvent, "type">): void {
-        this.event({ type: "ACCEPT", event: { ...e, type: "ACCEPTED" } })
-    }
-
-    tryReject(e: Omit<OS.OrderRejectedEvent, "type">): void {
-        this.event({ type: "REJECT", event: { ...e, type: "REJECTED" } })
-    }
-
-    tryFill(e: Omit<OS.OrderFilledEvent, "type">): void {
-        this.event({ type: "FILL", event: { ...e, type: "FILLED" } })
-    }
-
-    tryProfitLoss(e: Omit<OS.OrderProfitLossEvent, "type">): void {
-        this.event({ type: "PROFITLOSS", event: { ...e, type: "PROFITLOSS" } })
-    }
-
-    tryClose(e: Omit<OS.OrderClosedEvent, "type">): void {
-        this.event({ type: "CLOSE", event: { ...e, type: "CLOSED" } })
-    }
-
-    tryCancel(e: Omit<OS.OrderCanceledEvent, "type">): void {
-        this.event({ type: "CANCEL", event: { ...e, type: "CANCELED" } })
-    }
-
-    tryExpire(e: Omit<OS.OrderExpiredEvent, "type">): void {
-        this.event({ type: "EXPIRE", event: { ...e, type: "EXPIRED" } })
     }
 }
 
