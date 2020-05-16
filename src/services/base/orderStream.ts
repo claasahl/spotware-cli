@@ -271,7 +271,7 @@ export abstract class OrderStream<Props extends OrderProps> extends Readable imp
   abstract cancel(): Promise<OrderCanceledEvent>;
   abstract end(): Promise<OrderEndedEvent>;
 
-  private event(e: Event) {
+  protected event(e: Event) {
     const oldState = this.state;
     const newState = machine.transition(oldState, e);
     this.state = newState;
@@ -297,6 +297,18 @@ export abstract class OrderStream<Props extends OrderProps> extends Readable imp
       this.push(e.event)
       this.push({ ...e.event, type: "ENDED" })
     }
+  }
+}
+export class DebugOrderStream<Props extends OrderProps> extends OrderStream<Props> {
+
+  async close(): Promise<OrderClosedEvent> {
+    throw new Error("not implemented");
+  }
+  async cancel(): Promise<OrderCanceledEvent> {
+    throw new Error("not implemented");
+  }
+  async end(): Promise<OrderEndedEvent> {
+    throw new Error("not implemented");
   }
 
   tryCreate(e: Omit<OrderCreatedEvent, "type">): void {

@@ -3,7 +3,7 @@ import * as OS from "../base/orderStream"
 import * as B from "../base"
 import { AskPriceChangedEvent } from "../base";
 
-class LocalOrderStream<Props extends OS.OrderProps> extends OS.OrderStream<Props> {
+class LocalOrderStream<Props extends OS.OrderProps> extends OS.DebugOrderStream<Props> {
     private timestamp: B.Timestamp = 0;
 
     push(event: OS.OrderEvent): boolean {
