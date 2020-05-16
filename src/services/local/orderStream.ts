@@ -70,6 +70,7 @@ const machine = createMachine<Context, Event, State>({
 
 class LocalOrderStream<Props extends OS.OrderProps> extends OS.OrderStream<Props> {
     private state: StateMachine.State<Context, Event, State>;
+    private timestamp: B.Timestamp = 0;
     constructor(props: Props) {
         super(props);
         this.state = machine.initialState
@@ -79,6 +80,7 @@ class LocalOrderStream<Props extends OS.OrderProps> extends OS.OrderStream<Props
         const oldState = this.state;
         const newState = machine.transition(oldState, e);
         this.state = newState;
+        this.timestamp = e.event.timestamp;
 
         if (newState.changed && e.type === "CREATE") {
             this.push(e.event)
@@ -111,8 +113,7 @@ class LocalOrderStream<Props extends OS.OrderProps> extends OS.OrderStream<Props
         throw new Error(`order ${this.props.id} cannot be closed (${JSON.stringify(this.state)})`);
     }
     async cancel(): Promise<OS.OrderCanceledEvent> {
-        const { timestamp } = await this.created(); // TODO: improve estimate of timestamp
-        this.tryCancel({ timestamp })
+        this.tryCancel({ timestamp: this.timestamp })
         if (this.state.matches("canceled")) {
             return this.canceled();
         }
