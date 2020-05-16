@@ -1,193 +1,183 @@
 import assert from "assert";
-import { createMachine, interpret, StateMachine } from '@xstate/fsm';
+import { createMachine, StateMachine } from '@xstate/fsm';
 import * as OS from "../base/orderStream"
 import * as B from "../base"
 import { AskPriceChangedEvent } from "../base";
 
-type Context = 
-| OS.OrderCreatedEvent
-| OS.OrderAcceptedEvent
-| OS.OrderRejectedEvent
-| OS.OrderFilledEvent
-| OS.OrderClosedEvent
-| OS.OrderCanceledEvent
-| OS.OrderExpiredEvent
+type Context =
+    | OS.OrderCreatedEvent
+    | OS.OrderAcceptedEvent
+    | OS.OrderRejectedEvent
+    | OS.OrderFilledEvent
+    | OS.OrderClosedEvent
+    | OS.OrderCanceledEvent
+    | OS.OrderExpiredEvent
 
 type Event =
-| { type: 'CREATE', event: OS.OrderCreatedEvent }
-| { type: 'ACCEPT', event: OS.OrderAcceptedEvent }
-| { type: 'REJECT', event: OS.OrderRejectedEvent }
-| { type: 'FILL', event:   OS.OrderFilledEvent }
-| { type: 'CLOSE', event:  OS.OrderClosedEvent }
-| { type: 'CANCEL', event: OS.OrderCanceledEvent }
-| { type: 'EXPIRE', event: OS.OrderExpiredEvent }
+    | { type: 'CREATE', event: OS.OrderCreatedEvent }
+    | { type: 'ACCEPT', event: OS.OrderAcceptedEvent }
+    | { type: 'REJECT', event: OS.OrderRejectedEvent }
+    | { type: 'FILL', event: OS.OrderFilledEvent }
+    | { type: 'PROFITLOSS', event: OS.OrderProfitLossEvent }
+    | { type: 'CLOSE', event: OS.OrderClosedEvent }
+    | { type: 'CANCEL', event: OS.OrderCanceledEvent }
+    | { type: 'EXPIRE', event: OS.OrderExpiredEvent }
 
 type State =
-  | { value: 'uninitialized', context: OS.OrderCreatedEvent }
-  | { value: 'created', context: OS.OrderCreatedEvent }
-  | { value: 'accepted', context: OS.OrderAcceptedEvent }
-  | { value: 'rejected', context: OS.OrderRejectedEvent }
-  | { value: 'filled', context: OS.OrderFilledEvent }
-  | { value: 'closed', context: OS.OrderClosedEvent }
-  | { value: 'canceled', context: OS.OrderCanceledEvent }
-  | { value: 'expired', context: OS.OrderExpiredEvent }
+    | { value: 'uninitialized', context: OS.OrderCreatedEvent }
+    | { value: 'created', context: OS.OrderCreatedEvent }
+    | { value: 'accepted', context: OS.OrderAcceptedEvent }
+    | { value: 'rejected', context: OS.OrderRejectedEvent }
+    | { value: 'filled', context: OS.OrderFilledEvent }
+    | { value: 'closed', context: OS.OrderClosedEvent }
+    | { value: 'canceled', context: OS.OrderCanceledEvent }
+    | { value: 'expired', context: OS.OrderExpiredEvent }
 
-  class LocalOrderStream<Props extends OS.OrderProps> extends OS.OrderStream<Props> {
-    private service: StateMachine.Service<Context, Event, State>;
+const machine = createMachine<Context, Event, State>({
+    initial: "uninitialized",
+    states: {
+        uninitialized: {
+            on: {
+                CREATE: 'created'
+            }
+        },
+        created: {
+            on: {
+                ACCEPT: 'accepted',
+                REJECT: 'rejected',
+                CANCEL: 'canceled'
+            }
+        },
+        accepted: {
+            on: {
+                FILL: 'filled',
+                CANCEL: 'canceled',
+                EXPIRE: 'expired'
+            }
+        },
+        filled: {
+            on: {
+                CLOSE: 'closed',
+                PROFITLOSS: 'filled'
+            }
+        },
+        rejected: {},
+        closed: {},
+        canceled: {},
+        expired: {},
+    }
+});
+
+class LocalOrderStream<Props extends OS.OrderProps> extends OS.OrderStream<Props> {
+    private state: StateMachine.State<Context, Event, State>;
     constructor(props: Props) {
         super(props);
-        const machine = createMachine<Context, Event, State>({
-            initial: "uninitialized",
-            states: {
-                uninitialized: {
-                    on: {
-                        CREATE: 'created'
-                    }
-                },
-                created: {
-                    entry: (_context, event) => {
-                        if(event.type === "CREATE") {
-                            this.push(event.event)
-                        }
-                    },
-                    on: {
-                        ACCEPT: 'accepted',
-                        REJECT: 'rejected',
-                        CANCEL: 'canceled'
-                    }
-                },
-                accepted: {
-                    entry: (_context, event) => {
-                        if(event.type === "ACCEPT") {
-                            this.push(event.event)
-                        }
-                    },
-                    on: {
-                        FILL: 'filled',
-                        CANCEL: 'canceled',
-                        EXPIRE: 'expired'
-                    }
-                },
-                filled: {
-                    entry: (_context, event) => {
-                        if(event.type === "FILL") {
-                            this.push(event.event)
-                        }
-                    },
-                    on: {
-                        CLOSE: 'closed'
-                    }
-                },
-                rejected: {
-                    entry: (_context, event) => {
-                        if(event.type === "REJECT") {
-                            this.push(event.event)
-                            this.push({...event.event, type: "ENDED"})
-                        }
-                    }
-                },
-                closed: {  
-                    entry: (_context, event) => {
-                        if(event.type === "CLOSE") {
-                            this.push(event.event)
-                            this.push({...event.event, type: "ENDED"})
-                        }
-                    }
-                },
-                canceled: { 
-                    entry: (_context, event) => {
-                        if(event.type === "CANCEL") {
-                            this.push(event.event)
-                            this.push({...event.event, type: "ENDED"})
-                        }
-                    }
-                },
-                expired: {
-                    entry: (_context, event) => {
-                        if(event.type === "EXPIRE") {
-                            this.push(event.event)
-                            this.push({...event.event, type: "ENDED"})
-                        }
-                    }
-                },
-            }
-        });
-        this.service = interpret(machine);
-        this.service.start();
+        this.state = machine.initialState
+    }
+
+    private event(e: Event) {
+        const oldState = this.state;
+        const newState = machine.transition(oldState, e);
+        this.state = newState;
+
+        if (newState.changed && e.type === "CREATE") {
+            this.push(e.event)
+        } else if (newState.changed && e.type === "ACCEPT") {
+            this.push(e.event)
+        } else if (newState.changed && e.type === "FILL") {
+            this.push(e.event)
+        } else if (newState.value === "filled" && e.type === "PROFITLOSS") {
+            this.push(e.event)
+        } else if (newState.changed && e.type === "REJECT") {
+            this.push(e.event)
+            this.push({ ...e.event, type: "ENDED" })
+        } else if (newState.changed && e.type === "CLOSE") {
+            this.push(e.event)
+            this.push({ ...e.event, type: "ENDED" })
+        } else if (newState.changed && e.type === "CANCEL") {
+            this.push(e.event)
+            this.push({ ...e.event, type: "ENDED" })
+        } else if (newState.changed && e.type === "EXPIRE") {
+            this.push(e.event)
+            this.push({ ...e.event, type: "ENDED" })
+        }
     }
     async close(): Promise<OS.OrderClosedEvent> {
-        const {timestamp, price: exit, profitLoss} = await this.profitLoss();
+        const { timestamp, price: exit, profitLoss } = await this.profitLoss();
         this.tryClose({ timestamp, exit, profitLoss })
-        if(this.service.state.matches("closed")) {
+        if (this.state.matches("closed")) {
             return this.closed()
         }
-        throw new Error(`order ${this.props.id} cannot be closed (${JSON.stringify(this.service.state)})`);
+        throw new Error(`order ${this.props.id} cannot be closed (${JSON.stringify(this.state)})`);
     }
     async cancel(): Promise<OS.OrderCanceledEvent> {
-        const {timestamp} = await this.created(); // TODO: improve estimate of timestamp
+        const { timestamp } = await this.created(); // TODO: improve estimate of timestamp
         this.tryCancel({ timestamp })
-        if(this.service.state.matches("canceled")) {
+        if (this.state.matches("canceled")) {
             return this.canceled();
         }
-        throw new Error(`order ${this.props.id} cannot be canceled (${JSON.stringify(this.service.state)})`);
+        throw new Error(`order ${this.props.id} cannot be canceled (${JSON.stringify(this.state)})`);
     }
     async end(): Promise<OS.OrderEndedEvent> {
-        if(["created", "accepted", "canceled"].includes(this.service.state.value)) {
+        if (["created", "accepted", "canceled"].includes(this.state.value)) {
             await this.cancel();
-        } else if(["filled", "closed"].includes(this.service.state.value)) {
+        } else if (["filled", "closed"].includes(this.state.value)) {
             await this.close();
         }
         return this.ended()
     }
 
-    
     tryCreate(e: Omit<OS.OrderCreatedEvent, "type">): void {
-        this.service.send({ type: "CREATE", event: {...e, type: "CREATED"}})
-      }
-    
-      tryAccept(e: Omit<OS.OrderAcceptedEvent, "type">): void {
-          this.service.send({ type: "ACCEPT", event: {...e, type: "ACCEPTED"}})
-      }
-    
-      tryReject(e: Omit<OS.OrderRejectedEvent, "type">): void {
-          this.service.send({ type: "REJECT", event: {...e, type: "REJECTED"}})
-      }
-    
-      tryFill(e: Omit<OS.OrderFilledEvent, "type">): void {
-          this.service.send({ type: "FILL", event: {...e, type: "FILLED"}})
-      }
-    
-      tryClose(e: Omit<OS.OrderClosedEvent, "type">): void {
-          this.service.send({ type: "CLOSE", event: {...e, type: "CLOSED"}})
-      }
-    
-      tryCancel(e: Omit<OS.OrderCanceledEvent, "type">): void {
-          this.service.send({ type: "CANCEL", event: {...e, type: "CANCELED"}})
-      }
-    
-      tryExpire(e: Omit<OS.OrderExpiredEvent, "type">): void {
-          this.service.send({ type: "EXPIRE", event: {...e, type: "EXPIRED"}})
-      }
+        this.event({ type: "CREATE", event: { ...e, type: "CREATED" } })
+    }
+
+    tryAccept(e: Omit<OS.OrderAcceptedEvent, "type">): void {
+        this.event({ type: "ACCEPT", event: { ...e, type: "ACCEPTED" } })
+    }
+
+    tryReject(e: Omit<OS.OrderRejectedEvent, "type">): void {
+        this.event({ type: "REJECT", event: { ...e, type: "REJECTED" } })
+    }
+
+    tryFill(e: Omit<OS.OrderFilledEvent, "type">): void {
+        this.event({ type: "FILL", event: { ...e, type: "FILLED" } })
+    }
+
+    tryProfitLoss(e: Omit<OS.OrderProfitLossEvent, "type">): void {
+        this.event({ type: "PROFITLOSS", event: { ...e, type: "PROFITLOSS" } })
+    }
+
+    tryClose(e: Omit<OS.OrderClosedEvent, "type">): void {
+        this.event({ type: "CLOSE", event: { ...e, type: "CLOSED" } })
+    }
+
+    tryCancel(e: Omit<OS.OrderCanceledEvent, "type">): void {
+        this.event({ type: "CANCEL", event: { ...e, type: "CANCELED" } })
+    }
+
+    tryExpire(e: Omit<OS.OrderExpiredEvent, "type">): void {
+        this.event({ type: "EXPIRE", event: { ...e, type: "EXPIRED" } })
+    }
 }
 
 async function buy<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream, condition: (e: B.AskPriceChangedEvent) => boolean): Promise<OS.OrderStream<Props>> {
     assert.strictEqual(props.tradeSide, "BUY");
     const stream = new LocalOrderStream<Props>(props);
     const fill = (e: AskPriceChangedEvent) => {
-        if(condition(e)) {
+        if (condition(e)) {
             spots.off("ask", fill);
-            const {timestamp, ask: entry} = e;
-            stream.tryFill({timestamp, entry})
+            const { timestamp, ask: entry } = e;
+            stream.tryFill({ timestamp, entry })
 
             const update = (e: B.BidPriceChangedEvent) => {
-                const {timestamp, bid: price} = e
+                const { timestamp, bid: price } = e
                 const profitLoss = Math.round((price - entry) * stream.props.volume * 100) / 100;
-                stream.push({type: "PROFITLOSS", timestamp, price, profitLoss}); // TODO no "push"
+                stream.tryProfitLoss({ timestamp, price, profitLoss });
 
-                if(props.stopLoss && props.stopLoss >= price ||
+                if (props.stopLoss && props.stopLoss >= price ||
                     props.takeProfit && props.takeProfit <= price) {
                     spots.off("bid", update);
-                    stream.tryClose({timestamp, exit: price, profitLoss})
+                    stream.tryClose({ timestamp, exit: price, profitLoss })
                 }
             }
             spots.bid().then(e => {
@@ -198,10 +188,10 @@ async function buy<Props extends B.OrderProps>(props: Props, spots: B.SpotPrices
         return false;
     }
     spots.ask().then(e => {
-        const {timestamp} = e;
-        stream.tryCreate({timestamp})
-        stream.tryAccept({timestamp})
-        if(!fill(e)) {
+        const { timestamp } = e;
+        stream.tryCreate({ timestamp })
+        stream.tryAccept({ timestamp })
+        if (!fill(e)) {
             spots.on("ask", fill);
         }
     })
@@ -212,20 +202,20 @@ async function sell<Props extends B.OrderProps>(props: Props, spots: B.SpotPrice
     assert.strictEqual(props.tradeSide, "SELL");
     const stream = new LocalOrderStream<Props>(props);
     const fill = (e: B.BidPriceChangedEvent) => {
-        if(condition(e)) {
+        if (condition(e)) {
             spots.off("bid", fill);
-            const {timestamp, bid: entry} = e;
-            stream.tryFill({timestamp, entry})
+            const { timestamp, bid: entry } = e;
+            stream.tryFill({ timestamp, entry })
 
             const update = (e: B.AskPriceChangedEvent) => {
-                const {timestamp, ask: price} = e
+                const { timestamp, ask: price } = e
                 const profitLoss = Math.round((entry - price) * stream.props.volume * 100) / 100;
-                stream.push({type: "PROFITLOSS", timestamp, price, profitLoss}); // TODO no "push"
+                stream.tryProfitLoss({ timestamp, price, profitLoss });
 
-                if(props.stopLoss && props.stopLoss <= price ||
+                if (props.stopLoss && props.stopLoss <= price ||
                     props.takeProfit && props.takeProfit >= price) {
                     spots.off("ask", update);
-                    stream.tryClose({timestamp, exit: price, profitLoss})
+                    stream.tryClose({ timestamp, exit: price, profitLoss })
                 }
             }
             spots.ask().then(e => {
@@ -236,10 +226,10 @@ async function sell<Props extends B.OrderProps>(props: Props, spots: B.SpotPrice
         return false;
     }
     spots.bid().then(e => {
-        const {timestamp} = e;
-        stream.tryCreate({timestamp})
-        stream.tryAccept({timestamp})
-        if(!fill(e)) {
+        const { timestamp } = e;
+        stream.tryCreate({ timestamp })
+        stream.tryAccept({ timestamp })
+        if (!fill(e)) {
             spots.on("bid", fill);
         }
     })
@@ -247,17 +237,17 @@ async function sell<Props extends B.OrderProps>(props: Props, spots: B.SpotPrice
 }
 
 export function marketOrderFromSpotPrices(props: Omit<B.MarketOrderProps & { spots: B.SpotPricesStream }, "orderType">): Promise<OS.OrderStream<B.MarketOrderProps>> {
-    const {spots, ...rest} = props;
-    if(props.tradeSide === "BUY") {
-        return buy({...rest, orderType: "MARKET"}, spots, () => true)
+    const { spots, ...rest } = props;
+    if (props.tradeSide === "BUY") {
+        return buy({ ...rest, orderType: "MARKET" }, spots, () => true)
     }
-    return sell({...rest, orderType: "MARKET"}, spots, () => true)
+    return sell({ ...rest, orderType: "MARKET" }, spots, () => true)
 }
 
 export function stopOrderFromSpotPrices(props: Omit<B.StopOrderProps & { spots: B.SpotPricesStream }, "orderType">): Promise<OS.OrderStream<B.StopOrderProps>> {
-    const {spots, ...rest} = props;
-    if(props.tradeSide === "BUY") {
-        return buy({...rest, orderType: "STOP"}, spots, e => e.ask >= props.enter)
+    const { spots, ...rest } = props;
+    if (props.tradeSide === "BUY") {
+        return buy({ ...rest, orderType: "STOP" }, spots, e => e.ask >= props.enter)
     }
-    return sell({...rest, orderType: "STOP"}, spots, e => e.bid <= props.enter)
+    return sell({ ...rest, orderType: "STOP" }, spots, e => e.bid <= props.enter)
 }
