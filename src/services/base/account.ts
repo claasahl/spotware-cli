@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 import debug from "debug";
 
 import { Price, Timestamp, Currency } from "./types";
-import { OrderStream, MarketOrderProps, StopOrderProps, OrderProps } from "./order";
+import { OrderStream, MarketOrderProps, StopOrderProps, OrderEvent, OrderProps } from "./order";
 import { SpotPricesStream, SpotPricesProps } from "./spotPrices";
 import { TrendbarsProps, TrendbarsStream } from "./trendbars";
 
@@ -18,11 +18,7 @@ export interface EquityChangedEvent {
   equity: Price;
   timestamp: Timestamp;
 }
-interface OrderEventBase {
-  timestamp: Timestamp;
-  status: "CREATED" | "ACCEPTED" | "REJECTED" | "CANCELED" | "EXPIRED" | "FILLED" | "CLOSED" | "ENDED"
-}
-export type OrderEvent = OrderProps & OrderEventBase
+export type OrderEvents = OrderEvent & OrderProps;
 export type AccountSimpleMarketOrderProps = Omit<MarketOrderProps, keyof AccountProps | "orderType">;
 export type AccountSimpleStopOrderProps = Omit<StopOrderProps, keyof AccountProps | "orderType">;
 export type AccountSimpleSpotPricesProps = Omit<SpotPricesProps, keyof AccountProps>;
@@ -40,37 +36,37 @@ export declare interface AccountStream extends EventEmitter {
   balance(): Promise<BalanceChangedEvent>
   transaction(): Promise<TransactionEvent>
   equity(): Promise<EquityChangedEvent>
-  order(): Promise<OrderEvent>
+  order(): Promise<OrderEvents>
 
   addListener(event: string, listener: (...args: any[]) => void): this;
   addListener(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
   addListener(event: "transaction", listener: (e: TransactionEvent) => void): this;
   addListener(event: "equity", listener: (e: EquityChangedEvent) => void): this;
-  addListener(event: "order", listener: (e: OrderEvent) => void): this;
+  addListener(event: "order", listener: (e: OrderEvents) => void): this;
 
   on(event: string, listener: (...args: any[]) => void): this;
   on(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
   on(event: "transaction", listener: (e: TransactionEvent) => void): this;
   on(event: "equity", listener: (e: EquityChangedEvent) => void): this;
-  on(event: "order", listener: (e: OrderEvent) => void): this;
+  on(event: "order", listener: (e: OrderEvents) => void): this;
 
   once(event: string, listener: (...args: any[]) => void): this;
   once(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
   once(event: "transaction", listener: (e: TransactionEvent) => void): this;
   once(event: "equity", listener: (e: EquityChangedEvent) => void): this;
-  once(event: "order", listener: (e: OrderEvent) => void): this;
+  once(event: "order", listener: (e: OrderEvents) => void): this;
 
   prependListener(event: string, listener: (...args: any[]) => void): this;
   prependListener(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
   prependListener(event: "transaction", listener: (e: TransactionEvent) => void): this;
   prependListener(event: "equity", listener: (e: EquityChangedEvent) => void): this;
-  prependListener(event: "order", listener: (e: OrderEvent) => void): this;
+  prependListener(event: "order", listener: (e: OrderEvents) => void): this;
 
   prependOnceListener(event: string, listener: (...args: any[]) => void): this;
   prependOnceListener(event: "balance", listener: (e: BalanceChangedEvent) => void): this;
   prependOnceListener(event: "transaction", listener: (e: TransactionEvent) => void): this;
   prependOnceListener(event: "equity", listener: (e: EquityChangedEvent) => void): this;
-  prependOnceListener(event: "order", listener: (e: OrderEvent) => void): this;
+  prependOnceListener(event: "order", listener: (e: OrderEvents) => void): this;
 }
 
 export abstract class AccountStream extends EventEmitter implements AccountActions {
@@ -78,7 +74,7 @@ export abstract class AccountStream extends EventEmitter implements AccountActio
   private cachedBalance?: BalanceChangedEvent;
   private cachedTransaction?: TransactionEvent;
   private cachedEquity?: EquityChangedEvent;
-  private cachedOrder?: OrderEvent;
+  private cachedOrder?: OrderEvents;
   constructor(props: AccountProps) {
     super();
     this.props = Object.freeze(props);
@@ -176,7 +172,7 @@ export class DebugAccountStream extends AccountStream {
     setImmediate(() => this.emit("equity", e));
   }
 
-  emitOrder(e: OrderEvent): void {
+  emitOrder(e: OrderEvents): void {
     setImmediate(() => this.emit("order", e));
   }
 }

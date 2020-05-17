@@ -104,28 +104,24 @@ class SpotwareAccountStream extends B.DebugAccountStream {
             order.profitLoss = e.profitLoss;
             this.updateEquity(e)
         }
-        stream.on("profitLoss", update)
-        stream.once("ended", e => {
-            stream.off("profitLoss", update)
-            const all = this.orders.get(props.id)!
-            const toBeDeleted: number[] = [];
-            all.forEach((o, index) => {
-                if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
-                    this.emitTransaction({ timestamp: e.timestamp, amount: o.profitLoss })
-                    toBeDeleted.push(index);
-                }
-            });
-            toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
+        stream.on("data", e => {
+            if(e.type === "PROFITLOSS") {
+                update(e);
+            } else if(e.type === "ACCEPTED") {
+                this.orders.get(props.id)!.push(order)
+            } else if(e.type === "ENDED") {
+                const all = this.orders.get(props.id)!
+                const toBeDeleted: number[] = [];
+                all.forEach((o, index) => {
+                    if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
+                        this.emitTransaction({ timestamp: e.timestamp, amount: o.profitLoss })
+                        toBeDeleted.push(index);
+                    }
+                });
+                toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
+            }
+            this.emitOrder({...e, ...stream.props})
         })
-        stream.once("accepted", () => this.orders.get(props.id)!.push(order))
-        stream.once("created", e => this.emitOrder({ timestamp: e.timestamp, status: "CREATED", ...stream.props }))
-        stream.once("accepted", e => this.emitOrder({ timestamp: e.timestamp, status: "ACCEPTED", ...stream.props }))
-        stream.once("rejected", e => this.emitOrder({ timestamp: e.timestamp, status: "REJECTED", ...stream.props }))
-        stream.once("filled", e => this.emitOrder({ timestamp: e.timestamp, status: "FILLED", ...stream.props }))
-        stream.once("closed", e => this.emitOrder({ timestamp: e.timestamp, status: "CLOSED", ...stream.props }))
-        stream.once("canceled", e => this.emitOrder({ timestamp: e.timestamp, status: "CANCELED", ...stream.props }))
-        stream.once("expired", e => this.emitOrder({ timestamp: e.timestamp, status: "EXPIRED", ...stream.props }))
-        stream.once("ended", e => this.emitOrder({ timestamp: e.timestamp, status: "ENDED", ...stream.props }))
         return stream;
     }
     async stopOrder(props: B.AccountSimpleStopOrderProps): Promise<B.OrderStream<B.StopOrderProps>> {
@@ -146,28 +142,24 @@ class SpotwareAccountStream extends B.DebugAccountStream {
             order.profitLoss = e.profitLoss;
             this.updateEquity(e)
         }
-        stream.on("profitLoss", update)
-        stream.once("ended", e => {
-            stream.off("profitLoss", update)
-            const all = this.orders.get(props.id)!
-            const toBeDeleted: number[] = [];
-            all.forEach((o, index) => {
-                if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
-                    this.emitTransaction({ timestamp: e.timestamp, amount: o.profitLoss })
-                    toBeDeleted.push(index);
-                }
-            });
-            toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
+        stream.on("data", e => {
+            if(e.type === "PROFITLOSS") {
+                update(e);
+            } else if(e.type === "ACCEPTED") {
+                this.orders.get(props.id)!.push(order)
+            } else if(e.type === "ENDED") {
+                const all = this.orders.get(props.id)!
+                const toBeDeleted: number[] = [];
+                all.forEach((o, index) => {
+                    if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
+                        this.emitTransaction({ timestamp: e.timestamp, amount: o.profitLoss })
+                        toBeDeleted.push(index);
+                    }
+                });
+                toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
+            }
+            this.emitOrder({...e, ...stream.props})
         })
-        stream.once("accepted", () => this.orders.get(props.id)!.push(order))
-        stream.once("created", e => this.emitOrder({ timestamp: e.timestamp, status: "CREATED", ...stream.props }))
-        stream.once("accepted", e => this.emitOrder({ timestamp: e.timestamp, status: "ACCEPTED", ...stream.props }))
-        stream.once("rejected", e => this.emitOrder({ timestamp: e.timestamp, status: "REJECTED", ...stream.props }))
-        stream.once("filled", e => this.emitOrder({ timestamp: e.timestamp, status: "FILLED", ...stream.props }))
-        stream.once("closed", e => this.emitOrder({ timestamp: e.timestamp, status: "CLOSED", ...stream.props }))
-        stream.once("canceled", e => this.emitOrder({ timestamp: e.timestamp, status: "CANCELED", ...stream.props }))
-        stream.once("expired", e => this.emitOrder({ timestamp: e.timestamp, status: "EXPIRED", ...stream.props }))
-        stream.once("ended", e => this.emitOrder({ timestamp: e.timestamp, status: "ENDED", ...stream.props }))
         return stream;
     }
 

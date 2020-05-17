@@ -37,8 +37,11 @@ async function placeOrder(props: PlaceOrderProps): Promise<B.OrderStream<B.StopO
       order.close();
     }
   }
-  order.on("profitLoss", guard);
-  order.once("ended", () => order.off("profitLoss", guard))
+  order.on("data", e => {
+    if(e.type === "PROFITLOSS") {
+      guard(e);  
+    }
+  });
   return order;
 }
 

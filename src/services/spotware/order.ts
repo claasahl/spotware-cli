@@ -95,7 +95,7 @@ async function order<Props extends B.OrderProps>(props: Props, extras: { client:
     const positionId = event.order?.positionId || 0;
     const orderId = event.order?.orderId || 0;
     const stream = new SpotwareOrderStream<Props>(props, {...extras, positionId, orderId});
-    stream.emitCreated({ timestamp: Date.now() })
+    stream.tryCreate({ timestamp: Date.now() })
     const round = (price: number) => {
         const factor = Math.pow(10, extras.digits);
         return Math.round(price * factor) / factor
@@ -111,7 +111,7 @@ async function order<Props extends B.OrderProps>(props: Props, extras: { client:
                         return;
                     }
                     const timestamp = msg.order.utcLastUpdateTimestamp || 0;
-                    stream.emitAccepted({ timestamp });
+                    stream.tryAccept({ timestamp });
                     break;
                 }
             case $.ProtoOAExecutionType.ORDER_EXPIRED:
@@ -120,8 +120,7 @@ async function order<Props extends B.OrderProps>(props: Props, extras: { client:
                         return
                     }
                     const timestamp = msg.order.utcLastUpdateTimestamp || 0;
-                    stream.emitExpired({ timestamp });
-                    stream.emitEnded({ timestamp });
+                    stream.tryExpire({ timestamp });
                     break;
                 }
             case $.ProtoOAExecutionType.ORDER_CANCELLED:
@@ -130,8 +129,7 @@ async function order<Props extends B.OrderProps>(props: Props, extras: { client:
                         return
                     }
                     const timestamp = msg.order.utcLastUpdateTimestamp || 0;
-                    stream.emitCanceled({ timestamp });
-                    stream.emitEnded({ timestamp });
+                    stream.tryCancel({ timestamp });
                     break;
                 }
             case $.ProtoOAExecutionType.ORDER_FILLED:
@@ -143,28 +141,27 @@ async function order<Props extends B.OrderProps>(props: Props, extras: { client:
                     const timestamp = msg.deal.executionTimestamp;
                     if (msg.deal.closePositionDetail) {
                         const profitLoss = msg.deal.closePositionDetail.grossProfit / Math.pow(10, extras.digits);
-                        stream.emitClosed({ timestamp, exit: executionPrice, profitLoss });
-                        stream.emitEnded({ timestamp, exit: executionPrice, profitLoss });
+                        stream.tryClose({ timestamp, exit: executionPrice, profitLoss });
                         break;
                     }
 
-                    stream.emitFilled({ timestamp, entry: executionPrice });
+                    stream.tryFill({ timestamp, entry: executionPrice });
                     if (props.tradeSide === "BUY") {
                         const update = (e: B.BidPriceChangedEvent) => {
                             const { timestamp, bid: price } = e
                             const profitLoss = round((price - executionPrice) * stream.props.volume);
-                            stream.emitProfitLoss({ timestamp, price, profitLoss })
+                            stream.tryProfitLoss({ timestamp, price, profitLoss })
                         }
                         extras.spots.on("bid", update);
-                        stream.once("ended", () => extras.spots.off("bid", update))
+                        stream.once("end", () => extras.spots.off("bid", update))
                     } else if (props.tradeSide === "SELL") {
                         const update = (e: B.AskPriceChangedEvent) => {
                             const { timestamp, ask: price } = e
                             const profitLoss = round((executionPrice - price) * stream.props.volume);
-                            stream.emitProfitLoss({ timestamp, price, profitLoss })
+                            stream.tryProfitLoss({ timestamp, price, profitLoss })
                         }
                         extras.spots.on("ask", update);
-                        stream.once("ended", () => extras.spots.off("ask", update))
+                        stream.once("end", () => extras.spots.off("ask", update))
                     }
                     break;
                 }
@@ -175,7 +172,7 @@ async function order<Props extends B.OrderProps>(props: Props, extras: { client:
                     }
                     const timestamp = msg.deal.executionTimestamp;
                     // TODO: msg.errorCode
-                    stream.emitRejected({ timestamp });
+                    stream.tryReject({ timestamp });
                     break;
                 }
             default:
