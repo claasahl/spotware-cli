@@ -1,5 +1,5 @@
 import assert from "assert";
-import * as OS from "../base/orderStream"
+import * as OS from "../base/order"
 import * as B from "../base"
 import { AskPriceChangedEvent } from "../base";
 
