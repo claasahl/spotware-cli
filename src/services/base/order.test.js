@@ -319,11 +319,10 @@ describe("DebugOrderStream", () => {
                 {type: "REJECTED", timestamp: 123},
                 {type: "ENDED", timestamp: 123},
             ]
-            stream.on("data", e => {
-                expect(e).toStrictEqual(events.shift());
-                if(events.length === 0) {
-                    done()
-                }
+            stream.on("data", e => expect(e).toStrictEqual(events.shift()))
+            stream.once("end", () => {
+                expect(events.length).toBe(0);
+                done();
             })
             stream.tryCreate({ timestamp: 1 })
             stream.tryReject({ timestamp: 123 })
@@ -338,11 +337,10 @@ describe("DebugOrderStream", () => {
                 {type: "CANCELED", timestamp: 123},
                 {type: "ENDED", timestamp: 123},
             ]
-            stream.on("data", e => {
-                expect(e).toStrictEqual(events.shift());
-                if(events.length === 0) {
-                    done()
-                }
+            stream.on("data", e => expect(e).toStrictEqual(events.shift()))
+            stream.once("end", () => {
+                expect(events.length).toBe(0);
+                done();
             })
             stream.tryCreate({ timestamp: 1 })
             stream.tryAccept({ timestamp: 2 })
@@ -358,11 +356,10 @@ describe("DebugOrderStream", () => {
                 {type: "EXPIRED", timestamp: 123},
                 {type: "ENDED", timestamp: 123},
             ]
-            stream.on("data", e => {
-                expect(e).toStrictEqual(events.shift());
-                if(events.length === 0) {
-                    done()
-                }
+            stream.on("data", e => expect(e).toStrictEqual(events.shift()))
+            stream.once("end", () => {
+                expect(events.length).toBe(0);
+                done();
             })
             stream.tryCreate({ timestamp: 1 })
             stream.tryAccept({ timestamp: 2 })
@@ -381,11 +378,10 @@ describe("DebugOrderStream", () => {
                 {type: "CLOSED", timestamp: 123, exit: 42, profitLoss: 23},
                 {type: "ENDED", timestamp: 123, exit: 42, profitLoss: 23},
             ]
-            stream.on("data", e => {
-                expect(e).toStrictEqual(events.shift());
-                if(events.length === 0) {
-                    done()
-                }
+            stream.on("data", e => expect(e).toStrictEqual(events.shift()))
+            stream.once("end", () => {
+                expect(events.length).toBe(0);
+                done();
             })
             stream.tryCreate({ timestamp: 1 })
             stream.tryAccept({ timestamp: 2 })

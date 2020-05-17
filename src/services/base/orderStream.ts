@@ -187,6 +187,8 @@ const machine = createMachine<Context, Event, State>({
   }
 });
 
+const streamConfig = { objectMode: true, emitClose: false, read: () => { } }
+
 export abstract class OrderStream<Props extends OrderProps> extends Readable implements OrderActions {
   public readonly props: Props
   private readonly cachedEvents: Map<OrderEvent["type"], OrderEvent>;
@@ -194,15 +196,15 @@ export abstract class OrderStream<Props extends OrderProps> extends Readable imp
   protected state: StateMachine.State<Context, Event, State>;
 
   constructor(props: Props) {
-    super({ objectMode: true, read: () => { } });
+    super(streamConfig);
     this.props = Object.freeze(props);
     this.cachedEvents = new Map();
     this.log = debug("order").extend(props.id);
     this.state = machine.initialState
   }
 
-  push(event: OrderEvent): boolean {
-    if (orderEventTypes.includes(event.type)) {
+  push(event: OrderEvent | null): boolean {
+    if (event && orderEventTypes.includes(event.type)) {
       this.cachedEvents.set(event.type, event);
       this.log("%j", event);
     }
@@ -287,15 +289,19 @@ export abstract class OrderStream<Props extends OrderProps> extends Readable imp
     } else if (newState.changed && e.type === "REJECT") {
       this.push(e.event)
       this.push({ ...e.event, type: "ENDED" })
+      this.push(null)
     } else if (newState.changed && e.type === "CLOSE") {
       this.push(e.event)
       this.push({ ...e.event, type: "ENDED" })
+      this.push(null)
     } else if (newState.changed && e.type === "CANCEL") {
       this.push(e.event)
       this.push({ ...e.event, type: "ENDED" })
+      this.push(null)
     } else if (newState.changed && e.type === "EXPIRE") {
       this.push(e.event)
       this.push({ ...e.event, type: "ENDED" })
+      this.push(null)
     }
   }
 }

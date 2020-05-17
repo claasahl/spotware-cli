@@ -6,8 +6,10 @@ import { AskPriceChangedEvent } from "../base";
 class LocalOrderStream<Props extends OS.OrderProps> extends OS.DebugOrderStream<Props> {
     private timestamp: B.Timestamp = 0;
 
-    push(event: OS.OrderEvent): boolean {
-        this.timestamp = event.timestamp;
+    push(event: OS.OrderEvent | null): boolean {
+        if(event) {
+            this.timestamp = event.timestamp;
+        }
         return super.push(event)
     }
 
