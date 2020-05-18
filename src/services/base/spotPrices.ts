@@ -33,34 +33,54 @@ export interface SpotPricesActions {
 }
 
 export declare interface SpotPricesStream extends Readable {
-  ask(): Promise<AskPriceChangedEvent>;
-  bid(): Promise<BidPriceChangedEvent>;
-  price(): Promise<PriceChangedEvent>;
+  addListener(event: "close", listener: () => void): this;
+  addListener(event: "data", listener: (event: SpotPricesEvent) => void): this;
+  addListener(event: "end", listener: () => void): this;
+  addListener(event: "readable", listener: () => void): this;
+  addListener(event: "error", listener: (err: Error) => void): this;
+  addListener(event: string | symbol, listener: (...args: any[]) => void): this;
 
-  addListener(event: string, listener: (...args: any[]) => void): this;
-  addListener(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
-  addListener(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
-  addListener(event: "price", listener: (e: PriceChangedEvent) => void): this;
+  emit(event: "close"): boolean;
+  emit(event: "data", chunk: any): boolean;
+  emit(event: "end"): boolean;
+  emit(event: "readable"): boolean;
+  emit(event: "error", err: Error): boolean;
+  emit(event: string | symbol, ...args: any[]): boolean;
 
-  on(event: string, listener: (...args: any[]) => void): this;
-  on(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
-  on(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
-  on(event: "price", listener: (e: PriceChangedEvent) => void): this;
+  on(event: "close", listener: () => void): this;
+  on(event: "data", listener: (event: SpotPricesEvent) => void): this;
+  on(event: "end", listener: () => void): this;
+  on(event: "readable", listener: () => void): this;
+  on(event: "error", listener: (err: Error) => void): this;
+  on(event: string | symbol, listener: (...args: any[]) => void): this;
 
-  once(event: string, listener: (...args: any[]) => void): this;
-  once(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
-  once(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
-  once(event: "price", listener: (e: PriceChangedEvent) => void): this;
+  once(event: "close", listener: () => void): this;
+  once(event: "data", listener: (event: SpotPricesEvent) => void): this;
+  once(event: "end", listener: () => void): this;
+  once(event: "readable", listener: () => void): this;
+  once(event: "error", listener: (err: Error) => void): this;
+  once(event: string | symbol, listener: (...args: any[]) => void): this;
 
-  prependListener(event: string, listener: (...args: any[]) => void): this;
-  prependListener(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
-  prependListener(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
-  prependListener(event: "price", listener: (e: PriceChangedEvent) => void): this;
+  prependListener(event: "close", listener: () => void): this;
+  prependListener(event: "data", listener: (event: SpotPricesEvent) => void): this;
+  prependListener(event: "end", listener: () => void): this;
+  prependListener(event: "readable", listener: () => void): this;
+  prependListener(event: "error", listener: (err: Error) => void): this;
+  prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
 
-  prependOnceListener(event: string, listener: (...args: any[]) => void): this;
-  prependOnceListener(event: "ask", listener: (e: AskPriceChangedEvent) => void): this;
-  prependOnceListener(event: "bid", listener: (e: BidPriceChangedEvent) => void): this;
-  prependOnceListener(event: "price", listener: (e: PriceChangedEvent) => void): this;
+  prependOnceListener(event: "close", listener: () => void): this;
+  prependOnceListener(event: "data", listener: (event: SpotPricesEvent) => void): this;
+  prependOnceListener(event: "end", listener: () => void): this;
+  prependOnceListener(event: "readable", listener: () => void): this;
+  prependOnceListener(event: "error", listener: (err: Error) => void): this;
+  prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
+
+  removeListener(event: "close", listener: () => void): this;
+  removeListener(event: "data", listener: (event: SpotPricesEvent) => void): this;
+  removeListener(event: "end", listener: () => void): this;
+  removeListener(event: "readable", listener: () => void): this;
+  removeListener(event: "error", listener: (err: Error) => void): this;
+  removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
 }
 
 const streamConfig = { objectMode: true, emitClose: false, read: () => { } }
