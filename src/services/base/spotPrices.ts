@@ -124,20 +124,6 @@ export abstract class SpotPricesStream extends Readable implements SpotPricesAct
 }
 
 export class DebugSpotPricesStream extends SpotPricesStream {
-  constructor(props: SpotPricesProps) {
-    super(props);
-    const log = debug("spotPrices");
-
-    const ask = log.extend("ask");
-    this.prependListener("ask", e => ask("%j", e));
-
-    const bid = log.extend("bid");
-    this.prependListener("bid", e => bid("%j", e));
-
-    const price = log.extend("price");
-    this.prependListener("price", e => price("%j", e));
-  }
-
   trendbars(_props: SpotPricesSimpleTrendbarsProps): Promise<TrendbarsStream> {
     throw new Error("not implemented");
   }
