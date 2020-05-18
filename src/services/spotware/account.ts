@@ -187,13 +187,13 @@ class SpotwareAccountStream extends B.DebugAccountStream {
 
             const timestamp = Date.now();
             if (msg.ask) {
-                stream.emitAsk({ timestamp, ask: msg.ask / fact0r })
+                stream.tryAsk({ timestamp, ask: msg.ask / fact0r })
             }
             if (msg.bid) {
-                stream.emitBid({ timestamp, bid: msg.bid / fact0r })
+                stream.tryBid({ timestamp, bid: msg.bid / fact0r })
             }
             if (msg.ask && msg.bid) {
-                stream.emitPrice({ timestamp, ask: msg.ask / fact0r, bid: msg.bid / fact0r })
+                stream.tryPrice({ timestamp, ask: msg.ask / fact0r, bid: msg.bid / fact0r })
             }
         })
         return stream;

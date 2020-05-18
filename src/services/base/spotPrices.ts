@@ -1,22 +1,27 @@
-import { EventEmitter } from "events";
+import { Readable } from "stream";
 import debug from "debug";
 
 import { Price, Timestamp, Symbol } from "./types";
 import { TrendbarsStream, TrendbarsProps } from "./trendbars";
 
 export interface AskPriceChangedEvent {
+  type: "ASK_PRICE_CHANGED";
   ask: Price;
   timestamp: Timestamp;
 }
 export interface BidPriceChangedEvent {
+  type: "BID_PRICE_CHANGED";
   bid: Price;
   timestamp: Timestamp;
 }
 export interface PriceChangedEvent {
+  type: "PRICE_CHANGED";
   ask: Price;
   bid: Price;
   timestamp: Timestamp;
 }
+export type SpotPricesEvent = AskPriceChangedEvent | BidPriceChangedEvent | PriceChangedEvent;
+const spotPricesEventTypes: SpotPricesEvent['type'][] = ["ASK_PRICE_CHANGED", "BID_PRICE_CHANGED", "PRICE_CHANGED"]
 
 export type SpotPricesSimpleTrendbarsProps = Omit<TrendbarsProps, keyof SpotPricesProps>;
 export interface SpotPricesProps {
@@ -27,7 +32,7 @@ export interface SpotPricesActions {
   trendbars(props: SpotPricesSimpleTrendbarsProps): Promise<TrendbarsStream>;
 }
 
-export declare interface SpotPricesStream extends EventEmitter {
+export declare interface SpotPricesStream extends Readable {
   ask(): Promise<AskPriceChangedEvent>;
   bid(): Promise<BidPriceChangedEvent>;
   price(): Promise<PriceChangedEvent>;
@@ -58,39 +63,63 @@ export declare interface SpotPricesStream extends EventEmitter {
   prependOnceListener(event: "price", listener: (e: PriceChangedEvent) => void): this;
 }
 
-export abstract class SpotPricesStream extends EventEmitter implements SpotPricesActions {
+const streamConfig = { objectMode: true, emitClose: false, read: () => { } }
+
+export abstract class SpotPricesStream extends Readable implements SpotPricesActions {
   public readonly props: SpotPricesProps;
-  private cachedAskPrice?: AskPriceChangedEvent;
-  private cachedBidPrice?: BidPriceChangedEvent;
-  private cachedPrice?: PriceChangedEvent;
+  private readonly cachedEvents: Map<SpotPricesEvent["type"], SpotPricesEvent>;
+  private readonly log: debug.Debugger;
+
   constructor(props: SpotPricesProps) {
-    super();
+    super(streamConfig);
     this.props = Object.freeze(props);
-    this.on("ask", e => this.cachedAskPrice = e)
-    this.on("bid", e => this.cachedBidPrice = e)
-    this.on("price", e => this.cachedPrice = e)
+    this.props = Object.freeze(props);
+    this.cachedEvents = new Map();
+    this.log = debug("spotPrices").extend(props.symbol.toString());
   }
+
+  push(event: SpotPricesEvent | null): boolean {
+    if (event && spotPricesEventTypes.includes(event.type)) {
+      this.cachedEvents.set(event.type, event);
+      this.log("%j", event);
+    }
+    return super.push(event)
+  }
+
+  private cachedEvent<T extends SpotPricesEvent>(type: T["type"]): Promise<T> {
+    if (!spotPricesEventTypes.includes(type)) {
+      const error = new Error(`event type '${type}' is not allowed. Only ${spotPricesEventTypes.join(", ")} as allowed.`)
+      return Promise.reject(error);
+    }
+    const event = this.cachedEvents.get(type)
+    if (event && event.type === type) {
+      return Promise.resolve(event as T);
+    } else {
+      return new Promise(resolve => {
+        const isEvent = (event: SpotPricesEvent) => {
+          if (event.type === type) {
+            resolve(event as T);
+            this.off("data", isEvent);
+          }
+        }
+        this.on("data", isEvent);
+        this.once("close", () => this.off("data", isEvent));
+      });
+    }
+  }
+
   ask(): Promise<AskPriceChangedEvent> {
-    if (this.cachedAskPrice) {
-      return Promise.resolve(this.cachedAskPrice);
-    } else {
-      return new Promise(resolve => this.once("ask", resolve));
-    }
+    return this.cachedEvent("ASK_PRICE_CHANGED");
   }
+
   bid(): Promise<BidPriceChangedEvent> {
-    if (this.cachedBidPrice) {
-      return Promise.resolve(this.cachedBidPrice);
-    } else {
-      return new Promise(resolve => this.once("bid", resolve));
-    }
+    return this.cachedEvent("BID_PRICE_CHANGED");
   }
+
   price(): Promise<PriceChangedEvent> {
-    if (this.cachedPrice) {
-      return Promise.resolve(this.cachedPrice);
-    } else {
-      return new Promise(resolve => this.once("price", resolve));
-    }
+    return this.cachedEvent("PRICE_CHANGED");
   }
+
   abstract trendbars(props: SpotPricesSimpleTrendbarsProps): Promise<TrendbarsStream>;
 }
 
@@ -113,15 +142,15 @@ export class DebugSpotPricesStream extends SpotPricesStream {
     throw new Error("not implemented");
   }
 
-  emitAsk(e: AskPriceChangedEvent): void {
-    setImmediate(() => this.emit("ask", e));
+  tryAsk(e: Omit<AskPriceChangedEvent, "type">): void {
+    this.push({ ...e, type: "ASK_PRICE_CHANGED" })
   }
 
-  emitBid(e: BidPriceChangedEvent): void {
-    setImmediate(() => this.emit("bid", e));
+  tryBid(e: Omit<BidPriceChangedEvent, "type">): void {
+    this.push({ ...e, type: "BID_PRICE_CHANGED" })
   }
 
-  emitPrice(e: PriceChangedEvent): void {
-    setImmediate(() => this.emit("price", e));
+  tryPrice(e: Omit<PriceChangedEvent, "type">): void {
+    this.push({ ...e, type: "PRICE_CHANGED" })
   }
 }
