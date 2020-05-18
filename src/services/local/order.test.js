@@ -18,7 +18,7 @@ describe("marketOrderFromSpotPrices", () => {
                     done();
                 }
             })
-            spots.emitBid({ timestamp: 1, bid: 0 })
+            spots.tryBid({ timestamp: 1, bid: 0 })
         })
         test("should cancel order exactly once", async done => {
             const symbol = Symbol.for("abc")
@@ -34,7 +34,7 @@ describe("marketOrderFromSpotPrices", () => {
                     timer = setTimeout(done, 50)
                 }
             })
-            spots.emitBid({ timestamp: 1, bid: 0 })
+            spots.tryBid({ timestamp: 1, bid: 0 })
         })
         test("should close order", async done => {
             const symbol = Symbol.for("abc")
@@ -51,8 +51,8 @@ describe("marketOrderFromSpotPrices", () => {
                     done();
                 }
             })
-            spots.emitBid({ timestamp: 0, bid: 5 })
-            spots.emitAsk({ timestamp: 1, ask: 1 })
+            spots.tryBid({ timestamp: 0, bid: 5 })
+            spots.tryAsk({ timestamp: 1, ask: 1 })
         })
         test("should close order exactly once", async done => {
             const symbol = Symbol.for("abc")
@@ -68,8 +68,8 @@ describe("marketOrderFromSpotPrices", () => {
                     timer = setTimeout(done, 50)
                 }
             })
-            spots.emitBid({ timestamp: 0, bid: 5 })
-            spots.emitAsk({ timestamp: 1, ask: 1 })
+            spots.tryBid({ timestamp: 0, bid: 5 })
+            spots.tryAsk({ timestamp: 1, ask: 1 })
         })
         test("should 'end' order (1)", async done => {
             const symbol = Symbol.for("abc")
@@ -84,7 +84,7 @@ describe("marketOrderFromSpotPrices", () => {
                     done();
                 }
             })
-            spots.emitAsk({ timestamp: 1, ask: 0 })
+            spots.tryAsk({ timestamp: 1, ask: 0 })
         })
         test("should 'end' order (2)", async done => {
             const symbol = Symbol.for("abc")
@@ -99,8 +99,8 @@ describe("marketOrderFromSpotPrices", () => {
                     done();
                 }
             })
-            spots.emitAsk({ timestamp: 0, ask: 5 })
-            spots.emitBid({ timestamp: 1, bid: 1 })
+            spots.tryAsk({ timestamp: 0, ask: 5 })
+            spots.tryBid({ timestamp: 1, bid: 1 })
         })
         test("should 'end' order exactly once", async done => {
             const symbol = Symbol.for("abc")
@@ -116,8 +116,8 @@ describe("marketOrderFromSpotPrices", () => {
                     timer = setTimeout(done, 50)
                 }
             })
-            spots.emitAsk({ timestamp: 0, ask: 5 })
-            spots.emitBid({ timestamp: 1, bid: 1 })
+            spots.tryAsk({ timestamp: 0, ask: 5 })
+            spots.tryBid({ timestamp: 1, bid: 1 })
         })
     })
 
@@ -133,7 +133,7 @@ describe("marketOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitAsk({timestamp: 1, ask: 0})
+            spots.tryAsk({timestamp: 1, ask: 0})
         })
         test("accept order asap", async done => {
             const symbol = Symbol.for("abc")
@@ -146,7 +146,7 @@ describe("marketOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitAsk({timestamp: 1, ask: 0})
+            spots.tryAsk({timestamp: 1, ask: 0})
         })
         test("fill order asap (1)", async done => {
             const symbol = Symbol.for("abc")
@@ -159,8 +159,8 @@ describe("marketOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitBid({ timestamp: 0, bid: 1 })
-            spots.emitAsk({ timestamp: 1, ask: 5 })
+            spots.tryBid({ timestamp: 0, bid: 1 })
+            spots.tryAsk({ timestamp: 1, ask: 5 })
         })
         test("fill order asap (2)", done => {
             const symbol = Symbol.for("abc")
@@ -175,8 +175,8 @@ describe("marketOrderFromSpotPrices", () => {
                     }
                 })
             })
-            spots.emitBid({ timestamp: 0, bid: 1 })
-            spots.emitAsk({ timestamp: 1, ask: 5 })
+            spots.tryBid({ timestamp: 0, bid: 1 })
+            spots.tryAsk({ timestamp: 1, ask: 5 })
         })
         test("estimate profitLoss (1)", async done => {
             const symbol = Symbol.for("abc")
@@ -189,8 +189,8 @@ describe("marketOrderFromSpotPrices", () => {
                     done();
                 }
             })
-            spots.emitBid({ timestamp: 0, bid: 1 })
-            spots.emitAsk({ timestamp: 1, ask: 5 })
+            spots.tryBid({ timestamp: 0, bid: 1 })
+            spots.tryAsk({ timestamp: 1, ask: 5 })
         })
         test("estimate profitLoss (2)", async done => {
             const symbol = Symbol.for("abc")
@@ -203,8 +203,8 @@ describe("marketOrderFromSpotPrices", () => {
                     done();
                 }
             })
-            spots.emitAsk({ timestamp: 1, ask: 5 })
-            spots.emitBid({ timestamp: 5, bid: 6 })
+            spots.tryAsk({ timestamp: 1, ask: 5 })
+            spots.tryBid({ timestamp: 5, bid: 6 })
         })
         test("take profit (1)", async done => {
             const symbol = Symbol.for("abc")
@@ -217,9 +217,9 @@ describe("marketOrderFromSpotPrices", () => {
                     done();
                 }
             })
-            spots.emitAsk({ timestamp: 1, ask: 5 })
-            spots.emitBid({ timestamp: 5, bid: 6 })
-            spots.emitBid({ timestamp: 6, bid: 11 })
+            spots.tryAsk({ timestamp: 1, ask: 5 })
+            spots.tryBid({ timestamp: 5, bid: 6 })
+            spots.tryBid({ timestamp: 6, bid: 11 })
         })
         test("take profit (2)", async done => {
             const symbol = Symbol.for("abc")
@@ -232,9 +232,9 @@ describe("marketOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitAsk({ timestamp: 1, ask: 5 })
-            spots.emitBid({ timestamp: 5, bid: 6 })
-            spots.emitBid({ timestamp: 60, bid: 15 })
+            spots.tryAsk({ timestamp: 1, ask: 5 })
+            spots.tryBid({ timestamp: 5, bid: 6 })
+            spots.tryBid({ timestamp: 60, bid: 15 })
         })
         test("stop loss (1)", async done => {
             const symbol = Symbol.for("abc")
@@ -247,9 +247,9 @@ describe("marketOrderFromSpotPrices", () => {
                     done();
                 }
             })
-            spots.emitAsk({ timestamp: 1, ask: 5 })
-            spots.emitBid({ timestamp: 5, bid: 4 })
-            spots.emitBid({ timestamp: 6, bid: 2 })
+            spots.tryAsk({ timestamp: 1, ask: 5 })
+            spots.tryBid({ timestamp: 5, bid: 4 })
+            spots.tryBid({ timestamp: 6, bid: 2 })
         })
         test("stop loss (2)", async done => {
             const symbol = Symbol.for("abc")
@@ -262,9 +262,9 @@ describe("marketOrderFromSpotPrices", () => {
                     done();
                 }
             })
-            spots.emitAsk({ timestamp: 1, ask: 5 })
-            spots.emitBid({ timestamp: 5, bid: 4 })
-            spots.emitBid({ timestamp: 60, bid: 1 })
+            spots.tryAsk({ timestamp: 1, ask: 5 })
+            spots.tryBid({ timestamp: 5, bid: 4 })
+            spots.tryBid({ timestamp: 60, bid: 1 })
         })
         test("'ended' event", async done => {
             const symbol = Symbol.for("abc")
@@ -277,9 +277,9 @@ describe("marketOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitAsk({ timestamp: 1, ask: 5 })
-            spots.emitBid({ timestamp: 5, bid: 4 })
-            spots.emitBid({ timestamp: 60, bid: 1 })
+            spots.tryAsk({ timestamp: 1, ask: 5 })
+            spots.tryBid({ timestamp: 5, bid: 4 })
+            spots.tryBid({ timestamp: 60, bid: 1 })
         })
     })
     describe("order type: SELL", () => {
@@ -294,7 +294,7 @@ describe("marketOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitBid({timestamp: 1, bid: 0})
+            spots.tryBid({timestamp: 1, bid: 0})
         })
         test("accept order asap", async done => {
             const symbol = Symbol.for("abc")
@@ -307,7 +307,7 @@ describe("marketOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitBid({timestamp: 1, bid: 0})
+            spots.tryBid({timestamp: 1, bid: 0})
         })
         test("fill order asap (1)", async done => {
             const symbol = Symbol.for("abc")
@@ -320,8 +320,8 @@ describe("marketOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitAsk({ timestamp: 0, ask: 1 })
-            spots.emitBid({ timestamp: 1, bid: 5 })
+            spots.tryAsk({ timestamp: 0, ask: 1 })
+            spots.tryBid({ timestamp: 1, bid: 5 })
         })
         test("fill order asap (2)", done => {
             const symbol = Symbol.for("abc")
@@ -337,8 +337,8 @@ describe("marketOrderFromSpotPrices", () => {
                     }
                 })
             })
-            spots.emitAsk({ timestamp: 0, ask: 1 })
-            spots.emitBid({ timestamp: 1, bid: 5 })
+            spots.tryAsk({ timestamp: 0, ask: 1 })
+            spots.tryBid({ timestamp: 1, bid: 5 })
         })
         test("estimate profitLoss (1)", async done => {
             const symbol = Symbol.for("abc")
@@ -351,8 +351,8 @@ describe("marketOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitAsk({ timestamp: 0, ask: 1 })
-            spots.emitBid({ timestamp: 1, bid: 5 })
+            spots.tryAsk({ timestamp: 0, ask: 1 })
+            spots.tryBid({ timestamp: 1, bid: 5 })
         })
         test("estimate profitLoss (2)", async done => {
             const symbol = Symbol.for("abc")
@@ -365,8 +365,8 @@ describe("marketOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitBid({ timestamp: 1, bid: 5 })
-            spots.emitAsk({ timestamp: 5, ask: 6 })
+            spots.tryBid({ timestamp: 1, bid: 5 })
+            spots.tryAsk({ timestamp: 5, ask: 6 })
         })
         test("take profit (1)", async done => {
             const symbol = Symbol.for("abc")
@@ -379,9 +379,9 @@ describe("marketOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitBid({ timestamp: 1, bid: 5 })
-            spots.emitAsk({ timestamp: 5, ask: 4 })
-            spots.emitAsk({ timestamp: 6, ask: 2 })
+            spots.tryBid({ timestamp: 1, bid: 5 })
+            spots.tryAsk({ timestamp: 5, ask: 4 })
+            spots.tryAsk({ timestamp: 6, ask: 2 })
         })
         test("take profit (2)", async done => {
             const symbol = Symbol.for("abc")
@@ -394,9 +394,9 @@ describe("marketOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitBid({ timestamp: 1, bid: 5 })
-            spots.emitAsk({ timestamp: 5, ask: 3 })
-            spots.emitAsk({ timestamp: 60, ask: 1 })
+            spots.tryBid({ timestamp: 1, bid: 5 })
+            spots.tryAsk({ timestamp: 5, ask: 3 })
+            spots.tryAsk({ timestamp: 60, ask: 1 })
         })
         test("stop loss (1)", async done => {
             const symbol = Symbol.for("abc")
@@ -409,9 +409,9 @@ describe("marketOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitBid({ timestamp: 1, bid: 5 })
-            spots.emitAsk({ timestamp: 5, ask: 7 })
-            spots.emitAsk({ timestamp: 6, ask: 12 })
+            spots.tryBid({ timestamp: 1, bid: 5 })
+            spots.tryAsk({ timestamp: 5, ask: 7 })
+            spots.tryAsk({ timestamp: 6, ask: 12 })
         })
         test("stop loss (2)", async done => {
             const symbol = Symbol.for("abc")
@@ -424,9 +424,9 @@ describe("marketOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitBid({ timestamp: 1, bid: 5 })
-            spots.emitAsk({ timestamp: 5, ask: 6 })
-            spots.emitAsk({ timestamp: 60, ask: 11 })
+            spots.tryBid({ timestamp: 1, bid: 5 })
+            spots.tryAsk({ timestamp: 5, ask: 6 })
+            spots.tryAsk({ timestamp: 60, ask: 11 })
         })
         test("'ended' event", async done => {
             const symbol = Symbol.for("abc")
@@ -439,9 +439,9 @@ describe("marketOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitBid({ timestamp: 1, bid: 5 })
-            spots.emitAsk({ timestamp: 5, ask: 4 })
-            spots.emitAsk({ timestamp: 60, ask: 1 })
+            spots.tryBid({ timestamp: 1, bid: 5 })
+            spots.tryAsk({ timestamp: 5, ask: 4 })
+            spots.tryAsk({ timestamp: 60, ask: 1 })
         })
     })
 })
@@ -463,7 +463,7 @@ describe("stopOrderFromSpotPrices", () => {
                     done();
                 }
             })
-            spots.emitBid({ timestamp: 1, bid: 7 })
+            spots.tryBid({ timestamp: 1, bid: 7 })
         })
         test("should cancel order exactly once", async done => {
             const symbol = Symbol.for("abc")
@@ -479,7 +479,7 @@ describe("stopOrderFromSpotPrices", () => {
                     timer = setTimeout(done, 50)
                 }
             })
-            spots.emitBid({ timestamp: 1, bid: 7 })
+            spots.tryBid({ timestamp: 1, bid: 7 })
         })
         test("should close order", async done => {
             const symbol = Symbol.for("abc")
@@ -496,9 +496,9 @@ describe("stopOrderFromSpotPrices", () => {
                     done();
                 }
             })
-            spots.emitBid({ timestamp: 0, bid: 5 })
-            spots.emitBid({ timestamp: 1, bid: 4 })
-            spots.emitAsk({ timestamp: 2, ask: 2 })
+            spots.tryBid({ timestamp: 0, bid: 5 })
+            spots.tryBid({ timestamp: 1, bid: 4 })
+            spots.tryAsk({ timestamp: 2, ask: 2 })
         })
         test("should close order exactly once", async done => {
             const symbol = Symbol.for("abc")
@@ -514,9 +514,9 @@ describe("stopOrderFromSpotPrices", () => {
                     timer = setTimeout(done, 50)
                 }
             })
-            spots.emitBid({ timestamp: 0, bid: 5 })
-            spots.emitBid({ timestamp: 1, bid: 4 })
-            spots.emitAsk({ timestamp: 2, ask: 2 })
+            spots.tryBid({ timestamp: 0, bid: 5 })
+            spots.tryBid({ timestamp: 1, bid: 4 })
+            spots.tryAsk({ timestamp: 2, ask: 2 })
         })
         test("should 'end' order (1)", async done => {
             const symbol = Symbol.for("abc")
@@ -531,7 +531,7 @@ describe("stopOrderFromSpotPrices", () => {
                     done();
                 }
             })
-            spots.emitAsk({ timestamp: 1, ask: 0 })
+            spots.tryAsk({ timestamp: 1, ask: 0 })
         })
         test("should 'end' order (2)", async done => {
             const symbol = Symbol.for("abc")
@@ -546,9 +546,9 @@ describe("stopOrderFromSpotPrices", () => {
                     done();
                 }
             })
-            spots.emitAsk({ timestamp: 0, ask: 5 })
-            spots.emitAsk({ timestamp: 1, ask: 7 })
-            spots.emitBid({ timestamp: 2, bid: 10 })
+            spots.tryAsk({ timestamp: 0, ask: 5 })
+            spots.tryAsk({ timestamp: 1, ask: 7 })
+            spots.tryBid({ timestamp: 2, bid: 10 })
         })
         test("should 'end' order exactly once", async done => {
             const symbol = Symbol.for("abc")
@@ -564,9 +564,9 @@ describe("stopOrderFromSpotPrices", () => {
                     timer = setTimeout(done, 50)
                 }
             })
-            spots.emitAsk({ timestamp: 0, ask: 5 })
-            spots.emitAsk({ timestamp: 1, ask: 7 })
-            spots.emitBid({ timestamp: 2, bid: 10 })
+            spots.tryAsk({ timestamp: 0, ask: 5 })
+            spots.tryAsk({ timestamp: 1, ask: 7 })
+            spots.tryBid({ timestamp: 2, bid: 10 })
         })
     })
 
@@ -582,7 +582,7 @@ describe("stopOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitAsk({timestamp: 1, ask: 0})
+            spots.tryAsk({timestamp: 1, ask: 0})
         })
         test("accept order asap", async done => {
             const symbol = Symbol.for("abc")
@@ -595,7 +595,7 @@ describe("stopOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitAsk({timestamp: 1, ask: 0})
+            spots.tryAsk({timestamp: 1, ask: 0})
         })
         test("fill order asap (1)", async done => {
             const symbol = Symbol.for("abc")
@@ -608,9 +608,9 @@ describe("stopOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitBid({ timestamp: 0, bid: 1 })
-            spots.emitAsk({ timestamp: 1, ask: 5 })
-            spots.emitAsk({ timestamp: 2, ask: 6 })
+            spots.tryBid({ timestamp: 0, bid: 1 })
+            spots.tryAsk({ timestamp: 1, ask: 5 })
+            spots.tryAsk({ timestamp: 2, ask: 6 })
         })
         test("fill order asap (2)", done => {
             const symbol = Symbol.for("abc")
@@ -625,9 +625,9 @@ describe("stopOrderFromSpotPrices", () => {
                     }
                 })
             })
-            spots.emitBid({ timestamp: 0, bid: 1 })
-            spots.emitAsk({ timestamp: 1, ask: 5 })
-            spots.emitAsk({ timestamp: 2, ask: 6 })
+            spots.tryBid({ timestamp: 0, bid: 1 })
+            spots.tryAsk({ timestamp: 1, ask: 5 })
+            spots.tryAsk({ timestamp: 2, ask: 6 })
         })
         test("estimate profitLoss (1)", async done => {
             const symbol = Symbol.for("abc")
@@ -640,9 +640,9 @@ describe("stopOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitBid({ timestamp: 0, bid: 1 })
-            spots.emitAsk({ timestamp: 1, ask: 5 })
-            spots.emitAsk({ timestamp: 2, ask: 6 })
+            spots.tryBid({ timestamp: 0, bid: 1 })
+            spots.tryAsk({ timestamp: 1, ask: 5 })
+            spots.tryAsk({ timestamp: 2, ask: 6 })
         })
         test("estimate profitLoss (2)", async done => {
             const symbol = Symbol.for("abc")
@@ -655,8 +655,8 @@ describe("stopOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitAsk({ timestamp: 1, ask: 6 })
-            spots.emitBid({ timestamp: 5, bid: 7 })
+            spots.tryAsk({ timestamp: 1, ask: 6 })
+            spots.tryBid({ timestamp: 5, bid: 7 })
         })
         test("take profit (1)", async done => {
             const symbol = Symbol.for("abc")
@@ -669,9 +669,9 @@ describe("stopOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitAsk({ timestamp: 1, ask: 6 })
-            spots.emitBid({ timestamp: 5, bid: 5 })
-            spots.emitBid({ timestamp: 6, bid: 11 })
+            spots.tryAsk({ timestamp: 1, ask: 6 })
+            spots.tryBid({ timestamp: 5, bid: 5 })
+            spots.tryBid({ timestamp: 6, bid: 11 })
         })
         test("take profit (2)", async done => {
             const symbol = Symbol.for("abc")
@@ -684,9 +684,9 @@ describe("stopOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitAsk({ timestamp: 1, ask: 6 })
-            spots.emitBid({ timestamp: 5, bid: 6 })
-            spots.emitBid({ timestamp: 60, bid: 15 })
+            spots.tryAsk({ timestamp: 1, ask: 6 })
+            spots.tryBid({ timestamp: 5, bid: 6 })
+            spots.tryBid({ timestamp: 60, bid: 15 })
         })
         test("stop loss (1)", async done => {
             const symbol = Symbol.for("abc")
@@ -699,9 +699,9 @@ describe("stopOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitAsk({ timestamp: 1, ask: 6 })
-            spots.emitBid({ timestamp: 5, bid: 4 })
-            spots.emitBid({ timestamp: 6, bid: 2 })
+            spots.tryAsk({ timestamp: 1, ask: 6 })
+            spots.tryBid({ timestamp: 5, bid: 4 })
+            spots.tryBid({ timestamp: 6, bid: 2 })
         })
         test("stop loss (2)", async done => {
             const symbol = Symbol.for("abc")
@@ -714,9 +714,9 @@ describe("stopOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitAsk({ timestamp: 1, ask: 6 })
-            spots.emitBid({ timestamp: 5, bid: 4 })
-            spots.emitBid({ timestamp: 60, bid: 1 })
+            spots.tryAsk({ timestamp: 1, ask: 6 })
+            spots.tryBid({ timestamp: 5, bid: 4 })
+            spots.tryBid({ timestamp: 60, bid: 1 })
         })
         test("'ended' event", async done => {
             const symbol = Symbol.for("abc")
@@ -729,9 +729,9 @@ describe("stopOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitAsk({ timestamp: 1, ask: 6 })
-            spots.emitBid({ timestamp: 5, bid: 4 })
-            spots.emitBid({ timestamp: 60, bid: 2 })
+            spots.tryAsk({ timestamp: 1, ask: 6 })
+            spots.tryBid({ timestamp: 5, bid: 4 })
+            spots.tryBid({ timestamp: 60, bid: 2 })
         })
     })
     describe("order type: SELL", () => {
@@ -746,7 +746,7 @@ describe("stopOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitBid({timestamp: 1, bid: 0})
+            spots.tryBid({timestamp: 1, bid: 0})
         })
         test("accept order asap", async done => {
             const symbol = Symbol.for("abc")
@@ -759,7 +759,7 @@ describe("stopOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitBid({timestamp: 1, bid: 0})
+            spots.tryBid({timestamp: 1, bid: 0})
         })
         test("fill order asap (1)", async done => {
             const symbol = Symbol.for("abc")
@@ -772,8 +772,8 @@ describe("stopOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitAsk({ timestamp: 0, ask: 1 })
-            spots.emitBid({ timestamp: 1, bid: 4 })
+            spots.tryAsk({ timestamp: 0, ask: 1 })
+            spots.tryBid({ timestamp: 1, bid: 4 })
         })
         test("fill order asap (2)", done => {
             const symbol = Symbol.for("abc")
@@ -788,8 +788,8 @@ describe("stopOrderFromSpotPrices", () => {
                     }
                 })
             })
-            spots.emitAsk({ timestamp: 0, ask: 1 })
-            spots.emitBid({ timestamp: 1, bid: 4 })
+            spots.tryAsk({ timestamp: 0, ask: 1 })
+            spots.tryBid({ timestamp: 1, bid: 4 })
         })
         test("estimate profitLoss (1)", async done => {
             const symbol = Symbol.for("abc")
@@ -802,9 +802,9 @@ describe("stopOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitAsk({ timestamp: 0, ask: 1 })
-            spots.emitBid({ timestamp: 1, bid: 5 })
-            spots.emitBid({ timestamp: 2, bid: 4 })
+            spots.tryAsk({ timestamp: 0, ask: 1 })
+            spots.tryBid({ timestamp: 1, bid: 5 })
+            spots.tryBid({ timestamp: 2, bid: 4 })
         })
         test("estimate profitLoss (2)", async done => {
             const symbol = Symbol.for("abc")
@@ -817,8 +817,8 @@ describe("stopOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitBid({ timestamp: 1, bid: 4 })
-            spots.emitAsk({ timestamp: 5, ask: 6 })
+            spots.tryBid({ timestamp: 1, bid: 4 })
+            spots.tryAsk({ timestamp: 5, ask: 6 })
         })
         test("take profit (1)", async done => {
             const symbol = Symbol.for("abc")
@@ -831,9 +831,9 @@ describe("stopOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitBid({ timestamp: 1, bid: 4 })
-            spots.emitAsk({ timestamp: 5, ask: 4 })
-            spots.emitAsk({ timestamp: 6, ask: 2 })
+            spots.tryBid({ timestamp: 1, bid: 4 })
+            spots.tryAsk({ timestamp: 5, ask: 4 })
+            spots.tryAsk({ timestamp: 6, ask: 2 })
         })
         test("take profit (2)", async done => {
             const symbol = Symbol.for("abc")
@@ -846,9 +846,9 @@ describe("stopOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitBid({ timestamp: 1, bid: 4 })
-            spots.emitAsk({ timestamp: 5, ask: 3 })
-            spots.emitAsk({ timestamp: 60, ask: 1 })
+            spots.tryBid({ timestamp: 1, bid: 4 })
+            spots.tryAsk({ timestamp: 5, ask: 3 })
+            spots.tryAsk({ timestamp: 60, ask: 1 })
         })
         test("stop loss (1)", async done => {
             const symbol = Symbol.for("abc")
@@ -861,9 +861,9 @@ describe("stopOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitBid({ timestamp: 1, bid: 4 })
-            spots.emitAsk({ timestamp: 5, ask: 7 })
-            spots.emitAsk({ timestamp: 6, ask: 12 })
+            spots.tryBid({ timestamp: 1, bid: 4 })
+            spots.tryAsk({ timestamp: 5, ask: 7 })
+            spots.tryAsk({ timestamp: 6, ask: 12 })
         })
         test("stop loss (2)", async done => {
             const symbol = Symbol.for("abc")
@@ -876,9 +876,9 @@ describe("stopOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitBid({ timestamp: 1, bid: 4 })
-            spots.emitAsk({ timestamp: 5, ask: 6 })
-            spots.emitAsk({ timestamp: 60, ask: 11 })
+            spots.tryBid({ timestamp: 1, bid: 4 })
+            spots.tryAsk({ timestamp: 5, ask: 6 })
+            spots.tryAsk({ timestamp: 60, ask: 11 })
         })
         test("'ended' event", async done => {
             const symbol = Symbol.for("abc")
@@ -891,9 +891,9 @@ describe("stopOrderFromSpotPrices", () => {
                     done()
                 }
             })
-            spots.emitBid({ timestamp: 1, bid: 4 })
-            spots.emitAsk({ timestamp: 5, ask: 4 })
-            spots.emitAsk({ timestamp: 60, ask: 1 })
+            spots.tryBid({ timestamp: 1, bid: 4 })
+            spots.tryAsk({ timestamp: 5, ask: 4 })
+            spots.tryAsk({ timestamp: 60, ask: 1 })
         })
     })
 })
