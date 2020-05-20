@@ -1,4 +1,4 @@
-const {DebugOrderStream} = require("../../../build/services/base/orderStream")
+const {DebugOrderStream} = require("../../../build/services/base/order")
 const debug = require("debug")
 
 jest.mock("debug");
