@@ -84,7 +84,7 @@ describe("fromNothing", () => {
                 }
                 orderNo++;
             })
-            spotPrices.emitBid({ timestamp: 2, bid: 15 })
+            spotPrices.tryBid({ timestamp: 2, bid: 15 })
         })
         test("should produce 'equity' events", done => {
             const symbol = Symbol.for("abc/def")
@@ -97,18 +97,18 @@ describe("fromNothing", () => {
             stream.on("equity", e => {
                 if(no === 1) {
                     // expect(e).toStrictEqual({ timestamp: 1, equity: 520 });
-                    spotPrices.emitAsk({ timestamp: 3, ask: 12 })
+                    spotPrices.tryAsk({ timestamp: 3, ask: 12 })
                 } else if(no === 2) {
                     expect(e).toStrictEqual({ timestamp: 3, equity: 512 });
-                    spotPrices.emitAsk({ timestamp: 4, ask: 8 })
+                    spotPrices.tryAsk({ timestamp: 4, ask: 8 })
                 } else if(no === 3) {
                     expect(e).toStrictEqual({ timestamp: 4, equity: 528 });
                     done()
                 }
                 no++;
             })
-            spotPrices.emitAsk({ timestamp: 1, ask: 10 })
-            spotPrices.emitBid({ timestamp: 2, bid: 15 })
+            spotPrices.tryAsk({ timestamp: 1, ask: 10 })
+            spotPrices.tryBid({ timestamp: 2, bid: 15 })
         })
         test("should produce 'balance' event", done => {
             const symbol = Symbol.for("abc/def")
@@ -125,10 +125,10 @@ describe("fromNothing", () => {
                 }
                 no++;
             })
-            spotPrices.emitAsk({ timestamp: 1, ask: 10 })
-            spotPrices.emitBid({ timestamp: 2, bid: 15 })
-            spotPrices.emitAsk({ timestamp: 3, ask: 12 })
-            spotPrices.emitAsk({ timestamp: 4, ask: 8 })
+            spotPrices.tryAsk({ timestamp: 1, ask: 10 })
+            spotPrices.tryBid({ timestamp: 2, bid: 15 })
+            spotPrices.tryAsk({ timestamp: 3, ask: 12 })
+            spotPrices.tryAsk({ timestamp: 4, ask: 8 })
         })
         test("should produce 'transaction' event", done => {
             const symbol = Symbol.for("abc/def")
@@ -145,10 +145,10 @@ describe("fromNothing", () => {
                 }
                 no++;
             })
-            spotPrices.emitAsk({ timestamp: 1, ask: 10 })
-            spotPrices.emitBid({ timestamp: 2, bid: 15 })
-            spotPrices.emitAsk({ timestamp: 3, ask: 12 })
-            spotPrices.emitAsk({ timestamp: 4, ask: 8 })
+            spotPrices.tryAsk({ timestamp: 1, ask: 10 })
+            spotPrices.tryBid({ timestamp: 2, bid: 15 })
+            spotPrices.tryAsk({ timestamp: 3, ask: 12 })
+            spotPrices.tryAsk({ timestamp: 4, ask: 8 })
         })
     })
     describe("stop order", () => {
@@ -170,7 +170,7 @@ describe("fromNothing", () => {
                 }
                 orderNo++;
             })
-            spotPrices.emitAsk({ timestamp: 1, ask: 10 })
+            spotPrices.tryAsk({ timestamp: 1, ask: 10 })
         })
         test("should produce 'equity' events", done => {
             const symbol = Symbol.for("abc/def")
@@ -183,18 +183,18 @@ describe("fromNothing", () => {
             stream.on("equity", e => {
                 if(no === 1) {
                     // expect(e).toStrictEqual({ timestamp: 2, equity: 520 });
-                    spotPrices.emitBid({ timestamp: 3, bid: 12 })
+                    spotPrices.tryBid({ timestamp: 3, bid: 12 })
                 } else if(no === 2) {
                     expect(e).toStrictEqual({ timestamp: 3, equity: 508 });
-                    spotPrices.emitBid({ timestamp: 4, bid: 18 })
+                    spotPrices.tryBid({ timestamp: 4, bid: 18 })
                 } else if(no === 3) {
                     expect(e).toStrictEqual({ timestamp: 4, equity: 532 });
                     done()
                 }
                 no++;
             })
-            spotPrices.emitAsk({ timestamp: 1, ask: 10 })
-            spotPrices.emitBid({ timestamp: 2, bid: 15 })
+            spotPrices.tryAsk({ timestamp: 1, ask: 10 })
+            spotPrices.tryBid({ timestamp: 2, bid: 15 })
         })
         test("should produce 'balance' event", done => {
             const symbol = Symbol.for("abc/def")
@@ -211,8 +211,8 @@ describe("fromNothing", () => {
                 }
                 no++;
             })
-            spotPrices.emitAsk({ timestamp: 1, ask: 10 })
-            spotPrices.emitBid({ timestamp: 2, bid: 15 })
+            spotPrices.tryAsk({ timestamp: 1, ask: 10 })
+            spotPrices.tryBid({ timestamp: 2, bid: 15 })
         })
         test("should produce 'transaction' event", done => {
             const symbol = Symbol.for("abc/def")
@@ -229,8 +229,8 @@ describe("fromNothing", () => {
                 }
                 no++;
             })
-            spotPrices.emitAsk({ timestamp: 1, ask: 10 })
-            spotPrices.emitBid({ timestamp: 2, bid: 15 })
+            spotPrices.tryAsk({ timestamp: 1, ask: 10 })
+            spotPrices.tryBid({ timestamp: 2, bid: 15 })
         })
     })
 })
