@@ -1,6 +1,7 @@
 import fs from "fs";
 import readline from "readline";
 import debug from "debug";
+import { Readable } from "stream";
 
 import * as B from "../base";
 import { trendbarsFromSpotPrices } from "./trendbars";
@@ -119,25 +120,13 @@ function emitSpotPrices(
     stream.tryBid({ timestamp: e.timestamp, bid: e.bid });
     stream.tryPrice({ timestamp: e.timestamp, ask: e.ask, bid: e.bid });
   }
-  setImmediate(() => stream.emit("next"));
 }
 
 export function fromSampleData(props: B.SpotPricesProps): B.SpotPricesStream {
   const data = sampleData();
   const stream = new LocalSpotPricesStream(props);
-  const emitNext = () => {
-    data.next().then(a => {
-      setImmediate(() => {
-        if (a.value) {
-          emitSpotPrices(stream, a.value);
-        }
-      })
-    });
-  }
-  setImmediate(() => {
-    stream.on("next", emitNext)
-    emitNext();
-  })
+  const s = Readable.from(data);
+  s.on("data", value => emitSpotPrices(stream, value))
   return stream;
 }
 
@@ -145,38 +134,17 @@ export function fromFile(props: B.SpotPricesProps & { path: fs.PathLike }): B.Sp
   const { path, ...originalProps } = props;
   const data = fr0mFile(path);
   const stream = new LocalSpotPricesStream(originalProps);
-  const emitNext = () => {
-    data.next().then(a => {
-      setImmediate(() => {
-        if (a.value) {
-          emitSpotPrices(stream, a.value);
-        }
-      })
-    });
-  }
-  setImmediate(() => {
-    stream.on("next", emitNext)
-    emitNext();
-  })
+  const s = Readable.from(data);
+  s.on("data", value => emitSpotPrices(stream, value))
   return stream;
 }
 
 export function fromLogFiles(props: B.SpotPricesProps & { paths: fs.PathLike[] }): B.SpotPricesStream {
   const { paths, ...originalProps } = props;
-  const data = fr0mLogFiles(paths);
   const stream = new LocalSpotPricesStream(originalProps);
-  const emitNext = () => {
-    data.next().then(a => {
-      setImmediate(() => {
-        if (a.value) {
-          emitSpotPrices(stream, a.value);
-        }
-      })
-    });
-  }
-  setImmediate(() => {
-    stream.on("next", emitNext)
-    emitNext();
-  })
+
+  const data = fr0mLogFiles(paths);
+  const s = Readable.from(data);
+  s.on("data", value => emitSpotPrices(stream, value))
   return stream;
 }
