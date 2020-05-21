@@ -44,17 +44,17 @@ describe("insideBarMomentumStrategy", () => {
             orderNo++;
         })
 
-        spotPrices.emitBid({ timestamp: 1000000, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1000250, bid: 15500})
-        spotPrices.emitBid({ timestamp: 1000500, bid: 14980})
-        spotPrices.emitBid({ timestamp: 1000750, bid: 15100})
+        spotPrices.tryBid({ timestamp: 1000000, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1000250, bid: 15500})
+        spotPrices.tryBid({ timestamp: 1000500, bid: 14980})
+        spotPrices.tryBid({ timestamp: 1000750, bid: 15100})
 
-        spotPrices.emitBid({ timestamp: 1001000, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001250, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001500, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001750, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001000, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001250, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001500, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001750, bid: 15000})
 
-        spotPrices.emitAsk({ timestamp: 1002000, ask: 0})
+        spotPrices.tryAsk({ timestamp: 1002000, ask: 0})
     })
     test("bearish pattern", async done => {
         const currency = Symbol.for("EUR");
@@ -96,17 +96,17 @@ describe("insideBarMomentumStrategy", () => {
             orderNo++;
         })
 
-        spotPrices.emitBid({ timestamp: 1000000, bid: 15100})
-        spotPrices.emitBid({ timestamp: 1000250, bid: 15500})
-        spotPrices.emitBid({ timestamp: 1000500, bid: 14980})
-        spotPrices.emitBid({ timestamp: 1000750, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1000000, bid: 15100})
+        spotPrices.tryBid({ timestamp: 1000250, bid: 15500})
+        spotPrices.tryBid({ timestamp: 1000500, bid: 14980})
+        spotPrices.tryBid({ timestamp: 1000750, bid: 15000})
 
-        spotPrices.emitBid({ timestamp: 1001000, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001250, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001500, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001750, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001000, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001250, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001500, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001750, bid: 15000})
 
-        spotPrices.emitAsk({ timestamp: 1002000, ask: 0})
+        spotPrices.tryAsk({ timestamp: 1002000, ask: 0})
     })
     test("cancel previous (BUY) order", async done => {
         const currency = Symbol.for("EUR");
@@ -147,27 +147,27 @@ describe("insideBarMomentumStrategy", () => {
             }
         })
 
-        spotPrices.emitBid({ timestamp: 1000000, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1000250, bid: 15500})
-        spotPrices.emitBid({ timestamp: 1000500, bid: 14980})
-        spotPrices.emitBid({ timestamp: 1000750, bid: 15100})
+        spotPrices.tryBid({ timestamp: 1000000, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1000250, bid: 15500})
+        spotPrices.tryBid({ timestamp: 1000500, bid: 14980})
+        spotPrices.tryBid({ timestamp: 1000750, bid: 15100})
 
-        spotPrices.emitBid({ timestamp: 1001000, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001250, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001500, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001750, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001000, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001250, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001500, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001750, bid: 15000})
 
-        spotPrices.emitBid({ timestamp: 1002000, bid: 15100})
-        spotPrices.emitBid({ timestamp: 1002250, bid: 15500})
-        spotPrices.emitBid({ timestamp: 1002500, bid: 14980})
-        spotPrices.emitBid({ timestamp: 1002750, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1002000, bid: 15100})
+        spotPrices.tryBid({ timestamp: 1002250, bid: 15500})
+        spotPrices.tryBid({ timestamp: 1002500, bid: 14980})
+        spotPrices.tryBid({ timestamp: 1002750, bid: 15000})
 
-        spotPrices.emitBid({ timestamp: 1003000, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1003250, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1003500, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1003750, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1003000, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1003250, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1003500, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1003750, bid: 15000})
 
-        spotPrices.emitAsk({ timestamp: 1004000, ask: 0})
+        spotPrices.tryAsk({ timestamp: 1004000, ask: 0})
     })
     test("cancel previous (SELL) order", async done => {
         const currency = Symbol.for("EUR");
@@ -208,27 +208,27 @@ describe("insideBarMomentumStrategy", () => {
             }
         })
 
-        spotPrices.emitBid({ timestamp: 1000000, bid: 15100})
-        spotPrices.emitBid({ timestamp: 1000250, bid: 15500})
-        spotPrices.emitBid({ timestamp: 1000500, bid: 14980})
-        spotPrices.emitBid({ timestamp: 1000750, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1000000, bid: 15100})
+        spotPrices.tryBid({ timestamp: 1000250, bid: 15500})
+        spotPrices.tryBid({ timestamp: 1000500, bid: 14980})
+        spotPrices.tryBid({ timestamp: 1000750, bid: 15000})
 
-        spotPrices.emitBid({ timestamp: 1001000, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001250, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001500, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001750, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001000, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001250, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001500, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001750, bid: 15000})
 
-        spotPrices.emitBid({ timestamp: 1002000, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1002250, bid: 15500})
-        spotPrices.emitBid({ timestamp: 1002500, bid: 14980})
-        spotPrices.emitBid({ timestamp: 1002750, bid: 15100})
+        spotPrices.tryBid({ timestamp: 1002000, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1002250, bid: 15500})
+        spotPrices.tryBid({ timestamp: 1002500, bid: 14980})
+        spotPrices.tryBid({ timestamp: 1002750, bid: 15100})
 
-        spotPrices.emitBid({ timestamp: 1003000, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1003250, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1003500, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1003750, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1003000, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1003250, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1003500, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1003750, bid: 15000})
 
-        spotPrices.emitAsk({ timestamp: 1004000, ask: 0})
+        spotPrices.tryAsk({ timestamp: 1004000, ask: 0})
     })
     test("close (BUY) order if entry price exceeds takeProfit", async done => {
         const currency = Symbol.for("EUR");
@@ -260,18 +260,18 @@ describe("insideBarMomentumStrategy", () => {
             }
         })
 
-        spotPrices.emitBid({ timestamp: 1000000, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1000250, bid: 15500})
-        spotPrices.emitBid({ timestamp: 1000500, bid: 14980})
-        spotPrices.emitBid({ timestamp: 1000750, bid: 15100})
+        spotPrices.tryBid({ timestamp: 1000000, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1000250, bid: 15500})
+        spotPrices.tryBid({ timestamp: 1000500, bid: 14980})
+        spotPrices.tryBid({ timestamp: 1000750, bid: 15100})
 
-        spotPrices.emitBid({ timestamp: 1001000, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001250, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001500, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001750, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001000, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001250, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001500, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001750, bid: 15000})
         
-        spotPrices.emitBid({ timestamp: 1002000, bid: 15916})
-        spotPrices.emitAsk({ timestamp: 1002000, ask: 15552})
+        spotPrices.tryBid({ timestamp: 1002000, bid: 15916})
+        spotPrices.tryAsk({ timestamp: 1002000, ask: 15552})
     })
     test("close (SELL) order if entry price exceeds takeProfit", async done => {
         const currency = Symbol.for("EUR");
@@ -303,18 +303,18 @@ describe("insideBarMomentumStrategy", () => {
             }
         })
 
-        spotPrices.emitBid({ timestamp: 1000000, bid: 15100})
-        spotPrices.emitBid({ timestamp: 1000250, bid: 15500})
-        spotPrices.emitBid({ timestamp: 1000500, bid: 14980})
-        spotPrices.emitBid({ timestamp: 1000750, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1000000, bid: 15100})
+        spotPrices.tryBid({ timestamp: 1000250, bid: 15500})
+        spotPrices.tryBid({ timestamp: 1000500, bid: 14980})
+        spotPrices.tryBid({ timestamp: 1000750, bid: 15000})
 
-        spotPrices.emitBid({ timestamp: 1001000, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001250, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001500, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001750, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001000, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001250, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001500, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001750, bid: 15000})
 
-        spotPrices.emitBid({ timestamp: 1002000, bid: 14928})
-        spotPrices.emitAsk({ timestamp: 1002000, ask: 14564})
+        spotPrices.tryBid({ timestamp: 1002000, bid: 14928})
+        spotPrices.tryAsk({ timestamp: 1002000, ask: 14564})
     })
     test("close (BUY) order if entry price exceeds stopLoss", async done => {
         const currency = Symbol.for("EUR");
@@ -346,18 +346,18 @@ describe("insideBarMomentumStrategy", () => {
             }
         })
 
-        spotPrices.emitBid({ timestamp: 1000000, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1000250, bid: 15500})
-        spotPrices.emitBid({ timestamp: 1000500, bid: 14980})
-        spotPrices.emitBid({ timestamp: 1000750, bid: 15100})
+        spotPrices.tryBid({ timestamp: 1000000, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1000250, bid: 15500})
+        spotPrices.tryBid({ timestamp: 1000500, bid: 14980})
+        spotPrices.tryBid({ timestamp: 1000750, bid: 15100})
 
-        spotPrices.emitBid({ timestamp: 1001000, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001250, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001500, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001750, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001000, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001250, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001500, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001750, bid: 15000})
 
-        spotPrices.emitBid({ timestamp: 1002000, bid: 15292})
-        spotPrices.emitAsk({ timestamp: 1002000, ask: 15552})
+        spotPrices.tryBid({ timestamp: 1002000, bid: 15292})
+        spotPrices.tryAsk({ timestamp: 1002000, ask: 15552})
     })
     test("close (SELL) order if entry price exceeds stopLoss", async done => {
         const currency = Symbol.for("EUR");
@@ -389,17 +389,17 @@ describe("insideBarMomentumStrategy", () => {
             }
         })
 
-        spotPrices.emitBid({ timestamp: 1000000, bid: 15100})
-        spotPrices.emitBid({ timestamp: 1000250, bid: 15500})
-        spotPrices.emitBid({ timestamp: 1000500, bid: 14980})
-        spotPrices.emitBid({ timestamp: 1000750, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1000000, bid: 15100})
+        spotPrices.tryBid({ timestamp: 1000250, bid: 15500})
+        spotPrices.tryBid({ timestamp: 1000500, bid: 14980})
+        spotPrices.tryBid({ timestamp: 1000750, bid: 15000})
 
-        spotPrices.emitBid({ timestamp: 1001000, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001250, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001500, bid: 15000})
-        spotPrices.emitBid({ timestamp: 1001750, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001000, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001250, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001500, bid: 15000})
+        spotPrices.tryBid({ timestamp: 1001750, bid: 15000})
 
-        spotPrices.emitBid({ timestamp: 1002000, bid: 14928})
-        spotPrices.emitAsk({ timestamp: 1002000, ask: 15188})
+        spotPrices.tryBid({ timestamp: 1002000, bid: 14928})
+        spotPrices.tryAsk({ timestamp: 1002000, ask: 15188})
     })
 })
