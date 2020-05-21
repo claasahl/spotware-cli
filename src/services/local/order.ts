@@ -39,27 +39,41 @@ class LocalOrderStream<Props extends OS.OrderProps> extends OS.DebugOrderStream<
 
 async function buy<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream, condition: (e: B.AskPriceChangedEvent) => boolean): Promise<OS.OrderStream<Props>> {
     assert.strictEqual(props.tradeSide, "BUY");
+    const fill = (e: B.AskPriceChangedEvent | null): B.Price | null => {
+        if(!e) {
+            return null;
+        }
+        const { timestamp } = e;
+        stream.tryCreate({ timestamp })
+        stream.tryAccept({ timestamp })
+        if (condition(e)) {
+            const { timestamp, ask: entry } = e;
+            stream.tryFill({ timestamp, entry })
+            update(entry, spots.bidOrNull())
+            return entry;
+        }
+        return null;
+    }
+    const update = (entry: B.Price, e: B.BidPriceChangedEvent | null) => {
+        if(!e) {
+            return;
+        }
+        const { timestamp, bid: price } = e
+        const profitLoss = Math.round((price - entry) * stream.props.volume * 100) / 100;
+        stream.tryProfitLoss({ timestamp, price, profitLoss });
+
+        if (props.stopLoss && props.stopLoss >= price ||
+            props.takeProfit && props.takeProfit <= price) {
+            stream.tryClose({ timestamp, exit: price, profitLoss })
+        }
+    }
     const stream = new LocalOrderStream<Props>(props);
-    let entry: B.Price | null = null;
+    let entry = fill(spots.askOrNull());
     spots.on("data", e => {
         if(entry === null && e.type ==="ASK_PRICE_CHANGED") {
-            const { timestamp } = e;
-            stream.tryCreate({ timestamp })
-            stream.tryAccept({ timestamp })
-            if (condition(e)) {
-                const { timestamp, ask } = e;
-                entry = ask;
-                stream.tryFill({ timestamp, entry })
-            }
+            entry = fill(e);
         } else if(entry !== null && e.type === "BID_PRICE_CHANGED") {
-            const { timestamp, bid: price } = e
-            const profitLoss = Math.round((price - entry) * stream.props.volume * 100) / 100;
-            stream.tryProfitLoss({ timestamp, price, profitLoss });
-
-            if (props.stopLoss && props.stopLoss >= price ||
-                props.takeProfit && props.takeProfit <= price) {
-                stream.tryClose({ timestamp, exit: price, profitLoss })
-            }
+            update(entry, e);   
         }
     })
     return stream;
@@ -67,27 +81,41 @@ async function buy<Props extends B.OrderProps>(props: Props, spots: B.SpotPrices
 
 async function sell<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream, condition: (e: B.BidPriceChangedEvent) => boolean): Promise<OS.OrderStream<Props>> {
     assert.strictEqual(props.tradeSide, "SELL");
+    const fill = (e: B.BidPriceChangedEvent | null): B.Price | null => {
+        if(!e) {
+            return  null;
+        }
+        const { timestamp } = e;
+        stream.tryCreate({ timestamp })
+        stream.tryAccept({ timestamp })
+        if (condition(e)) {
+            const { timestamp, bid: entry } = e;
+            stream.tryFill({ timestamp, entry })
+            update(entry, spots.askOrNull())
+            return entry;
+        }
+        return null;
+    }
+    const update = (entry: B.Price, e: B.AskPriceChangedEvent | null) => {
+        if(!e) {
+            return;
+        }
+        const { timestamp, ask: price } = e
+        const profitLoss = Math.round((entry - price) * stream.props.volume * 100) / 100;
+        stream.tryProfitLoss({ timestamp, price, profitLoss });
+
+        if (props.stopLoss && props.stopLoss <= price ||
+            props.takeProfit && props.takeProfit >= price) {
+            stream.tryClose({ timestamp, exit: price, profitLoss })
+        }
+    }
     const stream = new LocalOrderStream<Props>(props);
-    let entry: B.Price | null = null;
+    let entry = fill(spots.bidOrNull());
     spots.on("data", e => {
         if(entry === null && e.type ==="BID_PRICE_CHANGED") {
-            const { timestamp } = e;
-            stream.tryCreate({ timestamp })
-            stream.tryAccept({ timestamp })
-            if (condition(e)) {
-                const { timestamp, bid } = e;
-                entry = bid;
-                stream.tryFill({ timestamp, entry })
-            }
+            entry = fill(e);
         } else if(entry !== null && e.type === "ASK_PRICE_CHANGED") {
-            const { timestamp, ask: price } = e
-            const profitLoss = Math.round((entry - price) * stream.props.volume * 100) / 100;
-            stream.tryProfitLoss({ timestamp, price, profitLoss });
-
-            if (props.stopLoss && props.stopLoss <= price ||
-                props.takeProfit && props.takeProfit >= price) {
-                stream.tryClose({ timestamp, exit: price, profitLoss })
-            }
+            update(entry, e);
         }
     })
     return stream;

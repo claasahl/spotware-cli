@@ -140,6 +140,29 @@ export abstract class SpotPricesStream extends Readable implements SpotPricesAct
     return this.cachedEvent("PRICE_CHANGED");
   }
 
+  private cachedEventOrNull<T extends SpotPricesEvent>(type: T["type"]): T | null {
+    if (!spotPricesEventTypes.includes(type)) {
+      throw new Error(`event type '${type}' is not allowed. Only ${spotPricesEventTypes.join(", ")} as allowed.`)
+    }
+    const event = this.cachedEvents.get(type)
+    if (event && event.type === type) {
+      return event as T;
+    }
+    return null;
+  }
+
+  askOrNull(): AskPriceChangedEvent | null {
+    return this.cachedEventOrNull("ASK_PRICE_CHANGED");
+  }
+
+  bidOrNull(): BidPriceChangedEvent | null {
+    return this.cachedEventOrNull("BID_PRICE_CHANGED");
+  }
+
+  priceOrNull(): PriceChangedEvent | null {
+    return this.cachedEventOrNull("PRICE_CHANGED");
+  }
+
   abstract trendbars(props: SpotPricesSimpleTrendbarsProps): Promise<TrendbarsStream>;
 }
 
