@@ -3,7 +3,7 @@ const { DebugSpotPricesStream } = require("../../../build/services/base/spotPric
 
 describe("marketOrderFromSpotPrices", () => {
     describe("actions", () => {
-        test.skip("should cancel order", async done => {
+        test("should cancel order", async done => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await marketOrderFromSpotPrices({ id: "1", symbol, tradeSide: "SELL", volume: 2, spots })
@@ -20,7 +20,7 @@ describe("marketOrderFromSpotPrices", () => {
             })
             spots.tryBid({ timestamp: 1, bid: 0 })
         })
-        test.skip("should cancel order exactly once", async done => {
+        test("should cancel order exactly once", async done => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await marketOrderFromSpotPrices({ id: "1", symbol, tradeSide: "SELL", volume: 2, spots })
@@ -71,7 +71,7 @@ describe("marketOrderFromSpotPrices", () => {
             spots.tryBid({ timestamp: 0, bid: 5 })
             spots.tryAsk({ timestamp: 1, ask: 1 })
         })
-        test.skip("should 'end' order (1)", async done => {
+        test("should 'end' order (1)", async done => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await marketOrderFromSpotPrices({ id: "1", symbol, tradeSide: "BUY", volume: 2, spots })
