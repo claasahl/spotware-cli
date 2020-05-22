@@ -124,10 +124,10 @@ describe("DebugSpotPricesStream", () => {
     })
 
     describe("actions", () => {
-        test("trendbars", () => {
+        test("trendbars", async () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            expect(stream.trendbars).toThrow("not implemented")
+            await expect(stream.trendbars()).rejects.toThrow("not implemented")
         })
     })
 

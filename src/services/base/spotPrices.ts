@@ -166,7 +166,7 @@ export abstract class SpotPricesStream extends Readable implements SpotPricesAct
 }
 
 export class DebugSpotPricesStream extends SpotPricesStream {
-  trendbars(_props: SpotPricesSimpleTrendbarsProps): Promise<TrendbarsStream> {
+  async trendbars(_props: SpotPricesSimpleTrendbarsProps): Promise<TrendbarsStream> {
     throw new Error("not implemented");
   }
 
