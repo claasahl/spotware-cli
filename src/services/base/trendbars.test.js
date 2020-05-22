@@ -42,7 +42,7 @@ describe("DebugTrendbarsStream", () => {
             const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
             const stream = new DebugTrendbarsStream(props)
             const event = { type: "TRENDBAR", open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
-            stream.tryTrendbar(event)
+            stream.push(event)
             expect(log).toHaveBeenCalledTimes(1)
             expect(log).toHaveBeenCalledWith("%j", event);
         })
@@ -50,8 +50,8 @@ describe("DebugTrendbarsStream", () => {
         test("should not log unknown events", () => {
             const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
             const stream = new DebugTrendbarsStream(props)
-            stream.emit("unknown", {})
-            stream.emit("something", {})
+            stream.push({ type: "UNKNOWN"})
+            stream.push({something: 23})
             expect(log).toHaveBeenCalledTimes(0)
         })
     })

@@ -41,7 +41,7 @@ describe("DebugSpotPricesStream", () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
             const event = { type: "ASK_PRICE_CHANGED", ask: 23, timestamp: 123 };
-            stream.tryAsk(event)
+            stream.push(event)
             expect(log).toHaveBeenCalledTimes(1)
             expect(log).toHaveBeenCalledWith("%j", event);
         })
@@ -50,7 +50,7 @@ describe("DebugSpotPricesStream", () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
             const event = { type: "BID_PRICE_CHANGED", bid: 23, timestamp: 123 };
-            stream.tryBid(event)
+            stream.push(event)
             expect(log).toHaveBeenCalledTimes(1)
             expect(log).toHaveBeenCalledWith("%j", event);
         })
@@ -59,7 +59,7 @@ describe("DebugSpotPricesStream", () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
             const event = { type: "PRICE_CHANGED", ask: 23, bid: 22, timestamp: 123 };
-            stream.tryPrice(event)
+            stream.push(event)
             expect(log).toHaveBeenCalledTimes(1)
             expect(log).toHaveBeenCalledWith("%j", event);
         })
@@ -67,8 +67,8 @@ describe("DebugSpotPricesStream", () => {
         test("should not log unknown events", () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            stream.emit("unknown", {})
-            stream.emit("something", {})
+            stream.push({ type: "UNKNOWN"})
+            stream.push({something: 23})
             expect(log).toHaveBeenCalledTimes(0)
         })
     })
