@@ -69,15 +69,18 @@ export async function insideBarMomentumStrategy(props: Props): Promise<B.Account
   let id = 1, timestamp = 0;
 
   const spots = await account.spotPrices({ symbol })
-  spots.on("ask", e => timestamp = e.timestamp);
-  spots.on("bid", e => timestamp = e.timestamp);
+  spots.on("data", e => timestamp = e.timestamp)
 
   let lastOrder: B.OrderStream<B.StopOrderProps> | undefined = undefined;
   const placeBuyOrder = (enter: B.Price, stopLoss: B.Price, takeProfit: B.Price) => placeOrder({ id: `${id++}`, symbol, enter, tradeSide: "BUY", volume, stopLoss, takeProfit, account, expiresAt: expiresIn ? timestamp + expiresIn : undefined })
   const placeSellOrder = (enter: B.Price, stopLoss: B.Price, takeProfit: B.Price) => placeOrder({ id: `${id++}`, symbol, enter, tradeSide: "SELL", volume, stopLoss, takeProfit, account, expiresAt: expiresIn ? timestamp + expiresIn : undefined })
 
   const trendbarEvents: B.TrendbarEvent[] = []
-  trendbars.on("trendbar", async e => {
+  trendbars.on("data", async e => {
+    if(e.type !== "TRENDBAR") {
+      return;
+    }
+    
     trendbarEvents.push(e);
     if (trendbarEvents.length >= 2) {
       const [first, second] = trendbarEvents;
