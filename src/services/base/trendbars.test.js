@@ -41,10 +41,10 @@ describe("DebugTrendbarsStream", () => {
         test("log 'trendbar' events", () => {
             const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
             const stream = new DebugTrendbarsStream(props)
-            const event = { open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
-            stream.emit("trendbar", event)
+            const event = { type: "TRENDBAR", open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
+            stream.tryTrendbar(event)
             expect(log).toHaveBeenCalledTimes(1)
-            expect(log).toHaveBeenCalledWith(expect.any(String), event);
+            expect(log).toHaveBeenCalledWith("%j", event);
         })
 
         test("should not log unknown events", () => {
@@ -84,12 +84,14 @@ describe("DebugTrendbarsStream", () => {
         test("should emit 'trendbar' event", done => {
             const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
             const stream = new DebugTrendbarsStream(props)
-            const event = { open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
-            stream.once("trendbar", e => {
-                expect(e).toBe(event);
-                done()
+            const event = { type: "TRENDBAR", open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
+            stream.on("data", e => {
+                if(e.type === "TRENDBAR") {
+                    expect(e).toStrictEqual(event);
+                    done()
+                }
             })
-            stream.emitTrendbar(event)
+            stream.tryTrendbar(event)
         })
     })
 })

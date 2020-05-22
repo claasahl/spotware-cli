@@ -8,10 +8,12 @@ describe("trendbarsFromSpotPrices", () => {
             const period = 1000;
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await trendbarsFromSpotPrices({ symbol, period, spots })
-            const event = { timestamp: 0, open: 1, high: 5, low: 0.1, close: 0.7, volume: 0 };
-            stream.on("trendbar", e => {
-                expect(e).toStrictEqual(event)
-                done()
+            const event = { type: "TRENDBAR", timestamp: 0, open: 1, high: 5, low: 0.1, close: 0.7, volume: 0 };
+            stream.on("data", e => {
+                if(e.type === "TRENDBAR") {
+                    expect(e).toStrictEqual(event)
+                    done()
+                }
             })
 
             spots.tryBid({ timestamp: 0, bid: 1 })
@@ -30,10 +32,12 @@ describe("trendbarsFromSpotPrices", () => {
             const period = 1000;
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await trendbarsFromSpotPrices({ symbol, period, spots })
-            const event = { timestamp: 0, open: 1, high: 1, low: 1, close: 1, volume: 0 };
-            stream.on("trendbar", e => {
-                expect(e).toStrictEqual(event)
-                done()
+            const event = { type: "TRENDBAR", timestamp: 0, open: 1, high: 1, low: 1, close: 1, volume: 0 };
+            stream.on("data", e => {
+                if(e.type === "TRENDBAR") {
+                    expect(e).toStrictEqual(event)
+                    done()
+                }
             })
 
             spots.tryBid({ timestamp: 0, bid: 1 })
@@ -44,10 +48,12 @@ describe("trendbarsFromSpotPrices", () => {
             const period = 1000;
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await trendbarsFromSpotPrices({ symbol, period, spots })
-            const event = { timestamp: 0, open: 1, high: 1, low: 1, close: 1, volume: 0 };
-            stream.on("trendbar", e => {
-                expect(e).toStrictEqual(event)
-                done()
+            const event = { type: "TRENDBAR", timestamp: 0, open: 1, high: 1, low: 1, close: 1, volume: 0 };
+            stream.on("data", e => {
+                if(e.type === "TRENDBAR") {
+                    expect(e).toStrictEqual(event)
+                    done()
+                }
             })
 
             spots.tryBid({ timestamp: 0, bid: 1 })
@@ -58,10 +64,12 @@ describe("trendbarsFromSpotPrices", () => {
             const period = 1000;
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await trendbarsFromSpotPrices({ symbol, period, spots })
-            const event = { timestamp: 1000, open: 1, high: 1, low: 1, close: 1, volume: 0 };
-            stream.on("trendbar", e => {
-                expect(e).toStrictEqual(event)
-                done()
+            const event = { type: "TRENDBAR", timestamp: 1000, open: 1, high: 1, low: 1, close: 1, volume: 0 };
+            stream.on("data", e => {
+                if(e.type === "TRENDBAR") {
+                    expect(e).toStrictEqual(event)
+                    done()
+                }
             })
             
             spots.tryAsk({ timestamp: 0, ask: 10 })

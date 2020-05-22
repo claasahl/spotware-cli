@@ -36,6 +36,7 @@ function toTrendbar(
     events: B.BidPriceChangedEvent[]
 ): B.TrendbarEvent {
     const seed: B.TrendbarEvent = {
+        type: "TRENDBAR",
         open: 0,
         high: Number.MIN_VALUE,
         low: Number.MAX_VALUE,
@@ -60,7 +61,7 @@ export function trendbarsFromSpotPrices(props: B.TrendbarsProps & { spots: B.Spo
                     e => bucked(e.timestamp).begin === bucket1.begin
                 );
                 values.splice(0, eventsInBucket.length);
-                stream.emitTrendbar(toTrendbar(bucket1.begin, eventsInBucket))
+                stream.tryTrendbar(toTrendbar(bucket1.begin, eventsInBucket))
             }
         } else if(e.type === "ASK_PRICE_CHANGED") {
             if(values.length === 0) {
@@ -73,7 +74,7 @@ export function trendbarsFromSpotPrices(props: B.TrendbarsProps & { spots: B.Spo
                     e => bucked(e.timestamp).begin === bucket1.begin
                 );
                 values.splice(0, eventsInBucket.length);
-                stream.emitTrendbar(toTrendbar(bucket1.begin, eventsInBucket))
+                stream.tryTrendbar(toTrendbar(bucket1.begin, eventsInBucket))
             }
         }
        
