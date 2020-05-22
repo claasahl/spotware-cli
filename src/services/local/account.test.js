@@ -96,7 +96,7 @@ describe("fromNothing", () => {
             let no = 0;
             stream.on("equity", e => {
                 if(no === 1) {
-                    // expect(e).toStrictEqual({ timestamp: 1, equity: 520 });
+                    expect(e).toStrictEqual({ timestamp: 1, equity: 520 });
                     spotPrices.tryAsk({ timestamp: 3, ask: 12 })
                 } else if(no === 2) {
                     expect(e).toStrictEqual({ timestamp: 3, equity: 512 });
@@ -182,7 +182,7 @@ describe("fromNothing", () => {
             let no = 0;
             stream.on("equity", e => {
                 if(no === 1) {
-                    // expect(e).toStrictEqual({ timestamp: 2, equity: 520 });
+                    expect(e).toStrictEqual({ timestamp: 2, equity: 520 });
                     spotPrices.tryBid({ timestamp: 3, bid: 12 })
                 } else if(no === 2) {
                     expect(e).toStrictEqual({ timestamp: 3, equity: 508 });

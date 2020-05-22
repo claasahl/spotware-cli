@@ -130,6 +130,6 @@ class LocalAccountStream extends B.DebugAccountStream {
 
 export function fromNothing(props: LocalAccountProps): B.AccountStream {
     const stream = new LocalAccountStream(props);
-    stream.emitTransaction({ timestamp: Date.now(), amount: props.initialBalance });
+    stream.emitTransaction({ timestamp: 0, amount: props.initialBalance });
     return stream;
 }
