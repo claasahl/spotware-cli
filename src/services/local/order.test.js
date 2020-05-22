@@ -521,7 +521,7 @@ describe("stopOrderFromSpotPrices", () => {
             spots.tryBid({ timestamp: 1, bid: 4 })
             spots.tryAsk({ timestamp: 2, ask: 2 })
         })
-        test.skip("should 'end' order (1)", async done => {
+        test("should 'end' order (1)", async done => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await stopOrderFromSpotPrices({ id: "1", symbol, tradeSide: "BUY", volume: 2, enter: 6, spots })
@@ -534,7 +534,7 @@ describe("stopOrderFromSpotPrices", () => {
                     done();
                 }
             })
-            spots.tryAsk({ timestamp: 1, ask: 6 })
+            spots.tryAsk({ timestamp: 1, ask: 5 })
         })
         test("should 'end' order (2)", async done => {
             const symbol = Symbol.for("abc")
