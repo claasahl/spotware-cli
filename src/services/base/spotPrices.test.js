@@ -74,58 +74,52 @@ describe("DebugSpotPricesStream", () => {
     })
 
     describe("access cached events", () => {
-        test("should call cb with ask (not cached)", () => {
+        test("should call cb with ask (not cached)", async () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            const event = { ask: 23, timestamp: 123 };
-            expect(stream.ask()).resolves.toBe(event);
-            setTimeout(() => stream.emit("ask", event), 100)
+            const event = { type: "ASK_PRICE_CHANGED", ask: 23, timestamp: 123 };
+            setTimeout(() => stream.push(event), 50)
+            await expect(stream.ask()).resolves.toStrictEqual(event);
         })
     
-        test("should call cb with ask (cached)", () => {
+        test("should call cb with ask (cached)", async () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            const event = { ask: 23, timestamp: 123 };
-            stream.once("ask", () => {
-                expect(stream.ask()).resolves.toBe(event);
-            })
-            stream.emit("ask", event);
+            const event = { type: "ASK_PRICE_CHANGED", ask: 23, timestamp: 123 };
+            stream.push(event)
+            await expect(stream.ask()).resolves.toStrictEqual(event);
         })
 
-        test("should call cb with bid (not cached)", () => {
+        test("should call cb with bid (not cached)", async () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            const event = { bid: 23, timestamp: 123 };
-            expect(stream.bid()).resolves.toBe(event);
-            setTimeout(() => stream.emit("bid", event), 100)
+            const event = { type: "BID_PRICE_CHANGED", bid: 23, timestamp: 123 };
+            setTimeout(() => stream.push(event), 50)
+            await expect(stream.bid()).resolves.toStrictEqual(event);
         })
     
-        test("should call cb with bid (cached)", () => {
+        test("should call cb with bid (cached)", async () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            const event = { bid: 23, timestamp: 123 };
-            stream.once("bid", () => {
-                expect(stream.bid()).resolves.toBe(event);
-            })
-            stream.emit("bid", event);
+            const event = { type: "BID_PRICE_CHANGED", bid: 23, timestamp: 123 };
+            stream.push(event)
+            await expect(stream.bid()).resolves.toStrictEqual(event);
         })
 
-        test("should call cb with price (not cached)", () => {
+        test("should call cb with price (not cached)", async () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            const event = { ask: 22, bid: 23, timestamp: 123 };
-            expect(stream.price()).resolves.toBe(event);
-            setTimeout(() => stream.emit("price", event), 100)
+            const event = { type: "PRICE_CHANGED", ask: 22, bid: 23, timestamp: 123 };
+            setTimeout(() => stream.push(event), 50)
+            await expect(stream.price()).resolves.toStrictEqual(event);
         })
     
-        test("should call cb with price (cached)", () => {
+        test("should call cb with price (cached)", async () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            const event = { ask: 22, bid: 23, timestamp: 123 };
-            stream.once("price", () => {
-                expect(stream.price()).resolves.toBe(event);
-            })
-            stream.emit("price", event);
+            const event = { type: "PRICE_CHANGED", ask: 22, bid: 23, timestamp: 123 };
+            stream.push(event)
+            await expect(stream.price()).resolves.toStrictEqual(event);
         })
     })
 

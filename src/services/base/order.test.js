@@ -129,166 +129,148 @@ describe("DebugOrderStream", () => {
     })
 
     describe("access cached events", () => {
-        test("should call cb with accepted (not cached)", () => {
+        test("should call cb with accepted (not cached)", async () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            const event = { timestamp: 123 };
-            expect(stream.accepted()).resolves.toBe(event);
-            setTimeout(() => stream.emit("accepted", event), 100)
+            const event = { type: "ACCEPTED", timestamp: 123 };
+            setTimeout(() => stream.push(event), 50)
+            await expect(stream.accepted()).resolves.toStrictEqual(event);
         })
     
-        test("should call cb with accepted (cached)", () => {
+        test("should call cb with accepted (cached)", async () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            const event = { timestamp: 123 };
-            stream.once("accepted", () => {
-                expect(stream.accepted()).resolves.toBe(event);
-            })
-            stream.emit("accepted", event);
+            const event = { type: "ACCEPTED", timestamp: 123 };
+            stream.push(event)
+            await expect(stream.accepted()).resolves.toStrictEqual(event);
         })
 
-        test("should call cb with created (not cached)", () => {
+        test("should call cb with created (not cached)", async () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            const event = { timestamp: 123 };
-            expect(stream.created()).resolves.toBe(event);
-            setTimeout(() => stream.emit("created", event), 100)
+            const event = { type: "CREATED", timestamp: 123 };
+            setTimeout(() => stream.push(event), 50)
+            await expect(stream.created()).resolves.toStrictEqual(event);
         })
     
-        test("should call cb with created (cached)", () => {
+        test("should call cb with created (cached)", async () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            const event = { timestamp: 123 };
-            stream.once("created", () => {
-                expect(stream.created()).resolves.toBe(event);
-            })
-            stream.emit("created", event);
+            const event = { type: "CREATED", timestamp: 123 };
+            stream.push(event)
+            await expect(stream.created()).resolves.toStrictEqual(event);
         })
 
-        test("should call cb with rejected (not cached)", () => {
+        test("should call cb with rejected (not cached)", async () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            const event = { timestamp: 123 };
-            expect(stream.rejected()).resolves.toBe(event);
-            setTimeout(() => stream.emit("rejected", event), 100)
+            const event = { type: "REJECTED", timestamp: 123 };
+            setTimeout(() => stream.push(event), 50)
+            await expect(stream.rejected()).resolves.toStrictEqual(event);
         })
     
-        test("should call cb with rejected (cached)", () => {
+        test("should call cb with rejected (cached)", async () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            const event = { timestamp: 123 };
-            stream.once("rejected", () => {
-                expect(stream.rejected()).resolves.toBe(event);
-            })
-            stream.emit("rejected", event);
+            const event = { type: "REJECTED", timestamp: 123 };
+            stream.push(event)
+            await expect(stream.rejected()).resolves.toStrictEqual(event);
         })
 
-        test("should call cb with filled (not cached)", () => {
+        test("should call cb with filled (not cached)", async () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            const event = { entry: 23, timestamp: 123 };
-            expect(stream.filled()).resolves.toBe(event);
-            setTimeout(() => stream.emit("filled", event), 100)
+            const event = { type: "FILLED", entry: 23, timestamp: 123 };
+            setTimeout(() => stream.push(event), 50)
+            await expect(stream.filled()).resolves.toStrictEqual(event);
         })
     
-        test("should call cb with filled (cached)", () => {
+        test("should call cb with filled (cached)", async () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            const event = { entry: 23, timestamp: 123 };
-            stream.once("filled", () => {
-                expect(stream.filled()).resolves.toBe(event);
-            })
-            stream.emit("filled", event);
+            const event = { type: "FILLED", entry: 23, timestamp: 123 };
+            stream.push(event)
+            await expect(stream.filled()).resolves.toStrictEqual(event);
         })
 
-        test("should call cb with profitLoss (not cached)", () => {
+        test("should call cb with profitLoss (not cached)", async () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            const event = { price: 123, profitLoss: 23, timestamp: 123 };
-            expect(stream.profitLoss()).resolves.toBe(event);
-            setTimeout(() => stream.emit("profitLoss", event), 100)
+            const event = { type: "PROFITLOSS", price: 123, profitLoss: 23, timestamp: 123 };
+            setTimeout(() => stream.push(event), 50)
+            await expect(stream.profitLoss()).resolves.toStrictEqual(event);
         })
     
-        test("should call cb with profitLoss (cached)", () => {
+        test("should call cb with profitLoss (cached)", async () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            const event = { price: 123, profitLoss: 23, timestamp: 123 };
-            stream.once("profitLoss", () => {
-                expect(stream.profitLoss()).resolves.toBe(event);
-            })
-            stream.emit("profitLoss", event);
+            const event = { type: "PROFITLOSS", price: 123, profitLoss: 23, timestamp: 123 };
+            stream.push(event)
+            await expect(stream.profitLoss()).resolves.toStrictEqual(event);
         })
         
-        test("should call cb with closed (not cached)", () => {
+        test("should call cb with closed (not cached)", async () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            const event = { exit: 42, profitLoss: 23, timestamp: 123 };
-            expect(stream.closed()).resolves.toBe(event);
-            setTimeout(() => stream.emit("closed", event), 100)
+            const event = { type: "CLOSED", exit: 42, profitLoss: 23, timestamp: 123 };
+            setTimeout(() => stream.push(event), 50)
+            await expect(stream.closed()).resolves.toStrictEqual(event);
         })
     
-        test("should call cb with closed (cached)", () => {
+        test("should call cb with closed (cached)", async () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            const event = { exit: 42, profitLoss: 23, timestamp: 123 };
-            stream.once("closed", () => {
-                expect(stream.closed()).resolves.toBe(event);
-            })
-            stream.emit("closed", event);
+            const event = { type: "CLOSED", exit: 42, profitLoss: 23, timestamp: 123 };
+            stream.push(event)
+            await expect(stream.closed()).resolves.toStrictEqual(event);
         })
         
-        test("should call cb with canceled (not cached)", () => {
+        test("should call cb with canceled (not cached)", async () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            const event = { timestamp: 123 };
-            expect(stream.canceled()).resolves.toBe(event);
-            setTimeout(() => stream.emit("canceled", event), 100)
+            const event = { type: "CANCELED", timestamp: 123 };
+            setTimeout(() => stream.push(event), 50)
+            await expect(stream.canceled()).resolves.toStrictEqual(event);
         })
     
-        test("should call cb with canceled (cached)", () => {
+        test("should call cb with canceled (cached)", async () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            const event = { timestamp: 123 };
-            stream.once("canceled", () => {
-                expect(stream.canceled()).resolves.toBe(event);
-            })
-            stream.emit("canceled", event);
+            const event = { type: "CANCELED", timestamp: 123 };
+            stream.push(event)
+            await expect(stream.canceled()).resolves.toStrictEqual(event);
         })
 
-        test("should call cb with expired (not cached)", () => {
+        test("should call cb with expired (not cached)", async () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            const event = { timestamp: 123 };
-            expect(stream.expired()).resolves.toBe(event);
-            setTimeout(() => stream.emit("expired", event), 100)
+            const event = { type: "EXPIRED", timestamp: 123 };
+            setTimeout(() => stream.push(event), 50)
+            await expect(stream.expired()).resolves.toStrictEqual(event);
         })
     
-        test("should call cb with expired (cached)", () => {
+        test("should call cb with expired (cached)", async () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            const event = { timestamp: 123 };
-            stream.once("expired", () => {
-                expect(stream.expired()).resolves.toBe(event);
-            })
-            stream.emit("expired", event);
+            const event = { type: "EXPIRED", timestamp: 123 };
+            stream.push(event)
+            await expect(stream.expired()).resolves.toStrictEqual(event);
         })
 
-        test("should call cb with ended (not cached)", () => {
+        test("should call cb with ended (not cached)", async () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            const event = { exit: 42, profitLoss: 23, timestamp: 123 };
-            expect(stream.ended()).resolves.toBe(event);
-            setTimeout(() => stream.emit("ended", event), 100)
+            const event = { type: "ENDED", exit: 42, profitLoss: 23, timestamp: 123 };
+            setTimeout(() => stream.push(event), 50)
+            await expect(stream.ended()).resolves.toStrictEqual(event);
         })
     
-        test("should call cb with ended (cached)", () => {
+        test("should call cb with ended (cached)", async () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            const event = { exit: 42, profitLoss: 23, timestamp: 123 };
-            stream.once("ended", () => {
-                expect(stream.ended()).resolves.toBe(event);
-            })
-            stream.emit("ended", event);
+            const event = { type: "ENDED", exit: 42, profitLoss: 23, timestamp: 123 };
+            stream.push(event)
+            await expect(stream.ended()).resolves.toStrictEqual(event);
         })
     })
 
