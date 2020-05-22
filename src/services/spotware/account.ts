@@ -57,7 +57,7 @@ class SpotwareAccountStream extends B.DebugAccountStream {
             const trader = await this.client.trader({ctidTraderAccountId})
             const timestamp = Date.now();
             const balance = trader.trader.balance / 100;
-            this.emitBalance({timestamp, balance})
+            this.tryBalance({timestamp, balance})
             return ctidTraderAccountId;
         })
     }
@@ -114,13 +114,13 @@ class SpotwareAccountStream extends B.DebugAccountStream {
                 const toBeDeleted: number[] = [];
                 all.forEach((o, index) => {
                     if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
-                        this.emitTransaction({ timestamp: e.timestamp, amount: o.profitLoss })
+                        this.tryTransaction({ timestamp: e.timestamp, amount: o.profitLoss })
                         toBeDeleted.push(index);
                     }
                 });
                 toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
             }
-            this.emitOrder({...e, ...stream.props})
+            this.tryOrder({...e, ...stream.props})
         })
         return stream;
     }
@@ -152,13 +152,13 @@ class SpotwareAccountStream extends B.DebugAccountStream {
                 const toBeDeleted: number[] = [];
                 all.forEach((o, index) => {
                     if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
-                        this.emitTransaction({ timestamp: e.timestamp, amount: o.profitLoss })
+                        this.tryTransaction({ timestamp: e.timestamp, amount: o.profitLoss })
                         toBeDeleted.push(index);
                     }
                 });
                 toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
             }
-            this.emitOrder({...e, ...stream.props})
+            this.tryOrder({...e, ...stream.props})
         })
         return stream;
     }
@@ -209,7 +209,7 @@ class SpotwareAccountStream extends B.DebugAccountStream {
         let profitLoss = 0;
         this.orders.forEach(o => o.forEach(o => (profitLoss += o.profitLoss)));
         const equity = Math.round((balance + profitLoss) * 100) / 100;
-        this.emitEquity({ timestamp: e.timestamp, equity });
+        this.tryEquity({ timestamp: e.timestamp, equity });
     }
 }
 
