@@ -93,7 +93,6 @@ export abstract class SpotPricesStream extends Readable implements SpotPricesAct
   constructor(props: SpotPricesProps) {
     super(streamConfig);
     this.props = Object.freeze(props);
-    this.props = Object.freeze(props);
     this.cachedEvents = new Map();
     this.log = debug("spotPrices").extend(props.symbol.toString());
   }
