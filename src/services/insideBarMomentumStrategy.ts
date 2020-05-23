@@ -76,7 +76,8 @@ export async function insideBarMomentumStrategy(props: Props): Promise<B.Account
   trendbars.on("data", async e => {
     trendbarEvents.push(e);
     if (trendbarEvents.length >= 2) {
-      const [first, second] = trendbarEvents;
+      const first = trendbarEvents.shift()!;
+      const second = trendbarEvents[0];
       const r = range(first);
       if (r < minTrendbarRange) {
         // no good. if this trendbar is used to calculate stopLoss and takeProfit levels, then chance are high that the current spot price is too close to these levels.
@@ -93,7 +94,6 @@ export async function insideBarMomentumStrategy(props: Props): Promise<B.Account
         await endLastOrder(lastOrder);
         lastOrder = await placeSellOrder(e.timestamp+period, enter, stopLoss, takeProfit)
       }
-      trendbarEvents.shift()
     }
   })
   return account;
