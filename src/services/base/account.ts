@@ -111,7 +111,8 @@ export abstract class AccountStream extends Readable implements AccountActions {
     const tmp = super.push(event)
     if(event && event.type === "TRANSACTION") {
         const { timestamp, amount } = event;
-        const oldBalance = this.balanceOrNull()?.balance || 0
+        const balanceOrNull = this.balanceOrNull();
+        const oldBalance = balanceOrNull ? balanceOrNull.balance : 0
         const balance = Math.round((oldBalance + amount) * 100) / 100;
         this.push({type: "BALANCE_CHANGED", timestamp, balance})
     }

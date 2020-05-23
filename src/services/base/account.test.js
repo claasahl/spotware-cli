@@ -46,10 +46,11 @@ describe("DebugAccountStream", () => {
         test("log 'transaction' events", () => {
             const props = { currency: Symbol.for("abc"), a: 2 }
             const stream = new DebugAccountStream(props)
-            const event = { type: "TRANSACTION", balance: 23, timestamp: 123 };
+            const event = { type: "TRANSACTION", amount: 23, timestamp: 123 };
             stream.push(event)
-            expect(log).toHaveBeenCalledTimes(1)
-            expect(log).toHaveBeenCalledWith("%j", event);
+            expect(log).toHaveBeenCalledTimes(2)
+            expect(log).toHaveBeenNthCalledWith(1, "%j", event);
+            expect(log).toHaveBeenNthCalledWith(2, "%j", {type: "BALANCE_CHANGED", timestamp: 123, balance: 23});
         })
 
         test("log 'equity' events", () => {
