@@ -22,6 +22,8 @@ import debug from "debug";
 
 // review all base/*.ts and local/*.ts files for "Promises vs callbacks" and "Promises vs 'sync' returns"
 
+// philosophy: for awesome readablity format all events like so {timestamp, type, ...rest}
+
 function header() {
   execFile("git", ["rev-parse", "HEAD"], (_error, stdout, _stderr) => {
     debug("CONFIG")("%j", {config, git: stdout, env: process.env})

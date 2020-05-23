@@ -114,7 +114,7 @@ export abstract class AccountStream extends Readable implements AccountActions {
         const balanceOrNull = this.balanceOrNull();
         const oldBalance = balanceOrNull ? balanceOrNull.balance : 0
         const balance = Math.round((oldBalance + amount) * 100) / 100;
-        this.push({type: "BALANCE_CHANGED", timestamp, balance})
+        this.push({timestamp, type: "BALANCE_CHANGED", balance})
     }
     return tmp;
   }
@@ -197,18 +197,24 @@ export class DebugAccountStream extends AccountStream {
   }
 
   tryBalance(e: Omit<BalanceChangedEvent, "type">): void {
-    this.push({...e, type: "BALANCE_CHANGED"});
+    const event: BalanceChangedEvent = {...e, type: "BALANCE_CHANGED"};
+    const {timestamp, type, ...rest} = event;
+    this.push({timestamp, type, ...rest});
   }
 
   tryTransaction(e: Omit<TransactionEvent, "type">): void {
-    this.push({...e, type: "TRANSACTION"});
+    const event: TransactionEvent = {...e, type: "TRANSACTION"};
+    const {timestamp, type, ...rest} = event;
+    this.push({timestamp, type, ...rest});
   }
 
   tryEquity(e: Omit<EquityChangedEvent, "type">): void {
-    this.push({...e, type: "EQUITY_CHANGED"});
+    const event: EquityChangedEvent = {...e, type: "EQUITY_CHANGED"};
+    const {timestamp, type, ...rest} = event;
+    this.push({timestamp, type, ...rest});
   }
 
   tryOrder(e: OrderEvents): void {
-    this.push(e);
+    this.push({timestamp: e.timestamp, type: e.type, ...e});
   }
 }

@@ -365,34 +365,50 @@ export class DebugOrderStream<Props extends OrderProps> extends OrderStream<Prop
   }
 
   tryCreate(e: Omit<OrderCreatedEvent, "type">): void {
-    this.event({ type: "CREATE", event: { ...e, type: "CREATED" } })
+    const event: OrderCreatedEvent = {...e, type: "CREATED"};
+    const {timestamp, type, ...rest} = event;
+    this.event({ type: "CREATE", event: {timestamp, type, ...rest} });
   }
 
   tryAccept(e: Omit<OrderAcceptedEvent, "type">): void {
-    this.event({ type: "ACCEPT", event: { ...e, type: "ACCEPTED" } })
+    const event: OrderAcceptedEvent = {...e, type: "ACCEPTED"};
+    const {timestamp, type, ...rest} = event;
+    this.event({ type: "ACCEPT", event: {timestamp, type, ...rest} });
   }
 
   tryReject(e: Omit<OrderRejectedEvent, "type">): void {
-    this.event({ type: "REJECT", event: { ...e, type: "REJECTED" } })
+    const event: OrderRejectedEvent = {...e, type: "REJECTED"};
+    const {timestamp, type, ...rest} = event;
+    this.event({ type: "REJECT", event: {timestamp, type, ...rest} });
   }
 
   tryFill(e: Omit<OrderFilledEvent, "type">): void {
-    this.event({ type: "FILL", event: { ...e, type: "FILLED" } })
+    const event: OrderFilledEvent = {...e, type: "FILLED"};
+    const {timestamp, type, ...rest} = event;
+    this.event({ type: "FILL", event: {timestamp, type, ...rest} });
   }
 
   tryProfitLoss(e: Omit<OrderProfitLossEvent, "type">): void {
-    this.event({ type: "PROFITLOSS", event: { ...e, type: "PROFITLOSS" } })
+    const event: OrderProfitLossEvent = {...e, type: "PROFITLOSS"};
+    const {timestamp, type, ...rest} = event;
+    this.event({ type: "PROFITLOSS", event: {timestamp, type, ...rest} });
   }
 
   tryClose(e: Omit<OrderClosedEvent, "type">): void {
-    this.event({ type: "CLOSE", event: { ...e, type: "CLOSED" } })
+    const event: OrderClosedEvent = {...e, type: "CLOSED"};
+    const {timestamp, type, ...rest} = event;
+    this.event({ type: "CLOSE", event: {timestamp, type, ...rest} });
   }
 
   tryCancel(e: Omit<OrderCanceledEvent, "type">): void {
-    this.event({ type: "CANCEL", event: { ...e, type: "CANCELED" } })
+    const event: OrderCanceledEvent = {...e, type: "CANCELED"};
+    const {timestamp, type, ...rest} = event;
+    this.event({ type: "CANCEL", event: {timestamp, type, ...rest} });
   }
 
   tryExpire(e: Omit<OrderExpiredEvent, "type">): void {
-    this.event({ type: "EXPIRE", event: { ...e, type: "EXPIRED" } })
+    const event: OrderExpiredEvent = {...e, type: "EXPIRED"};
+    const {timestamp, type, ...rest} = event;
+    this.event({ type: "EXPIRE", event: {timestamp, type, ...rest} });
   }
 }

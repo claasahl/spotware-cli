@@ -171,14 +171,20 @@ export class DebugSpotPricesStream extends SpotPricesStream {
   }
 
   tryAsk(e: Omit<AskPriceChangedEvent, "type">): void {
-    this.push({ ...e, type: "ASK_PRICE_CHANGED" })
+    const event: AskPriceChangedEvent = {...e, type: "ASK_PRICE_CHANGED"};
+    const {timestamp, type, ...rest} = event;
+    this.push({timestamp, type, ...rest});
   }
 
   tryBid(e: Omit<BidPriceChangedEvent, "type">): void {
-    this.push({ ...e, type: "BID_PRICE_CHANGED" })
+    const event: BidPriceChangedEvent = {...e, type: "BID_PRICE_CHANGED"};
+    const {timestamp, type, ...rest} = event;
+    this.push({timestamp, type, ...rest});
   }
 
   tryPrice(e: Omit<PriceChangedEvent, "type">): void {
-    this.push({ ...e, type: "PRICE_CHANGED" })
+    const event: PriceChangedEvent = {...e, type: "PRICE_CHANGED"};
+    const {timestamp, type, ...rest} = event;
+    this.push({timestamp, type, ...rest});
   }
 }

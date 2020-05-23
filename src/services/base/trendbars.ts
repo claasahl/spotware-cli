@@ -143,6 +143,8 @@ export class TrendbarsStream extends Readable implements TrendbarsActions {
 
 export class DebugTrendbarsStream extends TrendbarsStream {
   tryTrendbar(e: Omit<TrendbarEvent, "type">): void {
-    this.push({ ...e, type: "TRENDBAR" })
+    const event: TrendbarEvent = {...e, type: "TRENDBAR"};
+    const {timestamp, type, ...rest} = event;
+    this.push({timestamp, type, ...rest});
   }
 }
