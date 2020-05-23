@@ -48,19 +48,21 @@ async function buy<Props extends B.OrderProps>(props: Props, spots: B.SpotPrices
         stream.tryAccept({ timestamp })
         setImmediate(() => { // <-- enables cancelling of market orders
             if (condition(e)) {
-                const { timestamp, ask } = e;
-                entry = ask;
+                const { timestamp, ask: entry } = e;
                 stream.tryFill({ timestamp, entry })
-                update(spots.bidOrNull())
+                update(
+                    { type: "FILLED", timestamp, entry },
+                    spots.bidOrNull()
+                )
             }
         })
     }
-    const update = (e: B.BidPriceChangedEvent | null): void => {
+    const update = (filled: B.OrderFilledEvent, e: B.BidPriceChangedEvent | null): void => {
         if(!e) {
             return;
         }
         const { timestamp, bid: price } = e
-        const profitLoss = Math.round((price - entry!) * stream.props.volume * 100) / 100;
+        const profitLoss = Math.round((price - filled.entry!) * stream.props.volume * 100) / 100;
         stream.tryProfitLoss({ timestamp, price, profitLoss });
 
         if (props.stopLoss && props.stopLoss >= price ||
@@ -69,13 +71,13 @@ async function buy<Props extends B.OrderProps>(props: Props, spots: B.SpotPrices
         }
     }
     const stream = new LocalOrderStream<Props>(props);
-    let entry: B.Price | null = null;
     fill(spots.askOrNull());
     spots.on("data", e => {
-        if(entry === null && e.type ==="ASK_PRICE_CHANGED") {
+        const filled = stream.filledOrNull();
+        if(filled === null && e.type ==="ASK_PRICE_CHANGED") {
             fill(e);
-        } else if(entry !== null && e.type === "BID_PRICE_CHANGED") {
-            update(e);   
+        } else if(filled !== null && e.type === "BID_PRICE_CHANGED") {
+            update(filled, e);
         }
     })
     return stream;
@@ -92,19 +94,21 @@ async function sell<Props extends B.OrderProps>(props: Props, spots: B.SpotPrice
         stream.tryAccept({ timestamp })
         setImmediate(() => { // <-- enables cancelling of market orders
             if (condition(e)) {
-                const { timestamp, bid } = e;
-                entry = bid;
+                const { timestamp, bid: entry } = e;
                 stream.tryFill({ timestamp, entry })
-                update(spots.askOrNull())
+                update(
+                    { type: "FILLED", timestamp, entry },
+                    spots.askOrNull()
+                )
             }
         })
     }
-    const update = (e: B.AskPriceChangedEvent | null): void => {
+    const update = (filled: B.OrderFilledEvent, e: B.AskPriceChangedEvent | null): void => {
         if(!e) {
             return;
         }
         const { timestamp, ask: price } = e
-        const profitLoss = Math.round((entry! - price) * stream.props.volume * 100) / 100;
+        const profitLoss = Math.round((filled.entry - price) * stream.props.volume * 100) / 100;
         stream.tryProfitLoss({ timestamp, price, profitLoss });
 
         if (props.stopLoss && props.stopLoss <= price ||
@@ -113,13 +117,13 @@ async function sell<Props extends B.OrderProps>(props: Props, spots: B.SpotPrice
         }
     }
     const stream = new LocalOrderStream<Props>(props);
-    let entry: B.Price | null = null;
     fill(spots.bidOrNull());
     spots.on("data", e => {
-        if(entry === null && e.type ==="BID_PRICE_CHANGED") {
+        const filled = stream.filledOrNull()
+        if(filled === null && e.type ==="BID_PRICE_CHANGED") {
             fill(e);
-        } else if(entry !== null && e.type === "ASK_PRICE_CHANGED") {
-            update(e);
+        } else if(filled !== null && e.type === "ASK_PRICE_CHANGED") {
+            update(filled, e);
         }
     })
     return stream;

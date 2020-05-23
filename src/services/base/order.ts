@@ -269,6 +269,53 @@ export abstract class OrderStream<Props extends OrderProps> extends Readable imp
     return this.cachedEvent("ENDED");
   }
 
+  private cachedEventOrNull<T extends OrderEvent>(type: T["type"]): T | null {
+    if (!orderEventTypes.includes(type)) {
+      throw new Error(`event type '${type}' is not allowed. Only ${orderEventTypes.join(", ")} as allowed.`)
+    }
+    const event = this.cachedEvents.get(type)
+    if (event && event.type === type) {
+      return event as T;
+    }
+    return null;
+  }
+
+  createdOrNull(): OrderCreatedEvent | null {
+    return this.cachedEventOrNull("CREATED");
+  }
+
+  acceptedOrNull(): OrderAcceptedEvent | null {
+    return this.cachedEventOrNull("ACCEPTED");
+  }
+
+  rejectedOrNull(): OrderRejectedEvent | null {
+    return this.cachedEventOrNull("REJECTED");
+  }
+
+  filledOrNull(): OrderFilledEvent | null {
+    return this.cachedEventOrNull("FILLED");
+  }
+
+  profitLossOrNull(): OrderProfitLossEvent | null {
+    return this.cachedEventOrNull("PROFITLOSS");
+  }
+
+  closedOrNull(): OrderClosedEvent | null {
+    return this.cachedEventOrNull("CLOSED");
+  }
+
+  canceledOrNull(): OrderCanceledEvent | null {
+    return this.cachedEventOrNull("CANCELED");
+  }
+
+  expiredOrNull(): OrderExpiredEvent | null {
+    return this.cachedEventOrNull("EXPIRED");
+  }
+
+  endedOrNull(): OrderEndedEvent | null {
+    return this.cachedEventOrNull("ENDED");
+  }
+
   abstract close(): Promise<OrderClosedEvent>;
   abstract cancel(): Promise<OrderCanceledEvent>;
   abstract end(): Promise<OrderEndedEvent>;
