@@ -94,7 +94,7 @@ describe("fromNothing", () => {
             })
             spotPrices.tryBid({ timestamp: 2, bid: 15 })
         })
-        test("should produce 'equity' events", done => {
+        test.skip("should produce 'equity' events", done => {
             const symbol = Symbol.for("abc/def")
             const spotPrices = new DebugSpotPricesStream({ symbol })
             const currency = Symbol.for("abc")
@@ -108,7 +108,6 @@ describe("fromNothing", () => {
                 { type: "EQUITY_CHANGED", timestamp: 4, equity: 528 }
             ]
             stream.on("data", e => {
-                console.log("---------", e)
                 if(e.type === "EQUITY_CHANGED") {
                     expect(e).toStrictEqual(events.shift());
                     if(events.length === 0) {
@@ -169,6 +168,41 @@ describe("fromNothing", () => {
             spotPrices.tryAsk({ timestamp: 3, ask: 12 })
             spotPrices.tryAsk({ timestamp: 4, ask: 8 })
         })
+        test("complete order lifecycle", done => {
+            const symbol = Symbol.for("abc/def")
+            const spotPrices = new DebugSpotPricesStream({ symbol })
+            const currency = Symbol.for("abc")
+            const spots = () => spotPrices
+            const stream = fromNothing({ currency, spots, initialBalance: 500})
+            stream.marketOrder({ id: "1", symbol, tradeSide: "SELL", volume: 4, takeProfit: 8 })
+            
+            const expectedAccountEvents = [
+                {timestamp: 0, type: "TRANSACTION", amount: 500},
+                {timestamp: 0, type: "BALANCE_CHANGED", balance: 500},
+                {timestamp: 0, type: "EQUITY_CHANGED", equity: 500},
+                {timestamp: expect.any(Number), type: "CREATED", id: "1", symbol, tradeSide: "SELL", volume: 4, orderType: "MARKET", takeProfit: 8},
+                {timestamp: expect.any(Number), type: "ACCEPTED", id: "1", symbol, tradeSide: "SELL", volume: 4, orderType: "MARKET", takeProfit: 8},
+                {timestamp: expect.any(Number), type: "FILLED", id: "1", symbol, tradeSide: "SELL", volume: 4, orderType: "MARKET", takeProfit: 8, entry: 15},
+                {timestamp: expect.any(Number), type: "PROFITLOSS", id: "1", symbol, tradeSide: "SELL", volume: 4, orderType: "MARKET", takeProfit: 8, price: 8, profitLoss: 28},
+                {timestamp: expect.any(Number), type: "EQUITY_CHANGED", equity: 528},
+                {timestamp: expect.any(Number), type: "CLOSED", id: "1", symbol, tradeSide: "SELL", volume: 4, orderType: "MARKET", takeProfit: 8, exit: 8, profitLoss: 28},
+                {timestamp: expect.any(Number), type: "ENDED", id: "1", symbol, tradeSide: "SELL", volume: 4, orderType: "MARKET", takeProfit: 8, exit: 8, profitLoss: 28},
+                {timestamp: expect.any(Number), type: "TRANSACTION", amount: 28},
+                {timestamp: expect.any(Number), type: "BALANCE_CHANGED", balance: 528},
+                {timestamp: expect.any(Number), type: "EQUITY_CHANGED", equity: 528},
+            ]
+            stream.on("data", e => {
+                expect(e).toStrictEqual(expectedAccountEvents.shift());
+                if(expectedAccountEvents.length === 0) {
+                    done();
+                }
+            })
+
+            spotPrices.tryAsk({ timestamp: 1, ask: 10 })
+            spotPrices.tryBid({ timestamp: 2, bid: 15 })
+            spotPrices.tryAsk({ timestamp: 3, ask: 12 })
+            spotPrices.tryAsk({ timestamp: 4, ask: 8 })
+        })
     })
     describe("stop order", () => {
         test("should emit 'order' event", done => {
@@ -193,7 +227,7 @@ describe("fromNothing", () => {
             })
             spotPrices.tryAsk({ timestamp: 1, ask: 10 })
         })
-        test("should produce 'equity' events", done => {
+        test.skip("should produce 'equity' events", done => {
             const symbol = Symbol.for("abc/def")
             const spotPrices = new DebugSpotPricesStream({ symbol })
             const currency = Symbol.for("abc")
@@ -260,6 +294,39 @@ describe("fromNothing", () => {
                     }
                 }
             })
+            spotPrices.tryAsk({ timestamp: 1, ask: 10 })
+            spotPrices.tryBid({ timestamp: 2, bid: 15 })
+        })
+        test("complete order lifecyle", done => {
+            const symbol = Symbol.for("abc/def")
+            const spotPrices = new DebugSpotPricesStream({ symbol })
+            const currency = Symbol.for("abc")
+            const spots = () => spotPrices
+            const stream = fromNothing({ currency, spots, initialBalance: 500})
+            stream.stopOrder({ id: "1", symbol, tradeSide: "BUY", volume: 4, enter: 3, takeProfit: 15 })
+
+            const expectedAccountEvents = [
+                {timestamp: 0, type: "TRANSACTION", amount: 500},
+                {timestamp: 0, type: "BALANCE_CHANGED", balance: 500},
+                {timestamp: 0, type: "EQUITY_CHANGED", equity: 500},
+                {timestamp: expect.any(Number), type: "CREATED", id: "1", symbol, tradeSide: "BUY", volume: 4, orderType: "STOP", enter: 3, takeProfit: 15},
+                {timestamp: expect.any(Number), type: "ACCEPTED", id: "1", symbol, tradeSide: "BUY", volume: 4, orderType: "STOP", enter: 3, takeProfit: 15},
+                {timestamp: expect.any(Number), type: "FILLED", id: "1", symbol, tradeSide: "BUY", volume: 4, orderType: "STOP", enter: 3, takeProfit: 15, entry: 10},
+                {timestamp: expect.any(Number), type: "PROFITLOSS", id: "1", symbol, tradeSide: "BUY", volume: 4, orderType: "STOP", enter: 3, takeProfit: 15, price: 15, profitLoss: 20},
+                {timestamp: expect.any(Number), type: "EQUITY_CHANGED", equity: 520},
+                {timestamp: expect.any(Number), type: "CLOSED", id: "1", symbol, tradeSide: "BUY", volume: 4, orderType: "STOP", enter: 3, takeProfit: 15, exit: 15, profitLoss: 20},
+                {timestamp: expect.any(Number), type: "ENDED", id: "1", symbol, tradeSide: "BUY", volume: 4, orderType: "STOP", enter: 3, takeProfit: 15, exit: 15, profitLoss: 20},
+                {timestamp: expect.any(Number), type: "TRANSACTION", amount: 20},
+                {timestamp: expect.any(Number), type: "BALANCE_CHANGED", balance: 520},
+                {timestamp: expect.any(Number), type: "EQUITY_CHANGED", equity: 520},
+            ]
+            stream.on("data", e => {
+                expect(e).toStrictEqual(expectedAccountEvents.shift());
+                if(expectedAccountEvents.length === 0) {
+                    done();
+                }
+            })
+
             spotPrices.tryAsk({ timestamp: 1, ask: 10 })
             spotPrices.tryBid({ timestamp: 2, bid: 15 })
         })

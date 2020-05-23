@@ -54,6 +54,7 @@ class LocalAccountStream extends B.DebugAccountStream {
             this.updateEquity(e)
         }
         stream.on("data", e => {
+            this.tryOrder({...e, ...stream.props})
             if(e.type === "PROFITLOSS") {
                 update(e);
             } else if(e.type === "ACCEPTED") {
@@ -61,15 +62,16 @@ class LocalAccountStream extends B.DebugAccountStream {
             } else if(e.type === "ENDED") {
                 const all = this.orders.get(props.id)!
                 const toBeDeleted: number[] = [];
+                const amounts: B.Price[] = [];
                 all.forEach((o, index) => {
                     if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
-                        this.tryTransaction({ timestamp: e.timestamp, amount: o.profitLoss })
+                        amounts.push(o.profitLoss);
                         toBeDeleted.push(index);
                     }
                 });
                 toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
+                amounts.forEach(amount => this.tryTransaction({ timestamp: e.timestamp, amount }));
             }
-            this.tryOrder({...e, ...stream.props})
         })
         return stream;
     }
@@ -94,6 +96,7 @@ class LocalAccountStream extends B.DebugAccountStream {
             this.updateEquity(e)
         }
         stream.on("data", e => {
+            this.tryOrder({...e, ...stream.props})
             if(e.type === "PROFITLOSS") {
                 update(e);
             } else if(e.type === "ACCEPTED") {
@@ -101,15 +104,16 @@ class LocalAccountStream extends B.DebugAccountStream {
             } else if(e.type === "ENDED") {
                 const all = this.orders.get(props.id)!
                 const toBeDeleted: number[] = [];
+                const amounts: B.Price[] = [];
                 all.forEach((o, index) => {
                     if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
-                        this.tryTransaction({ timestamp: e.timestamp, amount: o.profitLoss })
+                        amounts.push(o.profitLoss);
                         toBeDeleted.push(index);
                     }
                 });
                 toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
+                amounts.forEach(amount => this.tryTransaction({ timestamp: e.timestamp, amount }));
             }
-            this.tryOrder({...e, ...stream.props})
         })
         return stream;
     }
