@@ -107,15 +107,15 @@ export abstract class AccountStream extends Readable implements AccountActions {
     if (event && accountEventTypes.includes(event.type)) {
       this.cachedEvents.set(event.type, event);
       this.log("%j", event);
-
-      if(event.type === "TRANSACTION") {
-          const { timestamp, amount } = event;
-          const oldBalance = this.balanceOrNull()?.balance || 0
-          const balance = Math.round((oldBalance + amount) * 100) / 100;
-          setImmediate(() => this.push({type: "BALANCE_CHANGED", timestamp, balance}))
-      }
     }
-    return super.push(event)
+    const tmp = super.push(event)
+    if(event && event.type === "TRANSACTION") {
+        const { timestamp, amount } = event;
+        const oldBalance = this.balanceOrNull()?.balance || 0
+        const balance = Math.round((oldBalance + amount) * 100) / 100;
+        this.push({type: "BALANCE_CHANGED", timestamp, balance})
+    }
+    return tmp;
   }
 
   private cachedEvent<T extends AccountEvent>(type: T["type"]): Promise<T> {
