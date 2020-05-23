@@ -19,15 +19,20 @@ interface LocalAccountProps extends B.AccountProps {
 class LocalAccountStream extends B.DebugAccountStream {
     private readonly spots: (props: B.AccountSimpleSpotPricesProps) => B.SpotPricesStream;
     private readonly orders: Map<string, Order[]> = new Map();
-    private myBalance?: B.Price;
 
     constructor(props: LocalAccountProps) {
         super(props);
         const cacheKey = (arguments_: any) => JSON.stringify(arguments_.symbol);
         this.spots = mem(props.spots, { cacheKey })
-        this.on("balance", e => this.myBalance = e.balance)
-        this.on("balance", this.updateEquity)
     }
+
+    push(event: B.AccountEvent | null): boolean {
+        const tmp = super.push(event)
+        if(event && event.type === "BALANCE_CHANGED") {
+            this.updateEquity(event);
+        }
+        return tmp;
+      }
 
     async marketOrder(props: B.AccountSimpleMarketOrderProps): Promise<B.OrderStream<B.MarketOrderProps>> {
         if (!includesCurrency(props.symbol, this.props.currency)) {
@@ -120,7 +125,7 @@ class LocalAccountStream extends B.DebugAccountStream {
     }
 
     private updateEquity(e: { timestamp: B.Timestamp }): void {
-        const balance = this.myBalance || 0
+        const balance = this.balanceOrNull()?.balance || 0
         let profitLoss = 0;
         this.orders.forEach(o => o.forEach(o => (profitLoss += o.profitLoss)));
         const equity = Math.round((balance + profitLoss) * 100) / 100;
