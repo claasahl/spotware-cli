@@ -26,21 +26,6 @@ async function* sampleData(): AsyncGenerator<string, void, unknown> {
   yield '{ "type": "ASK_PRICE_CHANGED", "timestamp": 1577663993516, "ask": 6612.72 }';
 }
 
-// function emitSpotPrices(
-//   stream: B.DebugSpotPricesStream,
-//   e: B.AskPriceChangedEvent | B.BidPriceChangedEvent | B.PriceChangedEvent
-// ): void {
-//   if ("ask" in e && !("bid" in e)) {
-//     stream.tryAsk({ timestamp: e.timestamp, ask: e.ask });
-//   } else if (!("ask" in e) && "bid" in e) {
-//     stream.tryBid({ timestamp: e.timestamp, bid: e.bid });
-//   } else if ("ask" in e && "bid" in e) {
-//     stream.tryAsk({ timestamp: e.timestamp, ask: e.ask });
-//     stream.tryBid({ timestamp: e.timestamp, bid: e.bid });
-//     stream.tryPrice({ timestamp: e.timestamp, ask: e.ask, bid: e.bid });
-//   }
-// }
-
 export function fromSampleData(props: B.SpotPricesProps): B.SpotPricesStream {
   return pipeline(
     Readable.from(sampleData()),
@@ -72,7 +57,7 @@ export function fromLogFiles(props: B.SpotPricesProps & { paths: fs.PathLike[] }
   const streams = paths.map(fr0mFile);
   return pipeline(
     multistream(streams), // TODO is there a NodeJS native way? PassThrough?
-    new ChunkToSpotPrices(originalProps),
+    new ChunkToSpotPrices(originalProps, chunk => chunk.includes("spotPrices:ask") || chunk.includes("spotPrices:bid")),
     err => console.log("pipeline callback", err)
   );
 }
@@ -80,15 +65,17 @@ const transformOptions: TransformOptions = {objectMode: true}
 class ChunkToSpotPrices extends Transform implements B.SpotPricesStream {
   props: B.SpotPricesProps;
   private readonly cachedEvents: Map<B.SpotPricesEvent["type"], B.SpotPricesEvent>;
-  constructor(props: B.SpotPricesProps) {
+  private readonly filter: (chunk: string) => boolean;
+  constructor(props: B.SpotPricesProps, filter: (chunk: string) => boolean = () => true) {
     super(transformOptions);
     this.props = Object.freeze(props);
     this.cachedEvents = new Map();
+    this.filter = filter;
   }
   _transform(chunk: Buffer | string | any, encoding: string, callback: TransformCallback): void {
     if(typeof chunk !== "string" || encoding !== "utf8") {
       return callback();
-    } else if (!chunk.includes("spotPrices:ask") && !chunk.includes("spotPrices:bid")) {
+    } else if (!this.filter(chunk)) {
       return callback();
     }
     
@@ -96,9 +83,21 @@ class ChunkToSpotPrices extends Transform implements B.SpotPricesStream {
     if (logEntry) {
       try {
         const data = JSON.parse(logEntry[1]);
-        if (typeof data === "object") {
-          return callback(null, data);
+        if (typeof data !== "object") {
+          return callback();
+        } else if(!("timestamp" in data)) {
+          return callback();
         }
+        if ("ask" in data && !("bid" in data)) {
+          this.push({ type: "ASK_PRICE_CHANGED", timestamp: data.timestamp, ask: data.ask });
+        } else if (!("ask" in data) && "bid" in data) {
+          this.push({ type: "BID_PRICE_CHANGED", timestamp: data.timestamp, bid: data.bid });
+        } else if ("ask" in data && "bid" in data) {
+          this.push({ type: "ASK_PRICE_CHANGED", timestamp: data.timestamp, ask: data.ask });
+          this.push({ type: "BID_PRICE_CHANGED", timestamp: data.timestamp, bid: data.bid });
+          this.push({ type: "PRICE_CHANGED", timestamp: data.timestamp, ask: data.ask, bid: data.bid });
+        }
+        return callback();
       } catch (err) {
         const msg = `failed to parse '${logEntry[1]}' as JSON`;
         return callback(new Error(msg));
