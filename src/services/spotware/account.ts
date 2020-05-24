@@ -30,15 +30,20 @@ class SpotwareAccountStream extends B.DebugAccountStream {
     private readonly subscribed: Set<B.Symbol> = new Set();
     private readonly symbols: Map<B.Symbol, $.ProtoOALightSymbol> = new Map();
     private readonly orders: Map<string, Order[]> = new Map();
-    private myBalance?: number;
 
     constructor({ currency, ...props }: SpotwareAccountProps) {
         super({ currency })
         this.clientProps = props;
         this.client = new SpotwareClient(props);
-        this.on("balance", e => this.myBalance = e.balance)
-        this.on("balance", this.updateEquity)
     }
+
+    push(event: B.AccountEvent | null): boolean {
+        const tmp = super.push(event)
+        if(event && event.type === "BALANCE_CHANGED") {
+            this.updateEquity(event);
+        }
+        return tmp;
+      }
 
     private async traderId(): Promise<number> {
         return this.lock.acquire("traderId", async () => {
@@ -205,7 +210,7 @@ class SpotwareAccountStream extends B.DebugAccountStream {
     }
 
     private updateEquity(e: { timestamp: B.Timestamp }): void {
-        const balance = this.myBalance || 0
+        const balance = this.balanceOrNull()?.balance || 0
         let profitLoss = 0;
         this.orders.forEach(o => o.forEach(o => (profitLoss += o.profitLoss)));
         const equity = Math.round((balance + profitLoss) * 100) / 100;
