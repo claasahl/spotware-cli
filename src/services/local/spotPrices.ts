@@ -1,6 +1,7 @@
 import fs from "fs";
 import readline from "readline";
 import debug from "debug";
+import { Readable } from "stream";
 
 import * as B from "../base";
 import { trendbarsFromSpotPrices } from "./trendbars";
@@ -18,24 +19,24 @@ async function* sampleData(): AsyncGenerator<
   void,
   unknown
 > {
-  yield { timestamp: 1577663999771, ask: 6611.79 };
-  yield { timestamp: 1577663999425, bid: 6612.03 };
-  yield { timestamp: 1577663999110, bid: 6612.28 };
-  yield { timestamp: 1577663998928, ask: 6612.52 };
-  yield { timestamp: 1577663998447, bid: 6612.73 };
-  yield { timestamp: 1577663998021, bid: 6613.18 };
-  yield { timestamp: 1577663997680, ask: 6613.21 };
-  yield { timestamp: 1577663997264, bid: 6613.11 };
-  yield { timestamp: 1577663997026, bid: 6613.18 };
-  yield { timestamp: 1577663996609, bid: 6613.21 };
-  yield { timestamp: 1577663995996, ask: 6613.24 };
-  yield { timestamp: 1577663995829, bid: 6613.98 };
-  yield { timestamp: 1577663995601, bid: 6614.08 };
-  yield { timestamp: 1577663995198, ask: 6613, bid: 6613.91 };
-  yield { timestamp: 1577663994564, ask: 6613, bid: 6613.17 };
-  yield { timestamp: 1577663994182, ask: 6613, bid: 6613.14 };
-  yield { timestamp: 1577663993987, bid: 6613.21 };
-  yield { timestamp: 1577663993516, ask: 6612.72 };
+  yield { type: "ASK_PRICE_CHANGED", timestamp: 1577663999771, ask: 6611.79 };
+  yield { type: "BID_PRICE_CHANGED", timestamp: 1577663999425, bid: 6612.03 };
+  yield { type: "BID_PRICE_CHANGED", timestamp: 1577663999110, bid: 6612.28 };
+  yield { type: "ASK_PRICE_CHANGED", timestamp: 1577663998928, ask: 6612.52 };
+  yield { type: "BID_PRICE_CHANGED", timestamp: 1577663998447, bid: 6612.73 };
+  yield { type: "BID_PRICE_CHANGED", timestamp: 1577663998021, bid: 6613.18 };
+  yield { type: "ASK_PRICE_CHANGED", timestamp: 1577663997680, ask: 6613.21 };
+  yield { type: "BID_PRICE_CHANGED", timestamp: 1577663997264, bid: 6613.11 };
+  yield { type: "BID_PRICE_CHANGED", timestamp: 1577663997026, bid: 6613.18 };
+  yield { type: "BID_PRICE_CHANGED", timestamp: 1577663996609, bid: 6613.21 };
+  yield { type: "ASK_PRICE_CHANGED", timestamp: 1577663995996, ask: 6613.24 };
+  yield { type: "BID_PRICE_CHANGED", timestamp: 1577663995829, bid: 6613.98 };
+  yield { type: "BID_PRICE_CHANGED", timestamp: 1577663995601, bid: 6614.08 };
+  yield { type: "PRICE_CHANGED", timestamp: 1577663995198, ask: 6613, bid: 6613.91 };
+  yield { type: "PRICE_CHANGED", timestamp: 1577663994564, ask: 6613, bid: 6613.17 };
+  yield { type: "PRICE_CHANGED", timestamp: 1577663994182, ask: 6613, bid: 6613.14 };
+  yield { type: "BID_PRICE_CHANGED", timestamp: 1577663993987, bid: 6613.21 };
+  yield { type: "ASK_PRICE_CHANGED", timestamp: 1577663993516, ask: 6612.72 };
 }
 
 export async function* fr0mLogFiles(
@@ -111,33 +112,21 @@ function emitSpotPrices(
   e: B.AskPriceChangedEvent | B.BidPriceChangedEvent | B.PriceChangedEvent
 ): void {
   if ("ask" in e && !("bid" in e)) {
-    stream.emitAsk({ timestamp: e.timestamp, ask: e.ask });
+    stream.tryAsk({ timestamp: e.timestamp, ask: e.ask });
   } else if (!("ask" in e) && "bid" in e) {
-    stream.emitBid({ timestamp: e.timestamp, bid: e.bid });
+    stream.tryBid({ timestamp: e.timestamp, bid: e.bid });
   } else if ("ask" in e && "bid" in e) {
-    stream.emitAsk({ timestamp: e.timestamp, ask: e.ask });
-    stream.emitBid({ timestamp: e.timestamp, bid: e.bid });
-    stream.emitPrice({ timestamp: e.timestamp, ask: e.ask, bid: e.bid });
+    stream.tryAsk({ timestamp: e.timestamp, ask: e.ask });
+    stream.tryBid({ timestamp: e.timestamp, bid: e.bid });
+    stream.tryPrice({ timestamp: e.timestamp, ask: e.ask, bid: e.bid });
   }
-  setImmediate(() => stream.emit("next"));
 }
 
 export function fromSampleData(props: B.SpotPricesProps): B.SpotPricesStream {
   const data = sampleData();
   const stream = new LocalSpotPricesStream(props);
-  const emitNext = () => {
-    data.next().then(a => {
-      setImmediate(() => {
-        if (a.value) {
-          emitSpotPrices(stream, a.value);
-        }
-      })
-    });
-  }
-  setImmediate(() => {
-    stream.on("next", emitNext)
-    emitNext();
-  })
+  const s = Readable.from(data);
+  s.on("data", value => emitSpotPrices(stream, value))
   return stream;
 }
 
@@ -145,38 +134,17 @@ export function fromFile(props: B.SpotPricesProps & { path: fs.PathLike }): B.Sp
   const { path, ...originalProps } = props;
   const data = fr0mFile(path);
   const stream = new LocalSpotPricesStream(originalProps);
-  const emitNext = () => {
-    data.next().then(a => {
-      setImmediate(() => {
-        if (a.value) {
-          emitSpotPrices(stream, a.value);
-        }
-      })
-    });
-  }
-  setImmediate(() => {
-    stream.on("next", emitNext)
-    emitNext();
-  })
+  const s = Readable.from(data);
+  s.on("data", value => emitSpotPrices(stream, value))
   return stream;
 }
 
 export function fromLogFiles(props: B.SpotPricesProps & { paths: fs.PathLike[] }): B.SpotPricesStream {
   const { paths, ...originalProps } = props;
-  const data = fr0mLogFiles(paths);
   const stream = new LocalSpotPricesStream(originalProps);
-  const emitNext = () => {
-    data.next().then(a => {
-      setImmediate(() => {
-        if (a.value) {
-          emitSpotPrices(stream, a.value);
-        }
-      })
-    });
-  }
-  setImmediate(() => {
-    stream.on("next", emitNext)
-    emitNext();
-  })
+
+  const data = fr0mLogFiles(paths);
+  const s = Readable.from(data);
+  s.on("data", value => emitSpotPrices(stream, value))
   return stream;
 }

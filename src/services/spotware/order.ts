@@ -8,8 +8,6 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream
     private readonly lotSize: number;
     private readonly positionId: number;
     private readonly orderId: number;
-    private canBeClosed: boolean = false;
-    private canBeCanceled: boolean = true;
 
     constructor(props: Props, extras: { client: SpotwareClient, ctidTraderAccountId: number, lotSize: number, positionId: number, orderId: number }) {
         super(props);
@@ -18,53 +16,38 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream
         this.lotSize = extras.lotSize;
         this.positionId = extras.positionId;
         this.orderId = extras.orderId;
-        const reset = () => {
-            this.canBeClosed = false;
-            this.canBeCanceled = false;
-        }
-        this.on("accepted", () => {
-            this.canBeClosed = false;
-            this.canBeCanceled = true;
-        })
-        this.on("rejected", () => reset())
-        this.on("filled", () => {
-            this.canBeClosed = true;
-            this.canBeCanceled = false;
-        })
-        this.on("closed", () => reset())
-        this.on("canceled", () => reset())
-        this.on("ended", () => reset())
     }
 
     async close(): Promise<B.OrderClosedEvent> {
-        if(this.canBeClosed) {
+        if (["filled", "closed"].includes(this.state.value)) {
             const ctidTraderAccountId = this.ctidTraderAccountId;
             const positionId = this.positionId;
             const volume = this.props.volume * this.lotSize;
-            return new Promise((resolve) => {
-                this.client.closePosition({ctidTraderAccountId, positionId, volume})
-                this.once("closed", resolve)
-            })
+            await this.client.closePosition({ctidTraderAccountId, positionId, volume})
+            return this.closed();
         }
-        throw new Error(`order ${this.props.id} cannot be closed ${JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled})}`);
+        const { timestamp, price: exit, profitLoss } = await this.profitLoss();
+        this.tryClose({ timestamp, exit, profitLoss })
+        if (this.state.matches("closed")) {
+            return this.closed()
+        }
+        throw new Error(`order ${this.props.id} cannot be closed (${JSON.stringify(this.state)})`);
     }
 
     async cancel(): Promise<B.OrderCanceledEvent> {
-        if(this.canBeCanceled) {
+        if (["created", "accepted", "canceled"].includes(this.state.value)) {
             const ctidTraderAccountId = this.ctidTraderAccountId;
             const orderId = this.orderId;
-            return new Promise((resolve) => {
-                this.client.cancelOrder({ctidTraderAccountId, orderId})
-                this.once("canceled", resolve)
-            })
+            await this.client.cancelOrder({ctidTraderAccountId, orderId})
+            return this.canceled()
         }
-        throw new Error(`order ${this.props.id} cannot be canceled ${JSON.stringify({canBeClosed: this.canBeClosed, canBeCanceled: this.canBeCanceled})}`);
+        throw new Error(`order ${this.props.id} cannot be canceled (${JSON.stringify(this.state)})`);
     }
     
     async end(): Promise<B.OrderEndedEvent> {
-        if(this.canBeCanceled) {
+        if (["created", "accepted", "canceled"].includes(this.state.value)) {
             await this.cancel();
-        } else if(this.canBeClosed) {
+        } else if (["filled", "closed"].includes(this.state.value)) {
             await this.close();
         }
         return this.ended()
@@ -95,7 +78,7 @@ async function order<Props extends B.OrderProps>(props: Props, extras: { client:
     const positionId = event.order?.positionId || 0;
     const orderId = event.order?.orderId || 0;
     const stream = new SpotwareOrderStream<Props>(props, {...extras, positionId, orderId});
-    stream.emitCreated({ timestamp: Date.now() })
+    stream.tryCreate({ timestamp: Date.now() })
     const round = (price: number) => {
         const factor = Math.pow(10, extras.digits);
         return Math.round(price * factor) / factor
@@ -111,7 +94,7 @@ async function order<Props extends B.OrderProps>(props: Props, extras: { client:
                         return;
                     }
                     const timestamp = msg.order.utcLastUpdateTimestamp || 0;
-                    stream.emitAccepted({ timestamp });
+                    stream.tryAccept({ timestamp });
                     break;
                 }
             case $.ProtoOAExecutionType.ORDER_EXPIRED:
@@ -120,8 +103,7 @@ async function order<Props extends B.OrderProps>(props: Props, extras: { client:
                         return
                     }
                     const timestamp = msg.order.utcLastUpdateTimestamp || 0;
-                    stream.emitExpired({ timestamp });
-                    stream.emitEnded({ timestamp });
+                    stream.tryExpire({ timestamp });
                     break;
                 }
             case $.ProtoOAExecutionType.ORDER_CANCELLED:
@@ -130,8 +112,7 @@ async function order<Props extends B.OrderProps>(props: Props, extras: { client:
                         return
                     }
                     const timestamp = msg.order.utcLastUpdateTimestamp || 0;
-                    stream.emitCanceled({ timestamp });
-                    stream.emitEnded({ timestamp });
+                    stream.tryCancel({ timestamp });
                     break;
                 }
             case $.ProtoOAExecutionType.ORDER_FILLED:
@@ -143,28 +124,31 @@ async function order<Props extends B.OrderProps>(props: Props, extras: { client:
                     const timestamp = msg.deal.executionTimestamp;
                     if (msg.deal.closePositionDetail) {
                         const profitLoss = msg.deal.closePositionDetail.grossProfit / Math.pow(10, extras.digits);
-                        stream.emitClosed({ timestamp, exit: executionPrice, profitLoss });
-                        stream.emitEnded({ timestamp, exit: executionPrice, profitLoss });
+                        stream.tryClose({ timestamp, exit: executionPrice, profitLoss });
                         break;
                     }
 
-                    stream.emitFilled({ timestamp, entry: executionPrice });
+                    stream.tryFill({ timestamp, entry: executionPrice });
                     if (props.tradeSide === "BUY") {
-                        const update = (e: B.BidPriceChangedEvent) => {
-                            const { timestamp, bid: price } = e
-                            const profitLoss = round((price - executionPrice) * stream.props.volume);
-                            stream.emitProfitLoss({ timestamp, price, profitLoss })
+                        const update = (e: B.SpotPricesEvent) => {
+                            if(e.type === "BID_PRICE_CHANGED") {
+                                const { timestamp, bid: price } = e
+                                const profitLoss = round((price - executionPrice) * stream.props.volume);
+                                stream.tryProfitLoss({ timestamp, price, profitLoss })
+                            }
                         }
-                        extras.spots.on("bid", update);
-                        stream.once("ended", () => extras.spots.off("bid", update))
+                        extras.spots.on("data", update);
+                        stream.once("end", () => extras.spots.off("data", update))
                     } else if (props.tradeSide === "SELL") {
-                        const update = (e: B.AskPriceChangedEvent) => {
-                            const { timestamp, ask: price } = e
-                            const profitLoss = round((executionPrice - price) * stream.props.volume);
-                            stream.emitProfitLoss({ timestamp, price, profitLoss })
+                        const update = (e: B.SpotPricesEvent) => {
+                            if(e.type === "ASK_PRICE_CHANGED") {
+                                const { timestamp, ask: price } = e
+                                const profitLoss = round((executionPrice - price) * stream.props.volume);
+                                stream.tryProfitLoss({ timestamp, price, profitLoss })
+                            }
                         }
-                        extras.spots.on("ask", update);
-                        stream.once("ended", () => extras.spots.off("ask", update))
+                        extras.spots.on("data", update);
+                        stream.once("end", () => extras.spots.off("data", update))
                     }
                     break;
                 }
@@ -175,7 +159,7 @@ async function order<Props extends B.OrderProps>(props: Props, extras: { client:
                     }
                     const timestamp = msg.deal.executionTimestamp;
                     // TODO: msg.errorCode
-                    stream.emitRejected({ timestamp });
+                    stream.tryReject({ timestamp });
                     break;
                 }
             default:

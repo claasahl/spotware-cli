@@ -32,9 +32,9 @@ function interpolate(msg: $.ProtoOAGetTickDataRes, type: $.ProtoOAQuoteType): (B
     curr.tick = prev.tick + curr.tick
   }
   if(type === $.ProtoOAQuoteType.ASK) {
-    return tickData.map(t => ({timestamp: t.timestamp, ask: t.tick / 100000}));
+    return tickData.map(t => ({type: "ASK_PRICE_CHANGED", timestamp: t.timestamp, ask: t.tick / 100000}));
   } else if(type === $.ProtoOAQuoteType.BID) {
-    return tickData.map(t => ({timestamp: t.timestamp, bid: t.tick / 100000}));
+    return tickData.map(t => ({type: "BID_PRICE_CHANGED", timestamp: t.timestamp, bid: t.tick / 100000}));
   }
   return []
 }

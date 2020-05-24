@@ -41,38 +41,36 @@ describe("DebugTrendbarsStream", () => {
         test("log 'trendbar' events", () => {
             const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
             const stream = new DebugTrendbarsStream(props)
-            const event = { open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
-            stream.emit("trendbar", event)
+            const event = { type: "TRENDBAR", open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
+            stream.push(event)
             expect(log).toHaveBeenCalledTimes(1)
-            expect(log).toHaveBeenCalledWith(expect.any(String), event);
+            expect(log).toHaveBeenCalledWith("%j", event);
         })
 
         test("should not log unknown events", () => {
             const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
             const stream = new DebugTrendbarsStream(props)
-            stream.emit("unknown", {})
-            stream.emit("something", {})
+            stream.push({ type: "UNKNOWN"})
+            stream.push({something: 23})
             expect(log).toHaveBeenCalledTimes(0)
         })
     })
 
     describe("access cached events", () => {
-        test("should call cb with trendbar (not cached)", () => {
+        test("should call cb with trendbar (not cached)", async () => {
             const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
             const stream = new DebugTrendbarsStream(props)
-            const event = { open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
-            expect(stream.trendbar()).resolves.toBe(event);
-            setTimeout(() => stream.emit("trendbar", event), 100)
+            const event = { type: "TRENDBAR", open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
+            setTimeout(() => stream.push(event), 50)
+            await expect(stream.trendbar()).resolves.toStrictEqual(event);
         })
     
-        test("should call cb with trendbar (cached)", () => {
+        test("should call cb with trendbar (cached)", async () => {
             const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
             const stream = new DebugTrendbarsStream(props)
-            const event = { open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
-            stream.once("trendbar", () => {
-                expect(stream.trendbar()).resolves.toBe(event);
-            })
-            stream.emit("trendbar", event);
+            const event = { type: "TRENDBAR", open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
+            stream.push(event);
+            await expect(stream.trendbar()).resolves.toStrictEqual(event);
         })
     })
 
@@ -84,12 +82,14 @@ describe("DebugTrendbarsStream", () => {
         test("should emit 'trendbar' event", done => {
             const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
             const stream = new DebugTrendbarsStream(props)
-            const event = { open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
-            stream.once("trendbar", e => {
-                expect(e).toBe(event);
-                done()
+            const event = { type: "TRENDBAR", open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
+            stream.on("data", e => {
+                if(e.type === "TRENDBAR") {
+                    expect(e).toStrictEqual(event);
+                    done()
+                }
             })
-            stream.emitTrendbar(event)
+            stream.tryTrendbar(event)
         })
     })
 })

@@ -19,15 +19,20 @@ interface LocalAccountProps extends B.AccountProps {
 class LocalAccountStream extends B.DebugAccountStream {
     private readonly spots: (props: B.AccountSimpleSpotPricesProps) => B.SpotPricesStream;
     private readonly orders: Map<string, Order[]> = new Map();
-    private myBalance?: B.Price;
 
     constructor(props: LocalAccountProps) {
         super(props);
         const cacheKey = (arguments_: any) => JSON.stringify(arguments_.symbol);
         this.spots = mem(props.spots, { cacheKey })
-        this.on("balance", e => this.myBalance = e.balance)
-        this.on("balance", this.updateEquity)
     }
+
+    push(event: B.AccountEvent | null): boolean {
+        const tmp = super.push(event)
+        if(event && event.type === "BALANCE_CHANGED") {
+            this.updateEquity(event);
+        }
+        return tmp;
+      }
 
     async marketOrder(props: B.AccountSimpleMarketOrderProps): Promise<B.OrderStream<B.MarketOrderProps>> {
         if (!includesCurrency(props.symbol, this.props.currency)) {
@@ -48,28 +53,26 @@ class LocalAccountStream extends B.DebugAccountStream {
             order.profitLoss = e.profitLoss;
             this.updateEquity(e)
         }
-        stream.on("profitLoss", update)
-        stream.once("ended", e => {
-            stream.off("profitLoss", update)
-            const all = this.orders.get(props.id)!
-            const toBeDeleted: number[] = [];
-            all.forEach((o, index) => {
-                if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
-                    this.emitTransaction({ timestamp: e.timestamp, amount: o.profitLoss })
-                    toBeDeleted.push(index);
-                }
-            });
-            toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
+        stream.on("data", e => {
+            this.tryOrder({...e, ...stream.props})
+            if(e.type === "PROFITLOSS") {
+                update(e);
+            } else if(e.type === "ACCEPTED") {
+                this.orders.get(props.id)!.push(order)
+            } else if(e.type === "ENDED") {
+                const all = this.orders.get(props.id)!
+                const toBeDeleted: number[] = [];
+                const amounts: B.Price[] = [];
+                all.forEach((o, index) => {
+                    if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
+                        amounts.push(o.profitLoss);
+                        toBeDeleted.push(index);
+                    }
+                });
+                toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
+                amounts.forEach(amount => this.tryTransaction({ timestamp: e.timestamp, amount }));
+            }
         })
-        stream.once("accepted", () => this.orders.get(props.id)!.push(order))
-        stream.once("created", e => this.emitOrder({ timestamp: e.timestamp, status: "CREATED", ...stream.props }))
-        stream.once("accepted", e => this.emitOrder({ timestamp: e.timestamp, status: "ACCEPTED", ...stream.props }))
-        stream.once("rejected", e => this.emitOrder({ timestamp: e.timestamp, status: "REJECTED", ...stream.props }))
-        stream.once("filled", e => this.emitOrder({ timestamp: e.timestamp, status: "FILLED", ...stream.props }))
-        stream.once("closed", e => this.emitOrder({ timestamp: e.timestamp, status: "CLOSED", ...stream.props }))
-        stream.once("canceled", e => this.emitOrder({ timestamp: e.timestamp, status: "CANCELED", ...stream.props }))
-        stream.once("expired", e => this.emitOrder({ timestamp: e.timestamp, status: "EXPIRED", ...stream.props }))
-        stream.once("ended", e => this.emitOrder({ timestamp: e.timestamp, status: "ENDED", ...stream.props }))
         return stream;
     }
 
@@ -92,28 +95,26 @@ class LocalAccountStream extends B.DebugAccountStream {
             order.profitLoss = e.profitLoss;
             this.updateEquity(e)
         }
-        stream.on("profitLoss", update)
-        stream.once("ended", e => {
-            stream.off("profitLoss", update)
-            const all = this.orders.get(props.id)!
-            const toBeDeleted: number[] = [];
-            all.forEach((o, index) => {
-                if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
-                    this.emitTransaction({ timestamp: e.timestamp, amount: o.profitLoss })
-                    toBeDeleted.push(index);
-                }
-            });
-            toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
+        stream.on("data", e => {
+            this.tryOrder({...e, ...stream.props})
+            if(e.type === "PROFITLOSS") {
+                update(e);
+            } else if(e.type === "ACCEPTED") {
+                this.orders.get(props.id)!.push(order)
+            } else if(e.type === "ENDED") {
+                const all = this.orders.get(props.id)!
+                const toBeDeleted: number[] = [];
+                const amounts: B.Price[] = [];
+                all.forEach((o, index) => {
+                    if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
+                        amounts.push(o.profitLoss);
+                        toBeDeleted.push(index);
+                    }
+                });
+                toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
+                amounts.forEach(amount => this.tryTransaction({ timestamp: e.timestamp, amount }));
+            }
         })
-        stream.once("accepted", () => this.orders.get(props.id)!.push(order))
-        stream.once("created", e => this.emitOrder({ timestamp: e.timestamp, status: "CREATED", ...stream.props }))
-        stream.once("accepted", e => this.emitOrder({ timestamp: e.timestamp, status: "ACCEPTED", ...stream.props }))
-        stream.once("rejected", e => this.emitOrder({ timestamp: e.timestamp, status: "REJECTED", ...stream.props }))
-        stream.once("filled", e => this.emitOrder({ timestamp: e.timestamp, status: "FILLED", ...stream.props }))
-        stream.once("closed", e => this.emitOrder({ timestamp: e.timestamp, status: "CLOSED", ...stream.props }))
-        stream.once("canceled", e => this.emitOrder({ timestamp: e.timestamp, status: "CANCELED", ...stream.props }))
-        stream.once("expired", e => this.emitOrder({ timestamp: e.timestamp, status: "EXPIRED", ...stream.props }))
-        stream.once("ended", e => this.emitOrder({ timestamp: e.timestamp, status: "ENDED", ...stream.props }))
         return stream;
     }
 
@@ -128,16 +129,16 @@ class LocalAccountStream extends B.DebugAccountStream {
     }
 
     private updateEquity(e: { timestamp: B.Timestamp }): void {
-        const balance = this.myBalance || 0
+        const balance = this.balanceOrNull()?.balance || 0
         let profitLoss = 0;
         this.orders.forEach(o => o.forEach(o => (profitLoss += o.profitLoss)));
         const equity = Math.round((balance + profitLoss) * 100) / 100;
-        this.emitEquity({ timestamp: e.timestamp, equity });
+        this.tryEquity({ timestamp: e.timestamp, equity });
     }
 }
 
 export function fromNothing(props: LocalAccountProps): B.AccountStream {
     const stream = new LocalAccountStream(props);
-    stream.emitTransaction({ timestamp: Date.now(), amount: props.initialBalance });
+    stream.tryTransaction({ timestamp: 0, amount: props.initialBalance });
     return stream;
 }

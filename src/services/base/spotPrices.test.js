@@ -33,142 +33,142 @@ describe("DebugSpotPricesStream", () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             new DebugSpotPricesStream(props)
             expect(debug).toHaveBeenCalledTimes(1)
-            expect(extend).toHaveBeenCalledTimes(3)
+            expect(extend).toHaveBeenCalledTimes(1)
             expect(log).toHaveBeenCalledTimes(0)
         })
 
         test("log 'ask' events", () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            const event = { ask: 23, timestamp: 123 };
-            stream.emit("ask", event)
+            const event = { type: "ASK_PRICE_CHANGED", ask: 23, timestamp: 123 };
+            stream.push(event)
             expect(log).toHaveBeenCalledTimes(1)
-            expect(log).toHaveBeenCalledWith(expect.any(String), event);
+            expect(log).toHaveBeenCalledWith("%j", event);
         })
 
         test("log 'bid' events", () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            const event = { bid: 23, timestamp: 123 };
-            stream.emit("bid", event)
+            const event = { type: "BID_PRICE_CHANGED", bid: 23, timestamp: 123 };
+            stream.push(event)
             expect(log).toHaveBeenCalledTimes(1)
-            expect(log).toHaveBeenCalledWith(expect.any(String), event);
+            expect(log).toHaveBeenCalledWith("%j", event);
         })
 
         test("log 'price' events", () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            const event = { ask: 23, bid: 22, timestamp: 123 };
-            stream.emit("price", event)
+            const event = { type: "PRICE_CHANGED", ask: 23, bid: 22, timestamp: 123 };
+            stream.push(event)
             expect(log).toHaveBeenCalledTimes(1)
-            expect(log).toHaveBeenCalledWith(expect.any(String), event);
+            expect(log).toHaveBeenCalledWith("%j", event);
         })
 
         test("should not log unknown events", () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            stream.emit("unknown", {})
-            stream.emit("something", {})
+            stream.push({ type: "UNKNOWN"})
+            stream.push({something: 23})
             expect(log).toHaveBeenCalledTimes(0)
         })
     })
 
     describe("access cached events", () => {
-        test("should call cb with ask (not cached)", () => {
+        test("should call cb with ask (not cached)", async () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            const event = { ask: 23, timestamp: 123 };
-            expect(stream.ask()).resolves.toBe(event);
-            setTimeout(() => stream.emit("ask", event), 100)
+            const event = { type: "ASK_PRICE_CHANGED", ask: 23, timestamp: 123 };
+            setTimeout(() => stream.push(event), 50)
+            await expect(stream.ask()).resolves.toStrictEqual(event);
         })
     
-        test("should call cb with ask (cached)", () => {
+        test("should call cb with ask (cached)", async () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            const event = { ask: 23, timestamp: 123 };
-            stream.once("ask", () => {
-                expect(stream.ask()).resolves.toBe(event);
-            })
-            stream.emit("ask", event);
+            const event = { type: "ASK_PRICE_CHANGED", ask: 23, timestamp: 123 };
+            stream.push(event)
+            await expect(stream.ask()).resolves.toStrictEqual(event);
         })
 
-        test("should call cb with bid (not cached)", () => {
+        test("should call cb with bid (not cached)", async () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            const event = { bid: 23, timestamp: 123 };
-            expect(stream.bid()).resolves.toBe(event);
-            setTimeout(() => stream.emit("bid", event), 100)
+            const event = { type: "BID_PRICE_CHANGED", bid: 23, timestamp: 123 };
+            setTimeout(() => stream.push(event), 50)
+            await expect(stream.bid()).resolves.toStrictEqual(event);
         })
     
-        test("should call cb with bid (cached)", () => {
+        test("should call cb with bid (cached)", async () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            const event = { bid: 23, timestamp: 123 };
-            stream.once("bid", () => {
-                expect(stream.bid()).resolves.toBe(event);
-            })
-            stream.emit("bid", event);
+            const event = { type: "BID_PRICE_CHANGED", bid: 23, timestamp: 123 };
+            stream.push(event)
+            await expect(stream.bid()).resolves.toStrictEqual(event);
         })
 
-        test("should call cb with price (not cached)", () => {
+        test("should call cb with price (not cached)", async () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            const event = { ask: 22, bid: 23, timestamp: 123 };
-            expect(stream.price()).resolves.toBe(event);
-            setTimeout(() => stream.emit("price", event), 100)
+            const event = { type: "PRICE_CHANGED", ask: 22, bid: 23, timestamp: 123 };
+            setTimeout(() => stream.push(event), 50)
+            await expect(stream.price()).resolves.toStrictEqual(event);
         })
     
-        test("should call cb with price (cached)", () => {
+        test("should call cb with price (cached)", async () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            const event = { ask: 22, bid: 23, timestamp: 123 };
-            stream.once("price", () => {
-                expect(stream.price()).resolves.toBe(event);
-            })
-            stream.emit("price", event);
+            const event = { type: "PRICE_CHANGED", ask: 22, bid: 23, timestamp: 123 };
+            stream.push(event)
+            await expect(stream.price()).resolves.toStrictEqual(event);
         })
     })
 
     describe("actions", () => {
-        test("trendbars", () => {
+        test("trendbars", async () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            expect(stream.trendbars).toThrow("not implemented")
+            await expect(stream.trendbars()).rejects.toThrow("not implemented")
         })
     })
 
-    describe("emitXXX helpers", () => {
+    describe("lifecylce", () => {
         test("should emit 'ask' event", done => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
             const event = { ask: 23, timestamp: 123 };
-            stream.once("ask", e => {
-                expect(e).toBe(event);
-                done()
+            stream.once("data", e => {
+                if(e.type === "ASK_PRICE_CHANGED") {
+                    expect(e).toStrictEqual({...event, type: "ASK_PRICE_CHANGED"});
+                    done();
+                }
             })
-            stream.emitAsk(event)
+            stream.tryAsk(event)
         })
 
         test("should emit 'bid' event", done => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
             const event = { bid: 23, timestamp: 123 };
-            stream.once("bid", e => {
-                expect(e).toBe(event);
-                done()
+            stream.once("data", e => {
+                if(e.type === "BID_PRICE_CHANGED") {
+                    expect(e).toStrictEqual({...event, type: "BID_PRICE_CHANGED"});
+                    done();
+                }
             })
-            stream.emitBid(event)
+            stream.tryBid(event)
         })
     
         test("should emit 'price' event", done => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
             const event = { ask: 22, bid: 23, timestamp: 123 };
-            stream.once("price", e => {
-                expect(e).toBe(event);
-                done()
+            stream.on("data", e => {
+                if(e.type === "PRICE_CHANGED") {
+                    expect(e).toStrictEqual({...event, type: "PRICE_CHANGED"});
+                    done();
+                }
             })
-            stream.emitPrice(event)
+            stream.tryPrice(event)
         })
     })
 })
