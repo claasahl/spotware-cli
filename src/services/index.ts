@@ -1,4 +1,4 @@
-import { fromSampleData, fromNothing, fromLogFiles } from "./local";
+import { fromSampleData, fromNothing, fromLogFiles, abc } from "./local";
 import { insideBarMomentumStrategy } from "./insideBarMomentumStrategy";
 import config from "../config";
 import { fromSomething } from "./spotware/account";
@@ -78,7 +78,13 @@ async function insideBarSpotware() {
   const expiresIn = config.expirationOffset;
   insideBarMomentumStrategy({ ...config, account, symbol, period, expiresIn })
 }
-insideBarSpotware();
+insideBarSpotware;
+
+async function insideBarSpotware2() {
+  // abc("./store/samples.json")
+  abc("./store/2020-04-27.log")
+}
+insideBarSpotware2();
 
 async function spotware() {
   const currency = Symbol.for("EUR");

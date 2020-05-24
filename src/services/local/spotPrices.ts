@@ -1,7 +1,7 @@
 import fs from "fs";
 import readline from "readline";
 import debug from "debug";
-import { Readable } from "stream";
+import { Readable, Transform, TransformCallback, TransformOptions, pipeline } from "stream";
 
 import * as B from "../base";
 import { trendbarsFromSpotPrices } from "./trendbars";
@@ -147,4 +147,44 @@ export function fromLogFiles(props: B.SpotPricesProps & { paths: fs.PathLike[] }
   const s = Readable.from(data);
   s.on("data", value => emitSpotPrices(stream, value))
   return stream;
+}
+export function abc(path: fs.PathLike): void {
+  const transformOptions: TransformOptions = {objectMode: true}
+  class ChunkToSpotPrices extends Transform {
+    constructor() {
+      super(transformOptions)
+    }
+    _transform(chunk: Buffer | string | any, encoding: string, callback: TransformCallback): void {
+      if(typeof chunk !== "string" || encoding !== "utf8") {
+        return callback();
+      } else if (!chunk.includes("spotPrices:ask") && !chunk.includes("spotPrices:bid")) {
+        return callback();
+      }
+      
+      try {
+        const logEntry = /({.*})/.exec(chunk);
+        if (logEntry) {
+          const data = JSON.parse(logEntry[1]);
+          if (typeof data === "object") {
+            return callback(null, data);
+          }
+        }
+      } catch {
+        const e = new Error(`failed to parse line '${chunk}' as JSON (${path.toString()})`);
+        return callback(e);
+      }  
+    }
+  }
+
+  const fileStream = fs.createReadStream(path);
+  const rl = readline.createInterface({
+    input: fileStream,
+    crlfDelay: Infinity
+  });
+  const s = Readable.from(rl);
+  const t = new ChunkToSpotPrices();
+  const tmp = pipeline(s, t, err => console.log("pipeline callback", err));
+  tmp.on("end", () => console.log("end"))
+  tmp.on("error", err => console.log("err", err))
+  tmp.on("data", err => console.log("data", err))
 }
