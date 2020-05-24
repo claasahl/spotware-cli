@@ -81,8 +81,9 @@ async function insideBarSpotware() {
 insideBarSpotware;
 
 async function insideBarSpotware2() {
+  const symbol = Symbol.for("sdklj")
   // abc("./store/samples.json")
-  abc("./store/2020-04-27.log")
+  abc({path: "./store/2020-04-27.log", symbol})
 }
 insideBarSpotware2();
 

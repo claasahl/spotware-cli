@@ -149,9 +149,13 @@ export function fromLogFiles(props: B.SpotPricesProps & { paths: fs.PathLike[] }
   return stream;
 }
 const transformOptions: TransformOptions = {objectMode: true}
-class ChunkToSpotPrices extends Transform {
-  constructor() {
-    super(transformOptions)
+class ChunkToSpotPrices extends Transform implements B.SpotPricesStream {
+  props: B.SpotPricesProps;
+  private readonly cachedEvents: Map<B.SpotPricesEvent["type"], B.SpotPricesEvent>;
+  constructor(props: B.SpotPricesProps) {
+    super(transformOptions);
+    this.props = Object.freeze(props);
+    this.cachedEvents = new Map();
   }
   _transform(chunk: Buffer | string | any, encoding: string, callback: TransformCallback): void {
     if(typeof chunk !== "string" || encoding !== "utf8") {
@@ -173,16 +177,40 @@ class ChunkToSpotPrices extends Transform {
       }
     }
   }
+
+  async trendbars(_props: B.SpotPricesSimpleTrendbarsProps): Promise<B.TrendbarsStream> {
+    throw new Error("not implemented");
+  }
+
+  private cachedEventOrNull<T extends B.SpotPricesEvent>(type: T["type"]): T | null {
+    const event = this.cachedEvents.get(type)
+    if (event && event.type === type) {
+      return event as T;
+    }
+    return null;
+  }
+
+  askOrNull(): B.AskPriceChangedEvent | null {
+    return this.cachedEventOrNull("ASK_PRICE_CHANGED");
+  }
+
+  bidOrNull(): B.BidPriceChangedEvent | null {
+    return this.cachedEventOrNull("BID_PRICE_CHANGED");
+  }
+
+  priceOrNull(): B.PriceChangedEvent | null {
+    return this.cachedEventOrNull("PRICE_CHANGED");
+  }
 }
-export function abc(path: fs.PathLike): void {
-  const fileStream = fs.createReadStream(path);
+export function abc(props: B.SpotPricesProps & { path: fs.PathLike }): void {
+  const fileStream = fs.createReadStream(props.path);
   const rl = readline.createInterface({
     input: fileStream,
     crlfDelay: Infinity
   });
   const tmp = pipeline(
     Readable.from(rl),
-    new ChunkToSpotPrices(),
+    new ChunkToSpotPrices(props),
     err => console.log("pipeline callback", err)
   );
   tmp.on("end", () => console.log("end"))
