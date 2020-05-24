@@ -180,9 +180,11 @@ export function abc(path: fs.PathLike): void {
     input: fileStream,
     crlfDelay: Infinity
   });
-  const s = Readable.from(rl);
-  const t = new ChunkToSpotPrices();
-  const tmp = pipeline(s, t, err => console.log("pipeline callback", err));
+  const tmp = pipeline(
+    Readable.from(rl),
+    new ChunkToSpotPrices(),
+    err => console.log("pipeline callback", err)
+  );
   tmp.on("end", () => console.log("end"))
   tmp.on("error", err => console.log("err", err))
   tmp.on("data", err => console.log("data", err))
