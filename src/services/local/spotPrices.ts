@@ -148,34 +148,33 @@ export function fromLogFiles(props: B.SpotPricesProps & { paths: fs.PathLike[] }
   s.on("data", value => emitSpotPrices(stream, value))
   return stream;
 }
-export function abc(path: fs.PathLike): void {
-  const transformOptions: TransformOptions = {objectMode: true}
-  class ChunkToSpotPrices extends Transform {
-    constructor() {
-      super(transformOptions)
+const transformOptions: TransformOptions = {objectMode: true}
+class ChunkToSpotPrices extends Transform {
+  constructor() {
+    super(transformOptions)
+  }
+  _transform(chunk: Buffer | string | any, encoding: string, callback: TransformCallback): void {
+    if(typeof chunk !== "string" || encoding !== "utf8") {
+      return callback();
+    } else if (!chunk.includes("spotPrices:ask") && !chunk.includes("spotPrices:bid")) {
+      return callback();
     }
-    _transform(chunk: Buffer | string | any, encoding: string, callback: TransformCallback): void {
-      if(typeof chunk !== "string" || encoding !== "utf8") {
-        return callback();
-      } else if (!chunk.includes("spotPrices:ask") && !chunk.includes("spotPrices:bid")) {
-        return callback();
-      }
-      
+    
+    const logEntry = /({.*})/.exec(chunk);
+    if (logEntry) {
       try {
-        const logEntry = /({.*})/.exec(chunk);
-        if (logEntry) {
-          const data = JSON.parse(logEntry[1]);
-          if (typeof data === "object") {
-            return callback(null, data);
-          }
+        const data = JSON.parse(logEntry[1]);
+        if (typeof data === "object") {
+          return callback(null, data);
         }
-      } catch {
-        const e = new Error(`failed to parse line '${chunk}' as JSON (${path.toString()})`);
-        return callback(e);
-      }  
+      } catch (err) {
+        const msg = `failed to parse '${logEntry[1]}' as JSON`;
+        return callback(new Error(msg));
+      }
     }
   }
-
+}
+export function abc(path: fs.PathLike): void {
   const fileStream = fs.createReadStream(path);
   const rl = readline.createInterface({
     input: fileStream,
