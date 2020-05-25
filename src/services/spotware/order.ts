@@ -19,7 +19,7 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream
     }
 
     async close(): Promise<B.OrderClosedEvent> {
-        if (["filled", "closed"].includes(this.state.value)) {
+        if (["filled"].includes(this.state.value)) {
             const ctidTraderAccountId = this.ctidTraderAccountId;
             const positionId = this.positionId;
             const volume = this.props.volume * this.lotSize;
@@ -30,7 +30,7 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream
     }
 
     async cancel(): Promise<B.OrderCanceledEvent> {
-        if (["created", "accepted", "canceled"].includes(this.state.value)) {
+        if (["created", "accepted"].includes(this.state.value)) {
             const ctidTraderAccountId = this.ctidTraderAccountId;
             const orderId = this.orderId;
             await this.client.cancelOrder({ctidTraderAccountId, orderId})
@@ -40,9 +40,9 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream
     }
     
     async end(): Promise<B.OrderEndedEvent> {
-        if (["created", "accepted", "canceled"].includes(this.state.value)) {
+        if (["created", "accepted"].includes(this.state.value)) {
             await this.cancel();
-        } else if (["filled", "closed"].includes(this.state.value)) {
+        } else if (["filled"].includes(this.state.value)) {
             await this.close();
         }
         return this.ended()
