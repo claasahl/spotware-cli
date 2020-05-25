@@ -28,9 +28,9 @@ class LocalOrderStream<Props extends OS.OrderProps> extends OS.DebugOrderStream<
         throw new Error(`order ${this.props.id} cannot be canceled (${JSON.stringify(this.state)})`);
     }
     async end(): Promise<OS.OrderEndedEvent> {
-        if (["created", "accepted", "canceled"].includes(this.state.value)) {
+        if (["created", "accepted"].includes(this.state.value)) {
             await this.cancel();
-        } else if (["filled", "closed"].includes(this.state.value)) {
+        } else if (["filled"].includes(this.state.value)) {
             await this.close();
         }
         return this.ended()
