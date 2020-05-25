@@ -2,7 +2,7 @@ import { Readable } from "stream";
 import debug from "debug";
 import { createMachine, StateMachine } from '@xstate/fsm';
 
-import { Symbol, Timestamp, TradeSide, Volume, Price, OrderType } from "./types";
+import { Symbol, Timestamp, TradeSide, Volume, Price, OrderType, GenericReadable } from "./types";
 
 export interface OrderCreatedEvent {
   type: "CREATED";
@@ -79,55 +79,8 @@ export interface OrderActions {
   end(): Promise<OrderEndedEvent>;
 }
 
-export declare interface OrderStream<Props extends OrderProps> extends Readable {
-  addListener(event: "close", listener: () => void): this;
-  addListener(event: "data", listener: (event: OrderEvent) => void): this;
-  addListener(event: "end", listener: () => void): this;
-  addListener(event: "readable", listener: () => void): this;
-  addListener(event: "error", listener: (err: Error) => void): this;
-  addListener(event: string | symbol, listener: (...args: any[]) => void): this;
-
-  emit(event: "close"): boolean;
-  emit(event: "data", chunk: any): boolean;
-  emit(event: "end"): boolean;
-  emit(event: "readable"): boolean;
-  emit(event: "error", err: Error): boolean;
-  emit(event: string | symbol, ...args: any[]): boolean;
-
-  on(event: "close", listener: () => void): this;
-  on(event: "data", listener: (event: OrderEvent) => void): this;
-  on(event: "end", listener: () => void): this;
-  on(event: "readable", listener: () => void): this;
-  on(event: "error", listener: (err: Error) => void): this;
-  on(event: string | symbol, listener: (...args: any[]) => void): this;
-
-  once(event: "close", listener: () => void): this;
-  once(event: "data", listener: (event: OrderEvent) => void): this;
-  once(event: "end", listener: () => void): this;
-  once(event: "readable", listener: () => void): this;
-  once(event: "error", listener: (err: Error) => void): this;
-  once(event: string | symbol, listener: (...args: any[]) => void): this;
-
-  prependListener(event: "close", listener: () => void): this;
-  prependListener(event: "data", listener: (event: OrderEvent) => void): this;
-  prependListener(event: "end", listener: () => void): this;
-  prependListener(event: "readable", listener: () => void): this;
-  prependListener(event: "error", listener: (err: Error) => void): this;
-  prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
-
-  prependOnceListener(event: "close", listener: () => void): this;
-  prependOnceListener(event: "data", listener: (event: OrderEvent) => void): this;
-  prependOnceListener(event: "end", listener: () => void): this;
-  prependOnceListener(event: "readable", listener: () => void): this;
-  prependOnceListener(event: "error", listener: (err: Error) => void): this;
-  prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
-
-  removeListener(event: "close", listener: () => void): this;
-  removeListener(event: "data", listener: (event: OrderEvent) => void): this;
-  removeListener(event: "end", listener: () => void): this;
-  removeListener(event: "readable", listener: () => void): this;
-  removeListener(event: "error", listener: (err: Error) => void): this;
-  removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
+export interface OrderStream<Props extends OrderProps> extends GenericReadable<OrderEvent>, OrderActions {
+  readonly props: Props
 }
 
 type Context = {}
@@ -189,7 +142,7 @@ const machine = createMachine<Context, Event, State>({
 
 const streamConfig = { objectMode: true, emitClose: false, read: () => { } }
 
-export abstract class OrderStream<Props extends OrderProps> extends Readable implements OrderActions {
+abstract class OrderStreamBase<Props extends OrderProps> extends Readable implements OrderStream<Props> {
   public readonly props: Props
   private readonly cachedEvents: Map<OrderEvent["type"], OrderEvent>;
   private readonly log: debug.Debugger;
@@ -352,7 +305,7 @@ export abstract class OrderStream<Props extends OrderProps> extends Readable imp
     }
   }
 }
-export class DebugOrderStream<Props extends OrderProps> extends OrderStream<Props> {
+export class DebugOrderStream<Props extends OrderProps> extends OrderStreamBase<Props> {
 
   async close(): Promise<OrderClosedEvent> {
     throw new Error("not implemented");

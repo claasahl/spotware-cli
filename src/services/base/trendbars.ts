@@ -2,7 +2,7 @@ import { Readable } from "stream";
 import debug from "debug";
 import ms from "ms";
 
-import { Price, Volume, Period, Timestamp, Symbol } from "./types";
+import { Price, Volume, Period, Timestamp, Symbol, GenericReadable } from "./types";
 
 export interface TrendbarEvent {
   type: "TRENDBAR";
@@ -24,60 +24,13 @@ export interface TrendbarsActions {
   // no actions, yet
 }
 
-export declare interface TrendbarsStream extends Readable {
-  addListener(event: "close", listener: () => void): this;
-  addListener(event: "data", listener: (event: TrendbarEvent) => void): this;
-  addListener(event: "end", listener: () => void): this;
-  addListener(event: "readable", listener: () => void): this;
-  addListener(event: "error", listener: (err: Error) => void): this;
-  addListener(event: string | symbol, listener: (...args: any[]) => void): this;
-
-  emit(event: "close"): boolean;
-  emit(event: "data", chunk: any): boolean;
-  emit(event: "end"): boolean;
-  emit(event: "readable"): boolean;
-  emit(event: "error", err: Error): boolean;
-  emit(event: string | symbol, ...args: any[]): boolean;
-
-  on(event: "close", listener: () => void): this;
-  on(event: "data", listener: (event: TrendbarEvent) => void): this;
-  on(event: "end", listener: () => void): this;
-  on(event: "readable", listener: () => void): this;
-  on(event: "error", listener: (err: Error) => void): this;
-  on(event: string | symbol, listener: (...args: any[]) => void): this;
-
-  once(event: "close", listener: () => void): this;
-  once(event: "data", listener: (event: TrendbarEvent) => void): this;
-  once(event: "end", listener: () => void): this;
-  once(event: "readable", listener: () => void): this;
-  once(event: "error", listener: (err: Error) => void): this;
-  once(event: string | symbol, listener: (...args: any[]) => void): this;
-
-  prependListener(event: "close", listener: () => void): this;
-  prependListener(event: "data", listener: (event: TrendbarEvent) => void): this;
-  prependListener(event: "end", listener: () => void): this;
-  prependListener(event: "readable", listener: () => void): this;
-  prependListener(event: "error", listener: (err: Error) => void): this;
-  prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
-
-  prependOnceListener(event: "close", listener: () => void): this;
-  prependOnceListener(event: "data", listener: (event: TrendbarEvent) => void): this;
-  prependOnceListener(event: "end", listener: () => void): this;
-  prependOnceListener(event: "readable", listener: () => void): this;
-  prependOnceListener(event: "error", listener: (err: Error) => void): this;
-  prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
-
-  removeListener(event: "close", listener: () => void): this;
-  removeListener(event: "data", listener: (event: TrendbarEvent) => void): this;
-  removeListener(event: "end", listener: () => void): this;
-  removeListener(event: "readable", listener: () => void): this;
-  removeListener(event: "error", listener: (err: Error) => void): this;
-  removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
+export interface TrendbarsStream extends GenericReadable<TrendbarEvent>, TrendbarsActions {
+  readonly props: TrendbarsProps;
 }
 
 const streamConfig = { objectMode: true, emitClose: false, read: () => { } }
 
-export class TrendbarsStream extends Readable implements TrendbarsActions {
+abstract class TrendbarsStreamBase extends Readable implements TrendbarsStream {
   public readonly props: TrendbarsProps;
   private readonly cachedEvents: Map<TrendbarEvent["type"], TrendbarEvent>;
   private readonly log: debug.Debugger;
@@ -141,7 +94,7 @@ export class TrendbarsStream extends Readable implements TrendbarsActions {
   }
 }
 
-export class DebugTrendbarsStream extends TrendbarsStream {
+export class DebugTrendbarsStream extends TrendbarsStreamBase {
   tryTrendbar(e: Omit<TrendbarEvent, "type">): void {
     const event: TrendbarEvent = {...e, type: "TRENDBAR"};
     const {timestamp, type, ...rest} = event;

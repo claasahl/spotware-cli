@@ -1,7 +1,7 @@
 import { Readable } from "stream";
 import debug from "debug";
 
-import { Price, Timestamp, Currency } from "./types";
+import { Price, Timestamp, Currency, GenericReadable } from "./types";
 import { OrderStream, MarketOrderProps, StopOrderProps, OrderEvent, OrderProps } from "./order";
 import { SpotPricesStream, SpotPricesProps } from "./spotPrices";
 import { TrendbarsProps, TrendbarsStream } from "./trendbars";
@@ -38,60 +38,13 @@ export interface AccountActions {
   spotPrices(props: AccountSimpleSpotPricesProps): Promise<SpotPricesStream>;
   trendbars(props: AccountSimpleTrendbarsProps): Promise<TrendbarsStream>;
 }
-export declare interface AccountStream extends Readable {
-  addListener(event: "close", listener: () => void): this;
-  addListener(event: "data", listener: (event: AccountEvent) => void): this;
-  addListener(event: "end", listener: () => void): this;
-  addListener(event: "readable", listener: () => void): this;
-  addListener(event: "error", listener: (err: Error) => void): this;
-  addListener(event: string | symbol, listener: (...args: any[]) => void): this;
-
-  emit(event: "close"): boolean;
-  emit(event: "data", chunk: any): boolean;
-  emit(event: "end"): boolean;
-  emit(event: "readable"): boolean;
-  emit(event: "error", err: Error): boolean;
-  emit(event: string | symbol, ...args: any[]): boolean;
-
-  on(event: "close", listener: () => void): this;
-  on(event: "data", listener: (event: AccountEvent) => void): this;
-  on(event: "end", listener: () => void): this;
-  on(event: "readable", listener: () => void): this;
-  on(event: "error", listener: (err: Error) => void): this;
-  on(event: string | symbol, listener: (...args: any[]) => void): this;
-
-  once(event: "close", listener: () => void): this;
-  once(event: "data", listener: (event: AccountEvent) => void): this;
-  once(event: "end", listener: () => void): this;
-  once(event: "readable", listener: () => void): this;
-  once(event: "error", listener: (err: Error) => void): this;
-  once(event: string | symbol, listener: (...args: any[]) => void): this;
-
-  prependListener(event: "close", listener: () => void): this;
-  prependListener(event: "data", listener: (event: AccountEvent) => void): this;
-  prependListener(event: "end", listener: () => void): this;
-  prependListener(event: "readable", listener: () => void): this;
-  prependListener(event: "error", listener: (err: Error) => void): this;
-  prependListener(event: string | symbol, listener: (...args: any[]) => void): this;
-
-  prependOnceListener(event: "close", listener: () => void): this;
-  prependOnceListener(event: "data", listener: (event: AccountEvent) => void): this;
-  prependOnceListener(event: "end", listener: () => void): this;
-  prependOnceListener(event: "readable", listener: () => void): this;
-  prependOnceListener(event: "error", listener: (err: Error) => void): this;
-  prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this;
-
-  removeListener(event: "close", listener: () => void): this;
-  removeListener(event: "data", listener: (event: AccountEvent) => void): this;
-  removeListener(event: "end", listener: () => void): this;
-  removeListener(event: "readable", listener: () => void): this;
-  removeListener(event: "error", listener: (err: Error) => void): this;
-  removeListener(event: string | symbol, listener: (...args: any[]) => void): this;
+export interface AccountStream extends GenericReadable<AccountEvent>, AccountActions {
+  readonly props: AccountProps;
 }
 
 const streamConfig = { objectMode: true, emitClose: false, read: () => { } }
 
-export abstract class AccountStream extends Readable implements AccountActions {
+abstract class AccountStreamBase extends Readable implements AccountStream {
   public readonly props: AccountProps;
   private readonly cachedEvents: Map<AccountEvent["type"], AccountEvent>;
   private readonly log: debug.Debugger;
@@ -182,7 +135,7 @@ export abstract class AccountStream extends Readable implements AccountActions {
   abstract trendbars(props: AccountSimpleTrendbarsProps): Promise<TrendbarsStream>;
 }
 
-export class DebugAccountStream extends AccountStream {
+export class DebugAccountStream extends AccountStreamBase {
   async marketOrder(_props: AccountSimpleMarketOrderProps): Promise<OrderStream<MarketOrderProps>> {
     throw new Error("not implemented");
   }
