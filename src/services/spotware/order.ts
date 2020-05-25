@@ -26,11 +26,6 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream
             await this.client.closePosition({ctidTraderAccountId, positionId, volume})
             return this.closed();
         }
-        const { timestamp, price: exit, profitLoss } = await this.profitLoss();
-        this.tryClose({ timestamp, exit, profitLoss })
-        if (this.state.matches("closed")) {
-            return this.closed()
-        }
         throw new Error(`order ${this.props.id} cannot be closed (${JSON.stringify(this.state)})`);
     }
 
