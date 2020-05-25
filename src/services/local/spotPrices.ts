@@ -2,6 +2,7 @@ import fs from "fs";
 import readline from "readline";
 import { Readable, Transform, TransformCallback, TransformOptions, pipeline } from "stream";
 import {obj as multistream} from "multistream";
+import debug from "debug";
 
 import * as B from "../base";
 
@@ -66,11 +67,22 @@ class ChunkToSpotPrices extends Transform implements B.SpotPricesStream {
   props: B.SpotPricesProps;
   private readonly cachedEvents: Map<B.SpotPricesEvent["type"], B.SpotPricesEvent>;
   private readonly filter: (chunk: string) => boolean;
+  private readonly log: debug.Debugger;
+
   constructor(props: B.SpotPricesProps, filter: (chunk: string) => boolean = () => true) {
     super(transformOptions);
     this.props = Object.freeze(props);
     this.cachedEvents = new Map();
     this.filter = filter;
+    this.log = debug("spotPrices").extend(props.symbol.toString());
+  }
+
+  push(event: B.SpotPricesEvent | null): boolean {
+    if (event) {
+      this.cachedEvents.set(event.type, event);
+      this.log("%j", event);
+    }
+    return super.push(event)
   }
   _transform(chunk: Buffer | string | any, encoding: string, callback: TransformCallback): void {
     if(typeof chunk !== "string" || encoding !== "utf8") {
