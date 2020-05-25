@@ -18,10 +18,9 @@ function main() {
       "./store/2020-05-01.log",
     ], symbol
   });
-  spots.on("ask", () => { })
-  spots.on("bid", () => { })
+  spots.on("data", () => { })
 }
-main;
+main();
 
 // async function main2() {
 //   // about 3s
