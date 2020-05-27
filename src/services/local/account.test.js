@@ -67,7 +67,7 @@ describe("fromNothing", () => {
         const stream = fromNothing({ currency, spots, initialBalance})
         const period = 1000;
         const trendbars = await stream.trendbars({ symbol, period });
-        expect(trendbars.props).toStrictEqual({ symbol, period, spots: spotPrices });
+        expect(trendbars.props).toStrictEqual({ symbol, period });
         expect(spots).toHaveBeenCalledWith({ symbol })
         expect(spots).toHaveBeenCalledTimes(1)
     })

@@ -1,4 +1,5 @@
 import * as B from "../base";
+import { Transform, TransformOptions, TransformCallback, pipeline } from "stream";
 
 interface Bucket {
     begin: B.Timestamp;
@@ -47,37 +48,56 @@ function toTrendbar(
     return events.reduce(accumulateTrendbar, seed);
 }
 
-export function trendbarsFromSpotPrices(props: B.TrendbarsProps & { spots: B.SpotPricesStream }): Promise<B.TrendbarsStream> {
-    const stream = new B.DebugTrendbarsStream(props)
-    const bucked = (timestamp: B.Timestamp): Bucket => bucket(timestamp, props.period);
-    const values: B.BidPriceChangedEvent[] = [];
-    props.spots.on("data", e => {
-        if(e.type === "BID_PRICE_CHANGED") {
-            values.push(e);
-            const bucket1 = bucked(values[0].timestamp);
-            const bucket2 = bucked(values[values.length - 1].timestamp);
+const streamConfig: TransformOptions = { objectMode: true }
+class ToTrendbars extends Transform implements B.TrendbarsStream {
+    readonly props: B.TrendbarsProps;
+    private readonly values: Array<B.BidPriceChangedEvent> = [];
+    constructor(props: B.TrendbarsProps) {
+        super(streamConfig);
+        this.props = Object.freeze(props);
+    }
+    _transform(chunk: B.SpotPricesEvent, _encoding: string, callback: TransformCallback): void {
+        if (chunk.type === "BID_PRICE_CHANGED") {
+            this.values.push(chunk);
+            const bucket1 = this.bucket(this.values[0]);
+            const bucket2 = this.bucket(this.values[this.values.length - 1]);
             if (bucket1.begin !== bucket2.begin) {
-                const eventsInBucket = values.filter(
-                    e => bucked(e.timestamp).begin === bucket1.begin
+                const eventsInBucket = this.values.filter(
+                    e => this.bucket(e).begin === bucket1.begin
                 );
-                values.splice(0, eventsInBucket.length);
-                stream.tryTrendbar(toTrendbar(bucket1.begin, eventsInBucket))
+                this.values.splice(0, eventsInBucket.length);
+                this.push(toTrendbar(bucket1.begin, eventsInBucket))
             }
-        } else if(e.type === "ASK_PRICE_CHANGED") {
-            if(values.length === 0) {
-                return;
+            return callback();
+        } else if (chunk.type === "ASK_PRICE_CHANGED") {
+            if (this.values.length === 0) {
+                return callback();
             }
-            const bucket1 = bucked(values[0].timestamp);
-            const bucket2 = bucked(e.timestamp);
+            const bucket1 = this.bucket(this.values[0]);
+            const bucket2 = this.bucket(chunk);
             if (bucket1.begin !== bucket2.begin) {
-                const eventsInBucket = values.filter(
-                    e => bucked(e.timestamp).begin === bucket1.begin
+                const eventsInBucket = this.values.filter(
+                    e => this.bucket(e).begin === bucket1.begin
                 );
-                values.splice(0, eventsInBucket.length);
-                stream.tryTrendbar(toTrendbar(bucket1.begin, eventsInBucket))
+                this.values.splice(0, eventsInBucket.length);
+                this.push(toTrendbar(bucket1.begin, eventsInBucket))
             }
+            return callback();
         }
-       
-    });
-    return Promise.resolve(stream);
+    }
+
+    bucket(e: B.SpotPricesEvent): Bucket {
+        const { timestamp } = e;
+        const { period } = this.props
+        return bucket(timestamp, period)
+    }
+}
+
+export async function trendbarsFromSpotPrices(props: B.TrendbarsProps & { spots: B.SpotPricesStream }): Promise<B.TrendbarsStream> {
+    const { spots, ...originalProps } = props;
+    return pipeline(
+        spots,
+        new ToTrendbars(originalProps),
+        err => console.log("pipeline callback", err)
+    )
 }
