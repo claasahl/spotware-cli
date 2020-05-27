@@ -1,4 +1,4 @@
-const {toTrendbars} = require("../../../build/services/base/trendbars")
+const {ToTrendbars} = require("../../../build/services/base/trendbars")
 const {DebugSpotPricesStream} = require("../../../build/services/base/spotPrices")
 const debug = require("debug")
 
@@ -8,26 +8,26 @@ const extend = jest.fn(() => log)
 log["extend"] = extend;
 debug.mockImplementation(() => ({ extend }))
 
-describe("toTrendbars", () => {
+describe("ToTrendbars", () => {
     describe("props", () => {
-        test("should expose props", async () => {
+        test("should expose props", () => {
             const symbol = Symbol.for("abc");
             const period = 60000;
-            const spots = new DebugSpotPricesStream({ symbol })
-            const stream = await toTrendbars({ symbol, period, spots, a: 2 })
+            const stream = new ToTrendbars({ symbol, period, a: 2 })
             expect(stream.props).toStrictEqual({ symbol, period, a: 2 })
         })
         
-        test("should freeze props", async () => {
+        test("should freeze props", () => {
             const symbol = Symbol.for("abc");
             const period = 60000;
-            const spots = new DebugSpotPricesStream({ symbol })
-            const stream = await toTrendbars({ symbol, period, spots })
+            const props = { symbol, period }
+            const stream = new ToTrendbars(props)
+            expect(Object.isFrozen(props)).toBe(true)
             expect(Object.isFrozen(stream.props)).toBe(true)
         })
     })
 
-    describe.skip("log events", () => {
+    describe("log events", () => {
         beforeEach(() => {
             debug.mockClear();
             extend.mockClear();
@@ -35,16 +35,18 @@ describe("toTrendbars", () => {
         });
 
         test("setup loggers", () => {
-            const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
-            toTrendbars(props)
+            const symbol = Symbol.for("abc");
+            const period = 60000;
+            new ToTrendbars({ symbol, period })
             expect(debug).toHaveBeenCalledTimes(1)
             expect(extend).toHaveBeenCalledTimes(2)
             expect(log).toHaveBeenCalledTimes(0)
         })
 
         test("log 'trendbar' events", () => {
-            const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
-            const stream = toTrendbars(props)
+            const symbol = Symbol.for("abc");
+            const period = 60000;
+            const stream = new ToTrendbars({ symbol, period })
             const event = { type: "TRENDBAR", open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
             stream.push(event)
             expect(log).toHaveBeenCalledTimes(1)
@@ -52,8 +54,9 @@ describe("toTrendbars", () => {
         })
 
         test("should not log unknown events", () => {
-            const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
-            const stream = toTrendbars(props)
+            const symbol = Symbol.for("abc");
+            const period = 60000;
+            const stream = new ToTrendbars({ symbol, period })
             stream.push({ type: "UNKNOWN"})
             stream.push({something: 23})
             expect(log).toHaveBeenCalledTimes(0)

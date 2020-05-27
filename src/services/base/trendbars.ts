@@ -1,4 +1,6 @@
 import { Transform, TransformCallback, pipeline } from "stream";
+import debug from "debug";
+import ms from "ms";
 
 import { Price, Volume, Period, Timestamp, Symbol, GenericReadable } from "./types";
 import { BidPriceChangedEvent, SpotPricesEvent, SpotPricesStream } from "./spotPrices"
@@ -12,6 +14,7 @@ export interface TrendbarEvent {
   volume: Volume;
   timestamp: Timestamp;
 }
+const trendbarEventTypes: TrendbarEvent['type'][] = ["TRENDBAR"]
 
 export interface TrendbarsProps {
   readonly symbol: Symbol;
@@ -73,13 +76,26 @@ function toTrendbar(
   return events.reduce(accumulateTrendbar, seed);
 }
 
-class ToTrendbars extends Transform implements TrendbarsStream {
+export class ToTrendbars extends Transform implements TrendbarsStream {
   readonly props: TrendbarsProps;
   private readonly values: Array<BidPriceChangedEvent> = [];
+  private readonly log: debug.Debugger;
+
   constructor(props: TrendbarsProps) {
       super({ objectMode: true });
       this.props = Object.freeze(props);
+      this.log = debug("trendbars")
+        .extend(ms(props.period))
+        .extend(props.symbol.toString());
   }
+
+  push(event: TrendbarEvent | null): boolean {
+    if (event && trendbarEventTypes.includes(event.type)) {
+      this.log("%j", event);
+    }
+    return super.push(event)
+  }
+
   _transform(chunk: SpotPricesEvent, _encoding: string, callback: TransformCallback): void {
       if (chunk.type === "BID_PRICE_CHANGED") {
           this.values.push(chunk);
