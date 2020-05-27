@@ -1,4 +1,4 @@
-const {ToTrendbars} = require("../../../build/services/base/trendbars")
+const {ToTrendbars, toTrendbars} = require("../../../build/services/base/trendbars")
 const {DebugSpotPricesStream} = require("../../../build/services/base/spotPrices")
 const debug = require("debug")
 
@@ -8,7 +8,7 @@ const extend = jest.fn(() => log)
 log["extend"] = extend;
 debug.mockImplementation(() => ({ extend }))
 
-describe("ToTrendbars", () => {
+describe("ToTrendbars class", () => {
     describe("props", () => {
         test("should expose props", () => {
             const symbol = Symbol.for("abc");
@@ -99,8 +99,10 @@ describe("ToTrendbars", () => {
             stream.tryTrendbar(event)
         })
     })
+})
 
-    describe.skip("period: 1sec", () => {
+describe("toTrendbars function", () => {
+    describe("period: 1sec", () => {
         test("trendbar based on multiple price changes", async done => {
             const symbol = Symbol.for("abc");
             const period = 1000;
