@@ -1,4 +1,5 @@
 const {toTrendbars} = require("../../../build/services/base/trendbars")
+const {DebugSpotPricesStream} = require("../../../build/services/base/spotPrices")
 const debug = require("debug")
 
 jest.mock("debug");
@@ -9,16 +10,19 @@ debug.mockImplementation(() => ({ extend }))
 
 describe("toTrendbars", () => {
     describe("props", () => {
-        test("should expose props", () => {
-            const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
-            const stream = toTrendbars(props)
-            expect(stream.props).toBe(props)
+        test("should expose props", async () => {
+            const symbol = Symbol.for("abc");
+            const period = 60000;
+            const spots = new DebugSpotPricesStream({ symbol })
+            const stream = await toTrendbars({ symbol, period, spots, a: 2 })
+            expect(stream.props).toStrictEqual({ symbol, period, a: 2 })
         })
-    
-        test("should freeze props", () => {
-            const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
-            const stream = toTrendbars(props)
-            expect(Object.isFrozen(props)).toBe(true)
+        
+        test("should freeze props", async () => {
+            const symbol = Symbol.for("abc");
+            const period = 60000;
+            const spots = new DebugSpotPricesStream({ symbol })
+            const stream = await toTrendbars({ symbol, period, spots })
             expect(Object.isFrozen(stream.props)).toBe(true)
         })
     })
