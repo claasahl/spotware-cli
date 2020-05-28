@@ -2,7 +2,6 @@ import mem from "mem";
 import * as B from "../base";
 import { marketOrderFromSpotPrices, stopOrderFromSpotPrices } from "./order";
 import { includesCurrency } from "./util";
-import { trendbarsFromSpotPrices } from "./trendbars";
 
 interface Order {
     symbol: Symbol;
@@ -125,7 +124,7 @@ class LocalAccountStream extends B.DebugAccountStream {
     async trendbars(props: B.AccountSimpleTrendbarsProps): Promise<B.TrendbarsStream> {
         const { symbol } = props;
         const spots = await this.spotPrices({ symbol });
-        return trendbarsFromSpotPrices({ ...props, spots })
+        return B.toTrendbars({ ...props, spots })
     }
 
     private updateEquity(e: { timestamp: B.Timestamp }): void {

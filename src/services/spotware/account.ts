@@ -4,7 +4,6 @@ import mem from "mem";
 
 import * as B from "../base";
 import { SpotwareClient } from "./client";
-import { trendbarsFromSpotPrices } from "../local/trendbars"
 import { marketOrder, stopOrder } from "./order";
 
 interface Order {
@@ -206,7 +205,7 @@ class SpotwareAccountStream extends B.DebugAccountStream {
 
     async trendbars(props: B.AccountSimpleTrendbarsProps): Promise<B.TrendbarsStream> {
         const spots = await this.spotPrices(props)
-        return trendbarsFromSpotPrices({ ...props, spots })
+        return B.toTrendbars({ ...props, spots })
     }
 
     private updateEquity(e: { timestamp: B.Timestamp }): void {
