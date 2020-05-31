@@ -205,9 +205,7 @@ describe("fromNothing", () => {
                 }
             })
 
-            spotPrices.tryAsk({ timestamp: 1, ask: 10 })
             spotPrices.tryBid({ timestamp: 2, bid: 15 })
-            spotPrices.tryAsk({ timestamp: 3, ask: 12 })
             spotPrices.tryAsk({ timestamp: 4, ask: 8 })
         })
     })
