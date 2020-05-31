@@ -64,20 +64,18 @@ describe("ToTrendbars class", () => {
     })
 
     describe.skip("access cached events", () => {
-        test("should call cb with trendbar (not cached)", async () => {
+        test("TRENDBAR (not cached)", () => {
             const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
             const stream = toTrendbars(props)
-            const event = { type: "TRENDBAR", open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
-            setTimeout(() => stream.push(event), 50)
-            await expect(stream.trendbar()).resolves.toStrictEqual(event);
+            expect(stream.trendbarOrNull()).toBeNull();
         })
     
-        test("should call cb with trendbar (cached)", async () => {
+        test("TRENDBAR (cached)", () => {
             const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
             const stream = toTrendbars(props)
             const event = { type: "TRENDBAR", open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
             stream.push(event);
-            await expect(stream.trendbar()).resolves.toStrictEqual(event);
+            expect(stream.trendbarOrNull()).toStrictEqual(event);
         })
     })
 

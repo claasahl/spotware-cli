@@ -74,52 +74,46 @@ describe("DebugSpotPricesStream", () => {
     })
 
     describe("access cached events", () => {
-        test("should call cb with ask (not cached)", async () => {
+        test("ASK_PRICE_CHANGED (not cached)", () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            const event = { type: "ASK_PRICE_CHANGED", ask: 23, timestamp: 123 };
-            setTimeout(() => stream.push(event), 50)
-            await expect(stream.ask()).resolves.toStrictEqual(event);
+            expect(stream.askOrNull()).toBeNull();
         })
     
-        test("should call cb with ask (cached)", async () => {
+        test("ASK_PRICE_CHANGED (cached)", () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
             const event = { type: "ASK_PRICE_CHANGED", ask: 23, timestamp: 123 };
             stream.push(event)
-            await expect(stream.ask()).resolves.toStrictEqual(event);
+            expect(stream.askOrNull()).toStrictEqual(event);
         })
 
-        test("should call cb with bid (not cached)", async () => {
+        test("BID_PRICE_CHANGED (not cached)", () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            const event = { type: "BID_PRICE_CHANGED", bid: 23, timestamp: 123 };
-            setTimeout(() => stream.push(event), 50)
-            await expect(stream.bid()).resolves.toStrictEqual(event);
+            expect(stream.bidOrNull()).toBeNull();
         })
     
-        test("should call cb with bid (cached)", async () => {
+        test("BID_PRICE_CHANGED (cached)", () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
             const event = { type: "BID_PRICE_CHANGED", bid: 23, timestamp: 123 };
             stream.push(event)
-            await expect(stream.bid()).resolves.toStrictEqual(event);
+            expect(stream.bidOrNull()).toStrictEqual(event);
         })
 
-        test("should call cb with price (not cached)", async () => {
+        test("PRICE_CHANGED (not cached)", () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
-            const event = { type: "PRICE_CHANGED", ask: 22, bid: 23, timestamp: 123 };
-            setTimeout(() => stream.push(event), 50)
-            await expect(stream.price()).resolves.toStrictEqual(event);
+            expect(stream.priceOrNull()).toBeNull();
         })
     
-        test("should call cb with price (cached)", async () => {
+        test("PRICE_CHANGED (cached)", () => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
             const stream = new DebugSpotPricesStream(props)
             const event = { type: "PRICE_CHANGED", ask: 22, bid: 23, timestamp: 123 };
             stream.push(event)
-            await expect(stream.price()).resolves.toStrictEqual(event);
+            expect(stream.priceOrNull()).toStrictEqual(event);
         })
     })
 
