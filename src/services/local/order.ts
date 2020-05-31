@@ -12,28 +12,30 @@ class LocalOrderStream<Props extends OS.OrderProps> extends OS.DebugOrderStream<
         return super.push(event)
     }
 
-    async close(): Promise<OS.OrderClosedEvent> {
-        const { timestamp, price: exit, profitLoss } = await this.profitLoss();
-        this.tryClose({ timestamp, exit, profitLoss })
-        if (this.state.matches("closed")) {
-            return this.closed()
+    async close(): Promise<void> {
+        const profitLossEvent = this.profitLossOrNull();
+        if(profitLossEvent) {
+            const { timestamp, price: exit, profitLoss } = profitLossEvent;
+            this.tryClose({ timestamp, exit, profitLoss })
+            if (this.state.matches("closed")) {
+                return;
+            }
         }
         throw new Error(`order ${this.props.id} cannot be closed (${JSON.stringify(this.state)})`);
     }
-    async cancel(): Promise<OS.OrderCanceledEvent> {
+    async cancel(): Promise<void> {
         this.tryCancel({ timestamp: this.timestamp })
         if (this.state.matches("canceled")) {
-            return this.canceled();
+            return;
         }
         throw new Error(`order ${this.props.id} cannot be canceled (${JSON.stringify(this.state)})`);
     }
-    async end(): Promise<OS.OrderEndedEvent> {
+    async end(): Promise<void> {
         if (["created", "accepted"].includes(this.state.value)) {
             await this.cancel();
         } else if (["filled"].includes(this.state.value)) {
             await this.close();
         }
-        return this.ended()
     }
 }
 
