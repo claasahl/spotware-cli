@@ -200,7 +200,7 @@ class ToBuyOrder<Props extends B.OrderProps> extends Transform implements B.Orde
         callback();
     }
 
-    private tryToFillOrder(e: B.AskPriceChangedEvent) {
+    private tryToFillOrder(e: B.AskPriceChangedEvent): void {
         const { timestamp } = e;
         this.event({ type: "CREATE", event: { type: "CREATED", timestamp }})
         this.event({ type: "ACCEPT", event: { type: "ACCEPTED", timestamp }})
@@ -215,7 +215,7 @@ class ToBuyOrder<Props extends B.OrderProps> extends Transform implements B.Orde
         }
     }
 
-    private tryToCloseOrder(e: B.BidPriceChangedEvent, filled: B.OrderFilledEvent) {
+    private tryToCloseOrder(e: B.BidPriceChangedEvent, filled: B.OrderFilledEvent): void {
         const { timestamp, bid: price } = e
         const profitLoss = Math.round((price - filled.entry!) * this.props.volume * 100) / 100;
         this.profitLoss = { type: "PROFITLOSS", timestamp, price, profitLoss };
@@ -226,7 +226,7 @@ class ToBuyOrder<Props extends B.OrderProps> extends Transform implements B.Orde
         }
     }
 
-    private event(e: Event) {
+    private event(e: Event): void {
         const oldState = this.state;
         const newState = machine.transition(oldState, e);
         this.state = newState;
