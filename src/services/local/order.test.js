@@ -148,7 +148,7 @@ describe("marketOrderFromSpotPrices", () => {
             })
             spots.tryAsk({timestamp: 1, ask: 0})
         })
-        test("fill order asap (1)", async done => {
+        test("fill order asap", async done => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await marketOrderFromSpotPrices({ id: "1", symbol, tradeSide: "BUY", volume: 2, spots })
@@ -157,24 +157,6 @@ describe("marketOrderFromSpotPrices", () => {
                 if(e.type === "FILLED") {
                     expect(e).toStrictEqual(event);
                     done()
-                }
-            })
-            spots.tryBid({ timestamp: 0, bid: 1 })
-            spots.tryAsk({ timestamp: 1, ask: 5 })
-        })
-        test("fill order asap (2)", done => {
-            const symbol = Symbol.for("abc")
-            const spots = new DebugSpotPricesStream({ symbol })
-            spots.on("data", async e => {
-                if(e.type === "ASK_PRICE_CHANGED") {
-                    const stream = await marketOrderFromSpotPrices({ id: "1", symbol, tradeSide: "BUY", volume: 2, spots })
-                    const event = { type: "FILLED", timestamp: 1, entry: 5 }
-                    stream.on("data", e => {
-                        if(e.type === "FILLED") {
-                            expect(e).toStrictEqual(event);
-                            done();
-                        }
-                    })
                 }
             })
             spots.tryBid({ timestamp: 0, bid: 1 })
@@ -311,7 +293,7 @@ describe("marketOrderFromSpotPrices", () => {
             })
             spots.tryBid({timestamp: 1, bid: 0})
         })
-        test("fill order asap (1)", async done => {
+        test("fill order asap", async done => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await marketOrderFromSpotPrices({ id: "1", symbol, tradeSide: "SELL", volume: 2, spots })
@@ -320,24 +302,6 @@ describe("marketOrderFromSpotPrices", () => {
                 if(e.type === "FILLED") {
                     expect(e).toStrictEqual(event);
                     done()
-                }
-            })
-            spots.tryAsk({ timestamp: 0, ask: 1 })
-            spots.tryBid({ timestamp: 1, bid: 5 })
-        })
-        test("fill order asap (2)", done => {
-            const symbol = Symbol.for("abc")
-            const spots = new DebugSpotPricesStream({ symbol })
-            spots.on("data", async e => {
-                if(e.type === "BID_PRICE_CHANGED") {
-                    const stream = await marketOrderFromSpotPrices({ id: "1", symbol, tradeSide: "SELL", volume: 2, spots })
-                    const event = { type: "FILLED", timestamp: 1, entry: 5 }
-                    stream.on("data", e => {
-                        if(e.type === "FILLED") {
-                            expect(e).toStrictEqual(event);
-                            done()
-                        }
-                    })
                 }
             })
             spots.tryAsk({ timestamp: 0, ask: 1 })
@@ -598,7 +562,7 @@ describe("stopOrderFromSpotPrices", () => {
             })
             spots.tryAsk({timestamp: 1, ask: 0})
         })
-        test("fill order asap (1)", async done => {
+        test("fill order asap", async done => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await stopOrderFromSpotPrices({ id: "1", symbol, tradeSide: "BUY", volume: 2, enter: 6, spots })
@@ -607,24 +571,6 @@ describe("stopOrderFromSpotPrices", () => {
                 if(e.type === "FILLED") {
                     expect(e).toStrictEqual(event);
                     done()
-                }
-            })
-            spots.tryBid({ timestamp: 0, bid: 1 })
-            spots.tryAsk({ timestamp: 1, ask: 6 })
-        })
-        test("fill order asap (2)", done => {
-            const symbol = Symbol.for("abc")
-            const spots = new DebugSpotPricesStream({ symbol })
-            spots.on("data", async e => {
-                if(e.type === "ASK_PRICE_CHANGED") {
-                    const stream = await stopOrderFromSpotPrices({ id: "1", symbol, tradeSide: "BUY", volume: 2, enter: 6, spots })
-                    const event = { type: "FILLED", timestamp: 1, entry: 6 }
-                    stream.on("data", e => {
-                        if(e.type === "FILLED") {
-                            expect(e).toStrictEqual(event);
-                            done()
-                        }
-                    })
                 }
             })
             spots.tryBid({ timestamp: 0, bid: 1 })
@@ -761,7 +707,7 @@ describe("stopOrderFromSpotPrices", () => {
             })
             spots.tryBid({timestamp: 1, bid: 0})
         })
-        test("fill order asap (1)", async done => {
+        test("fill order asap", async done => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await stopOrderFromSpotPrices({ id: "1", symbol, tradeSide: "SELL", volume: 2, enter: 4, spots })
@@ -770,24 +716,6 @@ describe("stopOrderFromSpotPrices", () => {
                 if(e.type === "FILLED") {
                     expect(e).toStrictEqual(event);
                     done()
-                }
-            })
-            spots.tryAsk({ timestamp: 0, ask: 1 })
-            spots.tryBid({ timestamp: 1, bid: 4 })
-        })
-        test("fill order asap (2)", done => {
-            const symbol = Symbol.for("abc")
-            const spots = new DebugSpotPricesStream({ symbol })
-            spots.on("data", async e => {
-                if(e.type === "BID_PRICE_CHANGED") {
-                    const stream = await stopOrderFromSpotPrices({ id: "1", symbol, tradeSide: "SELL", volume: 2, enter: 4, spots })
-                    const event = { type: "FILLED", timestamp: 1, entry: 4 }
-                    stream.on("data", e => {
-                        if(e.type === "FILLED") {
-                            expect(e).toStrictEqual(event);
-                            done()
-                        }
-                    })
                 }
             })
             spots.tryAsk({ timestamp: 0, ask: 1 })
