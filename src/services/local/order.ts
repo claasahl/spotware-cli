@@ -1,4 +1,7 @@
 import assert from "assert";
+import { Transform, TransformCallback, pipeline } from "stream";
+import debug from "debug";
+
 import * as OS from "../base/order"
 import * as B from "../base"
 
@@ -56,50 +59,96 @@ class LocalOrderStream<Props extends OS.OrderProps> extends OS.DebugOrderStream<
     }
 }
 
-async function buy<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream, condition: (e: B.AskPriceChangedEvent) => boolean): Promise<OS.OrderStream<Props>> {
-    assert.strictEqual(props.tradeSide, "BUY");
-    const fill = (e: B.AskPriceChangedEvent | null): void => {
-        if(!e) {
-            return;
-        }
-        const { timestamp } = e;
-        stream.tryCreate({ timestamp })
-        stream.tryAccept({ timestamp })
-        setImmediate(() => { // <-- enables cancelling of market orders
-            if (condition(e)) {
-                const { timestamp, ask: entry } = e;
-                stream.tryFill({ timestamp, entry })
-                update(
-                    { type: "FILLED", timestamp, entry },
-                    spots.bidOrNull()
-                )
-            }
-        })
-    }
-    const update = (filled: B.OrderFilledEvent, e: B.BidPriceChangedEvent | null): void => {
-        if(!e) {
-            return;
-        }
-        const { timestamp, bid: price } = e
-        const profitLoss = Math.round((price - filled.entry!) * stream.props.volume * 100) / 100;
-        stream.tryProfitLoss({ timestamp, price, profitLoss });
+type Condition = (e: B.SpotPricesEvent) => boolean;
 
-        if (props.stopLoss && props.stopLoss >= price ||
-            props.takeProfit && props.takeProfit <= price) {
-            stream.tryClose({ timestamp, exit: price, profitLoss })
+class ToBuyOrder<Props extends B.OrderProps> extends Transform implements B.OrderStream<Props> {
+    readonly props: Props;
+    private readonly entryCondition: Condition;
+    private readonly exitCondition: Condition;
+    private readonly log: debug.Debugger;
+    private bidPrice: B.BidPriceChangedEvent | null = null;
+    private filled: B.OrderFilledEvent | null = null;
+  
+    constructor(props: Props, entryCondition: Condition, exitCondition: Condition) {
+      super({objectMode: true});
+      this.props = Object.freeze(props);
+      this.entryCondition = entryCondition;
+      this.exitCondition = exitCondition;
+      this.log = debug("order").extend(props.id);
+    }
+    closeOrder(): Promise<void> {
+        throw new Error("Method not implemented.");
+    }
+    cancelOrder(): Promise<void> {
+        throw new Error("Method not implemented.");
+    }
+    endOrder(): Promise<void> {
+        throw new Error("Method not implemented.");
+    }
+  
+    push(event: B.OrderEvent | null): boolean {
+      if (event) {
+        this.log("%j", event);
+      }
+      return super.push(event)
+    }
+
+    _transform(chunk: B.SpotPricesEvent, _encoding: string, callback: TransformCallback): void {
+        if(this.filled === null && chunk.type ==="ASK_PRICE_CHANGED") {
+            this.tryToFillOrder(chunk);
+        } else if(this.filled === null && chunk.type === "BID_PRICE_CHANGED") {
+            this.bidPrice = chunk;
+        } else if(this.filled !== null && chunk.type === "BID_PRICE_CHANGED") {
+            this.tryToCloseOrder(chunk, this.filled);
+        }
+        callback();
+    }
+
+    private tryToFillOrder(e: B.AskPriceChangedEvent) {
+        const { timestamp } = e;
+        this.push({ type: "CREATED", timestamp })
+        this.push({ type: "ACCEPTED", timestamp })
+        if (this.entryCondition(e)) {
+            const { timestamp, ask: entry } = e;
+            this.filled = { type: "FILLED", timestamp, entry }
+            this.push({ type: "FILLED", timestamp, entry })
+            if(this.bidPrice) {
+                this.tryToCloseOrder(this.bidPrice, this.filled);
+                this.bidPrice = null; // just needed for faster profitLoss / close events
+            }
         }
     }
-    const stream = new LocalOrderStream<Props>(props);
-    fill(spots.askOrNull());
-    spots.on("data", e => {
-        const filled = stream.filledOrNull();
-        if(filled === null && e.type ==="ASK_PRICE_CHANGED") {
-            fill(e);
-        } else if(filled !== null && e.type === "BID_PRICE_CHANGED") {
-            update(filled, e);
+
+    private tryToCloseOrder(e: B.BidPriceChangedEvent, filled: B.OrderFilledEvent) {
+        const { timestamp, bid: price } = e
+        const profitLoss = Math.round((price - filled.entry!) * this.props.volume * 100) / 100;
+        this.push({ type: "PROFITLOSS", timestamp, price, profitLoss });
+
+        if (this.exitCondition(e)) {
+            this.push({ type: "CLOSED", timestamp, exit: price, profitLoss })
+            this.push({ type: "ENDED", timestamp, exit: price, profitLoss })
+            this.push(null)
         }
-    })
-    return stream;
+    }
+}
+
+async function buy<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream, entryCondition: Condition): Promise<OS.OrderStream<Props>> {
+    assert.strictEqual(props.tradeSide, "BUY");
+    const exitCondition: Condition = e => {
+        if(e.type !== "BID_PRICE_CHANGED") {
+            return false;
+        } else if(props.stopLoss) {
+            return props.stopLoss >= e.bid;
+        } else if(props.takeProfit) {
+            return props.takeProfit <= e.bid;
+        }
+        return false;
+    }
+    return pipeline(
+        spots,
+        new ToBuyOrder(props, entryCondition, exitCondition),
+        err => console.log("pipeline callback", err)
+      );
 }
 
 async function sell<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream, condition: (e: B.BidPriceChangedEvent) => boolean): Promise<OS.OrderStream<Props>> {
@@ -159,7 +208,7 @@ export function marketOrderFromSpotPrices(props: Omit<B.MarketOrderProps & { spo
 export function stopOrderFromSpotPrices(props: Omit<B.StopOrderProps & { spots: B.SpotPricesStream }, "orderType">): Promise<OS.OrderStream<B.StopOrderProps>> {
     const { spots, ...rest } = props;
     if (props.tradeSide === "BUY") {
-        return buy({ ...rest, orderType: "STOP" }, spots, e => e.ask >= props.enter)
+        return buy({ ...rest, orderType: "STOP" }, spots, e => e.type === "ASK_PRICE_CHANGED" && e.ask >= props.enter)
     }
     return sell({ ...rest, orderType: "STOP" }, spots, e => e.bid <= props.enter)
 }
