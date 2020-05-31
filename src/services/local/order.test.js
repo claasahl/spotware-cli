@@ -10,7 +10,7 @@ describe("marketOrderFromSpotPrices", () => {
             const event = {timestamp: 1};
             stream.on("data", e => {
                 if(e.type === "ACCEPTED") {
-                    expect(stream.cancel()).resolves
+                    expect(stream.cancelOrder()).resolves
                 } else if(e.type === "CANCELED") {
                     expect(e).toStrictEqual({...event, type: "CANCELED"})
                 } else if(e.type === "ENDED") {
@@ -27,8 +27,8 @@ describe("marketOrderFromSpotPrices", () => {
             let timer = undefined;
             stream.on("data", e => {
                 if(e.type === "ACCEPTED") {
-                    stream.cancel()
-                    stream.cancel()
+                    stream.cancelOrder()
+                    stream.cancelOrder()
                 } else if(e.type === "CANCELED") {
                     expect(timer).toBeUndefined();
                     timer = setTimeout(done, 50)
@@ -43,7 +43,7 @@ describe("marketOrderFromSpotPrices", () => {
             const event = {timestamp: 1, exit: 1, profitLoss: 8};
             stream.on("data", e => {
                 if(e.type === "FILLED") {
-                    expect(stream.close()).resolves
+                    expect(stream.closeOrder()).resolves
                 } else if(e.type === "CLOSED") {
                     expect(e).toStrictEqual({...event, type: "CLOSED"})
                 } else if(e.type === "ENDED") {
@@ -61,8 +61,8 @@ describe("marketOrderFromSpotPrices", () => {
             let timer = undefined;
             stream.on("data", e => {
                 if(e.type === "FILLED") {
-                    stream.close()
-                    stream.close()
+                    stream.closeOrder()
+                    stream.closeOrder()
                 } else if(e.type === "CLOSED") {
                     expect(timer).toBeUndefined();
                     timer = setTimeout(done, 50)
@@ -78,7 +78,7 @@ describe("marketOrderFromSpotPrices", () => {
             const event = {timestamp: 1};
             stream.on("data", e => {
                 if(e.type === "ACCEPTED") {
-                    expect(stream.end()).resolves
+                    expect(stream.endOrder()).resolves
                 } else if(e.type === "CANCELED") {
                     expect(e).toStrictEqual({...event, type: "CANCELED"})
                     done();
@@ -93,7 +93,7 @@ describe("marketOrderFromSpotPrices", () => {
             const event = {timestamp: 1, exit: 1, profitLoss: -8};
             stream.on("data", e => {
                 if(e.type === "FILLED") {
-                    expect(stream.end()).resolves
+                    expect(stream.endOrder()).resolves
                 } else if(e.type === "CLOSED") {
                     expect(e).toStrictEqual({...event, type: "CLOSED"})
                     done();
@@ -109,8 +109,8 @@ describe("marketOrderFromSpotPrices", () => {
             let timer = undefined;
             stream.on("data", e => {
                 if(e.type === "FILLED") {
-                    stream.end()
-                    stream.end()
+                    stream.endOrder()
+                    stream.endOrder()
                 } else if(e.type === "ENDED") {
                     expect(timer).toBeUndefined();
                     timer = setTimeout(done, 50)
@@ -458,7 +458,7 @@ describe("stopOrderFromSpotPrices", () => {
             const event = {timestamp: 1};
             stream.on("data", e => {
                 if(e.type === "ACCEPTED") {
-                    expect(stream.cancel()).resolves
+                    expect(stream.cancelOrder()).resolves
                 } else if(e.type === "CANCELED") {
                     expect(e).toStrictEqual({...event, type: "CANCELED"})
                 } else if(e.type === "ENDED") {
@@ -475,8 +475,8 @@ describe("stopOrderFromSpotPrices", () => {
             let timer = undefined;
             stream.on("data", e => {
                 if(e.type === "ACCEPTED") {
-                    stream.cancel()
-                    stream.cancel()
+                    stream.cancelOrder()
+                    stream.cancelOrder()
                 } else if(e.type === "CANCELED") {
                     expect(timer).toBeUndefined();
                     timer = setTimeout(done, 50)
@@ -491,7 +491,7 @@ describe("stopOrderFromSpotPrices", () => {
             const event = {timestamp: 2, exit: 2, profitLoss: 4};
             stream.on("data", e => {
                 if(e.type === "FILLED") {
-                    expect(stream.close()).resolves
+                    expect(stream.closeOrder()).resolves
                 } else if(e.type === "CLOSED") {
                     expect(e).toStrictEqual({...event, type: "CLOSED"})
                 } else if(e.type === "ENDED") {
@@ -510,8 +510,8 @@ describe("stopOrderFromSpotPrices", () => {
             let timer = undefined;
             stream.on("data", e => {
                 if(e.type === "FILLED") {
-                    stream.close()
-                    stream.close()
+                    stream.closeOrder()
+                    stream.closeOrder()
                 } else if(e.type === "CLOSED") {
                     expect(timer).toBeUndefined();
                     timer = setTimeout(done, 50)
@@ -528,7 +528,7 @@ describe("stopOrderFromSpotPrices", () => {
             const event = {timestamp: 1};
             stream.on("data", e => {
                 if(e.type === "ACCEPTED") {
-                    expect(stream.end()).resolves
+                    expect(stream.endOrder()).resolves
                 } else if(e.type === "CANCELED") {
                     expect(e).toStrictEqual({...event, type: "CANCELED"})
                     done();
@@ -543,7 +543,7 @@ describe("stopOrderFromSpotPrices", () => {
             const event = {timestamp: 2, exit: 10, profitLoss: 6};
             stream.on("data", e => {
                 if(e.type === "FILLED") {
-                    expect(stream.end()).resolves
+                    expect(stream.endOrder()).resolves
                 } else if(e.type === "CLOSED") {
                     expect(e).toStrictEqual({...event, type: "CLOSED"})
                     done();
@@ -559,8 +559,8 @@ describe("stopOrderFromSpotPrices", () => {
             let timer = undefined;
             stream.on("data", e => {
                 if(e.type === "FILLED") {
-                    stream.end()
-                    stream.end()
+                    stream.endOrder()
+                    stream.endOrder()
                 } else if(e.type === "ENDED") {
                     expect(timer).toBeUndefined();
                     timer = setTimeout(done, 50)

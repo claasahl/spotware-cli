@@ -12,7 +12,7 @@ class LocalOrderStream<Props extends OS.OrderProps> extends OS.DebugOrderStream<
         return super.push(event)
     }
 
-    async close(): Promise<void> {
+    async closeOrder(): Promise<void> {
         if ("closed" === this.state.value) {
             return;
         } else if ("filled" === this.state.value) {
@@ -36,7 +36,7 @@ class LocalOrderStream<Props extends OS.OrderProps> extends OS.DebugOrderStream<
         }
         throw new Error(`order ${this.props.id} cannot be closed (${JSON.stringify(this.state)})`);
     }
-    async cancel(): Promise<void> {
+    async cancelOrder(): Promise<void> {
         if ("canceled" === this.state.value) {
             return;
         } else if (["created", "accepted"].includes(this.state.value)) {
@@ -47,11 +47,11 @@ class LocalOrderStream<Props extends OS.OrderProps> extends OS.DebugOrderStream<
         }
         throw new Error(`order ${this.props.id} cannot be canceled (${JSON.stringify(this.state)})`);
     }
-    async end(): Promise<void> {
+    async endOrder(): Promise<void> {
         if (["created", "accepted"].includes(this.state.value)) {
-            await this.cancel();
+            await this.cancelOrder();
         } else if (["filled"].includes(this.state.value)) {
-            await this.close();
+            await this.closeOrder();
         }
     }
 }

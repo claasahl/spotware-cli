@@ -260,17 +260,17 @@ describe("DebugOrderStream", () => {
         test("close", async () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            await expect(stream.close()).rejects.toThrow("not implemented")
+            await expect(stream.closeOrder()).rejects.toThrow("not implemented")
         })
         test("cancel", async () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            await expect(stream.cancel()).rejects.toThrow("not implemented")
+            await expect(stream.cancelOrder()).rejects.toThrow("not implemented")
         })
         test("end", async () => {
             const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
             const stream = new DebugOrderStream(props)
-            await expect(stream.end()).rejects.toThrow("not implemented")
+            await expect(stream.endOrder()).rejects.toThrow("not implemented")
         })
     })
 

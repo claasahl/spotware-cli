@@ -89,6 +89,6 @@ async function spotware() {
   await account.trendbars({symbol, period})
   const stream = await account.stopOrder({id: "1", symbol, tradeSide: "SELL", volume: 0.01, enter: 6500, expiresAt: Date.now() + 10000})
   // setTimeout(async () => console.log(await stream.end()), 5000)
-  setTimeout(async () => console.log(await stream.end()), 15000)
+  setTimeout(async () => console.log(await stream.endOrder()), 15000)
 }
 spotware;
