@@ -6,60 +6,6 @@ import { createMachine, StateMachine } from '@xstate/fsm';
 import * as OS from "../base/order"
 import * as B from "../base"
 
-class LocalOrderStream<Props extends OS.OrderProps> extends OS.DebugOrderStream<Props> {
-    private timestamp: B.Timestamp = 0;
-
-    push(event: OS.OrderEvent | null): boolean {
-        if(event) {
-            this.timestamp = event.timestamp;
-        }
-        return super.push(event)
-    }
-
-    async closeOrder(): Promise<void> {
-        if ("closed" === this.state.value) {
-            return;
-        } else if ("filled" === this.state.value) {
-            const { timestamp, price: exit, profitLoss } = await new Promise(resolve => {
-                const profitLossEvent = this.profitLossOrNull();
-                if(profitLossEvent) {
-                    return resolve(profitLossEvent);
-                }
-                const listener = (e: B.OrderEvent) => {
-                    if(e.type === "PROFITLOSS") {
-                        resolve(e);
-                        this.off("data", listener);
-                    }
-                } 
-                this.on("data", listener);
-            })
-            this.tryClose({ timestamp, exit, profitLoss })
-            if (this.state.matches("closed")) {
-                return;
-            }
-        }
-        throw new Error(`order ${this.props.id} cannot be closed (${JSON.stringify(this.state)})`);
-    }
-    async cancelOrder(): Promise<void> {
-        if ("canceled" === this.state.value) {
-            return;
-        } else if (["created", "accepted"].includes(this.state.value)) {
-            this.tryCancel({ timestamp: this.timestamp })
-            if (this.state.matches("canceled")) {
-                return;
-            }
-        }
-        throw new Error(`order ${this.props.id} cannot be canceled (${JSON.stringify(this.state)})`);
-    }
-    async endOrder(): Promise<void> {
-        if (["created", "accepted"].includes(this.state.value)) {
-            await this.cancelOrder();
-        } else if (["filled"].includes(this.state.value)) {
-            await this.closeOrder();
-        }
-    }
-}
-
 type Context = {}
 
 type Event =
