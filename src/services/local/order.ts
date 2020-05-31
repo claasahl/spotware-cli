@@ -264,12 +264,10 @@ async function buy<Props extends B.OrderProps>(props: Props, spots: B.SpotPrices
     const exitCondition: Condition = e => {
         if(e.type !== "BID_PRICE_CHANGED") {
             return false;
-        } else if(props.stopLoss) {
-            return props.stopLoss >= e.bid;
-        } else if(props.takeProfit) {
-            return props.takeProfit <= e.bid;
         }
-        return false;
+        const takeProfit = props.takeProfit ? props.takeProfit <= e.bid : false;
+        const stopLoss = props.stopLoss ? props.stopLoss >= e.bid : false;
+        return takeProfit || stopLoss;
     }
     return pipeline(
         spots,
