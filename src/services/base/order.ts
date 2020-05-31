@@ -74,9 +74,9 @@ export interface StopOrderProps extends CommonOrderProps {
 export type OrderProps = MarketOrderProps | StopOrderProps
 
 export interface OrderActions {
-  close(): Promise<OrderClosedEvent>;
-  cancel(): Promise<OrderCanceledEvent>;
-  end(): Promise<OrderEndedEvent>;
+  close(): Promise<void>;
+  cancel(): Promise<void>;
+  end(): Promise<void>;
 }
 
 export interface OrderStream<Props extends OrderProps> extends GenericReadable<OrderEvent>, OrderActions {
@@ -164,64 +164,6 @@ abstract class OrderStreamBase<Props extends OrderProps> extends Readable implem
     return super.push(event)
   }
 
-  private cachedEvent<T extends OrderEvent>(type: T["type"]): Promise<T> {
-    if (!orderEventTypes.includes(type)) {
-      const error = new Error(`event type '${type}' is not allowed. Only ${orderEventTypes.join(", ")} as allowed.`)
-      return Promise.reject(error);
-    }
-    const event = this.cachedEvents.get(type)
-    if (event && event.type === type) {
-      return Promise.resolve(event as T);
-    } else {
-      return new Promise(resolve => {
-        const isEvent = (event: OrderEvent) => {
-          if (event.type === type) {
-            resolve(event as T);
-            this.off("data", isEvent);
-          }
-        }
-        this.on("data", isEvent);
-        this.once("close", () => this.off("data", isEvent));
-      });
-    }
-  }
-
-  created(): Promise<OrderCreatedEvent> {
-    return this.cachedEvent("CREATED");
-  }
-
-  accepted(): Promise<OrderAcceptedEvent> {
-    return this.cachedEvent("ACCEPTED");
-  }
-
-  rejected(): Promise<OrderRejectedEvent> {
-    return this.cachedEvent("REJECTED");
-  }
-
-  filled(): Promise<OrderFilledEvent> {
-    return this.cachedEvent("FILLED");
-  }
-
-  profitLoss(): Promise<OrderProfitLossEvent> {
-    return this.cachedEvent("PROFITLOSS");
-  }
-
-  closed(): Promise<OrderClosedEvent> {
-    return this.cachedEvent("CLOSED");
-  }
-
-  canceled(): Promise<OrderCanceledEvent> {
-    return this.cachedEvent("CANCELED");
-  }
-
-  expired(): Promise<OrderExpiredEvent> {
-    return this.cachedEvent("EXPIRED");
-  }
-
-  ended(): Promise<OrderEndedEvent> {
-    return this.cachedEvent("ENDED");
-  }
-
   private cachedEventOrNull<T extends OrderEvent>(type: T["type"]): T | null {
     if (!orderEventTypes.includes(type)) {
       throw new Error(`event type '${type}' is not allowed. Only ${orderEventTypes.join(", ")} as allowed.`)
@@ -269,9 +211,9 @@ abstract class OrderStreamBase<Props extends OrderProps> extends Readable implem
     return this.cachedEventOrNull("ENDED");
   }
 
-  abstract close(): Promise<OrderClosedEvent>;
-  abstract cancel(): Promise<OrderCanceledEvent>;
-  abstract end(): Promise<OrderEndedEvent>;
+  abstract close(): Promise<void>;
+  abstract cancel(): Promise<void>;
+  abstract end(): Promise<void>;
 
   protected event(e: Event) {
     const oldState = this.state;
@@ -307,13 +249,13 @@ abstract class OrderStreamBase<Props extends OrderProps> extends Readable implem
 }
 export class DebugOrderStream<Props extends OrderProps> extends OrderStreamBase<Props> {
 
-  async close(): Promise<OrderClosedEvent> {
+  async close(): Promise<void> {
     throw new Error("not implemented");
   }
-  async cancel(): Promise<OrderCanceledEvent> {
+  async cancel(): Promise<void> {
     throw new Error("not implemented");
   }
-  async end(): Promise<OrderEndedEvent> {
+  async end(): Promise<void> {
     throw new Error("not implemented");
   }
 

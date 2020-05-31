@@ -12,28 +12,47 @@ class LocalOrderStream<Props extends OS.OrderProps> extends OS.DebugOrderStream<
         return super.push(event)
     }
 
-    async close(): Promise<OS.OrderClosedEvent> {
-        const { timestamp, price: exit, profitLoss } = await this.profitLoss();
-        this.tryClose({ timestamp, exit, profitLoss })
-        if (this.state.matches("closed")) {
-            return this.closed()
+    async close(): Promise<void> {
+        if ("closed" === this.state.value) {
+            return;
+        } else if ("filled" === this.state.value) {
+            const { timestamp, price: exit, profitLoss } = await new Promise(resolve => {
+                const profitLossEvent = this.profitLossOrNull();
+                if(profitLossEvent) {
+                    return resolve(profitLossEvent);
+                }
+                const listener = (e: B.OrderEvent) => {
+                    if(e.type === "PROFITLOSS") {
+                        resolve(e);
+                        this.off("data", listener);
+                    }
+                } 
+                this.on("data", listener);
+            })
+            this.tryClose({ timestamp, exit, profitLoss })
+            if (this.state.matches("closed")) {
+                return;
+            }
         }
         throw new Error(`order ${this.props.id} cannot be closed (${JSON.stringify(this.state)})`);
     }
-    async cancel(): Promise<OS.OrderCanceledEvent> {
-        this.tryCancel({ timestamp: this.timestamp })
-        if (this.state.matches("canceled")) {
-            return this.canceled();
+    async cancel(): Promise<void> {
+        if ("canceled" === this.state.value) {
+            return;
+        } else if (["created", "accepted"].includes(this.state.value)) {
+            this.tryCancel({ timestamp: this.timestamp })
+            if (this.state.matches("canceled")) {
+                return;
+            }
         }
         throw new Error(`order ${this.props.id} cannot be canceled (${JSON.stringify(this.state)})`);
     }
-    async end(): Promise<OS.OrderEndedEvent> {
+    async end(): Promise<void> {
         if (["created", "accepted"].includes(this.state.value)) {
             await this.cancel();
         } else if (["filled"].includes(this.state.value)) {
             await this.close();
         }
-        return this.ended()
     }
 }
 

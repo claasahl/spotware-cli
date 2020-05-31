@@ -18,34 +18,33 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream
         this.orderId = extras.orderId;
     }
 
-    async close(): Promise<B.OrderClosedEvent> {
+    async close(): Promise<void> {
         if (["filled"].includes(this.state.value)) {
             const ctidTraderAccountId = this.ctidTraderAccountId;
             const positionId = this.positionId;
             const volume = this.props.volume * this.lotSize;
             await this.client.closePosition({ctidTraderAccountId, positionId, volume})
-            return this.closed();
+            return;
         }
         throw new Error(`order ${this.props.id} cannot be closed (${JSON.stringify(this.state)})`);
     }
 
-    async cancel(): Promise<B.OrderCanceledEvent> {
+    async cancel(): Promise<void> {
         if (["created", "accepted"].includes(this.state.value)) {
             const ctidTraderAccountId = this.ctidTraderAccountId;
             const orderId = this.orderId;
             await this.client.cancelOrder({ctidTraderAccountId, orderId})
-            return this.canceled()
+            return;
         }
         throw new Error(`order ${this.props.id} cannot be canceled (${JSON.stringify(this.state)})`);
     }
     
-    async end(): Promise<B.OrderEndedEvent> {
+    async end(): Promise<void> {
         if (["created", "accepted"].includes(this.state.value)) {
             await this.cancel();
         } else if (["filled"].includes(this.state.value)) {
             await this.close();
         }
-        return this.ended()
     }
 }
 
