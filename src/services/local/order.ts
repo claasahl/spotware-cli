@@ -16,13 +16,22 @@ class LocalOrderStream<Props extends OS.OrderProps> extends OS.DebugOrderStream<
         if ("closed" === this.state.value) {
             return;
         } else if ("filled" === this.state.value) {
-            const profitLossEvent = this.profitLossOrNull();
-            if(profitLossEvent) {
-                const { timestamp, price: exit, profitLoss } = profitLossEvent;
-                this.tryClose({ timestamp, exit, profitLoss })
-                if (this.state.matches("closed")) {
-                    return;
+            const { timestamp, price: exit, profitLoss } = await new Promise(resolve => {
+                const profitLossEvent = this.profitLossOrNull();
+                if(profitLossEvent) {
+                    return resolve(profitLossEvent);
                 }
+                const listener = (e: B.OrderEvent) => {
+                    if(e.type === "PROFITLOSS") {
+                        resolve(e);
+                        this.off("data", listener);
+                    }
+                } 
+                this.on("data", listener);
+            })
+            this.tryClose({ timestamp, exit, profitLoss })
+            if (this.state.matches("closed")) {
+                return;
             }
         }
         throw new Error(`order ${this.props.id} cannot be closed (${JSON.stringify(this.state)})`);
