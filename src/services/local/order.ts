@@ -1,6 +1,7 @@
 import assert from "assert";
 import { Transform, TransformCallback, pipeline } from "stream";
 import debug from "debug";
+import { createMachine, StateMachine } from '@xstate/fsm';
 
 import * as OS from "../base/order"
 import * as B from "../base"
@@ -59,6 +60,63 @@ class LocalOrderStream<Props extends OS.OrderProps> extends OS.DebugOrderStream<
     }
 }
 
+type Context = {}
+
+type Event =
+  | { type: 'CREATE', event: B.OrderCreatedEvent }
+  | { type: 'ACCEPT', event: B.OrderAcceptedEvent }
+  | { type: 'REJECT', event: B.OrderRejectedEvent }
+  | { type: 'FILL', event: B.OrderFilledEvent }
+  | { type: 'PROFITLOSS', event: B.OrderProfitLossEvent }
+  | { type: 'CLOSE', event: B.OrderClosedEvent }
+  | { type: 'CANCEL', event: B.OrderCanceledEvent }
+  | { type: 'EXPIRE', event: B.OrderExpiredEvent }
+
+type State =
+  | { value: 'uninitialized', context: {} }
+  | { value: 'created', context: {} }
+  | { value: 'accepted', context: {} }
+  | { value: 'rejected', context: {} }
+  | { value: 'filled', context: {} }
+  | { value: 'closed', context: {} }
+  | { value: 'canceled', context: {} }
+  | { value: 'expired', context: {} }
+
+const machine = createMachine<Context, Event, State>({
+  initial: "uninitialized",
+  states: {
+    uninitialized: {
+      on: {
+        CREATE: 'created'
+      }
+    },
+    created: {
+      on: {
+        ACCEPT: 'accepted',
+        REJECT: 'rejected',
+        CANCEL: 'canceled'
+      }
+    },
+    accepted: {
+      on: {
+        FILL: 'filled',
+        CANCEL: 'canceled',
+        EXPIRE: 'expired'
+      }
+    },
+    filled: {
+      on: {
+        CLOSE: 'closed',
+        PROFITLOSS: 'filled'
+      }
+    },
+    rejected: {},
+    closed: {},
+    canceled: {},
+    expired: {},
+  }
+});
+
 type Condition = (e: B.SpotPricesEvent) => boolean;
 
 class ToBuyOrder<Props extends B.OrderProps> extends Transform implements B.OrderStream<Props> {
@@ -68,6 +126,9 @@ class ToBuyOrder<Props extends B.OrderProps> extends Transform implements B.Orde
     private readonly log: debug.Debugger;
     private bidPrice: B.BidPriceChangedEvent | null = null;
     private filled: B.OrderFilledEvent | null = null;
+    private profitLoss: B.OrderProfitLossEvent | null = null;
+    private state: StateMachine.State<Context, Event, State>;
+    private timestamp: B.Timestamp = 0;
   
     constructor(props: Props, entryCondition: Condition, exitCondition: Condition) {
       super({objectMode: true});
@@ -75,20 +136,55 @@ class ToBuyOrder<Props extends B.OrderProps> extends Transform implements B.Orde
       this.entryCondition = entryCondition;
       this.exitCondition = exitCondition;
       this.log = debug("order").extend(props.id);
+      this.state = machine.initialState
     }
-    closeOrder(): Promise<void> {
-        throw new Error("Method not implemented.");
+
+    async closeOrder(): Promise<void> {
+        if ("closed" === this.state.value) {
+            return;
+        } else if ("filled" === this.state.value) {
+            const { timestamp, price: exit, profitLoss } = await new Promise(resolve => {
+                if(this.profitLoss) {
+                    return resolve(this.profitLoss);
+                }
+                const listener = (e: B.OrderEvent) => {
+                    if(e.type === "PROFITLOSS") {
+                        resolve(e);
+                        this.off("data", listener);
+                    }
+                } 
+                this.on("data", listener);
+            })
+            this.event({type: "CLOSE", event: { type: "CLOSED", timestamp, exit, profitLoss }})
+            if (this.state.matches("closed")) {
+                return;
+            }
+        }
+        throw new Error(`order ${this.props.id} cannot be closed (${JSON.stringify(this.state)})`);
     }
-    cancelOrder(): Promise<void> {
-        throw new Error("Method not implemented.");
+    async cancelOrder(): Promise<void> {
+        if ("canceled" === this.state.value) {
+            return;
+        } else if (["created", "accepted"].includes(this.state.value)) {
+            this.event({type: "CANCEL", event: { type: "CANCELED", timestamp: this.timestamp }})
+            if (this.state.matches("canceled")) {
+                return;
+            }
+        }
+        throw new Error(`order ${this.props.id} cannot be canceled (${JSON.stringify(this.state)})`);
     }
-    endOrder(): Promise<void> {
-        throw new Error("Method not implemented.");
+    async endOrder(): Promise<void> {
+        if (["created", "accepted"].includes(this.state.value)) {
+            await this.cancelOrder();
+        } else if (["filled"].includes(this.state.value)) {
+            await this.closeOrder();
+        }
     }
   
     push(event: B.OrderEvent | null): boolean {
       if (event) {
         this.log("%j", event);
+        this.timestamp = event.timestamp;
       }
       return super.push(event)
     }
@@ -106,12 +202,12 @@ class ToBuyOrder<Props extends B.OrderProps> extends Transform implements B.Orde
 
     private tryToFillOrder(e: B.AskPriceChangedEvent) {
         const { timestamp } = e;
-        this.push({ type: "CREATED", timestamp })
-        this.push({ type: "ACCEPTED", timestamp })
+        this.event({ type: "CREATE", event: { type: "CREATED", timestamp }})
+        this.event({ type: "ACCEPT", event: { type: "ACCEPTED", timestamp }})
         if (this.entryCondition(e)) {
             const { timestamp, ask: entry } = e;
             this.filled = { type: "FILLED", timestamp, entry }
-            this.push({ type: "FILLED", timestamp, entry })
+            this.event({ type: "FILL", event: { type: "FILLED", timestamp, entry }})
             if(this.bidPrice) {
                 this.tryToCloseOrder(this.bidPrice, this.filled);
                 this.bidPrice = null; // just needed for faster profitLoss / close events
@@ -122,14 +218,45 @@ class ToBuyOrder<Props extends B.OrderProps> extends Transform implements B.Orde
     private tryToCloseOrder(e: B.BidPriceChangedEvent, filled: B.OrderFilledEvent) {
         const { timestamp, bid: price } = e
         const profitLoss = Math.round((price - filled.entry!) * this.props.volume * 100) / 100;
-        this.push({ type: "PROFITLOSS", timestamp, price, profitLoss });
+        this.profitLoss = { type: "PROFITLOSS", timestamp, price, profitLoss };
+        this.event({ type: "PROFITLOSS", event: { type: "PROFITLOSS", timestamp, price, profitLoss }});
 
         if (this.exitCondition(e)) {
-            this.push({ type: "CLOSED", timestamp, exit: price, profitLoss })
-            this.push({ type: "ENDED", timestamp, exit: price, profitLoss })
-            this.push(null)
+            this.event({ type: "CLOSE", event: { type: "CLOSED", timestamp, exit: price, profitLoss }})
         }
     }
+
+    private event(e: Event) {
+        const oldState = this.state;
+        const newState = machine.transition(oldState, e);
+        this.state = newState;
+    
+        if (newState.changed && e.type === "CREATE") {
+          this.push(e.event)
+        } else if (newState.changed && e.type === "ACCEPT") {
+          this.push(e.event)
+        } else if (newState.changed && e.type === "FILL") {
+          this.push(e.event)
+        } else if (newState.value === "filled" && e.type === "PROFITLOSS") {
+          this.push(e.event)
+        } else if (newState.changed && e.type === "REJECT") {
+          this.push(e.event)
+          this.push({ ...e.event, type: "ENDED" })
+          this.push(null)
+        } else if (newState.changed && e.type === "CLOSE") {
+          this.push(e.event)
+          this.push({ ...e.event, type: "ENDED" })
+          this.push(null)
+        } else if (newState.changed && e.type === "CANCEL") {
+          this.push(e.event)
+          this.push({ ...e.event, type: "ENDED" })
+          this.push(null)
+        } else if (newState.changed && e.type === "EXPIRE") {
+          this.push(e.event)
+          this.push({ ...e.event, type: "ENDED" })
+          this.push(null)
+        }
+      }
 }
 
 async function buy<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream, entryCondition: Condition): Promise<OS.OrderStream<Props>> {
