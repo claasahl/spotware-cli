@@ -180,21 +180,21 @@ describe("marketOrderFromSpotPrices", () => {
             spots.tryBid({ timestamp: 0, bid: 1 })
             spots.tryAsk({ timestamp: 1, ask: 5 })
         })
-        test("estimate profitLoss (1)", async done => {
+        test("estimate loss", async done => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await marketOrderFromSpotPrices({ id: "1", symbol, tradeSide: "BUY", volume: 2, spots })
-            const event = { type: "PROFITLOSS", timestamp: 0, price: 1, profitLoss: -8 }
+            const event = { type: "PROFITLOSS", timestamp: 2, price: 1, profitLoss: -8 }
             stream.on("data", e => {
                 if(e.type === "PROFITLOSS") {
                     expect(e).toStrictEqual(event);
                     done();
                 }
             })
-            spots.tryBid({ timestamp: 0, bid: 1 })
             spots.tryAsk({ timestamp: 1, ask: 5 })
+            spots.tryBid({ timestamp: 2, bid: 1 })
         })
-        test("estimate profitLoss (2)", async done => {
+        test("estimate profit", async done => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await marketOrderFromSpotPrices({ id: "1", symbol, tradeSide: "BUY", volume: 2, spots })
@@ -343,21 +343,21 @@ describe("marketOrderFromSpotPrices", () => {
             spots.tryAsk({ timestamp: 0, ask: 1 })
             spots.tryBid({ timestamp: 1, bid: 5 })
         })
-        test("estimate profitLoss (1)", async done => {
+        test("estimate profit", async done => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await marketOrderFromSpotPrices({ id: "1", symbol, tradeSide: "SELL", volume: 2, spots })
-            const event = { type: "PROFITLOSS", timestamp: 0, price: 1, profitLoss: 8 }
+            const event = { type: "PROFITLOSS", timestamp: 2, price: 1, profitLoss: 8 }
             stream.on("data", e => {
                 if(e.type === "PROFITLOSS") {
                     expect(e).toStrictEqual(event);
                     done()
                 }
             })
-            spots.tryAsk({ timestamp: 0, ask: 1 })
             spots.tryBid({ timestamp: 1, bid: 5 })
+            spots.tryAsk({ timestamp: 2, ask: 1 })
         })
-        test("estimate profitLoss (2)", async done => {
+        test("estimate loss", async done => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await marketOrderFromSpotPrices({ id: "1", symbol, tradeSide: "SELL", volume: 2, spots })
@@ -630,22 +630,21 @@ describe("stopOrderFromSpotPrices", () => {
             spots.tryBid({ timestamp: 0, bid: 1 })
             spots.tryAsk({ timestamp: 1, ask: 6 })
         })
-        test("estimate profitLoss (1)", async done => {
+        test("estimate loss", async done => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await stopOrderFromSpotPrices({ id: "1", symbol, tradeSide: "BUY", volume: 2, enter: 6, spots })
-            const event = { type: "PROFITLOSS", timestamp: 0, price: 1, profitLoss: -10 }
+            const event = { type: "PROFITLOSS", timestamp: 3, price: 1, profitLoss: -10 }
             stream.on("data", e => {
                 if(e.type === "PROFITLOSS") {
                     expect(e).toStrictEqual(event);
                     done()
                 }
             })
-            spots.tryBid({ timestamp: 0, bid: 1 })
-            spots.tryAsk({ timestamp: 1, ask: 5 })
             spots.tryAsk({ timestamp: 2, ask: 6 })
+            spots.tryBid({ timestamp: 3, bid: 1 })
         })
-        test("estimate profitLoss (2)", async done => {
+        test("estimate profit", async done => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await stopOrderFromSpotPrices({ id: "1", symbol, tradeSide: "BUY", volume: 2, enter: 6, spots })
@@ -794,22 +793,21 @@ describe("stopOrderFromSpotPrices", () => {
             spots.tryAsk({ timestamp: 0, ask: 1 })
             spots.tryBid({ timestamp: 1, bid: 4 })
         })
-        test("estimate profitLoss (1)", async done => {
+        test("estimate profit", async done => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await stopOrderFromSpotPrices({ id: "1", symbol, tradeSide: "SELL", volume: 2, enter: 4, spots })
-            const event = { type: "PROFITLOSS", timestamp: 0, price: 1, profitLoss: 6 }
+            const event = { type: "PROFITLOSS", timestamp: 3, price: 1, profitLoss: 6 }
             stream.on("data", e => {
                 if(e.type === "PROFITLOSS") {
                     expect(e).toStrictEqual(event);
                     done()
                 }
             })
-            spots.tryAsk({ timestamp: 0, ask: 1 })
-            spots.tryBid({ timestamp: 1, bid: 5 })
             spots.tryBid({ timestamp: 2, bid: 4 })
+            spots.tryAsk({ timestamp: 3, ask: 1 })
         })
-        test("estimate profitLoss (2)", async done => {
+        test("estimate loss", async done => {
             const symbol = Symbol.for("abc")
             const spots = new DebugSpotPricesStream({ symbol })
             const stream = await stopOrderFromSpotPrices({ id: "1", symbol, tradeSide: "SELL", volume: 2, enter: 4, spots })
