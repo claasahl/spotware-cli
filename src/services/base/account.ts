@@ -72,40 +72,6 @@ abstract class AccountStreamBase extends Readable implements AccountStream {
     return tmp;
   }
 
-  private cachedEvent<T extends AccountEvent>(type: T["type"]): Promise<T> {
-    if (!accountEventTypes.includes(type)) {
-      const error = new Error(`event type '${type}' is not allowed. Only ${accountEventTypes.join(", ")} as allowed.`)
-      return Promise.reject(error);
-    }
-    const event = this.cachedEvents.get(type)
-    if (event && event.type === type) {
-      return Promise.resolve(event as T);
-    } else {
-      return new Promise(resolve => {
-        const isEvent = (event: AccountEvent) => {
-          if (event.type === type) {
-            resolve(event as T);
-            this.off("data", isEvent);
-          }
-        }
-        this.on("data", isEvent);
-        this.once("close", () => this.off("data", isEvent));
-      });
-    }
-  }
-
-  balance(): Promise<BalanceChangedEvent> {
-    return this.cachedEvent("BALANCE_CHANGED");
-  }
-
-  equity(): Promise<EquityChangedEvent> {
-    return this.cachedEvent("EQUITY_CHANGED");
-  }
-
-  transaction(): Promise<TransactionEvent> {
-    return this.cachedEvent("TRANSACTION");
-  }
-
   private cachedEventOrNull<T extends AccountEvent>(type: T["type"]): T | null {
     if (!accountEventTypes.includes(type)) {
       throw new Error(`event type '${type}' is not allowed. Only ${accountEventTypes.join(", ")} as allowed.`)

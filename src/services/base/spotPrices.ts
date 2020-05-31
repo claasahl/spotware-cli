@@ -61,40 +61,6 @@ abstract class SpotPricesStreamBase extends Readable implements SpotPricesStream
     return super.push(event)
   }
 
-  private cachedEvent<T extends SpotPricesEvent>(type: T["type"]): Promise<T> {
-    if (!spotPricesEventTypes.includes(type)) {
-      const error = new Error(`event type '${type}' is not allowed. Only ${spotPricesEventTypes.join(", ")} as allowed.`)
-      return Promise.reject(error);
-    }
-    const event = this.cachedEvents.get(type)
-    if (event && event.type === type) {
-      return Promise.resolve(event as T);
-    } else {
-      return new Promise(resolve => {
-        const isEvent = (event: SpotPricesEvent) => {
-          if (event.type === type) {
-            resolve(event as T);
-            this.off("data", isEvent);
-          }
-        }
-        this.on("data", isEvent);
-        this.once("close", () => this.off("data", isEvent));
-      });
-    }
-  }
-
-  ask(): Promise<AskPriceChangedEvent> {
-    return this.cachedEvent("ASK_PRICE_CHANGED");
-  }
-
-  bid(): Promise<BidPriceChangedEvent> {
-    return this.cachedEvent("BID_PRICE_CHANGED");
-  }
-
-  price(): Promise<PriceChangedEvent> {
-    return this.cachedEvent("PRICE_CHANGED");
-  }
-
   private cachedEventOrNull<T extends SpotPricesEvent>(type: T["type"]): T | null {
     if (!spotPricesEventTypes.includes(type)) {
       throw new Error(`event type '${type}' is not allowed. Only ${spotPricesEventTypes.join(", ")} as allowed.`)
