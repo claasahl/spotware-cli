@@ -134,6 +134,6 @@ export class DebugAccountStream extends AccountStreamBase {
   }
 
   tryOrder(e: OrderEvents): void {
-    this.push({timestamp: e.timestamp, type: e.type, ...e});
+    this.push(e);
   }
 }
