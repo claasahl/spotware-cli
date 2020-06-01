@@ -74,9 +74,9 @@ export interface StopOrderProps extends CommonOrderProps {
 export type OrderProps = MarketOrderProps | StopOrderProps
 
 export interface OrderActions {
-  closeOrder(): Promise<void>;
-  cancelOrder(): Promise<void>;
-  endOrder(): Promise<void>;
+  closeOrder(): void;
+  cancelOrder(): void;
+  endOrder(): void;
 }
 
 export interface OrderStream<Props extends OrderProps> extends GenericReadable<OrderEvent>, OrderActions {
@@ -211,9 +211,9 @@ abstract class OrderStreamBase<Props extends OrderProps> extends Readable implem
     return this.cachedEventOrNull("ENDED");
   }
 
-  abstract closeOrder(): Promise<void>;
-  abstract cancelOrder(): Promise<void>;
-  abstract endOrder(): Promise<void>;
+  abstract closeOrder(): void;
+  abstract cancelOrder(): void;
+  abstract endOrder(): void;
 
   protected event(e: Event) {
     const oldState = this.state;
@@ -249,13 +249,13 @@ abstract class OrderStreamBase<Props extends OrderProps> extends Readable implem
 }
 export class DebugOrderStream<Props extends OrderProps> extends OrderStreamBase<Props> {
 
-  async closeOrder(): Promise<void> {
+  closeOrder(): void {
     throw new Error("not implemented");
   }
-  async cancelOrder(): Promise<void> {
+  cancelOrder(): void {
     throw new Error("not implemented");
   }
-  async endOrder(): Promise<void> {
+  endOrder(): void {
     throw new Error("not implemented");
   }
 

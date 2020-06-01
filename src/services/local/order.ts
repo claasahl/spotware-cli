@@ -85,11 +85,11 @@ class ToBuyOrder<Props extends B.OrderProps> extends Transform implements B.Orde
       this.state = machine.initialState
     }
 
-    async closeOrder(): Promise<void> {
+    closeOrder(): void {
         if ("closed" === this.state.value) {
             return;
         } else if ("filled" === this.state.value) {
-            const { timestamp, price: exit, profitLoss } = await new Promise(resolve => {
+            new Promise<B.OrderProfitLossEvent>(resolve => {
                 if(this.profitLoss) {
                     return resolve(this.profitLoss);
                 }
@@ -100,15 +100,14 @@ class ToBuyOrder<Props extends B.OrderProps> extends Transform implements B.Orde
                     }
                 } 
                 this.on("data", listener);
+            }).then(({ timestamp, price: exit, profitLoss }) => {
+              this.event({type: "CLOSE", event: { type: "CLOSED", timestamp, exit, profitLoss }})
             })
-            this.event({type: "CLOSE", event: { type: "CLOSED", timestamp, exit, profitLoss }})
-            if (this.state.matches("closed")) {
-                return;
-            }
+            return;
         }
         throw new Error(`order ${this.props.id} cannot be closed (${JSON.stringify(this.state)})`);
     }
-    async cancelOrder(): Promise<void> {
+    cancelOrder(): void {
         if ("canceled" === this.state.value) {
             return;
         } else if (["created", "accepted"].includes(this.state.value)) {
@@ -119,11 +118,11 @@ class ToBuyOrder<Props extends B.OrderProps> extends Transform implements B.Orde
         }
         throw new Error(`order ${this.props.id} cannot be canceled (${JSON.stringify(this.state)})`);
     }
-    async endOrder(): Promise<void> {
+    endOrder(): void {
         if (["created", "accepted"].includes(this.state.value)) {
-            await this.cancelOrder();
+            this.cancelOrder();
         } else if (["filled"].includes(this.state.value)) {
-            await this.closeOrder();
+            this.closeOrder();
         }
     }
   
