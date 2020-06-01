@@ -64,7 +64,7 @@ export function fromLogFiles(props: B.SpotPricesProps & { paths: fs.PathLike[] }
 }
 const transformOptions: TransformOptions = {objectMode: true}
 class ChunkToSpotPrices extends Transform implements B.SpotPricesStream {
-  props: B.SpotPricesProps;
+  readonly props: B.SpotPricesProps;
   private readonly cachedEvents: Map<B.SpotPricesEvent["type"], B.SpotPricesEvent>;
   private readonly filter: (chunk: string) => boolean;
   private readonly log: debug.Debugger;

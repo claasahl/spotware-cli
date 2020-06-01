@@ -205,9 +205,7 @@ describe("fromNothing", () => {
                 }
             })
 
-            spotPrices.tryAsk({ timestamp: 1, ask: 10 })
             spotPrices.tryBid({ timestamp: 2, bid: 15 })
-            spotPrices.tryAsk({ timestamp: 3, ask: 12 })
             spotPrices.tryAsk({ timestamp: 4, ask: 8 })
         })
     })
@@ -243,7 +241,6 @@ describe("fromNothing", () => {
             stream.stopOrder({ id: "346", symbol, tradeSide: "BUY", volume: 4, enter: 3, takeProfit: 18 })
             const events = [
                 expect.anything(),
-                { type: "EQUITY_CHANGED", timestamp: 2, equity: 520 }, // TODO why is this duplicated?
                 { type: "EQUITY_CHANGED", timestamp: 2, equity: 520 },
                 { type: "EQUITY_CHANGED", timestamp: 3, equity: 508 },
                 { type: "EQUITY_CHANGED", timestamp: 4, equity: 532 },

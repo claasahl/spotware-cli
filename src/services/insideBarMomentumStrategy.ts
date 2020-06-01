@@ -32,9 +32,9 @@ async function placeOrder(props: PlaceOrderProps): Promise<B.OrderStream<B.StopO
   const order = await account.stopOrder(rest);
   const guard = (e: B.OrderProfitLossEvent) => {
     if (props.tradeSide === "BUY" && (e.price >= props.takeProfit || e.price <= props.stopLoss)) {
-      order.close();
+      order.closeOrder();
     } else if (props.tradeSide === "SELL" && (e.price <= props.takeProfit || e.price >= props.stopLoss)) {
-      order.close();
+      order.closeOrder();
     }
   }
   order.on("data", e => {
@@ -47,7 +47,7 @@ async function placeOrder(props: PlaceOrderProps): Promise<B.OrderStream<B.StopO
 
 async function endLastOrder(lastOrder?: B.OrderStream<B.StopOrderProps>): Promise<void> {
   if (lastOrder) {
-    await lastOrder.end();
+    await lastOrder.endOrder();
   }
 }
 
