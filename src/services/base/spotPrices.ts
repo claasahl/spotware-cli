@@ -29,7 +29,7 @@ export interface SpotPricesProps {
 }
 
 export interface SpotPricesActions {
-  trendbars(props: SpotPricesSimpleTrendbarsProps): Promise<TrendbarsStream>;
+  trendbars(props: SpotPricesSimpleTrendbarsProps): TrendbarsStream;
 }
 
 export interface SpotPricesStream extends GenericReadable<SpotPricesEvent>, SpotPricesActions {
@@ -84,11 +84,11 @@ abstract class SpotPricesStreamBase extends Readable implements SpotPricesStream
     return this.cachedEventOrNull("PRICE_CHANGED");
   }
 
-  abstract trendbars(props: SpotPricesSimpleTrendbarsProps): Promise<TrendbarsStream>;
+  abstract trendbars(props: SpotPricesSimpleTrendbarsProps): TrendbarsStream;
 }
 
 export class DebugSpotPricesStream extends SpotPricesStreamBase {
-  async trendbars(_props: SpotPricesSimpleTrendbarsProps): Promise<TrendbarsStream> {
+  trendbars(_props: SpotPricesSimpleTrendbarsProps): TrendbarsStream {
     throw new Error("not implemented");
   }
 

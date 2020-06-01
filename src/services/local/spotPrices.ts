@@ -117,7 +117,7 @@ class ChunkToSpotPrices extends Transform implements B.SpotPricesStream {
     }
   }
 
-  async trendbars(_props: B.SpotPricesSimpleTrendbarsProps): Promise<B.TrendbarsStream> {
+  trendbars(_props: B.SpotPricesSimpleTrendbarsProps): B.TrendbarsStream {
     throw new Error("not implemented");
   }
 
