@@ -204,7 +204,7 @@ class ToBuyOrder<Props extends B.OrderProps> extends Transform implements B.Orde
       }
 }
 
-async function buy<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream, entryCondition: Condition): Promise<OS.OrderStream<Props>> {
+function buy<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream, entryCondition: Condition): OS.OrderStream<Props> {
     assert.strictEqual(props.tradeSide, "BUY");
     const exitCondition: Condition = e => {
         if(e.type !== "BID_PRICE_CHANGED") {
@@ -242,30 +242,29 @@ class ToSellOrder<Props extends B.OrderProps> extends Transform implements B.Ord
       this.state = machine.initialState
     }
 
-    async closeOrder(): Promise<void> {
+    closeOrder(): void {
         if ("closed" === this.state.value) {
             return;
         } else if ("filled" === this.state.value) {
-            const { timestamp, price: exit, profitLoss } = await new Promise(resolve => {
-                if(this.profitLoss) {
-                    return resolve(this.profitLoss);
-                }
-                const listener = (e: B.OrderEvent) => {
-                    if(e.type === "PROFITLOSS") {
-                        resolve(e);
-                        this.off("data", listener);
-                    }
-                } 
-                this.on("data", listener);
-            })
+          new Promise<B.OrderProfitLossEvent>(resolve => {
+              if(this.profitLoss) {
+                  return resolve(this.profitLoss);
+              }
+              const listener = (e: B.OrderEvent) => {
+                  if(e.type === "PROFITLOSS") {
+                      resolve(e);
+                      this.off("data", listener);
+                  }
+              } 
+              this.on("data", listener);
+          }).then(({ timestamp, price: exit, profitLoss }) => {
             this.event({type: "CLOSE", event: { type: "CLOSED", timestamp, exit, profitLoss }})
-            if (this.state.matches("closed")) {
-                return;
-            }
+          })
+          return;
         }
         throw new Error(`order ${this.props.id} cannot be closed (${JSON.stringify(this.state)})`);
     }
-    async cancelOrder(): Promise<void> {
+    cancelOrder(): void {
         if ("canceled" === this.state.value) {
             return;
         } else if (["created", "accepted"].includes(this.state.value)) {
@@ -276,11 +275,11 @@ class ToSellOrder<Props extends B.OrderProps> extends Transform implements B.Ord
         }
         throw new Error(`order ${this.props.id} cannot be canceled (${JSON.stringify(this.state)})`);
     }
-    async endOrder(): Promise<void> {
+    endOrder(): void {
         if (["created", "accepted"].includes(this.state.value)) {
-            await this.cancelOrder();
+            this.cancelOrder();
         } else if (["filled"].includes(this.state.value)) {
-            await this.closeOrder();
+            this.closeOrder();
         }
     }
   
@@ -362,7 +361,7 @@ class ToSellOrder<Props extends B.OrderProps> extends Transform implements B.Ord
       }
 }
 
-async function sell<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream, entryCondition: Condition): Promise<OS.OrderStream<Props>> {
+function sell<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream, entryCondition: Condition): OS.OrderStream<Props> {
     assert.strictEqual(props.tradeSide, "SELL");
     const exitCondition: Condition = e => {
         if(e.type !== "ASK_PRICE_CHANGED") {
@@ -379,7 +378,7 @@ async function sell<Props extends B.OrderProps>(props: Props, spots: B.SpotPrice
       );
 }
 
-export function marketOrderFromSpotPrices(props: Omit<B.MarketOrderProps & { spots: B.SpotPricesStream }, "orderType">): Promise<OS.OrderStream<B.MarketOrderProps>> {
+export function marketOrderFromSpotPrices(props: Omit<B.MarketOrderProps & { spots: B.SpotPricesStream }, "orderType">): OS.OrderStream<B.MarketOrderProps> {
     const { spots, ...rest } = props;
     if (props.tradeSide === "BUY") {
         return buy({ ...rest, orderType: "MARKET" }, spots, () => true)
@@ -387,7 +386,7 @@ export function marketOrderFromSpotPrices(props: Omit<B.MarketOrderProps & { spo
     return sell({ ...rest, orderType: "MARKET" }, spots, () => true)
 }
 
-export function stopOrderFromSpotPrices(props: Omit<B.StopOrderProps & { spots: B.SpotPricesStream }, "orderType">): Promise<OS.OrderStream<B.StopOrderProps>> {
+export function stopOrderFromSpotPrices(props: Omit<B.StopOrderProps & { spots: B.SpotPricesStream }, "orderType">): OS.OrderStream<B.StopOrderProps> {
     const { spots, ...rest } = props;
     if (props.tradeSide === "BUY") {
         return buy({ ...rest, orderType: "STOP" }, spots, e => e.type === "ASK_PRICE_CHANGED" && e.ask >= props.enter)

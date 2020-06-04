@@ -133,7 +133,7 @@ export class ToTrendbars extends Transform implements TrendbarsStream {
   }
 }
 
-export async function toTrendbars(props: TrendbarsProps & { spots: SpotPricesStream }): Promise<TrendbarsStream> {
+export function toTrendbars(props: TrendbarsProps & { spots: SpotPricesStream }): TrendbarsStream {
   const { spots, ...originalProps } = props;
   return pipeline(
       spots,
