@@ -34,9 +34,6 @@ export interface SpotPricesActions {
 
 export interface SpotPricesStream extends GenericReadable<SpotPricesEvent>, SpotPricesActions {
   readonly props: SpotPricesProps;
-  askOrNull(): AskPriceChangedEvent | null; // TODO remove or add to all streams
-  bidOrNull(): BidPriceChangedEvent | null; // TODO remove or add to all streams
-  priceOrNull(): PriceChangedEvent | null; // TODO remove or add to all streams
 }
 
 const streamConfig = { objectMode: true, emitClose: false, read: () => { } }
@@ -59,29 +56,6 @@ abstract class SpotPricesStreamBase extends Readable implements SpotPricesStream
       this.log("%j", event);
     }
     return super.push(event)
-  }
-
-  private cachedEventOrNull<T extends SpotPricesEvent>(type: T["type"]): T | null {
-    if (!spotPricesEventTypes.includes(type)) {
-      throw new Error(`event type '${type}' is not allowed. Only ${spotPricesEventTypes.join(", ")} as allowed.`)
-    }
-    const event = this.cachedEvents.get(type)
-    if (event && event.type === type) {
-      return event as T;
-    }
-    return null;
-  }
-
-  askOrNull(): AskPriceChangedEvent | null {
-    return this.cachedEventOrNull("ASK_PRICE_CHANGED");
-  }
-
-  bidOrNull(): BidPriceChangedEvent | null {
-    return this.cachedEventOrNull("BID_PRICE_CHANGED");
-  }
-
-  priceOrNull(): PriceChangedEvent | null {
-    return this.cachedEventOrNull("PRICE_CHANGED");
   }
 
   abstract trendbars(props: SpotPricesSimpleTrendbarsProps): TrendbarsStream;
