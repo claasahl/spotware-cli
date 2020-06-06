@@ -117,13 +117,13 @@ class LocalAccountStream extends B.DebugAccountStream {
         return stream;
     }
 
-    spotPrices(props: B.AccountSimpleSpotPricesProps): Promise<B.SpotPricesStream> {
-        return Promise.resolve(this.spots(props))
+    spotPrices(props: B.AccountSimpleSpotPricesProps): B.SpotPricesStream {
+        return this.spots(props)
     }
 
-    async trendbars(props: B.AccountSimpleTrendbarsProps): Promise<B.TrendbarsStream> {
+    trendbars(props: B.AccountSimpleTrendbarsProps): B.TrendbarsStream {
         const { symbol } = props;
-        const spots = await this.spotPrices({ symbol });
+        const spots = this.spotPrices({ symbol });
         return B.toTrendbars({ ...props, spots })
     }
 

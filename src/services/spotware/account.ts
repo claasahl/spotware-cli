@@ -167,7 +167,7 @@ class SpotwareAccountStream extends B.DebugAccountStream {
         return stream;
     }
 
-    async spotPrices(props: B.AccountSimpleSpotPricesProps): Promise<B.SpotPricesStream> {
+    spotPrices(props: B.AccountSimpleSpotPricesProps): B.SpotPricesStream {
         class Stream extends Readable implements B.SpotPricesStream {
             readonly props: B.SpotPricesProps;
             constructor(props: B.SpotPricesProps) {
@@ -220,8 +220,8 @@ class SpotwareAccountStream extends B.DebugAccountStream {
         return stream;
     }
 
-    async trendbars(props: B.AccountSimpleTrendbarsProps): Promise<B.TrendbarsStream> {
-        const spots = await this.spotPrices(props)
+    trendbars(props: B.AccountSimpleTrendbarsProps): B.TrendbarsStream {
+        const spots = this.spotPrices(props)
         return B.toTrendbars({ ...props, spots })
     }
 

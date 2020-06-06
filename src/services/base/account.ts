@@ -35,8 +35,8 @@ export interface AccountProps {
 export interface AccountActions {
   marketOrder(props: AccountSimpleMarketOrderProps): Promise<OrderStream<MarketOrderProps>>;
   stopOrder(props: AccountSimpleStopOrderProps): Promise<OrderStream<StopOrderProps>>;
-  spotPrices(props: AccountSimpleSpotPricesProps): Promise<SpotPricesStream>;
-  trendbars(props: AccountSimpleTrendbarsProps): Promise<TrendbarsStream>;
+  spotPrices(props: AccountSimpleSpotPricesProps): SpotPricesStream;
+  trendbars(props: AccountSimpleTrendbarsProps): TrendbarsStream;
 }
 export interface AccountStream extends GenericReadable<AccountEvent>, AccountActions {
   readonly props: AccountProps;
@@ -97,8 +97,8 @@ abstract class AccountStreamBase extends Readable implements AccountStream {
 
   abstract marketOrder(props: AccountSimpleMarketOrderProps): Promise<OrderStream<MarketOrderProps>>;
   abstract stopOrder(props: AccountSimpleStopOrderProps): Promise<OrderStream<StopOrderProps>>;
-  abstract spotPrices(props: AccountSimpleSpotPricesProps): Promise<SpotPricesStream>;
-  abstract trendbars(props: AccountSimpleTrendbarsProps): Promise<TrendbarsStream>;
+  abstract spotPrices(props: AccountSimpleSpotPricesProps): SpotPricesStream;
+  abstract trendbars(props: AccountSimpleTrendbarsProps): TrendbarsStream;
 }
 
 export class DebugAccountStream extends AccountStreamBase {
@@ -108,10 +108,10 @@ export class DebugAccountStream extends AccountStreamBase {
   async stopOrder(_props: AccountSimpleStopOrderProps): Promise<OrderStream<StopOrderProps>> {
     throw new Error("not implemented");
   }
-  async spotPrices(_props: AccountSimpleSpotPricesProps): Promise<SpotPricesStream> {
+  spotPrices(_props: AccountSimpleSpotPricesProps): SpotPricesStream {
     throw new Error("not implemented");
   }
-  async trendbars(_props: AccountSimpleTrendbarsProps): Promise<TrendbarsStream> {
+  trendbars(_props: AccountSimpleTrendbarsProps): TrendbarsStream {
     throw new Error("not implemented");
   }
 

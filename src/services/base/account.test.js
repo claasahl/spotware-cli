@@ -149,15 +149,15 @@ describe("DebugAccountStream", () => {
             const stream = new DebugAccountStream(props)
             await expect(stream.stopOrder()).rejects.toThrow("not implemented")
         })
-        test("spotPrices", async () => {
+        test("spotPrices", () => {
             const props = { currency: Symbol.for("abc"), a: 2 }
             const stream = new DebugAccountStream(props)
-            await expect(stream.spotPrices()).rejects.toThrow("not implemented")
+            expect(stream.spotPrices).toThrow("not implemented")
         })
-        test("trendbars", async () => {
+        test("trendbars", () => {
             const props = { currency: Symbol.for("abc"), a: 2 }
             const stream = new DebugAccountStream(props)
-            await expect(stream.trendbars()).rejects.toThrow("not implemented")
+            expect(stream.trendbars).toThrow("not implemented")
         })
     })
 
