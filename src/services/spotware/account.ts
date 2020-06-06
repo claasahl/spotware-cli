@@ -1,6 +1,6 @@
 import * as $ from "@claasahl/spotware-adapter";
 import Lock from "async-lock"
-import mem from "mem";
+import { Readable } from "stream";
 
 import * as B from "../base";
 import { SpotwareClient } from "./client";
@@ -167,37 +167,54 @@ class SpotwareAccountStream extends B.DebugAccountStream {
         return stream;
     }
 
-    spotPrices = mem(this.sp0ts, { cacheKey: (arguments_: any) => JSON.stringify(arguments_.symbol) })
-
-    private async sp0ts(props: B.AccountSimpleSpotPricesProps): Promise<B.SpotPricesStream> {
-        const ctidTraderAccountId = await this.traderId();
-        const symbolId = await this.symbolId(props.symbol);
-        await this.lock.acquire("subscription", async () => {
-            if (this.subscribed.has(props.symbol)) {
-                return;
+    async spotPrices(props: B.AccountSimpleSpotPricesProps): Promise<B.SpotPricesStream> {
+        class Stream extends Readable implements B.SpotPricesStream {
+            readonly props: B.SpotPricesProps;
+            constructor(props: B.SpotPricesProps) {
+                super({objectMode:true})
+                this.props = Object.freeze(props);
             }
-            await this.client.subscribeSpots({ ctidTraderAccountId, symbolId: [symbolId] })
-            this.subscribed.add(props.symbol);
-        })
-
-        const PRECISION = 5;
-        const fact0r = Math.pow(10, PRECISION)
-
-        const stream = new B.DebugSpotPricesStream(props);
-        this.client.on("PROTO_OA_SPOT_EVENT", (msg: $.ProtoOASpotEvent) => {
-            if (msg.symbolId !== symbolId) {
-                return;
+            push(chunk: B.SpotPricesEvent, encoding?: BufferEncoding): boolean {
+                return super.push(chunk, encoding);
             }
+            trendbars(_props: Pick<B.TrendbarsProps, "period">): B.TrendbarsStream {
+                throw new Error("Method not implemented.");
+            }
+        }
+        const stream = new Stream(props);
+        setImmediate(async () => {
+            try {
+                const ctidTraderAccountId = await this.traderId();
+                const symbolId = await this.symbolId(props.symbol);
+                await this.lock.acquire("subscription", async () => {
+                    if (this.subscribed.has(props.symbol)) {
+                        return;
+                    }
+                    await this.client.subscribeSpots({ ctidTraderAccountId, symbolId: [symbolId] })
+                    this.subscribed.add(props.symbol);
+                })
 
-            const timestamp = Date.now();
-            if (msg.ask) {
-                stream.tryAsk({ timestamp, ask: msg.ask / fact0r })
-            }
-            if (msg.bid) {
-                stream.tryBid({ timestamp, bid: msg.bid / fact0r })
-            }
-            if (msg.ask && msg.bid) {
-                stream.tryPrice({ timestamp, ask: msg.ask / fact0r, bid: msg.bid / fact0r })
+                const PRECISION = 5;
+                const fact0r = Math.pow(10, PRECISION);
+                this.client.on("PROTO_OA_SPOT_EVENT", (msg: $.ProtoOASpotEvent) => {
+                    if (msg.symbolId !== symbolId) {
+                        return;
+                    }
+
+                    const timestamp = Date.now();
+                    if (msg.ask) {
+                        stream.push({ type: "ASK_PRICE_CHANGED", timestamp, ask: msg.ask / fact0r })
+                    }
+                    if (msg.bid) {
+                        stream.push({ type: "BID_PRICE_CHANGED", timestamp, bid: msg.bid / fact0r })
+                    }
+                    if (msg.ask && msg.bid) {
+                        stream.push({ type: "PRICE_CHANGED", timestamp, ask: msg.ask / fact0r, bid: msg.bid / fact0r })
+                    }
+                })
+                this.client.on("error", err => stream.destroy(err))
+            } catch (error) {
+                stream.destroy(error)
             }
         })
         return stream;
