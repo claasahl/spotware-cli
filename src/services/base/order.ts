@@ -140,6 +140,44 @@ const machine = createMachine<Context, Event, State>({
   }
 });
 
+export function lifecycle() {
+  class ABV {
+    state?: OrderEvent["type"];
+
+    test(event: Pick<OrderEvent, "type">): boolean {
+      switch (event.type) {
+        case "ACCEPTED":
+          return this.state === "CREATED"
+        case "CANCELED":
+          return this.state === "CREATED" || this.state === "ACCEPTED" || this.state === "CANCELED"
+        case "CLOSED":
+          return this.state === "FILLED" || this.state === "CLOSED"
+        case "CREATED":
+          return this.state === undefined
+        case "ENDED":
+          return this.state === "REJECTED" || this.state === "CLOSED" || this.state === "CANCELED" || this.state === "EXPIRED"
+        case "EXPIRED":
+          return this.state === "ACCEPTED" || this.state === "EXPIRED"
+        case "FILLED":
+          return this.state === "ACCEPTED" || this.state === "FILLED"
+        case "PROFITLOSS":
+          return this.state === "FILLED"
+        case "REJECTED":
+          return this.state === "CREATED" || this.state === "REJECTED"
+      }
+    }
+
+    update(event: OrderEvent): OrderEvent["type"] | undefined {
+      if(this.test(event)) {
+        this.state = event.type;
+        return this.state;
+      }
+      return this.state;
+    }
+  }
+  return new ABV();
+}
+
 const streamConfig = { objectMode: true, emitClose: false, read: () => { } }
 
 abstract class OrderStreamBase<Props extends OrderProps> extends Readable implements OrderStream<Props> {
