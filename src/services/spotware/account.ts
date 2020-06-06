@@ -91,19 +91,21 @@ class SpotwareAccountStream extends B.DebugAccountStream {
         return data.symbol[0];
     }
 
-    async marketOrder(props: B.AccountSimpleMarketOrderProps): Promise<B.OrderStream<B.MarketOrderProps>> {
-        const ctidTraderAccountId = await this.traderId();
-        const symbolId = await this.symbolId(props.symbol);
-        const details = await this.symbol(props.symbol);
-        const {lotSize = 1, digits} = details;
+    marketOrder(props: B.AccountSimpleMarketOrderProps): B.OrderStream<B.MarketOrderProps> {
         const client = this.client;
 
         if (!this.orders.has(props.id)) {
             this.orders.set(props.id, [])
         }
         const order: Order = { ...props, entry: 0, profitLoss: 0 }
-        const spots = await this.spotPrices(props);
-        const stream = marketOrder({...props, spots, client, ctidTraderAccountId, symbolId, lotSize, digits})
+        const spots = this.spotPrices(props);
+        const stream = marketOrder({
+            ...props,
+            spots,
+            client,
+            ctidTraderAccountId: () => this.traderId(),
+            spotwareSymbol: () => this.symbol(props.symbol)
+        })
         const update = (e: B.OrderProfitLossEvent) => {
             order.profitLoss = e.profitLoss;
             this.updateEquity(e)
@@ -128,20 +130,20 @@ class SpotwareAccountStream extends B.DebugAccountStream {
         })
         return stream;
     }
-    async stopOrder(props: B.AccountSimpleStopOrderProps): Promise<B.OrderStream<B.StopOrderProps>> {
-        // TODO: equity
-        const ctidTraderAccountId = await this.traderId();
-        const symbolId = await this.symbolId(props.symbol);
-        const details = await this.symbol(props.symbol);
-        const {lotSize = 1, digits} = details;
+    stopOrder(props: B.AccountSimpleStopOrderProps): B.OrderStream<B.StopOrderProps> {
         const client = this.client;
-
         if (!this.orders.has(props.id)) {
             this.orders.set(props.id, [])
         }
         const order: Order = { ...props, entry: 0, profitLoss: 0 }
-        const spots = await this.spotPrices(props);
-        const stream = stopOrder({...props, spots, client, ctidTraderAccountId, symbolId, lotSize, digits})
+        const spots = this.spotPrices(props);
+        const stream = stopOrder({
+            ...props,
+            spots,
+            client,
+            ctidTraderAccountId: () => this.traderId(),
+            spotwareSymbol: () => this.symbol(props.symbol)
+        })
         const update = (e: B.OrderProfitLossEvent) => {
             order.profitLoss = e.profitLoss;
             this.updateEquity(e)

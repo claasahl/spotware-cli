@@ -139,15 +139,15 @@ describe("DebugAccountStream", () => {
     })
 
     describe("actions", () => {
-        test("marketOrder", async () => {
+        test("marketOrder", () => {
             const props = { currency: Symbol.for("abc"), a: 2 }
             const stream = new DebugAccountStream(props)
-            await expect(stream.marketOrder()).rejects.toThrow("not implemented")
+            expect(stream.marketOrder).toThrow("not implemented")
         })
-        test("stopOrder", async () => {
+        test("stopOrder", () => {
             const props = { currency: Symbol.for("abc"), a: 2 }
             const stream = new DebugAccountStream(props)
-            await expect(stream.stopOrder()).rejects.toThrow("not implemented")
+            expect(stream.stopOrder).toThrow("not implemented")
         })
         test("spotPrices", () => {
             const props = { currency: Symbol.for("abc"), a: 2 }
