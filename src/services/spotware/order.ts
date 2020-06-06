@@ -23,6 +23,9 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends Readable implement
         if (chunk && !this.lifecyle.test(chunk)) {
             return true;
         }
+        if(chunk) {
+            this.lifecyle.update(chunk);
+        }
         return super.push(chunk, encoding);
     }
 
