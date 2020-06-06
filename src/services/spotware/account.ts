@@ -103,7 +103,7 @@ class SpotwareAccountStream extends B.DebugAccountStream {
         }
         const order: Order = { ...props, entry: 0, profitLoss: 0 }
         const spots = await this.spotPrices(props);
-        const stream = await marketOrder({...props, spots, client, ctidTraderAccountId, symbolId, lotSize, digits})
+        const stream = marketOrder({...props, spots, client, ctidTraderAccountId, symbolId, lotSize, digits})
         const update = (e: B.OrderProfitLossEvent) => {
             order.profitLoss = e.profitLoss;
             this.updateEquity(e)
@@ -141,7 +141,7 @@ class SpotwareAccountStream extends B.DebugAccountStream {
         }
         const order: Order = { ...props, entry: 0, profitLoss: 0 }
         const spots = await this.spotPrices(props);
-        const stream = await stopOrder({...props, spots, client, ctidTraderAccountId, symbolId, lotSize, digits})
+        const stream = stopOrder({...props, spots, client, ctidTraderAccountId, symbolId, lotSize, digits})
         const update = (e: B.OrderProfitLossEvent) => {
             order.profitLoss = e.profitLoss;
             this.updateEquity(e)
