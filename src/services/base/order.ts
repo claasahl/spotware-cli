@@ -169,8 +169,14 @@ export function lifecycle() {
 
     update(event: OrderEvent): OrderEvent["type"] | undefined {
       if(this.test(event)) {
-        this.state = event.type;
-        return this.state;
+        if(event.type === "ENDED") {
+          return this.state;
+        } else if(event.type === "PROFITLOSS") {
+          return this.state;
+        } else {
+          this.state = event.type;
+          return this.state;
+        }
       }
       return this.state;
     }
