@@ -8,21 +8,6 @@ log["extend"] = extend;
 debug.mockImplementation(() => ({ extend }))
 
 describe.skip("DebugOrderStream", () => {
-    describe("props", () => {
-        test("should expose props", () => {
-            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
-            const stream = new DebugOrderStream(props)
-            expect(stream.props).toBe(props)
-        })
-    
-        test("should freeze props", () => {
-            const props = { id: 0, symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
-            const stream = new DebugOrderStream(props)
-            expect(Object.isFrozen(props)).toBe(true)
-            expect(Object.isFrozen(stream.props)).toBe(true)
-        })
-    })
-
     describe("log events", () => {
         beforeEach(() => {
             debug.mockClear();

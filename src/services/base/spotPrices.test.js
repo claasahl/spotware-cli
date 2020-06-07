@@ -7,21 +7,6 @@ const extend = jest.fn(() => log)
 debug.mockImplementation(() => ({ extend }))
 
 describe("DebugSpotPricesStream", () => {
-    describe("props", () => {
-        test("should expose props", () => {
-            const props = { symbol: Symbol.for("abc"), a: 2 }
-            const stream = new DebugSpotPricesStream(props)
-            expect(stream.props).toBe(props)
-        })
-    
-        test("should freeze props", () => {
-            const props = { symbol: Symbol.for("abc"), a: 2 }
-            const stream = new DebugSpotPricesStream(props)
-            expect(Object.isFrozen(props)).toBe(true)
-            expect(Object.isFrozen(stream.props)).toBe(true)
-        })
-    })
-
     describe("log events", () => {
         beforeEach(() => {
             debug.mockClear();

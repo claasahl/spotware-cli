@@ -11,16 +11,13 @@ debug.mockImplementation(() => ({ extend }))
 describe("ToTrendbars class", () => {
     describe("props", () => {
         test("should expose props", () => {
-            const symbol = Symbol.for("abc");
-            const period = 60000;
-            const stream = new ToTrendbars({ symbol, period, a: 2 })
-            expect(stream.props).toStrictEqual({ symbol, period, a: 2 })
+            const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 };
+            const stream = new ToTrendbars(props)
+            expect(stream.props).toStrictEqual(props)
         })
         
         test("should freeze props", () => {
-            const symbol = Symbol.for("abc");
-            const period = 60000;
-            const props = { symbol, period }
+            const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 };
             const stream = new ToTrendbars(props)
             expect(Object.isFrozen(props)).toBe(true)
             expect(Object.isFrozen(stream.props)).toBe(true)
