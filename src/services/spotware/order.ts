@@ -1,5 +1,6 @@
 import * as $ from "@claasahl/spotware-adapter"
 import {Readable} from "stream";
+import debug from "debug";
 
 import * as B from "../base"
 import { SpotwareClient } from "./client";
@@ -8,6 +9,7 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends Readable implement
     readonly props: Props;
     private readonly lifecyle = B.lifecycle();
     private readonly client: SpotwareClient;
+    private readonly log: debug.Debugger;
     ctidTraderAccountId?: number;
     lotSize?: number;
     positionId?: number;
@@ -17,6 +19,7 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends Readable implement
         super({objectMode: true, read: () => {}});
         this.props = Object.freeze(props);
         this.client = client;
+        this.log = debug("order").extend(props.id);
     }
     
     push(chunk: B.OrderEvent | null, encoding?: BufferEncoding): boolean {
@@ -24,6 +27,7 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends Readable implement
             return true;
         }
         if(chunk) {
+            this.log("%j", chunk);
             this.lifecyle.update(chunk);
         }
         return super.push(chunk, encoding);
