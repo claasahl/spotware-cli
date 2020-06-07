@@ -1,5 +1,7 @@
 import mem from "mem";
+
 import * as B from "../base";
+import * as G from "../generic";
 import { marketOrderFromSpotPrices, stopOrderFromSpotPrices } from "./order";
 import { includesCurrency } from "./util";
 
@@ -124,7 +126,7 @@ class LocalAccountStream extends B.DebugAccountStream {
     trendbars(props: B.AccountSimpleTrendbarsProps): B.TrendbarsStream {
         const { symbol } = props;
         const spots = this.spotPrices({ symbol });
-        return B.toTrendbars({ ...props, spots })
+        return G.toTrendbars({ ...props, spots })
     }
 
     private updateEquity(e: { timestamp: B.Timestamp }): void {

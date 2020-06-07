@@ -3,6 +3,7 @@ import Lock from "async-lock"
 import { Readable } from "stream";
 
 import * as B from "../base";
+import * as G from "../generic";
 import { SpotwareClient } from "./client";
 import { marketOrder, stopOrder } from "./order";
 
@@ -224,7 +225,7 @@ class SpotwareAccountStream extends B.DebugAccountStream {
 
     trendbars(props: B.AccountSimpleTrendbarsProps): B.TrendbarsStream {
         const spots = this.spotPrices(props)
-        return B.toTrendbars({ ...props, spots })
+        return G.toTrendbars({ ...props, spots })
     }
 
     private updateEquity(e: { timestamp: B.Timestamp }): void {

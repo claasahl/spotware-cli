@@ -1,4 +1,4 @@
-const {ToTrendbars, toTrendbars} = require("../../../build/services/base/trendbars")
+const {ToTrendbars, toTrendbars} = require("../../../build/services/generic/trendbars")
 const {DebugSpotPricesStream} = require("../../../build/services/base/spotPrices")
 const debug = require("debug")
 
