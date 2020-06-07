@@ -19,7 +19,7 @@ export class OrderStream<Props extends B.OrderProps> extends PassThrough impleme
 
   push(chunk: B.OrderEvent | null, encoding?: BufferEncoding): boolean {
     if(chunk && events.includes(chunk.type)) {
-      this.log("%j", event);
+      this.log("%j", chunk);
     }
     return super.push(chunk, encoding);
   }

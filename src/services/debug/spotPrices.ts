@@ -18,7 +18,7 @@ export class SpotPricesStream extends PassThrough implements B.SpotPricesStream 
 
   push(chunk: B.SpotPricesEvent | null, encoding?: BufferEncoding): boolean {
     if(chunk && events.includes(chunk.type)) {
-      this.log("%j", event);
+      this.log("%j", chunk);
     }
     return super.push(chunk, encoding);
   }

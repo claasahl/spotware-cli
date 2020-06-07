@@ -17,7 +17,7 @@ export class AccountStream extends PassThrough implements B.AccountStream {
 
   push(chunk: B.AccountEvent | null, encoding?: BufferEncoding): boolean {
     if(chunk && events.includes(chunk.type)) {
-      this.log("%j", event);
+      this.log("%j", chunk);
     }
     return super.push(chunk, encoding);
   }

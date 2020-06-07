@@ -20,7 +20,7 @@ export class TrendbarsStream extends PassThrough implements B.TrendbarsStream {
 
   push(chunk: B.TrendbarEvent | null, encoding?: BufferEncoding): boolean {
     if(chunk && events.includes(chunk.type)) {
-      this.log("%j", event);
+      this.log("%j", chunk);
     }
     return super.push(chunk, encoding);
   }
