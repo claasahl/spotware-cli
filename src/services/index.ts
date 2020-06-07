@@ -83,12 +83,9 @@ insideBarSpotware();
 async function spotware() {
   const currency = Symbol.for("EUR");
   const symbol = Symbol.for("BTC/EUR");
-  const period = 1000;
   const account = fromSomething({...config, currency})
-  await account.spotPrices({symbol})
-  await account.trendbars({symbol, period})
-  const stream = await account.stopOrder({id: "1", symbol, tradeSide: "SELL", volume: 0.01, enter: 6500, expiresAt: Date.now() + 10000})
-  // setTimeout(async () => console.log(await stream.end()), 5000)
-  setTimeout(async () => console.log(await stream.endOrder()), 15000)
+  const stream = account.marketOrder({id: "1", symbol, tradeSide: "SELL", volume: 0.01, expiresAt: Date.now() + 10000})
+  stream.on("data", e => console.log("---", e));
+  // setTimeout(async () => console.log(stream.endOrder()), 15000)
 }
 spotware;
