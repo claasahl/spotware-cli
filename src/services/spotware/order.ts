@@ -90,6 +90,7 @@ function order<Props extends B.OrderProps>(props: Props, extras: { client: Spotw
                 stopLoss: props.stopLoss,
                 expirationTimestamp: props.expiresAt
             })
+            stream.ctidTraderAccountId = ctidTraderAccountId;
             stream.positionId = event.order?.positionId || 0;
             stream.orderId = event.order?.orderId || 0;
             stream.push({ type: "CREATED", timestamp: Date.now() })
