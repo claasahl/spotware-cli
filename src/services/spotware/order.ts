@@ -14,7 +14,7 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends Readable implement
     orderId?: number;
 
     constructor(props: Props, client: SpotwareClient) {
-        super({objectMode: true});
+        super({objectMode: true, read: () => {}});
         this.props = Object.freeze(props);
         this.client = client;
     }

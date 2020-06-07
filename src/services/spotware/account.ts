@@ -173,7 +173,7 @@ class SpotwareAccountStream extends B.DebugAccountStream {
         class Stream extends Readable implements B.SpotPricesStream {
             readonly props: B.SpotPricesProps;
             constructor(props: B.SpotPricesProps) {
-                super({objectMode:true})
+                super({objectMode:true, read: () => {}})
                 this.props = Object.freeze(props);
             }
             push(chunk: B.SpotPricesEvent, encoding?: BufferEncoding): boolean {
