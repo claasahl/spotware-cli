@@ -13,7 +13,8 @@
     "start": "node -r dotenv/config ./build/services/index.js 2>&1 | multilog s16777215 n100 dir ./logs",
     "fetch": "ts-node -r dotenv/config ./src/fetch.ts > fetch.log 2>&1",
     "refresh": "ts-node -r dotenv/config ./src/refresh.ts",
-    "dev": "ts-node -r dotenv/config ./src/services/index.ts > dev.log 2>&1",
+    "predev": "npm run build",
+    "dev": "node -r dotenv/config ./build/services/index.js > dev.log 2>&1",
     "preprof": "npm run build",
     "prof": "node --prof -r dotenv/config ./build/performance.js > dev.log 2>&1",
     "profProcess": "node --prof-process isolate-000002054DC3BEF0-13692-v8.log > process.txt"
@@ -35,22 +36,23 @@
     "@types/mem": "^4.2.0",
     "@types/ms": "^0.7.31",
     "@types/multistream": "^2.1.1",
+    "@types/node": "^14.0.6",
     "@types/pbf": "^3.0.2",
-    "@types/uuid": "^7.0.2",
-    "create-typescript-project-dependencies": "^12.0.8",
+    "@types/uuid": "^7.0.4",
     "dotenv": "^8.1.0",
-    "jest": "^25.2.3"
+    "jest": "^25.5.4",
+    "typescript": "^3.9.3"
   },
   "dependencies": {
-    "@claasahl/spotware-adapter": "^1.2.0",
+    "@claasahl/spotware-adapter": "^1.2.1",
     "@xstate/fsm": "^1.4.0",
-    "async-lock": "^1.2.2",
+    "async-lock": "^1.2.4",
     "debug": "^4.1.1",
     "indicators": "^0.1.5",
-    "mem": "^6.0.1",
+    "mem": "^6.1.0",
     "ms": "^2.1.2",
     "multistream": "^4.0.0",
-    "rxjs": "^6.5.4",
+    "rxjs": "^6.5.5",
     "uuid": "^7.0.3"
   }
 }

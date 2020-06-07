@@ -1,6 +1,6 @@
 import * as $ from "@claasahl/spotware-adapter";
 import Lock from "async-lock"
-import mem from "mem";
+import { Readable } from "stream";
 
 import * as B from "../base";
 import { SpotwareClient } from "./client";
@@ -91,19 +91,21 @@ class SpotwareAccountStream extends B.DebugAccountStream {
         return data.symbol[0];
     }
 
-    async marketOrder(props: B.AccountSimpleMarketOrderProps): Promise<B.OrderStream<B.MarketOrderProps>> {
-        const ctidTraderAccountId = await this.traderId();
-        const symbolId = await this.symbolId(props.symbol);
-        const details = await this.symbol(props.symbol);
-        const {lotSize = 1, digits} = details;
+    marketOrder(props: B.AccountSimpleMarketOrderProps): B.OrderStream<B.MarketOrderProps> {
         const client = this.client;
 
         if (!this.orders.has(props.id)) {
             this.orders.set(props.id, [])
         }
         const order: Order = { ...props, entry: 0, profitLoss: 0 }
-        const spots = await this.spotPrices(props);
-        const stream = await marketOrder({...props, spots, client, ctidTraderAccountId, symbolId, lotSize, digits})
+        const spots = this.spotPrices(props);
+        const stream = marketOrder({
+            ...props,
+            spots,
+            client,
+            ctidTraderAccountId: () => this.traderId(),
+            spotwareSymbol: () => this.symbol(props.symbol)
+        })
         const update = (e: B.OrderProfitLossEvent) => {
             order.profitLoss = e.profitLoss;
             this.updateEquity(e)
@@ -128,20 +130,20 @@ class SpotwareAccountStream extends B.DebugAccountStream {
         })
         return stream;
     }
-    async stopOrder(props: B.AccountSimpleStopOrderProps): Promise<B.OrderStream<B.StopOrderProps>> {
-        // TODO: equity
-        const ctidTraderAccountId = await this.traderId();
-        const symbolId = await this.symbolId(props.symbol);
-        const details = await this.symbol(props.symbol);
-        const {lotSize = 1, digits} = details;
+    stopOrder(props: B.AccountSimpleStopOrderProps): B.OrderStream<B.StopOrderProps> {
         const client = this.client;
-
         if (!this.orders.has(props.id)) {
             this.orders.set(props.id, [])
         }
         const order: Order = { ...props, entry: 0, profitLoss: 0 }
-        const spots = await this.spotPrices(props);
-        const stream = await stopOrder({...props, spots, client, ctidTraderAccountId, symbolId, lotSize, digits})
+        const spots = this.spotPrices(props);
+        const stream = stopOrder({
+            ...props,
+            spots,
+            client,
+            ctidTraderAccountId: () => this.traderId(),
+            spotwareSymbol: () => this.symbol(props.symbol)
+        })
         const update = (e: B.OrderProfitLossEvent) => {
             order.profitLoss = e.profitLoss;
             this.updateEquity(e)
@@ -167,44 +169,61 @@ class SpotwareAccountStream extends B.DebugAccountStream {
         return stream;
     }
 
-    spotPrices = mem(this.sp0ts, { cacheKey: (arguments_: any) => JSON.stringify(arguments_.symbol) })
-
-    private async sp0ts(props: B.AccountSimpleSpotPricesProps): Promise<B.SpotPricesStream> {
-        const ctidTraderAccountId = await this.traderId();
-        const symbolId = await this.symbolId(props.symbol);
-        await this.lock.acquire("subscription", async () => {
-            if (this.subscribed.has(props.symbol)) {
-                return;
+    spotPrices(props: B.AccountSimpleSpotPricesProps): B.SpotPricesStream {
+        class Stream extends Readable implements B.SpotPricesStream {
+            readonly props: B.SpotPricesProps;
+            constructor(props: B.SpotPricesProps) {
+                super({objectMode:true})
+                this.props = Object.freeze(props);
             }
-            await this.client.subscribeSpots({ ctidTraderAccountId, symbolId: [symbolId] })
-            this.subscribed.add(props.symbol);
-        })
-
-        const PRECISION = 5;
-        const fact0r = Math.pow(10, PRECISION)
-
-        const stream = new B.DebugSpotPricesStream(props);
-        this.client.on("PROTO_OA_SPOT_EVENT", (msg: $.ProtoOASpotEvent) => {
-            if (msg.symbolId !== symbolId) {
-                return;
+            push(chunk: B.SpotPricesEvent, encoding?: BufferEncoding): boolean {
+                return super.push(chunk, encoding);
             }
+            trendbars(_props: Pick<B.TrendbarsProps, "period">): B.TrendbarsStream {
+                throw new Error("Method not implemented.");
+            }
+        }
+        const stream = new Stream(props);
+        setImmediate(async () => {
+            try {
+                const ctidTraderAccountId = await this.traderId();
+                const symbolId = await this.symbolId(props.symbol);
+                await this.lock.acquire("subscription", async () => {
+                    if (this.subscribed.has(props.symbol)) {
+                        return;
+                    }
+                    await this.client.subscribeSpots({ ctidTraderAccountId, symbolId: [symbolId] })
+                    this.subscribed.add(props.symbol);
+                })
 
-            const timestamp = Date.now();
-            if (msg.ask) {
-                stream.tryAsk({ timestamp, ask: msg.ask / fact0r })
-            }
-            if (msg.bid) {
-                stream.tryBid({ timestamp, bid: msg.bid / fact0r })
-            }
-            if (msg.ask && msg.bid) {
-                stream.tryPrice({ timestamp, ask: msg.ask / fact0r, bid: msg.bid / fact0r })
+                const PRECISION = 5;
+                const fact0r = Math.pow(10, PRECISION);
+                this.client.on("PROTO_OA_SPOT_EVENT", (msg: $.ProtoOASpotEvent) => {
+                    if (msg.symbolId !== symbolId) {
+                        return;
+                    }
+
+                    const timestamp = Date.now();
+                    if (msg.ask) {
+                        stream.push({ type: "ASK_PRICE_CHANGED", timestamp, ask: msg.ask / fact0r })
+                    }
+                    if (msg.bid) {
+                        stream.push({ type: "BID_PRICE_CHANGED", timestamp, bid: msg.bid / fact0r })
+                    }
+                    if (msg.ask && msg.bid) {
+                        stream.push({ type: "PRICE_CHANGED", timestamp, ask: msg.ask / fact0r, bid: msg.bid / fact0r })
+                    }
+                })
+                this.client.on("error", err => stream.destroy(err))
+            } catch (error) {
+                stream.destroy(error)
             }
         })
         return stream;
     }
 
-    async trendbars(props: B.AccountSimpleTrendbarsProps): Promise<B.TrendbarsStream> {
-        const spots = await this.spotPrices(props)
+    trendbars(props: B.AccountSimpleTrendbarsProps): B.TrendbarsStream {
+        const spots = this.spotPrices(props)
         return B.toTrendbars({ ...props, spots })
     }
 

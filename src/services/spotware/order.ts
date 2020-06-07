@@ -1,179 +1,201 @@
 import * as $ from "@claasahl/spotware-adapter"
+import {Readable} from "stream";
+
 import * as B from "../base"
 import { SpotwareClient } from "./client";
 
-class SpotwareOrderStream<Props extends B.OrderProps> extends B.DebugOrderStream<Props> {
+class SpotwareOrderStream<Props extends B.OrderProps> extends Readable implements B.OrderStream<Props> {
+    readonly props: Props;
+    private readonly lifecyle = B.lifecycle();
     private readonly client: SpotwareClient;
-    private readonly ctidTraderAccountId: number;
-    private readonly lotSize: number;
-    private readonly positionId: number;
-    private readonly orderId: number;
+    ctidTraderAccountId?: number;
+    lotSize?: number;
+    positionId?: number;
+    orderId?: number;
 
-    constructor(props: Props, extras: { client: SpotwareClient, ctidTraderAccountId: number, lotSize: number, positionId: number, orderId: number }) {
-        super(props);
-        this.client = extras.client;
-        this.ctidTraderAccountId = extras.ctidTraderAccountId;
-        this.lotSize = extras.lotSize;
-        this.positionId = extras.positionId;
-        this.orderId = extras.orderId;
-    }
-
-    async closeOrder(): Promise<void> {
-        if (["filled"].includes(this.state.value)) {
-            const ctidTraderAccountId = this.ctidTraderAccountId;
-            const positionId = this.positionId;
-            const volume = this.props.volume * this.lotSize;
-            await this.client.closePosition({ctidTraderAccountId, positionId, volume})
-            return;
-        }
-        throw new Error(`order ${this.props.id} cannot be closed (${JSON.stringify(this.state)})`);
-    }
-
-    async cancelOrder(): Promise<void> {
-        if (["created", "accepted"].includes(this.state.value)) {
-            const ctidTraderAccountId = this.ctidTraderAccountId;
-            const orderId = this.orderId;
-            await this.client.cancelOrder({ctidTraderAccountId, orderId})
-            return;
-        }
-        throw new Error(`order ${this.props.id} cannot be canceled (${JSON.stringify(this.state)})`);
+    constructor(props: Props, client: SpotwareClient) {
+        super({objectMode: true});
+        this.props = Object.freeze(props);
+        this.client = client;
     }
     
-    async endOrder(): Promise<void> {
-        if (["created", "accepted"].includes(this.state.value)) {
-            await this.cancelOrder();
-        } else if (["filled"].includes(this.state.value)) {
-            await this.closeOrder();
+    push(chunk: B.OrderEvent | null, encoding?: BufferEncoding): boolean {
+        if (chunk && !this.lifecyle.test(chunk)) {
+            return true;
+        }
+        if(chunk) {
+            this.lifecyle.update(chunk);
+        }
+        return super.push(chunk, encoding);
+    }
+
+    closeOrder(): void {
+        if(this.lotSize && this.ctidTraderAccountId && this.positionId && this.lifecyle.test({type: "CLOSED"})) {
+            this.client.closePosition({
+                ctidTraderAccountId: this.ctidTraderAccountId,
+                positionId: this.positionId,
+                volume: this.props.volume * this.lotSize
+            })
+            return;
+        }
+        throw new Error(`order ${this.props.id} cannot be closed (${JSON.stringify(this.lifecyle.state)})`);
+    }
+
+    cancelOrder(): void {
+        if(this.ctidTraderAccountId && this.orderId && this.lifecyle.test({type: "CANCELED"})) {
+            this.client.cancelOrder({
+                ctidTraderAccountId: this.ctidTraderAccountId,
+                orderId: this.orderId
+            })
+            return;
+        }
+        throw new Error(`order ${this.props.id} cannot be canceled (${JSON.stringify(this.lifecyle.state)})`);
+    }
+    
+    endOrder(): void {
+        if(this.lifecyle.test({type: "CANCELED"})) {
+            this.cancelOrder();
+        } else if(this.lifecyle.test({type: "CLOSED"})) {
+            this.closeOrder();
         }
     }
 }
 
-async function order<Props extends B.OrderProps>(props: Props, extras: { client: SpotwareClient, spots: B.SpotPricesStream, ctidTraderAccountId: number, symbolId: number, lotSize: number, digits: number, partial: Partial<$.ProtoOANewOrderReq> & Pick<$.ProtoOANewOrderReq, "orderType"> }): Promise<B.OrderStream<Props>> {
-    const { ctidTraderAccountId, symbolId } = extras;
-    const tradeSide = (() => {
-        switch (props.tradeSide) {
-            case "SELL":
-                return $.ProtoOATradeSide.SELL
-            case "BUY":
-            default:
-                return $.ProtoOATradeSide.BUY
-        }
-    })();
-    const event = await extras.client.newOrder({
-        ...extras.partial,
-        ctidTraderAccountId,
-        symbolId,
-        tradeSide,
-        volume: props.volume * extras.lotSize,
-        takeProfit: props.takeProfit,
-        stopLoss: props.stopLoss,
-        expirationTimestamp: props.expiresAt
-    })
-    const positionId = event.order?.positionId || 0;
-    const orderId = event.order?.orderId || 0;
-    const stream = new SpotwareOrderStream<Props>(props, {...extras, positionId, orderId});
-    stream.tryCreate({ timestamp: Date.now() })
-    const round = (price: number) => {
-        const factor = Math.pow(10, extras.digits);
-        return Math.round(price * factor) / factor
-    }
-    extras.client.on("PROTO_OA_EXECUTION_EVENT", (msg: $.ProtoOAExecutionEvent) => {
-        switch (msg.executionType) {
-            case $.ProtoOAExecutionType.ORDER_ACCEPTED:
-                {
-                    if (!msg.order || !event.position || msg.order.positionId !== event.position.positionId) {
-                        return
-                    }
-                    if(msg.order.closingOrder) {
-                        return;
-                    }
-                    const timestamp = msg.order.utcLastUpdateTimestamp || 0;
-                    stream.tryAccept({ timestamp });
-                    break;
+function order<Props extends B.OrderProps>(props: Props, extras: { client: SpotwareClient, spots: B.SpotPricesStream, ctidTraderAccountId: () => Promise<number>, spotwareSymbol: () => Promise<$.ProtoOASymbol>, partial: Partial<$.ProtoOANewOrderReq> & Pick<$.ProtoOANewOrderReq, "orderType"> }): B.OrderStream<Props> {
+    const stream = new SpotwareOrderStream(props, extras.client);
+    setImmediate(async () => {
+        try {
+            const ctidTraderAccountId = await extras.ctidTraderAccountId();
+            const {symbolId, lotSize = 1, digits } = await extras.spotwareSymbol();
+            const tradeSide = (() => {
+                switch (props.tradeSide) {
+                    case "SELL":
+                        return $.ProtoOATradeSide.SELL
+                    case "BUY":
+                    default:
+                        return $.ProtoOATradeSide.BUY
                 }
-            case $.ProtoOAExecutionType.ORDER_EXPIRED:
-                {
-                    if (!msg.order || !event.position || msg.order.positionId !== event.position.positionId) {
-                        return
-                    }
-                    const timestamp = msg.order.utcLastUpdateTimestamp || 0;
-                    stream.tryExpire({ timestamp });
-                    break;
-                }
-            case $.ProtoOAExecutionType.ORDER_CANCELLED:
-                {
-                    if (!msg.order || !event.position || msg.order.positionId !== event.position.positionId) {
-                        return
-                    }
-                    const timestamp = msg.order.utcLastUpdateTimestamp || 0;
-                    stream.tryCancel({ timestamp });
-                    break;
-                }
-            case $.ProtoOAExecutionType.ORDER_FILLED:
-                {
-                    if (!msg.deal || !event.position || msg.deal.positionId !== event.position.positionId) {
-                        return
-                    }
-                    const executionPrice = msg.deal.executionPrice || 0;
-                    const timestamp = msg.deal.executionTimestamp;
-                    if (msg.deal.closePositionDetail) {
-                        const profitLoss = msg.deal.closePositionDetail.grossProfit / Math.pow(10, extras.digits);
-                        stream.tryClose({ timestamp, exit: executionPrice, profitLoss });
-                        break;
-                    }
+            })();
+            const event = await extras.client.newOrder({
+                ...extras.partial,
+                ctidTraderAccountId,
+                symbolId,
+                tradeSide,
+                volume: props.volume * lotSize,
+                takeProfit: props.takeProfit,
+                stopLoss: props.stopLoss,
+                expirationTimestamp: props.expiresAt
+            })
+            stream.positionId = event.order?.positionId || 0;
+            stream.orderId = event.order?.orderId || 0;
+            stream.push({ type: "CREATED", timestamp: Date.now() })
+            
+            const round = (price: number) => {
+                const factor = Math.pow(10, digits);
+                return Math.round(price * factor) / factor
+            }
+            extras.client.on("PROTO_OA_EXECUTION_EVENT", (msg: $.ProtoOAExecutionEvent) => {
+                switch (msg.executionType) {
+                    case $.ProtoOAExecutionType.ORDER_ACCEPTED:
+                        {
+                            if (!msg.order || !event.position || msg.order.positionId !== event.position.positionId) {
+                                return
+                            }
+                            if (msg.order.closingOrder) {
+                                return;
+                            }
+                            const timestamp = msg.order.utcLastUpdateTimestamp || 0;
+                            stream.push({ type: "ACCEPTED", timestamp });
+                            break;
+                        }
+                    case $.ProtoOAExecutionType.ORDER_EXPIRED:
+                        {
+                            if (!msg.order || !event.position || msg.order.positionId !== event.position.positionId) {
+                                return
+                            }
+                            const timestamp = msg.order.utcLastUpdateTimestamp || 0;
+                            stream.push({ type: "EXPIRED", timestamp });
+                            break;
+                        }
+                    case $.ProtoOAExecutionType.ORDER_CANCELLED:
+                        {
+                            if (!msg.order || !event.position || msg.order.positionId !== event.position.positionId) {
+                                return
+                            }
+                            const timestamp = msg.order.utcLastUpdateTimestamp || 0;
+                            stream.push({ type: "CANCELED", timestamp });
+                            break;
+                        }
+                    case $.ProtoOAExecutionType.ORDER_FILLED:
+                        {
+                            if (!msg.deal || !event.position || msg.deal.positionId !== event.position.positionId) {
+                                return
+                            }
+                            const executionPrice = msg.deal.executionPrice || 0;
+                            const timestamp = msg.deal.executionTimestamp;
+                            if (msg.deal.closePositionDetail) {
+                                const profitLoss = msg.deal.closePositionDetail.grossProfit / Math.pow(10, digits);
+                                stream.push({ type: "CLOSED", timestamp, exit: executionPrice, profitLoss });
+                                break;
+                            }
 
-                    stream.tryFill({ timestamp, entry: executionPrice });
-                    if (props.tradeSide === "BUY") {
-                        const update = (e: B.SpotPricesEvent) => {
-                            if(e.type === "BID_PRICE_CHANGED") {
-                                const { timestamp, bid: price } = e
-                                const profitLoss = round((price - executionPrice) * stream.props.volume);
-                                stream.tryProfitLoss({ timestamp, price, profitLoss })
+                            stream.push({ type: "FILLED", timestamp, entry: executionPrice });
+                            if (props.tradeSide === "BUY") {
+                                const update = (e: B.SpotPricesEvent) => {
+                                    if (e.type === "BID_PRICE_CHANGED") {
+                                        const { timestamp, bid: price } = e
+                                        const profitLoss = round((price - executionPrice) * stream.props.volume);
+                                        stream.push({ type: "PROFITLOSS", timestamp, price, profitLoss })
+                                    }
+                                }
+                                extras.spots.on("data", update);
+                                stream.once("end", () => extras.spots.off("data", update))
+                            } else if (props.tradeSide === "SELL") {
+                                const update = (e: B.SpotPricesEvent) => {
+                                    if (e.type === "ASK_PRICE_CHANGED") {
+                                        const { timestamp, ask: price } = e
+                                        const profitLoss = round((executionPrice - price) * stream.props.volume);
+                                        stream.push({ type: "PROFITLOSS", timestamp, price, profitLoss })
+                                    }
+                                }
+                                extras.spots.on("data", update);
+                                stream.once("end", () => extras.spots.off("data", update))
                             }
+                            break;
                         }
-                        extras.spots.on("data", update);
-                        stream.once("end", () => extras.spots.off("data", update))
-                    } else if (props.tradeSide === "SELL") {
-                        const update = (e: B.SpotPricesEvent) => {
-                            if(e.type === "ASK_PRICE_CHANGED") {
-                                const { timestamp, ask: price } = e
-                                const profitLoss = round((executionPrice - price) * stream.props.volume);
-                                stream.tryProfitLoss({ timestamp, price, profitLoss })
+                    case $.ProtoOAExecutionType.ORDER_REJECTED:
+                        {
+                            if (!msg.deal || !event.position || msg.deal.positionId !== event.position.positionId) {
+                                return
                             }
+                            const timestamp = msg.deal.executionTimestamp;
+                            // TODO: msg.errorCode
+                            stream.push({ type: "REJECTED", timestamp });
+                            break;
                         }
-                        extras.spots.on("data", update);
-                        stream.once("end", () => extras.spots.off("data", update))
-                    }
-                    break;
+                    default:
+                        const error = new Error(`unexpected event: ${JSON.stringify(msg)}`)
+                        console.log(error)
+                        setImmediate(() => stream.emit("error", error))
                 }
-            case $.ProtoOAExecutionType.ORDER_REJECTED:
-                {
-                    if (!msg.deal || !event.position || msg.deal.positionId !== event.position.positionId) {
-                        return
-                    }
-                    const timestamp = msg.deal.executionTimestamp;
-                    // TODO: msg.errorCode
-                    stream.tryReject({ timestamp });
-                    break;
-                }
-            default:
-                const error = new Error(`unexpected event: ${JSON.stringify(msg)}`)
-                console.log(error)
-                setImmediate(() => stream.emit("error", error))
+            });
+            extras.client.on("error", err => stream.destroy(err))
+        } catch (error) {
+            stream.destroy(error)
         }
     })
     return stream;
 }
 
-export async function marketOrder(props: Omit<B.MarketOrderProps & { client: SpotwareClient, spots: B.SpotPricesStream, ctidTraderAccountId: number, symbolId: number, lotSize: number, digits: number }, "orderType">): Promise<B.OrderStream<B.MarketOrderProps>> {
-    const { client, spots, ctidTraderAccountId, symbolId, lotSize, digits, ...rest} = props;
-    const extras = { client, spots, ctidTraderAccountId, symbolId, lotSize, digits }
+export function marketOrder(props: Omit<B.MarketOrderProps & { client: SpotwareClient, spots: B.SpotPricesStream, ctidTraderAccountId: () => Promise<number>, spotwareSymbol: () => Promise<$.ProtoOASymbol> }, "orderType">): B.OrderStream<B.MarketOrderProps> {
+    const { client, spots, ctidTraderAccountId, spotwareSymbol, ...rest} = props;
+    const extras = { client, spots, ctidTraderAccountId, spotwareSymbol }
     const partial = { orderType: $.ProtoOAOrderType.MARKET }
     return order({ ...rest, orderType: "MARKET"}, {...extras, partial })
 }
-export async function stopOrder(props: Omit<B.StopOrderProps & { client: SpotwareClient, spots: B.SpotPricesStream, ctidTraderAccountId: number, symbolId: number, lotSize: number, digits: number }, "orderType">): Promise<B.OrderStream<B.StopOrderProps>> {
-    const { client, spots, ctidTraderAccountId, symbolId, lotSize, digits, ...rest} = props;
-    const extras = { client, spots, ctidTraderAccountId, symbolId, lotSize, digits }
+export function stopOrder(props: Omit<B.StopOrderProps & { client: SpotwareClient, spots: B.SpotPricesStream, ctidTraderAccountId: () => Promise<number>, spotwareSymbol: () => Promise<$.ProtoOASymbol> }, "orderType">): B.OrderStream<B.StopOrderProps> {
+    const { client, spots, ctidTraderAccountId, spotwareSymbol, ...rest} = props;
+    const extras = { client, spots, ctidTraderAccountId, spotwareSymbol }
     const partial = { orderType: $.ProtoOAOrderType.STOP, stopPrice: props.enter }
     return order({ ...rest, orderType: "STOP"}, {...extras, partial })
 }
