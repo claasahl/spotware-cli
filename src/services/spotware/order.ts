@@ -42,7 +42,7 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends Readable implement
             })
             return;
         }
-        throw new Error(`order ${this.props.id} cannot be closed (${JSON.stringify(this.lifecyle.state)})`);
+        throw new Error(`order ${this.props.id} cannot be closed (${JSON.stringify(this.lifecyle.state)};${this.lotSize};${this.ctidTraderAccountId};${this.positionId})`);
     }
 
     cancelOrder(): void {
@@ -53,7 +53,7 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends Readable implement
             })
             return;
         }
-        throw new Error(`order ${this.props.id} cannot be canceled (${JSON.stringify(this.lifecyle.state)})`);
+        throw new Error(`order ${this.props.id} cannot be canceled (${JSON.stringify(this.lifecyle.state)};${this.ctidTraderAccountId};${this.orderId})`);
     }
     
     endOrder(): void {
