@@ -27,9 +27,9 @@ interface PlaceOrderProps {
   account: B.AccountStream,
   expiresAt?: B.Timestamp
 }
-async function placeOrder(props: PlaceOrderProps): Promise<B.OrderStream<B.StopOrderProps>> {
+function placeOrder(props: PlaceOrderProps): B.OrderStream<B.StopOrderProps> {
   const { account, ...rest } = props;
-  const order = await account.stopOrder(rest);
+  const order = account.stopOrder(rest);
   const guard = (e: B.OrderProfitLossEvent) => {
     if (props.tradeSide === "BUY" && (e.price >= props.takeProfit || e.price <= props.stopLoss)) {
       order.closeOrder();
@@ -45,9 +45,13 @@ async function placeOrder(props: PlaceOrderProps): Promise<B.OrderStream<B.StopO
   return order;
 }
 
-async function endLastOrder(lastOrder?: B.OrderStream<B.StopOrderProps>): Promise<void> {
+function endLastOrder(lastOrder: B.OrderStream<B.StopOrderProps> | undefined, cb: (err?: Error) => void): void {
   if (lastOrder) {
-    await lastOrder.endOrder();
+    lastOrder.once("error", err => cb(err));
+    lastOrder.once("end", () => cb());
+    lastOrder.endOrder();
+  } else {
+    cb();
   }
 }
 
@@ -65,7 +69,7 @@ export interface Props {
 
 export async function insideBarMomentumStrategy(props: Props): Promise<B.AccountStream> {
   const { account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, expiresIn } = props
-  const trendbars = await account.trendbars({ period, symbol })
+  const trendbars = account.trendbars({ period, symbol })
   let id = 1;
 
   let lastOrder: B.OrderStream<B.StopOrderProps> | undefined = undefined;
@@ -73,7 +77,7 @@ export async function insideBarMomentumStrategy(props: Props): Promise<B.Account
   const placeSellOrder = (timestamp: B.Timestamp, enter: B.Price, stopLoss: B.Price, takeProfit: B.Price) => placeOrder({ id: `${id++}`, symbol, enter, tradeSide: "SELL", volume, stopLoss, takeProfit, account, expiresAt: expiresIn ? timestamp + expiresIn : undefined })
 
   const trendbarEvents: B.TrendbarEvent[] = []
-  trendbars.on("data", async e => {
+  trendbars.on("data", e => {
     trendbarEvents.push(e);
     if (trendbarEvents.length >= 2) {
       const first = trendbarEvents.shift()!;
@@ -85,14 +89,20 @@ export async function insideBarMomentumStrategy(props: Props): Promise<B.Account
         const enter = roundPrice(first.high + r * enterOffset);
         const stopLoss = roundPrice(first.high - r * stopLossOffset);
         const takeProfit = roundPrice(first.high + r * takeProfitOffset);
-        await endLastOrder(lastOrder);
-        lastOrder = await placeBuyOrder(e.timestamp+period, enter, stopLoss, takeProfit)
+        endLastOrder(lastOrder, err => {
+          if(!err) {
+            lastOrder = placeBuyOrder(e.timestamp+period, enter, stopLoss, takeProfit)
+          }
+        });
       } else if (bearish(first) && engulfed(first, second)) {
         const enter = roundPrice(first.low - r * enterOffset);
         const stopLoss = roundPrice(first.low + r * stopLossOffset);
         const takeProfit = roundPrice(first.low - r * takeProfitOffset);
-        await endLastOrder(lastOrder);
-        lastOrder = await placeSellOrder(e.timestamp+period, enter, stopLoss, takeProfit)
+        endLastOrder(lastOrder, err => {
+          if(!err) {
+            lastOrder = placeSellOrder(e.timestamp+period, enter, stopLoss, takeProfit)
+          }
+        });
       }
     }
   })
