@@ -1,6 +1,7 @@
 import mem from "mem";
 
 import * as B from "../base";
+import * as D from "../debug";
 import * as G from "../generic";
 import { marketOrderFromSpotPrices, stopOrderFromSpotPrices } from "./order";
 import { includesCurrency } from "./util";
@@ -17,9 +18,10 @@ interface LocalAccountProps extends B.AccountProps {
     spots: (props: B.AccountSimpleSpotPricesProps) => B.SpotPricesStream;
     initialBalance: B.Price;
 }
-class LocalAccountStream extends B.DebugAccountStream {
+class LocalAccountStream extends D.AccountStream {
     private readonly spots: (props: B.AccountSimpleSpotPricesProps) => B.SpotPricesStream;
     private readonly orders: Map<string, Order[]> = new Map();
+    private balance: number = 0;
 
     constructor(props: LocalAccountProps) {
         super(props);
@@ -29,7 +31,14 @@ class LocalAccountStream extends B.DebugAccountStream {
 
     push(event: B.AccountEvent | null): boolean {
         const tmp = super.push(event)
+        if(event && event.type === "TRANSACTION") {
+            const { timestamp, amount } = event;
+            const oldBalance = this.balance
+            const balance = Math.round((oldBalance + amount) * 100) / 100;
+            this.push({timestamp, type: "BALANCE_CHANGED", balance})
+        }
         if(event && event.type === "BALANCE_CHANGED") {
+            this.balance = event.balance;
             this.updateEquity(event);
         }
         return tmp;
@@ -55,7 +64,7 @@ class LocalAccountStream extends B.DebugAccountStream {
             this.updateEquity(e)
         }
         stream.on("data", e => {
-            this.tryOrder({...e, ...stream.props})
+            this.push({...e, ...stream.props})
             if(e.type === "PROFITLOSS") {
                 update(e);
             } else if(e.type === "ACCEPTED") {
@@ -71,7 +80,7 @@ class LocalAccountStream extends B.DebugAccountStream {
                     }
                 });
                 toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
-                amounts.forEach(amount => this.tryTransaction({ timestamp: e.timestamp, amount }));
+                amounts.forEach(amount => this.push({ type: "TRANSACTION", timestamp: e.timestamp, amount }));
             }
         })
         return stream;
@@ -97,7 +106,7 @@ class LocalAccountStream extends B.DebugAccountStream {
             this.updateEquity(e)
         }
         stream.on("data", e => {
-            this.tryOrder({...e, ...stream.props})
+            this.push({...e, ...stream.props})
             if(e.type === "PROFITLOSS") {
                 update(e);
             } else if(e.type === "ACCEPTED") {
@@ -113,7 +122,7 @@ class LocalAccountStream extends B.DebugAccountStream {
                     }
                 });
                 toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
-                amounts.forEach(amount => this.tryTransaction({ timestamp: e.timestamp, amount }));
+                amounts.forEach(amount => this.push({ type: "TRANSACTION", timestamp: e.timestamp, amount }));
             }
         })
         return stream;
@@ -130,16 +139,15 @@ class LocalAccountStream extends B.DebugAccountStream {
     }
 
     private updateEquity(e: { timestamp: B.Timestamp }): void {
-        const balance = this.balanceOrNull()?.balance || 0
         let profitLoss = 0;
         this.orders.forEach(o => o.forEach(o => (profitLoss += o.profitLoss)));
-        const equity = Math.round((balance + profitLoss) * 100) / 100;
-        this.tryEquity({ timestamp: e.timestamp, equity });
+        const equity = Math.round((this.balance + profitLoss) * 100) / 100;
+        this.push({ type: "EQUITY_CHANGED", timestamp: e.timestamp, equity });
     }
 }
 
 export function fromNothing(props: LocalAccountProps): B.AccountStream {
     const stream = new LocalAccountStream(props);
-    stream.tryTransaction({ timestamp: 0, amount: props.initialBalance });
+    stream.push({ type: "TRANSACTION", timestamp: 0, amount: props.initialBalance });
     return stream;
 }

@@ -3,6 +3,7 @@ import Lock from "async-lock"
 import { Readable } from "stream";
 
 import * as B from "../base";
+import * as D from "../debug";
 import * as G from "../generic";
 import { SpotwareClient } from "./client";
 import { marketOrder, stopOrder } from "./order";
@@ -22,11 +23,12 @@ interface SpotwareAccountProps extends B.AccountProps {
     clientSecret: string,
     accessToken: string
 }
-class SpotwareAccountStream extends B.DebugAccountStream {
+class SpotwareAccountStream extends D.AccountStream {
     private readonly lock = new Lock();
     private readonly clientProps: Omit<SpotwareAccountProps, keyof B.AccountProps>;
     private readonly client: SpotwareClient;
     private ctidTraderAccountId?: number;
+    private balance: number = 0;
     private readonly subscribed: Set<B.Symbol> = new Set();
     private readonly symbols: Map<B.Symbol, $.ProtoOALightSymbol> = new Map();
     private readonly orders: Map<string, Order[]> = new Map();
@@ -39,7 +41,14 @@ class SpotwareAccountStream extends B.DebugAccountStream {
 
     push(event: B.AccountEvent | null): boolean {
         const tmp = super.push(event)
+        if(event && event.type === "TRANSACTION") {
+            const { timestamp, amount } = event;
+            const oldBalance = this.balance
+            const balance = Math.round((oldBalance + amount) * 100) / 100;
+            this.push({timestamp, type: "BALANCE_CHANGED", balance})
+        }
         if(event && event.type === "BALANCE_CHANGED") {
+            this.balance = event.balance;
             this.updateEquity(event);
         }
         return tmp;
@@ -62,7 +71,7 @@ class SpotwareAccountStream extends B.DebugAccountStream {
             const trader = await this.client.trader({ctidTraderAccountId})
             const timestamp = Date.now();
             const balance = trader.trader.balance / 100;
-            this.tryBalance({timestamp, balance})
+            this.push({ type: "BALANCE_CHANGED", timestamp, balance})
             return ctidTraderAccountId;
         })
     }
@@ -121,13 +130,13 @@ class SpotwareAccountStream extends B.DebugAccountStream {
                 const toBeDeleted: number[] = [];
                 all.forEach((o, index) => {
                     if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
-                        this.tryTransaction({ timestamp: e.timestamp, amount: o.profitLoss })
+                        this.push({ type: "TRANSACTION", timestamp: e.timestamp, amount: o.profitLoss })
                         toBeDeleted.push(index);
                     }
                 });
                 toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
             }
-            this.tryOrder({...e, ...stream.props})
+            this.push({...e, ...stream.props})
         })
         return stream;
     }
@@ -159,13 +168,13 @@ class SpotwareAccountStream extends B.DebugAccountStream {
                 const toBeDeleted: number[] = [];
                 all.forEach((o, index) => {
                     if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
-                        this.tryTransaction({ timestamp: e.timestamp, amount: o.profitLoss })
+                        this.push({ type: "TRANSACTION", timestamp: e.timestamp, amount: o.profitLoss })
                         toBeDeleted.push(index);
                     }
                 });
                 toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
             }
-            this.tryOrder({...e, ...stream.props})
+            this.push({...e, ...stream.props})
         })
         return stream;
     }
@@ -229,11 +238,10 @@ class SpotwareAccountStream extends B.DebugAccountStream {
     }
 
     private updateEquity(e: { timestamp: B.Timestamp }): void {
-        const balance = this.balanceOrNull()?.balance || 0
         let profitLoss = 0;
         this.orders.forEach(o => o.forEach(o => (profitLoss += o.profitLoss)));
-        const equity = Math.round((balance + profitLoss) * 100) / 100;
-        this.tryEquity({ timestamp: e.timestamp, equity });
+        const equity = Math.round((this.balance + profitLoss) * 100) / 100;
+        this.push({ type: "EQUITY_CHANGED", timestamp: e.timestamp, equity });
     }
 }
 
