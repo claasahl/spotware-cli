@@ -1,10 +1,10 @@
 const { fromNothing } = require("../../../build/services/local/account");
-const { DebugSpotPricesStream } = require("../../../build/services/base/spotPrices")
+const { SpotPricesStream } = require("../../../build/services/debug/spotPrices")
 
 describe("fromNothing", () => {
     test("'transaction' event with initial balance", done => {
         const symbol = Symbol.for("abc/def")
-        const spotPrices = new DebugSpotPricesStream({ symbol })
+        const spotPrices = new SpotPricesStream({ symbol })
         const currency = Symbol.for("abc")
         const spots = () => spotPrices
         const initialBalance = 500;
@@ -19,7 +19,7 @@ describe("fromNothing", () => {
     })
     test("'balance' event with initial balance", done => {
         const symbol = Symbol.for("abc/def")
-        const spotPrices = new DebugSpotPricesStream({ symbol })
+        const spotPrices = new SpotPricesStream({ symbol })
         const currency = Symbol.for("abc")
         const spots = () => spotPrices
         const initialBalance = 500;
@@ -34,7 +34,7 @@ describe("fromNothing", () => {
     })
     test("'equity' event with initial balance", done => {
         const symbol = Symbol.for("abc/def")
-        const spotPrices = new DebugSpotPricesStream({ symbol })
+        const spotPrices = new SpotPricesStream({ symbol })
         const currency = Symbol.for("abc")
         const spots = () => spotPrices
         const initialBalance = 500;
@@ -49,7 +49,7 @@ describe("fromNothing", () => {
     })
     test("get spot prices", () => {
         const symbol = Symbol.for("abc/def")
-        const spotPrices = new DebugSpotPricesStream({ symbol })
+        const spotPrices = new SpotPricesStream({ symbol })
         const currency = Symbol.for("abc")
         const spots = jest.fn(() => spotPrices)
         const initialBalance = 500;
@@ -60,7 +60,7 @@ describe("fromNothing", () => {
     })
     test("get trendbars", async () => {
         const symbol = Symbol.for("abc/def")
-        const spotPrices = new DebugSpotPricesStream({ symbol })
+        const spotPrices = new SpotPricesStream({ symbol })
         const currency = Symbol.for("abc")
         const spots = jest.fn(() => spotPrices)
         const initialBalance = 500;
@@ -74,7 +74,7 @@ describe("fromNothing", () => {
     describe("market order", () => {
         test("should emit 'order' event", done => {
             const symbol = Symbol.for("abc/def")
-            const spotPrices = new DebugSpotPricesStream({ symbol })
+            const spotPrices = new SpotPricesStream({ symbol })
             const currency = Symbol.for("abc")
             const spots = () => spotPrices
             const stream = fromNothing({ currency, spots, initialBalance: 500 })
@@ -92,11 +92,11 @@ describe("fromNothing", () => {
                     }
                 }
             })
-            spotPrices.tryBid({ timestamp: 2, bid: 15 })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 2, bid: 15 })
         })
         test("should produce 'equity' events", done => {
             const symbol = Symbol.for("abc/def")
-            const spotPrices = new DebugSpotPricesStream({ symbol })
+            const spotPrices = new SpotPricesStream({ symbol })
             const currency = Symbol.for("abc")
             const spots = () => spotPrices
             const stream = fromNothing({ currency, spots, initialBalance: 500})
@@ -116,20 +116,20 @@ describe("fromNothing", () => {
                     }
                 }
             })
-            spotPrices.tryAsk({ timestamp: 1, ask: 10 })
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1, ask: 10 })
             setImmediate(() => { // TODO needs to work without setImmediate
-                spotPrices.tryBid({ timestamp: 2, bid: 15 })
+                spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 2, bid: 15 })
                 setImmediate(() => {
-                    spotPrices.tryAsk({ timestamp: 3, ask: 12 })
+                    spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 3, ask: 12 })
                     setImmediate(() => {
-                        spotPrices.tryAsk({ timestamp: 4, ask: 8 })
+                        spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 4, ask: 8 })
                     })
                 })
             })
         })
         test("should produce 'balance' event", done => {
             const symbol = Symbol.for("abc/def")
-            const spotPrices = new DebugSpotPricesStream({ symbol })
+            const spotPrices = new SpotPricesStream({ symbol })
             const currency = Symbol.for("abc")
             const spots = () => spotPrices
             const stream = fromNothing({ currency, spots, initialBalance: 500})
@@ -146,14 +146,14 @@ describe("fromNothing", () => {
                     }
                 }
             })
-            spotPrices.tryAsk({ timestamp: 1, ask: 10 })
-            spotPrices.tryBid({ timestamp: 2, bid: 15 })
-            spotPrices.tryAsk({ timestamp: 3, ask: 12 })
-            spotPrices.tryAsk({ timestamp: 4, ask: 8 })
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1, ask: 10 })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 2, bid: 15 })
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 3, ask: 12 })
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 4, ask: 8 })
         })
         test("should produce 'transaction' event", done => {
             const symbol = Symbol.for("abc/def")
-            const spotPrices = new DebugSpotPricesStream({ symbol })
+            const spotPrices = new SpotPricesStream({ symbol })
             const currency = Symbol.for("abc")
             const spots = () => spotPrices
             const stream = fromNothing({ currency, spots, initialBalance: 500})
@@ -170,14 +170,14 @@ describe("fromNothing", () => {
                     }
                 }
             })
-            spotPrices.tryAsk({ timestamp: 1, ask: 10 })
-            spotPrices.tryBid({ timestamp: 2, bid: 15 })
-            spotPrices.tryAsk({ timestamp: 3, ask: 12 })
-            spotPrices.tryAsk({ timestamp: 4, ask: 8 })
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1, ask: 10 })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 2, bid: 15 })
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 3, ask: 12 })
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 4, ask: 8 })
         })
         test("complete order lifecycle", done => {
             const symbol = Symbol.for("abc/def")
-            const spotPrices = new DebugSpotPricesStream({ symbol })
+            const spotPrices = new SpotPricesStream({ symbol })
             const currency = Symbol.for("abc")
             const spots = () => spotPrices
             const stream = fromNothing({ currency, spots, initialBalance: 500})
@@ -205,14 +205,14 @@ describe("fromNothing", () => {
                 }
             })
 
-            spotPrices.tryBid({ timestamp: 2, bid: 15 })
-            spotPrices.tryAsk({ timestamp: 4, ask: 8 })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 2, bid: 15 })
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 4, ask: 8 })
         })
     })
     describe("stop order", () => {
         test("should emit 'order' event", done => {
             const symbol = Symbol.for("abc/def")
-            const spotPrices = new DebugSpotPricesStream({ symbol })
+            const spotPrices = new SpotPricesStream({ symbol })
             const currency = Symbol.for("abc")
             const spots = () => spotPrices
             const stream = fromNothing({ currency, spots, initialBalance: 500 })
@@ -230,11 +230,11 @@ describe("fromNothing", () => {
                     }
                 }
             })
-            spotPrices.tryAsk({ timestamp: 1, ask: 10 })
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1, ask: 10 })
         })
         test("should produce 'equity' events", done => {
             const symbol = Symbol.for("abc/def")
-            const spotPrices = new DebugSpotPricesStream({ symbol })
+            const spotPrices = new SpotPricesStream({ symbol })
             const currency = Symbol.for("abc")
             const spots = () => spotPrices
             const stream = fromNothing({ currency, spots, initialBalance: 500})
@@ -254,20 +254,20 @@ describe("fromNothing", () => {
                     }
                 }
             })
-            spotPrices.tryAsk({ timestamp: 1, ask: 10 })
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1, ask: 10 })
             setImmediate(() => { // TODO needs to work without setImmediate
-                spotPrices.tryBid({ timestamp: 2, bid: 15 })
+                spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 2, bid: 15 })
                 setImmediate(() => {
-                    spotPrices.tryBid({ timestamp: 3, bid: 12 })
+                    spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 3, bid: 12 })
                     setImmediate(() => {
-                        spotPrices.tryBid({ timestamp: 4, bid: 18 })
+                        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 4, bid: 18 })
                     })
                 })
             })
         })
         test("should produce 'balance' event", done => {
             const symbol = Symbol.for("abc/def")
-            const spotPrices = new DebugSpotPricesStream({ symbol })
+            const spotPrices = new SpotPricesStream({ symbol })
             const currency = Symbol.for("abc")
             const spots = () => spotPrices
             const stream = fromNothing({ currency, spots, initialBalance: 500})
@@ -284,12 +284,12 @@ describe("fromNothing", () => {
                     }
                 }
             })
-            spotPrices.tryAsk({ timestamp: 1, ask: 10 })
-            spotPrices.tryBid({ timestamp: 2, bid: 15 })
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1, ask: 10 })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 2, bid: 15 })
         })
         test("should produce 'transaction' event", done => {
             const symbol = Symbol.for("abc/def")
-            const spotPrices = new DebugSpotPricesStream({ symbol })
+            const spotPrices = new SpotPricesStream({ symbol })
             const currency = Symbol.for("abc")
             const spots = () => spotPrices
             const stream = fromNothing({ currency, spots, initialBalance: 500})
@@ -306,12 +306,12 @@ describe("fromNothing", () => {
                     }
                 }
             })
-            spotPrices.tryAsk({ timestamp: 1, ask: 10 })
-            spotPrices.tryBid({ timestamp: 2, bid: 15 })
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1, ask: 10 })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 2, bid: 15 })
         })
         test("complete order lifecyle", done => {
             const symbol = Symbol.for("abc/def")
-            const spotPrices = new DebugSpotPricesStream({ symbol })
+            const spotPrices = new SpotPricesStream({ symbol })
             const currency = Symbol.for("abc")
             const spots = () => spotPrices
             const stream = fromNothing({ currency, spots, initialBalance: 500})
@@ -339,8 +339,8 @@ describe("fromNothing", () => {
                 }
             })
 
-            spotPrices.tryAsk({ timestamp: 1, ask: 10 })
-            spotPrices.tryBid({ timestamp: 2, bid: 15 })
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1, ask: 10 })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 2, bid: 15 })
         })
     })
 })

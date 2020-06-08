@@ -1,5 +1,5 @@
 const { insideBarMomentumStrategy } = require("../../build/services/insideBarMomentumStrategy")
-const { DebugSpotPricesStream } = require("../../build/services/base/spotPrices")
+const { SpotPricesStream } = require("../../build/services/debug/spotPrices")
 const { fromNothing } = require("../../build/services/local/account")
 const ms = require("ms");
 
@@ -14,7 +14,7 @@ describe("insideBarMomentumStrategy", () => {
         const takeProfitOffset = 0.8;
         const minTrendbarRange = 15;
         const volume = 0.1;
-        const spotPrices = new DebugSpotPricesStream({ symbol })
+        const spotPrices = new SpotPricesStream({ symbol })
         const spots = () => spotPrices;
         const account = fromNothing({ currency, initialBalance, spots })
         await insideBarMomentumStrategy({ account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume })
@@ -40,18 +40,18 @@ describe("insideBarMomentumStrategy", () => {
             }
         })
 
-        spotPrices.tryBid({ timestamp: 1000000, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1000250, bid: 15500 })
-        spotPrices.tryBid({ timestamp: 1000500, bid: 14980 })
-        spotPrices.tryBid({ timestamp: 1000750, bid: 15100 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000000, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000250, bid: 15500 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000500, bid: 14980 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000750, bid: 15100 })
 
-        spotPrices.tryBid({ timestamp: 1001000, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001250, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001500, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001750, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001000, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001250, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001500, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001750, bid: 15000 })
 
-        spotPrices.tryAsk({ timestamp: 1002000, ask: 0 })
-        setImmediate(() => spotPrices.tryAsk({ timestamp: 1002001, ask: 0 })) // FIXME
+        spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002000, ask: 0 })
+        setImmediate(() => spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002001, ask: 0 })) // FIXME
     })
     test("bearish pattern", async done => {
         const currency = Symbol.for("EUR");
@@ -63,7 +63,7 @@ describe("insideBarMomentumStrategy", () => {
         const takeProfitOffset = 0.8;
         const minTrendbarRange = 15;
         const volume = 0.1;
-        const spotPrices = new DebugSpotPricesStream({ symbol })
+        const spotPrices = new SpotPricesStream({ symbol })
         const spots = () => spotPrices;
         const account = fromNothing({ currency, initialBalance, spots })
         await insideBarMomentumStrategy({ account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume })
@@ -89,18 +89,18 @@ describe("insideBarMomentumStrategy", () => {
             }
         })
 
-        spotPrices.tryBid({ timestamp: 1000000, bid: 15100 })
-        spotPrices.tryBid({ timestamp: 1000250, bid: 15500 })
-        spotPrices.tryBid({ timestamp: 1000500, bid: 14980 })
-        spotPrices.tryBid({ timestamp: 1000750, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000000, bid: 15100 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000250, bid: 15500 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000500, bid: 14980 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000750, bid: 15000 })
 
-        spotPrices.tryBid({ timestamp: 1001000, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001250, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001500, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001750, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001000, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001250, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001500, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001750, bid: 15000 })
 
-        spotPrices.tryBid({ timestamp: 1002000, bid: 99999 })
-        setImmediate(() => spotPrices.tryBid({ timestamp: 1002001, bid: 99999 }))
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002000, bid: 99999 })
+        setImmediate(() => spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002001, bid: 99999 }))
     })
     test("cancel previous (BUY) order", async done => {
         const currency = Symbol.for("EUR");
@@ -112,7 +112,7 @@ describe("insideBarMomentumStrategy", () => {
         const takeProfitOffset = 0.8;
         const minTrendbarRange = 15;
         const volume = 0.1;
-        const spotPrices = new DebugSpotPricesStream({ symbol })
+        const spotPrices = new SpotPricesStream({ symbol })
         const spots = () => spotPrices;
         const account = fromNothing({ currency, initialBalance, spots })
         await insideBarMomentumStrategy({ account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume })
@@ -138,30 +138,30 @@ describe("insideBarMomentumStrategy", () => {
             }
         })
 
-        spotPrices.tryBid({ timestamp: 1000000, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1000250, bid: 15500 })
-        spotPrices.tryBid({ timestamp: 1000500, bid: 14980 })
-        spotPrices.tryBid({ timestamp: 1000750, bid: 15100 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000000, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000250, bid: 15500 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000500, bid: 14980 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000750, bid: 15100 })
 
-        spotPrices.tryBid({ timestamp: 1001000, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001250, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001500, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001750, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001000, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001250, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001500, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001750, bid: 15000 })
 
-        spotPrices.tryBid({ timestamp: 1002000, bid: 15100 })
-        spotPrices.tryBid({ timestamp: 1002250, bid: 15500 })
-        spotPrices.tryBid({ timestamp: 1002500, bid: 14980 })
-        spotPrices.tryBid({ timestamp: 1002750, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002000, bid: 15100 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002250, bid: 15500 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002500, bid: 14980 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002750, bid: 15000 })
 
         setImmediate(() => {
-          spotPrices.tryAsk({ timestamp: 1003000, ask: 0 })
-          spotPrices.tryBid({ timestamp: 1003000, bid: 15000 })
-          spotPrices.tryBid({ timestamp: 1003250, bid: 15000 })
-          spotPrices.tryBid({ timestamp: 1003500, bid: 15000 })
-          spotPrices.tryBid({ timestamp: 1003750, bid: 15000 })
+          spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1003000, ask: 0 })
+          spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003000, bid: 15000 })
+          spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003250, bid: 15000 })
+          spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003500, bid: 15000 })
+          spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003750, bid: 15000 })
 
-          spotPrices.tryBid({ timestamp: 1004000, bid: 99999 })
-          setImmediate(() => spotPrices.tryBid({ timestamp: 1004000, bid: 99999 }))
+          spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1004000, bid: 99999 })
+          setImmediate(() => spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1004000, bid: 99999 }))
         })
     })
     test("cancel previous (SELL) order", async done => {
@@ -174,7 +174,7 @@ describe("insideBarMomentumStrategy", () => {
         const takeProfitOffset = 0.8;
         const minTrendbarRange = 15;
         const volume = 0.1;
-        const spotPrices = new DebugSpotPricesStream({ symbol })
+        const spotPrices = new SpotPricesStream({ symbol })
         const spots = () => spotPrices;
         const account = fromNothing({ currency, initialBalance, spots })
         await insideBarMomentumStrategy({ account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume })
@@ -200,29 +200,29 @@ describe("insideBarMomentumStrategy", () => {
             }
         })
 
-        spotPrices.tryBid({ timestamp: 1000000, bid: 15100 })
-        spotPrices.tryBid({ timestamp: 1000250, bid: 15500 })
-        spotPrices.tryBid({ timestamp: 1000500, bid: 14980 })
-        spotPrices.tryBid({ timestamp: 1000750, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000000, bid: 15100 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000250, bid: 15500 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000500, bid: 14980 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000750, bid: 15000 })
 
-        spotPrices.tryBid({ timestamp: 1001000, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001250, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001500, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001750, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001000, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001250, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001500, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001750, bid: 15000 })
 
-        spotPrices.tryBid({ timestamp: 1002000, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1002250, bid: 15500 })
-        spotPrices.tryBid({ timestamp: 1002500, bid: 14980 })
-        spotPrices.tryBid({ timestamp: 1002750, bid: 15100 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002000, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002250, bid: 15500 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002500, bid: 14980 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002750, bid: 15100 })
 
         setImmediate(() => { // TODO needs to work without setImmediate
-            spotPrices.tryBid({ timestamp: 1003000, bid: 15000 })
-            spotPrices.tryBid({ timestamp: 1003250, bid: 15000 })
-            spotPrices.tryBid({ timestamp: 1003500, bid: 15000 })
-            spotPrices.tryBid({ timestamp: 1003750, bid: 15000 })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003000, bid: 15000 })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003250, bid: 15000 })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003500, bid: 15000 })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003750, bid: 15000 })
 
-            spotPrices.tryAsk({ timestamp: 1004000, ask: 0 })
-            setImmediate(() => spotPrices.tryAsk({ timestamp: 1004001, ask: 0 }))
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1004000, ask: 0 })
+            setImmediate(() => spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1004001, ask: 0 }))
         })
     })
     test("close (BUY) order if entry price exceeds takeProfit", async done => {
@@ -235,7 +235,7 @@ describe("insideBarMomentumStrategy", () => {
         const takeProfitOffset = 0.8;
         const minTrendbarRange = 15;
         const volume = 0.1;
-        const spotPrices = new DebugSpotPricesStream({ symbol })
+        const spotPrices = new SpotPricesStream({ symbol })
         const spots = () => spotPrices;
         const account = fromNothing({ currency, initialBalance, spots })
         await insideBarMomentumStrategy({ account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume })
@@ -262,21 +262,21 @@ describe("insideBarMomentumStrategy", () => {
             }
         })
 
-        spotPrices.tryBid({ timestamp: 1000000, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1000250, bid: 15500 })
-        spotPrices.tryBid({ timestamp: 1000500, bid: 14980 })
-        spotPrices.tryBid({ timestamp: 1000750, bid: 15100 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000000, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000250, bid: 15500 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000500, bid: 14980 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000750, bid: 15100 })
 
-        spotPrices.tryBid({ timestamp: 1001000, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001250, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001500, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001750, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001000, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001250, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001500, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001750, bid: 15000 })
 
         setImmediate(() => { // FIXME
-            spotPrices.tryAsk({ timestamp: 1002000, ask: 15000 })
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002000, ask: 15000 })
             setImmediate(() => {
-                spotPrices.tryAsk({ timestamp: 1002001, ask: 15552 })
-                spotPrices.tryBid({ timestamp: 1002001, bid: 15916 })
+                spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002001, ask: 15552 })
+                spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002001, bid: 15916 })
             })
         })
     })
@@ -290,7 +290,7 @@ describe("insideBarMomentumStrategy", () => {
         const takeProfitOffset = 0.8;
         const minTrendbarRange = 15;
         const volume = 0.1;
-        const spotPrices = new DebugSpotPricesStream({ symbol })
+        const spotPrices = new SpotPricesStream({ symbol })
         const spots = () => spotPrices;
         const account = fromNothing({ currency, initialBalance, spots })
         await insideBarMomentumStrategy({ account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume })
@@ -317,21 +317,21 @@ describe("insideBarMomentumStrategy", () => {
             }
         })
 
-        spotPrices.tryBid({ timestamp: 1000000, bid: 15100 })
-        spotPrices.tryBid({ timestamp: 1000250, bid: 15500 })
-        spotPrices.tryBid({ timestamp: 1000500, bid: 14980 })
-        spotPrices.tryBid({ timestamp: 1000750, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000000, bid: 15100 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000250, bid: 15500 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000500, bid: 14980 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000750, bid: 15000 })
 
-        spotPrices.tryBid({ timestamp: 1001000, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001250, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001500, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001750, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001000, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001250, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001500, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001750, bid: 15000 })
 
         setImmediate(() => { // FIXME
-            spotPrices.tryBid({ timestamp: 1002000, bid: 15000 })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002000, bid: 15000 })
             setImmediate(() => {
-                spotPrices.tryBid({ timestamp: 1002001, bid: 14928 })
-                spotPrices.tryAsk({ timestamp: 1002001, ask: 14564 })
+                spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002001, bid: 14928 })
+                spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002001, ask: 14564 })
             })
         })
     })
@@ -345,7 +345,7 @@ describe("insideBarMomentumStrategy", () => {
         const takeProfitOffset = 0.8;
         const minTrendbarRange = 15;
         const volume = 0.1;
-        const spotPrices = new DebugSpotPricesStream({ symbol })
+        const spotPrices = new SpotPricesStream({ symbol })
         const spots = () => spotPrices;
         const account = fromNothing({ currency, initialBalance, spots })
         await insideBarMomentumStrategy({ account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume })
@@ -372,21 +372,21 @@ describe("insideBarMomentumStrategy", () => {
             }
         })
 
-        spotPrices.tryBid({ timestamp: 1000000, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1000250, bid: 15500 })
-        spotPrices.tryBid({ timestamp: 1000500, bid: 14980 })
-        spotPrices.tryBid({ timestamp: 1000750, bid: 15100 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000000, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000250, bid: 15500 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000500, bid: 14980 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000750, bid: 15100 })
 
-        spotPrices.tryBid({ timestamp: 1001000, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001250, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001500, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001750, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001000, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001250, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001500, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001750, bid: 15000 })
 
         setImmediate(() => { // FIXME
-            spotPrices.tryAsk({ timestamp: 1002000, ask: 15000 })
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002000, ask: 15000 })
             setImmediate(() => {
-                spotPrices.tryAsk({ timestamp: 1002001, ask: 15552 })
-                spotPrices.tryBid({ timestamp: 1002001, bid: 15292 })
+                spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002001, ask: 15552 })
+                spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002001, bid: 15292 })
             })
         })
     })
@@ -400,7 +400,7 @@ describe("insideBarMomentumStrategy", () => {
         const takeProfitOffset = 0.8;
         const minTrendbarRange = 15;
         const volume = 0.1;
-        const spotPrices = new DebugSpotPricesStream({ symbol })
+        const spotPrices = new SpotPricesStream({ symbol })
         const spots = () => spotPrices;
         const account = fromNothing({ currency, initialBalance, spots })
         await insideBarMomentumStrategy({ account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume })
@@ -427,21 +427,21 @@ describe("insideBarMomentumStrategy", () => {
             }
         })
 
-        spotPrices.tryBid({ timestamp: 1000000, bid: 15100 })
-        spotPrices.tryBid({ timestamp: 1000250, bid: 15500 })
-        spotPrices.tryBid({ timestamp: 1000500, bid: 14980 })
-        spotPrices.tryBid({ timestamp: 1000750, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000000, bid: 15100 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000250, bid: 15500 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000500, bid: 14980 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1000750, bid: 15000 })
 
-        spotPrices.tryBid({ timestamp: 1001000, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001250, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001500, bid: 15000 })
-        spotPrices.tryBid({ timestamp: 1001750, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001000, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001250, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001500, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001750, bid: 15000 })
 
         setImmediate(() => { // FIXME
-            spotPrices.tryBid({ timestamp: 1002000, bid: 15000 })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002000, bid: 15000 })
             setImmediate(() => {
-                spotPrices.tryBid({ timestamp: 1002001, bid: 14928 })
-                spotPrices.tryAsk({ timestamp: 1002001, ask: 15188 })
+                spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002001, bid: 14928 })
+                spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002001, ask: 15188 })
             })
         })
     })
