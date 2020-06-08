@@ -1,24 +1,16 @@
 import {PassThrough} from "stream";
-import debug from "debug";
 
 import * as B from "../base";
 
-const events: B.AccountEvent["type"][] = ["BALANCE_CHANGED" , "TRANSACTION" , "EQUITY_CHANGED" , "CREATED" , "ACCEPTED" , "REJECTED" , "EXPIRED" , "CANCELED" , "FILLED" , "PROFITLOSS" , "CLOSED" , "ENDED"]
-
 export class AccountStream extends PassThrough implements B.AccountStream {
   readonly props: B.AccountProps;
-  private readonly log: debug.Debugger;
 
   constructor(props: B.AccountProps) {
     super({objectMode: true});
     this.props = Object.freeze(props);
-    this.log = debug("account");
   }
 
   push(chunk: B.AccountEvent | null, encoding?: BufferEncoding): boolean {
-    if(chunk && events.includes(chunk.type)) {
-      this.log("%j", chunk);
-    }
     return super.push(chunk, encoding);
   }
 
