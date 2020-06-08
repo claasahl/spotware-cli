@@ -5,7 +5,7 @@ jest.mock("debug");
 const log = jest.fn(() => undefined)
 debug.mockImplementation(() => log)
 
-describe("DebugAccountStream", () => {
+describe.skip("DebugAccountStream", () => {
     describe("log events", () => {
         beforeEach(() => {
             debug.mockClear();
