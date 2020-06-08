@@ -65,64 +65,6 @@ describe.skip("DebugAccountStream", () => {
         })
     })
 
-    describe("access cached events", () => {
-        test("BALANCE_CHANGED (not cached)", () => {
-            const props = { currency: Symbol.for("abc"), a: 2 }
-            const stream = new DebugAccountStream(props)
-            expect(stream.balanceOrNull()).toBeNull();
-        })
-    
-        test("BALANCE_CHANGED (cached)", () => {
-            const props = { currency: Symbol.for("abc"), a: 2 }
-            const stream = new DebugAccountStream(props)
-            const event = { type: "BALANCE_CHANGED", balance: 23, timestamp: 123 };
-            stream.push(event)
-            expect(stream.balanceOrNull()).toStrictEqual(event);
-        })
-
-        test("TRANSACTION (not cached)", () => {
-            const props = { currency: Symbol.for("abc"), a: 2 }
-            const stream = new DebugAccountStream(props)
-            expect(stream.transactionOrNull()).toBeNull();
-        })
-    
-        test("TRANSACTION (cached)", () => {
-            const props = { currency: Symbol.for("abc"), a: 2 }
-            const stream = new DebugAccountStream(props)
-            const event = { type: "TRANSACTION", amount: 23, timestamp: 123 };
-            stream.push(event)
-            expect(stream.transactionOrNull()).toStrictEqual(event);
-        })
-
-        test("EQUITY_CHANGED (not cached)", () => {
-            const props = { currency: Symbol.for("abc"), a: 2 }
-            const stream = new DebugAccountStream(props)
-            expect(stream.equityOrNull()).toBeNull();
-        })
-    
-        test("EQUITY_CHANGED (cached)", () => {
-            const props = { currency: Symbol.for("abc"), a: 2 }
-            const stream = new DebugAccountStream(props)
-            const event = { type: "EQUITY_CHANGED", equity: 23, timestamp: 123 };
-            stream.push(event)
-            expect(stream.equityOrNull()).toStrictEqual(event);
-        })
-
-        // test("CREATED (not cached)", () => {
-        //     const props = { currency: Symbol.for("abc"), a: 2 }
-        //     const stream = new DebugAccountStream(props)
-        //     await expect(stream.order()).toBeNull();
-        // })
-    
-        // test("CREATED (cached)", () => {
-        //     const props = { currency: Symbol.for("abc"), a: 2 }
-        //     const stream = new DebugAccountStream(props)
-        //     const event = { type: "CREATED", timestamp: 123, id: "1", symbol: Symbol.for("abc"), tradeSide: "SELL", volume: 0.1, orderType: "MARKET" };
-        //     stream.push(event)
-        //     await expect(stream.order()).toStrictEqual(event);
-        // })
-    })
-
     describe("tryXXX helpers", () => {
         test("should try 'balance' event", done => {
             const props = { currency: Symbol.for("abc"), a: 2 }

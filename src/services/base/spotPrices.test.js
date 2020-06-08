@@ -58,50 +58,6 @@ describe.skip("DebugSpotPricesStream", () => {
         })
     })
 
-    // describe("access cached events", () => {
-    //     test("ASK_PRICE_CHANGED (not cached)", () => {
-    //         const props = { symbol: Symbol.for("abc"), a: 2 }
-    //         const stream = new DebugSpotPricesStream(props)
-    //         expect(stream.askOrNull()).toBeNull();
-    //     })
-    
-    //     test("ASK_PRICE_CHANGED (cached)", () => {
-    //         const props = { symbol: Symbol.for("abc"), a: 2 }
-    //         const stream = new DebugSpotPricesStream(props)
-    //         const event = { type: "ASK_PRICE_CHANGED", ask: 23, timestamp: 123 };
-    //         stream.push(event)
-    //         expect(stream.askOrNull()).toStrictEqual(event);
-    //     })
-
-    //     test("BID_PRICE_CHANGED (not cached)", () => {
-    //         const props = { symbol: Symbol.for("abc"), a: 2 }
-    //         const stream = new DebugSpotPricesStream(props)
-    //         expect(stream.bidOrNull()).toBeNull();
-    //     })
-    
-    //     test("BID_PRICE_CHANGED (cached)", () => {
-    //         const props = { symbol: Symbol.for("abc"), a: 2 }
-    //         const stream = new DebugSpotPricesStream(props)
-    //         const event = { type: "BID_PRICE_CHANGED", bid: 23, timestamp: 123 };
-    //         stream.push(event)
-    //         expect(stream.bidOrNull()).toStrictEqual(event);
-    //     })
-
-    //     test("PRICE_CHANGED (not cached)", () => {
-    //         const props = { symbol: Symbol.for("abc"), a: 2 }
-    //         const stream = new DebugSpotPricesStream(props)
-    //         expect(stream.priceOrNull()).toBeNull();
-    //     })
-    
-    //     test("PRICE_CHANGED (cached)", () => {
-    //         const props = { symbol: Symbol.for("abc"), a: 2 }
-    //         const stream = new DebugSpotPricesStream(props)
-    //         const event = { type: "PRICE_CHANGED", ask: 22, bid: 23, timestamp: 123 };
-    //         stream.push(event)
-    //         expect(stream.priceOrNull()).toStrictEqual(event);
-    //     })
-    // })
-
     describe("lifecylce", () => {
         test("should emit 'ask' event", done => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
