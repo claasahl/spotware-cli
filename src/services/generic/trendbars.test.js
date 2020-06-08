@@ -24,75 +24,8 @@ describe("ToTrendbars class", () => {
         })
     })
 
-    describe("log events", () => {
-        beforeEach(() => {
-            debug.mockClear();
-            extend.mockClear();
-            log.mockClear();
-        });
-
-        test("setup loggers", () => {
-            const symbol = Symbol.for("abc");
-            const period = 60000;
-            new ToTrendbars({ symbol, period })
-            expect(debug).toHaveBeenCalledTimes(1)
-            expect(extend).toHaveBeenCalledTimes(2)
-            expect(log).toHaveBeenCalledTimes(0)
-        })
-
-        test("log 'trendbar' events", () => {
-            const symbol = Symbol.for("abc");
-            const period = 60000;
-            const stream = new ToTrendbars({ symbol, period })
-            const event = { type: "TRENDBAR", open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
-            stream.push(event)
-            expect(log).toHaveBeenCalledTimes(1)
-            expect(log).toHaveBeenCalledWith("%j", event);
-        })
-
-        test("should not log unknown events", () => {
-            const symbol = Symbol.for("abc");
-            const period = 60000;
-            const stream = new ToTrendbars({ symbol, period })
-            stream.push({ type: "UNKNOWN"})
-            stream.push({something: 23})
-            expect(log).toHaveBeenCalledTimes(0)
-        })
-    })
-
-    describe.skip("access cached events", () => {
-        test("TRENDBAR (not cached)", () => {
-            const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
-            const stream = toTrendbars(props)
-            expect(stream.trendbarOrNull()).toBeNull();
-        })
-    
-        test("TRENDBAR (cached)", () => {
-            const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
-            const stream = toTrendbars(props)
-            const event = { type: "TRENDBAR", open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
-            stream.push(event);
-            expect(stream.trendbarOrNull()).toStrictEqual(event);
-        })
-    })
-
     describe("actions", () => {
         // no actions
-    })
-
-    describe.skip("emitXXX helpers", () => {
-        test("should emit 'trendbar' event", done => {
-            const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
-            const stream = toTrendbars(props)
-            const event = { type: "TRENDBAR", open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
-            stream.on("data", e => {
-                if(e.type === "TRENDBAR") {
-                    expect(e).toStrictEqual(event);
-                    done()
-                }
-            })
-            stream.tryTrendbar(event)
-        })
     })
 })
 
