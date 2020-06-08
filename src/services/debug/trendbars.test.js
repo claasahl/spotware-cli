@@ -17,4 +17,8 @@ describe("debug", () => {
             })
         })
     })
+
+    describe("actions", () => {
+        // no actions
+    })
 })

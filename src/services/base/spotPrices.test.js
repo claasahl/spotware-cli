@@ -102,14 +102,6 @@ describe.skip("DebugSpotPricesStream", () => {
     //     })
     // })
 
-    describe("actions", () => {
-        test("trendbars", () => {
-            const props = { symbol: Symbol.for("abc"), a: 2 }
-            const stream = new DebugSpotPricesStream(props)
-            expect(stream.trendbars).toThrow("not implemented")
-        })
-    })
-
     describe("lifecylce", () => {
         test("should emit 'ask' event", done => {
             const props = { symbol: Symbol.for("abc"), a: 2 }
