@@ -1,9 +1,9 @@
 import {PassThrough} from "stream";
 
-import * as B from "../base";
+import * as T from "../types";
 import * as L from "../logging";
 
-export class OrderStream<Props extends B.OrderProps> extends PassThrough implements B.OrderStream<Props> {
+export class OrderStream<Props extends T.OrderProps> extends PassThrough implements T.OrderStream<Props> {
   readonly props: Props;
 
   constructor(props: Props) {
@@ -12,7 +12,7 @@ export class OrderStream<Props extends B.OrderProps> extends PassThrough impleme
     L.logOrderEvents(this);
   }
 
-  push(chunk: B.OrderEvent | null, encoding?: BufferEncoding): boolean {
+  push(chunk: T.OrderEvent | null, encoding?: BufferEncoding): boolean {
     return super.push(chunk, encoding);
   }
 

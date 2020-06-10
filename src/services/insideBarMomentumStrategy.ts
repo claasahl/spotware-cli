@@ -1,7 +1,7 @@
-import * as B from "./base"
+import * as T from "./types"
 import { bullish, bearish, range } from "indicators"
 
-function engulfed(candleA: B.TrendbarEvent, candleB: B.TrendbarEvent): boolean {
+function engulfed(candleA: T.TrendbarEvent, candleB: T.TrendbarEvent): boolean {
   const upperA = candleA.high;
   const lowerA = candleA.low;
   const upperB = candleB.high;
@@ -18,19 +18,19 @@ function roundPrice(price: number): number {
 
 interface PlaceOrderProps {
   id: string,
-  symbol: B.Symbol,
-  enter: B.Price,
-  tradeSide: B.TradeSide,
-  volume: B.Volume,
-  stopLoss: B.Price,
-  takeProfit: B.Price,
-  account: B.AccountStream,
-  expiresAt?: B.Timestamp
+  symbol: T.Symbol,
+  enter: T.Price,
+  tradeSide: T.TradeSide,
+  volume: T.Volume,
+  stopLoss: T.Price,
+  takeProfit: T.Price,
+  account: T.AccountStream,
+  expiresAt?: T.Timestamp
 }
-function placeOrder(props: PlaceOrderProps): B.OrderStream<B.StopOrderProps> {
+function placeOrder(props: PlaceOrderProps): T.OrderStream<T.StopOrderProps> {
   const { account, ...rest } = props;
   const order = account.stopOrder(rest);
-  const guard = (e: B.OrderProfitLossEvent) => {
+  const guard = (e: T.OrderProfitLossEvent) => {
     if (props.tradeSide === "BUY" && (e.price >= props.takeProfit || e.price <= props.stopLoss)) {
       order.closeOrder();
     } else if (props.tradeSide === "SELL" && (e.price <= props.takeProfit || e.price >= props.stopLoss)) {
@@ -45,7 +45,7 @@ function placeOrder(props: PlaceOrderProps): B.OrderStream<B.StopOrderProps> {
   return order;
 }
 
-function endLastOrder(lastOrder: B.OrderStream<B.StopOrderProps> | undefined, cb: (err?: Error) => void): void {
+function endLastOrder(lastOrder: T.OrderStream<T.StopOrderProps> | undefined, cb: (err?: Error) => void): void {
   if (lastOrder) {
     lastOrder.once("error", err => cb(err));
     lastOrder.once("end", () => cb());
@@ -56,27 +56,27 @@ function endLastOrder(lastOrder: B.OrderStream<B.StopOrderProps> | undefined, cb
 }
 
 export interface Props {
-  account: B.AccountStream,
-  period: B.Period,
-  symbol: B.Symbol,
-  enterOffset: B.Price,
-  stopLossOffset: B.Price,
-  takeProfitOffset: B.Price,
-  minTrendbarRange: B.Price,
-  volume: B.Volume,
+  account: T.AccountStream,
+  period: T.Period,
+  symbol: T.Symbol,
+  enterOffset: T.Price,
+  stopLossOffset: T.Price,
+  takeProfitOffset: T.Price,
+  minTrendbarRange: T.Price,
+  volume: T.Volume,
   expiresIn?: number
 }
 
-export async function insideBarMomentumStrategy(props: Props): Promise<B.AccountStream> {
+export async function insideBarMomentumStrategy(props: Props): Promise<T.AccountStream> {
   const { account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, expiresIn } = props
   const trendbars = account.trendbars({ period, symbol })
   let id = 1;
 
-  let lastOrder: B.OrderStream<B.StopOrderProps> | undefined = undefined;
-  const placeBuyOrder = (timestamp: B.Timestamp, enter: B.Price, stopLoss: B.Price, takeProfit: B.Price) => placeOrder({ id: `${id++}`, symbol, enter, tradeSide: "BUY", volume, stopLoss, takeProfit, account, expiresAt: expiresIn ? timestamp + expiresIn : undefined })
-  const placeSellOrder = (timestamp: B.Timestamp, enter: B.Price, stopLoss: B.Price, takeProfit: B.Price) => placeOrder({ id: `${id++}`, symbol, enter, tradeSide: "SELL", volume, stopLoss, takeProfit, account, expiresAt: expiresIn ? timestamp + expiresIn : undefined })
+  let lastOrder: T.OrderStream<T.StopOrderProps> | undefined = undefined;
+  const placeBuyOrder = (timestamp: T.Timestamp, enter: T.Price, stopLoss: T.Price, takeProfit: T.Price) => placeOrder({ id: `${id++}`, symbol, enter, tradeSide: "BUY", volume, stopLoss, takeProfit, account, expiresAt: expiresIn ? timestamp + expiresIn : undefined })
+  const placeSellOrder = (timestamp: T.Timestamp, enter: T.Price, stopLoss: T.Price, takeProfit: T.Price) => placeOrder({ id: `${id++}`, symbol, enter, tradeSide: "SELL", volume, stopLoss, takeProfit, account, expiresAt: expiresIn ? timestamp + expiresIn : undefined })
 
-  const trendbarEvents: B.TrendbarEvent[] = []
+  const trendbarEvents: T.TrendbarEvent[] = []
   trendbars.on("data", e => {
     trendbarEvents.push(e);
     if (trendbarEvents.length >= 2) {

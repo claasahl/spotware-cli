@@ -1,5 +1,5 @@
 import assert from "assert";
-import { Symbol, Currency } from "../base";
+import { Symbol, Currency } from "../types";
 
 function name(symbol: Symbol) {
   const matches = symbol.toString().match(/Symbol\((.*)\)/);

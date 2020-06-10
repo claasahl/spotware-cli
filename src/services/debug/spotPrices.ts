@@ -1,22 +1,22 @@
 import {PassThrough} from "stream";
 
-import * as B from "../base";
+import * as T from "../types";
 import * as L from "../logging";
 
-export class SpotPricesStream extends PassThrough implements B.SpotPricesStream {
-  readonly props: B.SpotPricesProps;
+export class SpotPricesStream extends PassThrough implements T.SpotPricesStream {
+  readonly props: T.SpotPricesProps;
 
-  constructor(props: B.SpotPricesProps) {
+  constructor(props: T.SpotPricesProps) {
     super({objectMode: true});
     this.props = Object.freeze(props);
     L.logSpotPriceEvents(this);
   }
 
-  push(chunk: B.SpotPricesEvent | null, encoding?: BufferEncoding): boolean {
+  push(chunk: T.SpotPricesEvent | null, encoding?: BufferEncoding): boolean {
     return super.push(chunk, encoding);
   }
 
-  trendbars(_props: B.SpotPricesSimpleTrendbarsProps): B.TrendbarsStream {
+  trendbars(_props: T.SpotPricesSimpleTrendbarsProps): T.TrendbarsStream {
     throw new Error("Method not implemented.");
   }
 }

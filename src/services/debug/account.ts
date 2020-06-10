@@ -1,34 +1,34 @@
 import {PassThrough} from "stream";
 
-import * as B from "../base";
+import * as T from "../types";
 import * as L from "../logging";
 
-export class AccountStream extends PassThrough implements B.AccountStream {
-  readonly props: B.AccountProps;
+export class AccountStream extends PassThrough implements T.AccountStream {
+  readonly props: T.AccountProps;
 
-  constructor(props: B.AccountProps) {
+  constructor(props: T.AccountProps) {
     super({objectMode: true});
     this.props = Object.freeze(props);
     L.logAccountEvents(this);
   }
 
-  push(chunk: B.AccountEvent | null, encoding?: BufferEncoding): boolean {
+  push(chunk: T.AccountEvent | null, encoding?: BufferEncoding): boolean {
     return super.push(chunk, encoding);
   }
 
-  marketOrder(_props: B.AccountSimpleMarketOrderProps): B.OrderStream<B.MarketOrderProps> {
+  marketOrder(_props: T.AccountSimpleMarketOrderProps): T.OrderStream<T.MarketOrderProps> {
     throw new Error("Method not implemented.");
   }
 
-  stopOrder(_props: B.AccountSimpleStopOrderProps): B.OrderStream<B.StopOrderProps> {
+  stopOrder(_props: T.AccountSimpleStopOrderProps): T.OrderStream<T.StopOrderProps> {
     throw new Error("Method not implemented.");
   }
 
-  spotPrices(_props: B.AccountSimpleSpotPricesProps): B.SpotPricesStream {
+  spotPrices(_props: T.AccountSimpleSpotPricesProps): T.SpotPricesStream {
     throw new Error("Method not implemented.");
   }
 
-  trendbars(_props: B.AccountSimpleTrendbarsProps): B.TrendbarsStream {
+  trendbars(_props: T.AccountSimpleTrendbarsProps): T.TrendbarsStream {
     throw new Error("Method not implemented.");
   }
 }

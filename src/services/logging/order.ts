@@ -1,10 +1,10 @@
 import debug from "debug";
 
-import * as B from "../base";
+import * as T from "../types";
 
-const events: B.OrderEvent["type"][] = ["CREATED" , "ACCEPTED" , "REJECTED" , "EXPIRED" , "CANCELED" , "FILLED" , "PROFITLOSS" , "CLOSED" , "ENDED"]
+const events: T.OrderEvent["type"][] = ["CREATED" , "ACCEPTED" , "REJECTED" , "EXPIRED" , "CANCELED" , "FILLED" , "PROFITLOSS" , "CLOSED" , "ENDED"]
 
-export function logOrderEvents<Props extends B.OrderProps>(stream: B.OrderStream<Props>): void {
+export function logOrderEvents<Props extends T.OrderProps>(stream: T.OrderStream<Props>): void {
   const log = debug("order")
     .extend(stream.props.symbol.toString())
     .extend(stream.props.id);

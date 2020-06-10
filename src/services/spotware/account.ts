@@ -2,7 +2,7 @@ import * as $ from "@claasahl/spotware-adapter";
 import Lock from "async-lock"
 import { Readable } from "stream";
 
-import * as B from "../base";
+import * as T from "../types";
 import * as D from "../debug";
 import * as G from "../generic";
 import { SpotwareClient } from "./client";
@@ -10,13 +10,13 @@ import { marketOrder, stopOrder } from "./order";
 
 interface Order {
     symbol: Symbol;
-    entry: B.Price;
-    volume: B.Volume;
-    tradeSide: B.TradeSide;
-    profitLoss: B.Price;
+    entry: T.Price;
+    volume: T.Volume;
+    tradeSide: T.TradeSide;
+    profitLoss: T.Price;
 }
 
-interface SpotwareAccountProps extends B.AccountProps {
+interface SpotwareAccountProps extends T.AccountProps {
     host: string,
     port: number
     clientId: string,
@@ -25,12 +25,12 @@ interface SpotwareAccountProps extends B.AccountProps {
 }
 class SpotwareAccountStream extends D.AccountStream {
     private readonly lock = new Lock();
-    private readonly clientProps: Omit<SpotwareAccountProps, keyof B.AccountProps>;
+    private readonly clientProps: Omit<SpotwareAccountProps, keyof T.AccountProps>;
     private readonly client: SpotwareClient;
     private ctidTraderAccountId?: number;
     private balance: number = 0;
-    private readonly subscribed: Set<B.Symbol> = new Set();
-    private readonly symbols: Map<B.Symbol, $.ProtoOALightSymbol> = new Map();
+    private readonly subscribed: Set<T.Symbol> = new Set();
+    private readonly symbols: Map<T.Symbol, $.ProtoOALightSymbol> = new Map();
     private readonly orders: Map<string, Order[]> = new Map();
 
     constructor({ currency, ...props }: SpotwareAccountProps) {
@@ -39,7 +39,7 @@ class SpotwareAccountStream extends D.AccountStream {
         this.client = new SpotwareClient(props);
     }
 
-    push(event: B.AccountEvent | null): boolean {
+    push(event: T.AccountEvent | null): boolean {
         const tmp = super.push(event)
         if(event && event.type === "TRANSACTION") {
             const { timestamp, amount } = event;
@@ -76,7 +76,7 @@ class SpotwareAccountStream extends D.AccountStream {
         })
     }
 
-    private async symbolId(symbol: B.Symbol): Promise<number> {
+    private async symbolId(symbol: T.Symbol): Promise<number> {
         const details = this.symbols.get(symbol);
         if (details) {
             return details.symbolId;
@@ -94,14 +94,14 @@ class SpotwareAccountStream extends D.AccountStream {
         })
     }
 
-    private async symbol(symbol: B.Symbol): Promise<$.ProtoOASymbol> {
+    private async symbol(symbol: T.Symbol): Promise<$.ProtoOASymbol> {
         const ctidTraderAccountId = await this.traderId();
         const symbolId = await this.symbolId(symbol);
         const data = await this.client.symbolById({ ctidTraderAccountId, symbolId: [symbolId] })
         return data.symbol[0];
     }
 
-    marketOrder(props: B.AccountSimpleMarketOrderProps): B.OrderStream<B.MarketOrderProps> {
+    marketOrder(props: T.AccountSimpleMarketOrderProps): T.OrderStream<T.MarketOrderProps> {
         const client = this.client;
 
         if (!this.orders.has(props.id)) {
@@ -116,7 +116,7 @@ class SpotwareAccountStream extends D.AccountStream {
             ctidTraderAccountId: () => this.traderId(),
             spotwareSymbol: () => this.symbol(props.symbol)
         })
-        const update = (e: B.OrderProfitLossEvent) => {
+        const update = (e: T.OrderProfitLossEvent) => {
             order.profitLoss = e.profitLoss;
             this.updateEquity(e)
         }
@@ -140,7 +140,7 @@ class SpotwareAccountStream extends D.AccountStream {
         })
         return stream;
     }
-    stopOrder(props: B.AccountSimpleStopOrderProps): B.OrderStream<B.StopOrderProps> {
+    stopOrder(props: T.AccountSimpleStopOrderProps): T.OrderStream<T.StopOrderProps> {
         const client = this.client;
         if (!this.orders.has(props.id)) {
             this.orders.set(props.id, [])
@@ -154,7 +154,7 @@ class SpotwareAccountStream extends D.AccountStream {
             ctidTraderAccountId: () => this.traderId(),
             spotwareSymbol: () => this.symbol(props.symbol)
         })
-        const update = (e: B.OrderProfitLossEvent) => {
+        const update = (e: T.OrderProfitLossEvent) => {
             order.profitLoss = e.profitLoss;
             this.updateEquity(e)
         }
@@ -179,17 +179,17 @@ class SpotwareAccountStream extends D.AccountStream {
         return stream;
     }
 
-    spotPrices(props: B.AccountSimpleSpotPricesProps): B.SpotPricesStream {
-        class Stream extends Readable implements B.SpotPricesStream {
-            readonly props: B.SpotPricesProps;
-            constructor(props: B.SpotPricesProps) {
+    spotPrices(props: T.AccountSimpleSpotPricesProps): T.SpotPricesStream {
+        class Stream extends Readable implements T.SpotPricesStream {
+            readonly props: T.SpotPricesProps;
+            constructor(props: T.SpotPricesProps) {
                 super({objectMode:true, read: () => {}})
                 this.props = Object.freeze(props);
             }
-            push(chunk: B.SpotPricesEvent, encoding?: BufferEncoding): boolean {
+            push(chunk: T.SpotPricesEvent, encoding?: BufferEncoding): boolean {
                 return super.push(chunk, encoding);
             }
-            trendbars(_props: Pick<B.TrendbarsProps, "period">): B.TrendbarsStream {
+            trendbars(_props: Pick<T.TrendbarsProps, "period">): T.TrendbarsStream {
                 throw new Error("Method not implemented.");
             }
         }
@@ -232,12 +232,12 @@ class SpotwareAccountStream extends D.AccountStream {
         return stream;
     }
 
-    trendbars(props: B.AccountSimpleTrendbarsProps): B.TrendbarsStream {
+    trendbars(props: T.AccountSimpleTrendbarsProps): T.TrendbarsStream {
         const spots = this.spotPrices(props)
         return G.toTrendbars({ ...props, spots })
     }
 
-    private updateEquity(e: { timestamp: B.Timestamp }): void {
+    private updateEquity(e: { timestamp: T.Timestamp }): void {
         let profitLoss = 0;
         this.orders.forEach(o => o.forEach(o => (profitLoss += o.profitLoss)));
         const equity = Math.round((this.balance + profitLoss) * 100) / 100;
@@ -245,6 +245,6 @@ class SpotwareAccountStream extends D.AccountStream {
     }
 }
 
-export function fromSomething(props: SpotwareAccountProps): B.AccountStream {
+export function fromSomething(props: SpotwareAccountProps): T.AccountStream {
     return new SpotwareAccountStream(props);
 }

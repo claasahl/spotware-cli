@@ -1,11 +1,11 @@
 import debug from "debug";
 import ms from "ms";
 
-import * as B from "../base";
+import * as T from "../types";
 
-const events: B.TrendbarEvent["type"][] = ["TRENDBAR"]
+const events: T.TrendbarEvent["type"][] = ["TRENDBAR"]
 
-export function logTrendbarEvents(stream: B.TrendbarsStream): void {
+export function logTrendbarEvents(stream: T.TrendbarsStream): void {
   const log = debug("trendbars")
     .extend(stream.props.symbol.toString())
     .extend(ms(stream.props.period));

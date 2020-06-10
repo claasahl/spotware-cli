@@ -1,5 +1,5 @@
 import { createMachine, interpret, StateMachine } from '@xstate/fsm';
-import * as B from "./services/base"
+import * as T from "./services/types"
 
 
 
@@ -14,13 +14,13 @@ type Event =
   | { type: 'EXPIRE' };
 
 type State =
-  | { value: 'created', context: B.OrderCreatedEvent }
-  | { value: 'accepted', context: B.OrderAcceptedEvent }
-  | { value: 'rejected', context: B.OrderRejectedEvent }
-  | { value: 'filled', context: B.OrderFilledEvent }
-  | { value: 'closed', context: B.OrderClosedEvent }
-  | { value: 'canceled', context: B.OrderCanceledEvent }
-  | { value: 'expired', context: B.OrderExpiredEvent }
+  | { value: 'created', context: T.OrderCreatedEvent }
+  | { value: 'accepted', context: T.OrderAcceptedEvent }
+  | { value: 'rejected', context: T.OrderRejectedEvent }
+  | { value: 'filled', context: T.OrderFilledEvent }
+  | { value: 'closed', context: T.OrderClosedEvent }
+  | { value: 'canceled', context: T.OrderCanceledEvent }
+  | { value: 'expired', context: T.OrderExpiredEvent }
 
 const machine = createMachine<Context, Event, State>({
   initial: "created",

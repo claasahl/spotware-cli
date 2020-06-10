@@ -2,12 +2,12 @@ import * as $ from "@claasahl/spotware-adapter"
 import {Readable} from "stream";
 import debug from "debug";
 
-import * as B from "../base"
+import * as T from "../types"
 import { SpotwareClient } from "./client";
 
-class SpotwareOrderStream<Props extends B.OrderProps> extends Readable implements B.OrderStream<Props> {
+class SpotwareOrderStream<Props extends T.OrderProps> extends Readable implements T.OrderStream<Props> {
     readonly props: Props;
-    private readonly lifecyle = B.lifecycle();
+    private readonly lifecyle = T.lifecycle();
     private readonly client: SpotwareClient;
     private readonly log: debug.Debugger;
     ctidTraderAccountId?: number;
@@ -22,7 +22,7 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends Readable implement
         this.log = debug("order").extend(props.id);
     }
     
-    push(chunk: B.OrderEvent | null, encoding?: BufferEncoding): boolean {
+    push(chunk: T.OrderEvent | null, encoding?: BufferEncoding): boolean {
         if (chunk && !this.lifecyle.test(chunk)) {
             return true;
         }
@@ -65,7 +65,7 @@ class SpotwareOrderStream<Props extends B.OrderProps> extends Readable implement
     }
 }
 
-function order<Props extends B.OrderProps>(props: Props, extras: { client: SpotwareClient, spots: B.SpotPricesStream, ctidTraderAccountId: () => Promise<number>, spotwareSymbol: () => Promise<$.ProtoOASymbol>, partial: Partial<$.ProtoOANewOrderReq> & Pick<$.ProtoOANewOrderReq, "orderType"> }): B.OrderStream<Props> {
+function order<Props extends T.OrderProps>(props: Props, extras: { client: SpotwareClient, spots: T.SpotPricesStream, ctidTraderAccountId: () => Promise<number>, spotwareSymbol: () => Promise<$.ProtoOASymbol>, partial: Partial<$.ProtoOANewOrderReq> & Pick<$.ProtoOANewOrderReq, "orderType"> }): T.OrderStream<Props> {
     const stream = new SpotwareOrderStream(props, extras.client);
     setImmediate(async () => {
         try {
@@ -146,7 +146,7 @@ function order<Props extends B.OrderProps>(props: Props, extras: { client: Spotw
 
                             stream.push({ type: "FILLED", timestamp, entry: executionPrice });
                             if (props.tradeSide === "BUY") {
-                                const update = (e: B.SpotPricesEvent) => {
+                                const update = (e: T.SpotPricesEvent) => {
                                     if (e.type === "BID_PRICE_CHANGED") {
                                         const { timestamp, bid: price } = e
                                         const profitLoss = round((price - executionPrice) * stream.props.volume);
@@ -156,7 +156,7 @@ function order<Props extends B.OrderProps>(props: Props, extras: { client: Spotw
                                 extras.spots.on("data", update);
                                 stream.once("end", () => extras.spots.off("data", update))
                             } else if (props.tradeSide === "SELL") {
-                                const update = (e: B.SpotPricesEvent) => {
+                                const update = (e: T.SpotPricesEvent) => {
                                     if (e.type === "ASK_PRICE_CHANGED") {
                                         const { timestamp, ask: price } = e
                                         const profitLoss = round((executionPrice - price) * stream.props.volume);
@@ -192,13 +192,13 @@ function order<Props extends B.OrderProps>(props: Props, extras: { client: Spotw
     return stream;
 }
 
-export function marketOrder(props: Omit<B.MarketOrderProps & { client: SpotwareClient, spots: B.SpotPricesStream, ctidTraderAccountId: () => Promise<number>, spotwareSymbol: () => Promise<$.ProtoOASymbol> }, "orderType">): B.OrderStream<B.MarketOrderProps> {
+export function marketOrder(props: Omit<T.MarketOrderProps & { client: SpotwareClient, spots: T.SpotPricesStream, ctidTraderAccountId: () => Promise<number>, spotwareSymbol: () => Promise<$.ProtoOASymbol> }, "orderType">): T.OrderStream<T.MarketOrderProps> {
     const { client, spots, ctidTraderAccountId, spotwareSymbol, ...rest} = props;
     const extras = { client, spots, ctidTraderAccountId, spotwareSymbol }
     const partial = { orderType: $.ProtoOAOrderType.MARKET }
     return order({ ...rest, orderType: "MARKET"}, {...extras, partial })
 }
-export function stopOrder(props: Omit<B.StopOrderProps & { client: SpotwareClient, spots: B.SpotPricesStream, ctidTraderAccountId: () => Promise<number>, spotwareSymbol: () => Promise<$.ProtoOASymbol> }, "orderType">): B.OrderStream<B.StopOrderProps> {
+export function stopOrder(props: Omit<T.StopOrderProps & { client: SpotwareClient, spots: T.SpotPricesStream, ctidTraderAccountId: () => Promise<number>, spotwareSymbol: () => Promise<$.ProtoOASymbol> }, "orderType">): T.OrderStream<T.StopOrderProps> {
     const { client, spots, ctidTraderAccountId, spotwareSymbol, ...rest} = props;
     const extras = { client, spots, ctidTraderAccountId, spotwareSymbol }
     const partial = { orderType: $.ProtoOAOrderType.STOP, stopPrice: props.enter }

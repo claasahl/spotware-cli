@@ -4,7 +4,7 @@ import { Readable, Transform, TransformCallback, TransformOptions, pipeline } fr
 import {obj as multistream} from "multistream";
 import debug from "debug";
 
-import * as B from "../base";
+import * as T from "../types";
 
 async function* sampleData(): AsyncGenerator<string, void, unknown> {
   yield '{ "type": "ASK_PRICE_CHANGED", "timestamp": 1577663999771, "ask": 6611.79 }';
@@ -27,7 +27,7 @@ async function* sampleData(): AsyncGenerator<string, void, unknown> {
   yield '{ "type": "ASK_PRICE_CHANGED", "timestamp": 1577663993516, "ask": 6612.72 }';
 }
 
-export function fromSampleData(props: B.SpotPricesProps): B.SpotPricesStream {
+export function fromSampleData(props: T.SpotPricesProps): T.SpotPricesStream {
   return pipeline(
     Readable.from(sampleData()),
     new ChunkToSpotPrices(props),
@@ -44,7 +44,7 @@ function fr0mFile(path: fs.PathLike): Readable {
   return Readable.from(rl);
 }
 
-export function fromFile(props: B.SpotPricesProps & { path: fs.PathLike }): B.SpotPricesStream {
+export function fromFile(props: T.SpotPricesProps & { path: fs.PathLike }): T.SpotPricesStream {
   const { path, ...originalProps } = props;
   return pipeline(
     fr0mFile(path),
@@ -53,7 +53,7 @@ export function fromFile(props: B.SpotPricesProps & { path: fs.PathLike }): B.Sp
   );
 }
 
-export function fromLogFiles(props: B.SpotPricesProps & { paths: fs.PathLike[] }): B.SpotPricesStream {
+export function fromLogFiles(props: T.SpotPricesProps & { paths: fs.PathLike[] }): T.SpotPricesStream {
   const { paths, ...originalProps } = props;
   const streams = paths.map(fr0mFile);
   return pipeline(
@@ -63,13 +63,13 @@ export function fromLogFiles(props: B.SpotPricesProps & { paths: fs.PathLike[] }
   );
 }
 const transformOptions: TransformOptions = {objectMode: true}
-class ChunkToSpotPrices extends Transform implements B.SpotPricesStream {
-  readonly props: B.SpotPricesProps;
-  private readonly cachedEvents: Map<B.SpotPricesEvent["type"], B.SpotPricesEvent>;
+class ChunkToSpotPrices extends Transform implements T.SpotPricesStream {
+  readonly props: T.SpotPricesProps;
+  private readonly cachedEvents: Map<T.SpotPricesEvent["type"], T.SpotPricesEvent>;
   private readonly filter: (chunk: string) => boolean;
   private readonly log: debug.Debugger;
 
-  constructor(props: B.SpotPricesProps, filter: (chunk: string) => boolean = () => true) {
+  constructor(props: T.SpotPricesProps, filter: (chunk: string) => boolean = () => true) {
     super(transformOptions);
     this.props = Object.freeze(props);
     this.cachedEvents = new Map();
@@ -77,7 +77,7 @@ class ChunkToSpotPrices extends Transform implements B.SpotPricesStream {
     this.log = debug("spotPrices").extend(props.symbol.toString());
   }
 
-  push(event: B.SpotPricesEvent | null): boolean {
+  push(event: T.SpotPricesEvent | null): boolean {
     if (event) {
       this.cachedEvents.set(event.type, event);
       this.log("%j", event);
@@ -117,11 +117,11 @@ class ChunkToSpotPrices extends Transform implements B.SpotPricesStream {
     }
   }
 
-  trendbars(_props: B.SpotPricesSimpleTrendbarsProps): B.TrendbarsStream {
+  trendbars(_props: T.SpotPricesSimpleTrendbarsProps): T.TrendbarsStream {
     throw new Error("not implemented");
   }
 
-  private cachedEventOrNull<T extends B.SpotPricesEvent>(type: T["type"]): T | null {
+  private cachedEventOrNull<T extends T.SpotPricesEvent>(type: T["type"]): T | null {
     const event = this.cachedEvents.get(type)
     if (event && event.type === type) {
       return event as T;
@@ -129,15 +129,15 @@ class ChunkToSpotPrices extends Transform implements B.SpotPricesStream {
     return null;
   }
 
-  askOrNull(): B.AskPriceChangedEvent | null {
+  askOrNull(): T.AskPriceChangedEvent | null {
     return this.cachedEventOrNull("ASK_PRICE_CHANGED");
   }
 
-  bidOrNull(): B.BidPriceChangedEvent | null {
+  bidOrNull(): T.BidPriceChangedEvent | null {
     return this.cachedEventOrNull("BID_PRICE_CHANGED");
   }
 
-  priceOrNull(): B.PriceChangedEvent | null {
+  priceOrNull(): T.PriceChangedEvent | null {
     return this.cachedEventOrNull("PRICE_CHANGED");
   }
 }

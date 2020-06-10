@@ -1,6 +1,6 @@
 import mem from "mem";
 
-import * as B from "../base";
+import * as T from "../types";
 import * as D from "../debug";
 import * as G from "../generic";
 import { marketOrderFromSpotPrices, stopOrderFromSpotPrices } from "./order";
@@ -8,18 +8,18 @@ import { includesCurrency } from "./util";
 
 interface Order {
     symbol: Symbol;
-    entry: B.Price;
-    volume: B.Volume;
-    tradeSide: B.TradeSide;
-    profitLoss: B.Price;
+    entry: T.Price;
+    volume: T.Volume;
+    tradeSide: T.TradeSide;
+    profitLoss: T.Price;
 }
 
-interface LocalAccountProps extends B.AccountProps {
-    spots: (props: B.AccountSimpleSpotPricesProps) => B.SpotPricesStream;
-    initialBalance: B.Price;
+interface LocalAccountProps extends T.AccountProps {
+    spots: (props: T.AccountSimpleSpotPricesProps) => T.SpotPricesStream;
+    initialBalance: T.Price;
 }
 class LocalAccountStream extends D.AccountStream {
-    private readonly spots: (props: B.AccountSimpleSpotPricesProps) => B.SpotPricesStream;
+    private readonly spots: (props: T.AccountSimpleSpotPricesProps) => T.SpotPricesStream;
     private readonly orders: Map<string, Order[]> = new Map();
     private balance: number = 0;
 
@@ -29,7 +29,7 @@ class LocalAccountStream extends D.AccountStream {
         this.spots = mem(props.spots, { cacheKey })
     }
 
-    push(event: B.AccountEvent | null): boolean {
+    push(event: T.AccountEvent | null): boolean {
         const tmp = super.push(event)
         if(event && event.type === "TRANSACTION") {
             const { timestamp, amount } = event;
@@ -44,7 +44,7 @@ class LocalAccountStream extends D.AccountStream {
         return tmp;
       }
 
-    marketOrder(props: B.AccountSimpleMarketOrderProps): B.OrderStream<B.MarketOrderProps> {
+    marketOrder(props: T.AccountSimpleMarketOrderProps): T.OrderStream<T.MarketOrderProps> {
         if (!includesCurrency(props.symbol, this.props.currency)) {
             const symbol = props.symbol.toString();
             const currency = this.props.currency.toString()
@@ -59,7 +59,7 @@ class LocalAccountStream extends D.AccountStream {
         const order: Order = { ...props, entry: 0, profitLoss: 0 }
         const spots = this.spotPrices({ symbol: props.symbol })
         const stream = marketOrderFromSpotPrices({ ...props, spots })
-        const update = (e: B.OrderProfitLossEvent) => {
+        const update = (e: T.OrderProfitLossEvent) => {
             order.profitLoss = e.profitLoss;
             this.updateEquity(e)
         }
@@ -72,7 +72,7 @@ class LocalAccountStream extends D.AccountStream {
             } else if(e.type === "ENDED") {
                 const all = this.orders.get(props.id)!
                 const toBeDeleted: number[] = [];
-                const amounts: B.Price[] = [];
+                const amounts: T.Price[] = [];
                 all.forEach((o, index) => {
                     if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
                         amounts.push(o.profitLoss);
@@ -86,7 +86,7 @@ class LocalAccountStream extends D.AccountStream {
         return stream;
     }
 
-    stopOrder(props: B.AccountSimpleStopOrderProps): B.OrderStream<B.StopOrderProps> {
+    stopOrder(props: T.AccountSimpleStopOrderProps): T.OrderStream<T.StopOrderProps> {
         if (!includesCurrency(props.symbol, this.props.currency)) {
             const symbol = props.symbol.toString();
             const currency = this.props.currency.toString()
@@ -101,7 +101,7 @@ class LocalAccountStream extends D.AccountStream {
         const order: Order = { ...props, entry: 0, profitLoss: 0 }
         const spots = this.spotPrices({ symbol: props.symbol })
         const stream = stopOrderFromSpotPrices({ ...props, spots })
-        const update = (e: B.OrderProfitLossEvent) => {
+        const update = (e: T.OrderProfitLossEvent) => {
             order.profitLoss = e.profitLoss;
             this.updateEquity(e)
         }
@@ -114,7 +114,7 @@ class LocalAccountStream extends D.AccountStream {
             } else if(e.type === "ENDED") {
                 const all = this.orders.get(props.id)!
                 const toBeDeleted: number[] = [];
-                const amounts: B.Price[] = [];
+                const amounts: T.Price[] = [];
                 all.forEach((o, index) => {
                     if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
                         amounts.push(o.profitLoss);
@@ -128,17 +128,17 @@ class LocalAccountStream extends D.AccountStream {
         return stream;
     }
 
-    spotPrices(props: B.AccountSimpleSpotPricesProps): B.SpotPricesStream {
+    spotPrices(props: T.AccountSimpleSpotPricesProps): T.SpotPricesStream {
         return this.spots(props)
     }
 
-    trendbars(props: B.AccountSimpleTrendbarsProps): B.TrendbarsStream {
+    trendbars(props: T.AccountSimpleTrendbarsProps): T.TrendbarsStream {
         const { symbol } = props;
         const spots = this.spotPrices({ symbol });
         return G.toTrendbars({ ...props, spots })
     }
 
-    private updateEquity(e: { timestamp: B.Timestamp }): void {
+    private updateEquity(e: { timestamp: T.Timestamp }): void {
         let profitLoss = 0;
         this.orders.forEach(o => o.forEach(o => (profitLoss += o.profitLoss)));
         const equity = Math.round((this.balance + profitLoss) * 100) / 100;
@@ -146,7 +146,7 @@ class LocalAccountStream extends D.AccountStream {
     }
 }
 
-export function fromNothing(props: LocalAccountProps): B.AccountStream {
+export function fromNothing(props: LocalAccountProps): T.AccountStream {
     const stream = new LocalAccountStream(props);
     stream.push({ type: "TRANSACTION", timestamp: 0, amount: props.initialBalance });
     return stream;

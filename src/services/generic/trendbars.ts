@@ -1,13 +1,13 @@
 import { Transform, TransformCallback, pipeline } from "stream";
 
-import * as B from "../base";
+import * as T from "../types";
 import * as L from "../logging";
 
 interface Bucket {
-  begin: B.Timestamp;
-  end: B.Timestamp;
+  begin: T.Timestamp;
+  end: T.Timestamp;
 }
-function bucket(timestamp: B.Timestamp, period: B.Period): Bucket {
+function bucket(timestamp: T.Timestamp, period: T.Period): Bucket {
   const millisPerBucket = period;
   const bucketNo = Math.floor(timestamp / millisPerBucket);
   const begin = bucketNo * millisPerBucket;
@@ -16,10 +16,10 @@ function bucket(timestamp: B.Timestamp, period: B.Period): Bucket {
 }
 
 function accumulateTrendbar(
-  prev: B.TrendbarEvent,
-  curr: B.BidPriceChangedEvent,
+  prev: T.TrendbarEvent,
+  curr: T.BidPriceChangedEvent,
   index: number
-): B.TrendbarEvent {
+): T.TrendbarEvent {
   const next = { ...prev };
   if (index === 0) {
       next.open = curr.bid;
@@ -35,10 +35,10 @@ function accumulateTrendbar(
 }
 
 function toTrendbar(
-  timestamp: B.Timestamp,
-  events: B.BidPriceChangedEvent[]
-): B.TrendbarEvent {
-  const seed: B.TrendbarEvent = {
+  timestamp: T.Timestamp,
+  events: T.BidPriceChangedEvent[]
+): T.TrendbarEvent {
+  const seed: T.TrendbarEvent = {
       type: "TRENDBAR",
       open: 0,
       high: Number.MIN_VALUE,
@@ -50,21 +50,21 @@ function toTrendbar(
   return events.reduce(accumulateTrendbar, seed);
 }
 
-export class ToTrendbars extends Transform implements B.TrendbarsStream {
-  readonly props: B.TrendbarsProps;
-  private readonly values: Array<B.BidPriceChangedEvent> = [];
+export class ToTrendbars extends Transform implements T.TrendbarsStream {
+  readonly props: T.TrendbarsProps;
+  private readonly values: Array<T.BidPriceChangedEvent> = [];
 
-  constructor(props: B.TrendbarsProps) {
+  constructor(props: T.TrendbarsProps) {
       super({ objectMode: true });
       this.props = Object.freeze(props);
       L.logTrendbarEvents(this);
   }
 
-  push(event: B.TrendbarEvent | null): boolean {
+  push(event: T.TrendbarEvent | null): boolean {
     return super.push(event)
   }
 
-  _transform(chunk: B.SpotPricesEvent, _encoding: string, callback: TransformCallback): void {
+  _transform(chunk: T.SpotPricesEvent, _encoding: string, callback: TransformCallback): void {
       if (chunk.type === "BID_PRICE_CHANGED") {
           this.values.push(chunk);
           const bucket1 = this.bucket(this.values[0]);
@@ -94,14 +94,14 @@ export class ToTrendbars extends Transform implements B.TrendbarsStream {
       }
   }
 
-  bucket(e: B.SpotPricesEvent): Bucket {
+  bucket(e: T.SpotPricesEvent): Bucket {
       const { timestamp } = e;
       const { period } = this.props
       return bucket(timestamp, period)
   }
 }
 
-export function toTrendbars(props: B.TrendbarsProps & { spots: B.SpotPricesStream }): B.TrendbarsStream {
+export function toTrendbars(props: T.TrendbarsProps & { spots: T.SpotPricesStream }): T.TrendbarsStream {
   const { spots, ...originalProps } = props;
   return pipeline(
       spots,

@@ -4,7 +4,7 @@ import fs from "fs"
 import ms from "ms";
 
 import config from "./config";
-import * as B from "./services/base"
+import * as T from "./services/types"
 import { SpotwareClient } from "./services/spotware/client";
 
 interface Interval {
@@ -23,7 +23,7 @@ function split(fromTimestamp: number, toTimestamp: number, offset: number = ms("
   return intervals;
 }
 
-function interpolate(msg: $.ProtoOAGetTickDataRes, type: $.ProtoOAQuoteType): (B.AskPriceChangedEvent | B.BidPriceChangedEvent)[] {
+function interpolate(msg: $.ProtoOAGetTickDataRes, type: $.ProtoOAQuoteType): (T.AskPriceChangedEvent | T.BidPriceChangedEvent)[] {
   const tickData = msg.tickData
   for(let index = 1; index < tickData.length; index++) {
     const prev = tickData[index - 1]
@@ -39,8 +39,8 @@ function interpolate(msg: $.ProtoOAGetTickDataRes, type: $.ProtoOAQuoteType): (B
   return []
 }
 
-async function fetch(client: SpotwareClient, ctidTraderAccountId: number, symbolId: number, type: $.ProtoOAQuoteType, interval: Interval): Promise<(B.AskPriceChangedEvent | B.BidPriceChangedEvent)[]> {
-    const spots: (B.AskPriceChangedEvent | B.BidPriceChangedEvent)[] = []
+async function fetch(client: SpotwareClient, ctidTraderAccountId: number, symbolId: number, type: $.ProtoOAQuoteType, interval: Interval): Promise<(T.AskPriceChangedEvent | T.BidPriceChangedEvent)[]> {
+    const spots: (T.AskPriceChangedEvent | T.BidPriceChangedEvent)[] = []
     const {fromTimestamp} = interval
     let {toTimestamp} = interval
     while(fromTimestamp < toTimestamp) {
@@ -56,7 +56,7 @@ async function fetch(client: SpotwareClient, ctidTraderAccountId: number, symbol
     return []
 }
 
-function appendSpotPrices(path: string, spots: (B.AskPriceChangedEvent | B.BidPriceChangedEvent)[]) {
+function appendSpotPrices(path: string, spots: (T.AskPriceChangedEvent | T.BidPriceChangedEvent)[]) {
   const ticks = spots
   .sort((a, b) => a.timestamp - b.timestamp)
   .map((tick, index, ticks) => {
@@ -103,7 +103,7 @@ async function main() {
       const F = (type: $.ProtoOAQuoteType) => fetch(client, ctidTraderAccountId, symbolId, type, interval);
       const askSpots = await F($.ProtoOAQuoteType.ASK)
       const bidSpots = await F($.ProtoOAQuoteType.BID)
-      const spots: (B.AskPriceChangedEvent | B.BidPriceChangedEvent)[] = []
+      const spots: (T.AskPriceChangedEvent | T.BidPriceChangedEvent)[] = []
       spots.push(...askSpots)
       spots.push(...bidSpots)
       appendSpotPrices(path, spots);

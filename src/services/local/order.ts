@@ -2,21 +2,20 @@ import assert from "assert";
 import { Transform, TransformCallback, pipeline } from "stream";
 import debug from "debug";
 
-import * as OS from "../base/order"
-import * as B from "../base"
+import * as T from "../types"
 
-type Condition = (e: B.SpotPricesEvent) => boolean;
+type Condition = (e: T.SpotPricesEvent) => boolean;
 
-class ToBuyOrder<Props extends B.OrderProps> extends Transform implements B.OrderStream<Props> {
+class ToBuyOrder<Props extends T.OrderProps> extends Transform implements T.OrderStream<Props> {
     readonly props: Props;
     private readonly entryCondition: Condition;
     private readonly exitCondition: Condition;
     private readonly log: debug.Debugger;
-    private bidPrice: B.BidPriceChangedEvent | null = null;
-    private filled: B.OrderFilledEvent | null = null;
-    private profitLoss: B.OrderProfitLossEvent | null = null;
-    private lifecyle = B.lifecycle();
-    private timestamp: B.Timestamp = 0;
+    private bidPrice: T.BidPriceChangedEvent | null = null;
+    private filled: T.OrderFilledEvent | null = null;
+    private profitLoss: T.OrderProfitLossEvent | null = null;
+    private lifecyle = T.lifecycle();
+    private timestamp: T.Timestamp = 0;
   
     constructor(props: Props, entryCondition: Condition, exitCondition: Condition) {
       super({objectMode: true});
@@ -28,11 +27,11 @@ class ToBuyOrder<Props extends B.OrderProps> extends Transform implements B.Orde
 
     closeOrder(): void {
       if (this.lifecyle.test({type: "CLOSED" })) {
-            new Promise<B.OrderProfitLossEvent>(resolve => {
+            new Promise<T.OrderProfitLossEvent>(resolve => {
                 if(this.profitLoss) {
                     return resolve(this.profitLoss);
                 }
-                const listener = (e: B.OrderEvent) => {
+                const listener = (e: T.OrderEvent) => {
                     if(e.type === "PROFITLOSS") {
                         resolve(e);
                         this.off("data", listener);
@@ -67,7 +66,7 @@ class ToBuyOrder<Props extends B.OrderProps> extends Transform implements B.Orde
         }
     }
   
-    push(event: B.OrderEvent | null): boolean {
+    push(event: T.OrderEvent | null): boolean {
       if (event && !this.lifecyle.test(event)) {
         return true;
       }
@@ -79,7 +78,7 @@ class ToBuyOrder<Props extends B.OrderProps> extends Transform implements B.Orde
       return super.push(event)
     }
 
-    _transform(chunk: B.SpotPricesEvent, _encoding: string, callback: TransformCallback): void {
+    _transform(chunk: T.SpotPricesEvent, _encoding: string, callback: TransformCallback): void {
         if(this.filled === null && chunk.type ==="ASK_PRICE_CHANGED") {
             this.tryToFillOrder(chunk);
         } else if(this.filled === null && chunk.type === "BID_PRICE_CHANGED") {
@@ -90,7 +89,7 @@ class ToBuyOrder<Props extends B.OrderProps> extends Transform implements B.Orde
         callback();
     }
 
-    private tryToFillOrder(e: B.AskPriceChangedEvent): void {
+    private tryToFillOrder(e: T.AskPriceChangedEvent): void {
         const { timestamp } = e;
         this.push({ type: "CREATED", timestamp })
         this.push({ type: "ACCEPTED", timestamp })
@@ -105,7 +104,7 @@ class ToBuyOrder<Props extends B.OrderProps> extends Transform implements B.Orde
         }
     }
 
-    private tryToCloseOrder(e: B.BidPriceChangedEvent, filled: B.OrderFilledEvent): void {
+    private tryToCloseOrder(e: T.BidPriceChangedEvent, filled: T.OrderFilledEvent): void {
         const { timestamp, bid: price } = e
         const profitLoss = Math.round((price - filled.entry!) * this.props.volume * 100) / 100;
         this.profitLoss = { type: "PROFITLOSS", timestamp, price, profitLoss };
@@ -119,7 +118,7 @@ class ToBuyOrder<Props extends B.OrderProps> extends Transform implements B.Orde
     }
 }
 
-function buy<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream, entryCondition: Condition): OS.OrderStream<Props> {
+function buy<Props extends T.OrderProps>(props: Props, spots: T.SpotPricesStream, entryCondition: Condition): T.OrderStream<Props> {
     assert.strictEqual(props.tradeSide, "BUY");
     const exitCondition: Condition = e => {
         if(e.type !== "BID_PRICE_CHANGED") {
@@ -137,16 +136,16 @@ function buy<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream
 }
 
 
-class ToSellOrder<Props extends B.OrderProps> extends Transform implements B.OrderStream<Props> {
+class ToSellOrder<Props extends T.OrderProps> extends Transform implements T.OrderStream<Props> {
     readonly props: Props;
     private readonly entryCondition: Condition;
     private readonly exitCondition: Condition;
     private readonly log: debug.Debugger;
-    private askPrice: B.AskPriceChangedEvent | null = null;
-    private filled: B.OrderFilledEvent | null = null;
-    private profitLoss: B.OrderProfitLossEvent | null = null;
-    private lifecyle = B.lifecycle();
-    private timestamp: B.Timestamp = 0;
+    private askPrice: T.AskPriceChangedEvent | null = null;
+    private filled: T.OrderFilledEvent | null = null;
+    private profitLoss: T.OrderProfitLossEvent | null = null;
+    private lifecyle = T.lifecycle();
+    private timestamp: T.Timestamp = 0;
   
     constructor(props: Props, entryCondition: Condition, exitCondition: Condition) {
       super({objectMode: true});
@@ -158,11 +157,11 @@ class ToSellOrder<Props extends B.OrderProps> extends Transform implements B.Ord
 
     closeOrder(): void {
       if (this.lifecyle.test({type: "CLOSED" })) {
-            new Promise<B.OrderProfitLossEvent>(resolve => {
+            new Promise<T.OrderProfitLossEvent>(resolve => {
                 if(this.profitLoss) {
                     return resolve(this.profitLoss);
                 }
-                const listener = (e: B.OrderEvent) => {
+                const listener = (e: T.OrderEvent) => {
                     if(e.type === "PROFITLOSS") {
                         resolve(e);
                         this.off("data", listener);
@@ -197,7 +196,7 @@ class ToSellOrder<Props extends B.OrderProps> extends Transform implements B.Ord
       }
   }
   
-    push(event: B.OrderEvent | null): boolean {
+    push(event: T.OrderEvent | null): boolean {
       if (event && !this.lifecyle.test(event)) {
         return true;
       }
@@ -209,7 +208,7 @@ class ToSellOrder<Props extends B.OrderProps> extends Transform implements B.Ord
       return super.push(event)
     }
 
-    _transform(chunk: B.SpotPricesEvent, _encoding: string, callback: TransformCallback): void {
+    _transform(chunk: T.SpotPricesEvent, _encoding: string, callback: TransformCallback): void {
         if(this.filled === null && chunk.type ==="BID_PRICE_CHANGED") {
             this.tryToFillOrder(chunk);
         } else if(this.filled === null && chunk.type === "ASK_PRICE_CHANGED") {
@@ -220,7 +219,7 @@ class ToSellOrder<Props extends B.OrderProps> extends Transform implements B.Ord
         callback();
     }
 
-    private tryToFillOrder(e: B.BidPriceChangedEvent): void {
+    private tryToFillOrder(e: T.BidPriceChangedEvent): void {
         const { timestamp } = e;
         this.push({ type: "CREATED", timestamp })
         this.push({ type: "ACCEPTED", timestamp })
@@ -235,7 +234,7 @@ class ToSellOrder<Props extends B.OrderProps> extends Transform implements B.Ord
         }
     }
 
-    private tryToCloseOrder(e: B.AskPriceChangedEvent, filled: B.OrderFilledEvent): void {
+    private tryToCloseOrder(e: T.AskPriceChangedEvent, filled: T.OrderFilledEvent): void {
         const { timestamp, ask: price } = e
         const profitLoss = Math.round((filled.entry - price) * this.props.volume * 100) / 100;
         this.profitLoss = { type: "PROFITLOSS", timestamp, price, profitLoss };
@@ -249,7 +248,7 @@ class ToSellOrder<Props extends B.OrderProps> extends Transform implements B.Ord
     }
 }
 
-function sell<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStream, entryCondition: Condition): OS.OrderStream<Props> {
+function sell<Props extends T.OrderProps>(props: Props, spots: T.SpotPricesStream, entryCondition: Condition): T.OrderStream<Props> {
     assert.strictEqual(props.tradeSide, "SELL");
     const exitCondition: Condition = e => {
         if(e.type !== "ASK_PRICE_CHANGED") {
@@ -266,7 +265,7 @@ function sell<Props extends B.OrderProps>(props: Props, spots: B.SpotPricesStrea
       );
 }
 
-export function marketOrderFromSpotPrices(props: Omit<B.MarketOrderProps & { spots: B.SpotPricesStream }, "orderType">): OS.OrderStream<B.MarketOrderProps> {
+export function marketOrderFromSpotPrices(props: Omit<T.MarketOrderProps & { spots: T.SpotPricesStream }, "orderType">): T.OrderStream<T.MarketOrderProps> {
     const { spots, ...rest } = props;
     if (props.tradeSide === "BUY") {
         return buy({ ...rest, orderType: "MARKET" }, spots, () => true)
@@ -274,7 +273,7 @@ export function marketOrderFromSpotPrices(props: Omit<B.MarketOrderProps & { spo
     return sell({ ...rest, orderType: "MARKET" }, spots, () => true)
 }
 
-export function stopOrderFromSpotPrices(props: Omit<B.StopOrderProps & { spots: B.SpotPricesStream }, "orderType">): OS.OrderStream<B.StopOrderProps> {
+export function stopOrderFromSpotPrices(props: Omit<T.StopOrderProps & { spots: T.SpotPricesStream }, "orderType">): T.OrderStream<T.StopOrderProps> {
     const { spots, ...rest } = props;
     if (props.tradeSide === "BUY") {
         return buy({ ...rest, orderType: "STOP" }, spots, e => e.type === "ASK_PRICE_CHANGED" && e.ask >= props.enter)
