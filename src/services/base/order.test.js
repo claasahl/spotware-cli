@@ -1,15 +1,6 @@
 const {DebugOrderStream} = require("../../../build/services/base/order")
-const debug = require("debug")
-
-jest.mock("debug");
-const log = jest.fn(() => undefined)
-const extend = jest.fn(() => log)
-log["extend"] = extend;
-debug.mockImplementation(() => ({ extend }))
 
 describe.skip("DebugOrderStream", () => {
-    
-
     describe("order lifecylce", () => {
         test("complete lifecyle: 'rejected'", done => {
             const props = { id: "0", symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
