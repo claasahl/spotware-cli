@@ -1,5 +1,5 @@
-const { TrendbarsStream } = require("../../../build/services/debug/trendbars")
 const { logTrendbarEvents } = require("../../../build/services/logging/trendbars")
+const { PassThrough } = require("stream")
 const debug = require("debug")
 
 jest.mock("debug");
@@ -17,8 +17,8 @@ describe("logging", () => {
         });
 
         test("setup loggers", () => {
-            const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
-            const stream = new TrendbarsStream(props)
+            const stream = new PassThrough();
+            stream.props = { symbol: Symbol.for("abc"), period: 60000 };
             logTrendbarEvents(stream);
             expect(debug).toHaveBeenCalledTimes(1)
             expect(extend).toHaveBeenCalledTimes(2)
@@ -26,8 +26,8 @@ describe("logging", () => {
         })
 
         test("log 'trendbar' events", () => {
-            const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
-            const stream = new TrendbarsStream(props)
+            const stream = new PassThrough();
+            stream.props = { symbol: Symbol.for("abc"), period: 60000 };
             const event = { type: "TRENDBAR", open: 1, high: 5, low: 1, close: 2, volumne: 0, timestamp: 123 };
             logTrendbarEvents(stream); 
             stream.emit("data", event)
@@ -36,8 +36,8 @@ describe("logging", () => {
         })
 
         test("should not log unknown events", () => {
-            const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 }
-            const stream = new TrendbarsStream(props)
+            const stream = new PassThrough();
+            stream.props = { symbol: Symbol.for("abc"), period: 60000 };
             logTrendbarEvents(stream); 
             stream.emit("data", { type: "UNKNOWN" })
             stream.emit("data", { something: 23 })

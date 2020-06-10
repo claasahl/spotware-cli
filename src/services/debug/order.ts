@@ -1,6 +1,7 @@
 import {PassThrough} from "stream";
 
 import * as B from "../base";
+import * as L from "../logging";
 
 export class OrderStream<Props extends B.OrderProps> extends PassThrough implements B.OrderStream<Props> {
   readonly props: Props;
@@ -8,6 +9,7 @@ export class OrderStream<Props extends B.OrderProps> extends PassThrough impleme
   constructor(props: Props) {
     super({objectMode: true});
     this.props = Object.freeze(props);
+    L.logOrderEvents(this);
   }
 
   push(chunk: B.OrderEvent | null, encoding?: BufferEncoding): boolean {

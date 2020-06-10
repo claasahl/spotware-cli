@@ -1,4 +1,6 @@
+jest.mock("../../../build/services/logging")
 const {AccountStream} = require("../../../build/services/debug/account")
+const logging = require("../../../build/services/logging")
 
 describe("debug", () => {
     describe("AccountStream", () => {
@@ -14,6 +16,14 @@ describe("debug", () => {
                 const stream = new AccountStream(props)
                 expect(Object.isFrozen(props)).toBe(true)
                 expect(Object.isFrozen(stream.props)).toBe(true)
+            })
+        })
+
+        describe("logging", () => {
+            test("use logging decorator", () => {
+                const props = { currency: Symbol.for("abc"), a: 2 }
+                const stream = new AccountStream(props)
+                expect(logging.logAccountEvents).toHaveBeenCalledWith(stream)
             })
         })
 

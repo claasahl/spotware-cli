@@ -1,6 +1,7 @@
 import {PassThrough} from "stream";
 
 import * as B from "../base";
+import * as L from "../logging";
 
 export class AccountStream extends PassThrough implements B.AccountStream {
   readonly props: B.AccountProps;
@@ -8,6 +9,7 @@ export class AccountStream extends PassThrough implements B.AccountStream {
   constructor(props: B.AccountProps) {
     super({objectMode: true});
     this.props = Object.freeze(props);
+    L.logAccountEvents(this);
   }
 
   push(chunk: B.AccountEvent | null, encoding?: BufferEncoding): boolean {

@@ -1,4 +1,6 @@
+jest.mock("../../../build/services/logging")
 const {SpotPricesStream} = require("../../../build/services/debug/spotPrices")
+const logging = require("../../../build/services/logging")
 
 describe("debug", () => {
     describe("SpotPricesStream", () => {
@@ -14,6 +16,14 @@ describe("debug", () => {
                 const stream = new SpotPricesStream(props)
                 expect(Object.isFrozen(props)).toBe(true)
                 expect(Object.isFrozen(stream.props)).toBe(true)
+            })
+        })
+
+        describe("logging", () => {
+            test("use logging decorator", () => {
+                const props = { symbol: Symbol.for("abc"), a: 2 }
+                const stream = new SpotPricesStream(props)
+                expect(logging.logSpotPriceEvents).toHaveBeenCalledWith(stream)
             })
         })
 
