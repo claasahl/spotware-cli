@@ -1,10 +1,7 @@
 import { Transform, TransformCallback, pipeline } from "stream";
-import debug from "debug";
-import ms from "ms";
 
 import * as B from "../base";
-
-const trendbarEventTypes: B.TrendbarEvent['type'][] = ["TRENDBAR"]
+import * as L from "../logging";
 
 interface Bucket {
   begin: B.Timestamp;
@@ -56,20 +53,14 @@ function toTrendbar(
 export class ToTrendbars extends Transform implements B.TrendbarsStream {
   readonly props: B.TrendbarsProps;
   private readonly values: Array<B.BidPriceChangedEvent> = [];
-  private readonly log: debug.Debugger;
 
   constructor(props: B.TrendbarsProps) {
       super({ objectMode: true });
       this.props = Object.freeze(props);
-      this.log = debug("trendbars")
-        .extend(ms(props.period))
-        .extend(props.symbol.toString());
+      L.logTrendbarEvents(this);
   }
 
   push(event: B.TrendbarEvent | null): boolean {
-    if (event && trendbarEventTypes.includes(event.type)) {
-      this.log("%j", event);
-    }
     return super.push(event)
   }
 

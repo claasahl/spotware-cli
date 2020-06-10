@@ -1,12 +1,7 @@
+jest.mock("../../../build/services/logging")
 const {ToTrendbars, toTrendbars} = require("../../../build/services/generic/trendbars")
 const {SpotPricesStream} = require("../../../build/services/debug/spotPrices")
-const debug = require("debug")
-
-jest.mock("debug");
-const log = jest.fn(() => undefined)
-const extend = jest.fn(() => log)
-log["extend"] = extend;
-debug.mockImplementation(() => ({ extend }))
+const logging = require("../../../build/services/logging")
 
 describe("ToTrendbars class", () => {
     describe("props", () => {
@@ -21,6 +16,14 @@ describe("ToTrendbars class", () => {
             const stream = new ToTrendbars(props)
             expect(Object.isFrozen(props)).toBe(true)
             expect(Object.isFrozen(stream.props)).toBe(true)
+        })
+    })
+
+    describe("logging", () => {
+        test("use logging decorator", () => {
+            const props = { symbol: Symbol.for("abc"), period: 60000, a: 2 };
+            const stream = new ToTrendbars(props)
+            expect(logging.logTrendbarEvents).toHaveBeenCalledWith(stream)
         })
     })
 
