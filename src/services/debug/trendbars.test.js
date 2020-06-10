@@ -16,9 +16,9 @@ describe("debug", () => {
                 expect(Object.isFrozen(stream.props)).toBe(true)
             })
         })
-    })
 
-    describe("actions", () => {
-        // no actions
+        describe("actions", () => {
+            // no actions
+        })
     })
 })

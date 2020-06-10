@@ -16,13 +16,13 @@ describe("debug", () => {
                 expect(Object.isFrozen(stream.props)).toBe(true)
             })
         })
-    })
 
-    describe("actions", () => {
-        test("trendbars", () => {
-            const props = { symbol: Symbol.for("abc"), a: 2 }
-            const stream = new SpotPricesStream(props)
-            expect(stream.trendbars).toThrow("not implemented")
+        describe("actions", () => {
+            test("trendbars", () => {
+                const props = { symbol: Symbol.for("abc"), a: 2 }
+                const stream = new SpotPricesStream(props)
+                expect(stream.trendbars).toThrow("not implemented")
+            })
         })
     })
 })
