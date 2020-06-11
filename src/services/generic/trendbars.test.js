@@ -50,6 +50,7 @@ describe("toTrendbars function", () => {
             spots.push({ type: "BID_PRICE_CHANGED", timestamp: 0, bid: 1 })
             spots.push({ type: "BID_PRICE_CHANGED", timestamp: 100, bid: 2 })
             spots.push({ type: "BID_PRICE_CHANGED", timestamp: 200, bid: 0.5 })
+            spots.push({ type: "PRICE_CHANGED", timestamp: 202, ask: 0, bid: 0.5 })
             spots.push({ type: "BID_PRICE_CHANGED", timestamp: 399, bid: 0.7 })
             spots.push({ type: "BID_PRICE_CHANGED", timestamp: 400, bid: 0.1 })
             spots.push({ type: "ASK_PRICE_CHANGED", timestamp: 400, ask: 10 })

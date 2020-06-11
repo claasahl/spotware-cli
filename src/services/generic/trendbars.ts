@@ -76,7 +76,6 @@ export class ToTrendbars extends Transform implements T.TrendbarsStream {
               this.values.splice(0, eventsInBucket.length);
               this.push(toTrendbar(bucket1.begin, eventsInBucket))
           }
-          return callback();
       } else if (chunk.type === "ASK_PRICE_CHANGED") {
           if (this.values.length === 0) {
               return callback();
@@ -90,8 +89,8 @@ export class ToTrendbars extends Transform implements T.TrendbarsStream {
               this.values.splice(0, eventsInBucket.length);
               this.push(toTrendbar(bucket1.begin, eventsInBucket))
           }
-          return callback();
-      }
+        }
+        return callback();
   }
 
   bucket(e: T.SpotPricesEvent): Bucket {
