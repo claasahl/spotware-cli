@@ -180,8 +180,7 @@ function order<Props extends T.OrderProps>(props: Props, extras: { client: Spotw
                         }
                     default:
                         const error = new Error(`unexpected event: ${JSON.stringify(msg)}`)
-                        console.log(error)
-                        setImmediate(() => stream.emit("error", error))
+                        stream.destroy(error);
                 }
             });
             extras.client.on("error", err => stream.destroy(err))
