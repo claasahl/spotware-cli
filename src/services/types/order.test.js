@@ -1,4 +1,4 @@
-const {DebugOrderStream} = require("../../../build/services/base/order")
+const {DebugOrderStream} = require("../../../build/services/types/order")
 
 describe.skip("DebugOrderStream", () => {
     describe("order lifecylce", () => {
