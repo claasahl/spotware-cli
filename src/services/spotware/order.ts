@@ -93,6 +93,7 @@ function order<Props extends T.OrderProps>(props: Props, extras: { client: Spotw
             stream.ctidTraderAccountId = ctidTraderAccountId;
             stream.positionId = event.order?.positionId || 0;
             stream.orderId = event.order?.orderId || 0;
+            stream.lotSize = lotSize;
             stream.push({ type: "CREATED", timestamp: Date.now() })
             
             const round = (price: number) => {
