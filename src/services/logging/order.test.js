@@ -1,5 +1,5 @@
 const { logOrderEvents } = require("../../../build/services/logging/order")
-const { PassThrough } = require("stream")
+const { PassThrough, finished } = require("stream")
 const debug = require("debug")
 
 jest.mock("debug");
@@ -114,10 +114,11 @@ describe("logging", () => {
             expect(log).toHaveBeenCalledTimes(1)
             expect(log).toHaveBeenCalledWith("%j", event);
         })
-        
+
         test("log 'end' events", done => {
             const stream = new PassThrough();
-            logAccountEvents(stream);
+            stream.props = { symbol: Symbol.for("abc"), id: "0" };
+            logOrderEvents(stream);
             stream.resume();
             stream.end();
             finished(stream, () => {
@@ -129,7 +130,8 @@ describe("logging", () => {
 
         test("log 'error' events", done => {
             const stream = new PassThrough();
-            logAccountEvents(stream);
+            stream.props = { symbol: Symbol.for("abc"), id: "0" };
+            logOrderEvents(stream);
             const error = new Error("something horrible happened");
             stream.destroy(error);
             finished(stream, () => {

@@ -1,5 +1,5 @@
 const { logSpotPriceEvents } = require("../../../build/services/logging/spotPrices")
-const { PassThrough } = require("stream")
+const { PassThrough, finished } = require("stream")
 const debug = require("debug")
 
 jest.mock("debug");
@@ -56,7 +56,8 @@ describe("logging", () => {
 
         test("log 'end' events", done => {
             const stream = new PassThrough();
-            logAccountEvents(stream);
+            stream.props = { symbol: Symbol.for("abc") };
+            logSpotPriceEvents(stream);
             stream.resume();
             stream.end();
             finished(stream, () => {
@@ -68,7 +69,8 @@ describe("logging", () => {
 
         test("log 'error' events", done => {
             const stream = new PassThrough();
-            logAccountEvents(stream);
+            stream.props = { symbol: Symbol.for("abc") };
+            logSpotPriceEvents(stream);
             const error = new Error("something horrible happened");
             stream.destroy(error);
             finished(stream, () => {

@@ -1,5 +1,5 @@
 const { logTrendbarEvents } = require("../../../build/services/logging/trendbars")
-const { PassThrough } = require("stream")
+const { PassThrough, finished } = require("stream")
 const debug = require("debug")
 
 jest.mock("debug");
@@ -37,7 +37,8 @@ describe("logging", () => {
 
         test("log 'end' events", done => {
             const stream = new PassThrough();
-            logAccountEvents(stream);
+            stream.props = { symbol: Symbol.for("abc"), period: 60000 };
+            logTrendbarEvents(stream);
             stream.resume();
             stream.end();
             finished(stream, () => {
@@ -49,7 +50,8 @@ describe("logging", () => {
 
         test("log 'error' events", done => {
             const stream = new PassThrough();
-            logAccountEvents(stream);
+            stream.props = { symbol: Symbol.for("abc"), period: 60000 };
+            logTrendbarEvents(stream);
             const error = new Error("something horrible happened");
             stream.destroy(error);
             finished(stream, () => {
