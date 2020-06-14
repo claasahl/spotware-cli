@@ -35,6 +35,30 @@ describe("logging", () => {
             expect(log).toHaveBeenCalledWith("%j", event);
         })
 
+        test("log 'end' events", done => {
+            const stream = new PassThrough();
+            logAccountEvents(stream);
+            stream.resume();
+            stream.end();
+            finished(stream, () => {
+                expect(log).toHaveBeenCalledTimes(1)
+                expect(log).toHaveBeenCalledWith("ENDED");
+                done();
+            })
+        })
+
+        test("log 'error' events", done => {
+            const stream = new PassThrough();
+            logAccountEvents(stream);
+            const error = new Error("something horrible happened");
+            stream.destroy(error);
+            finished(stream, () => {
+                expect(log).toHaveBeenCalledTimes(1)
+                expect(log).toHaveBeenCalledWith(error);
+                done();
+            })
+        })
+
         test("should not log unknown events", () => {
             const stream = new PassThrough();
             stream.props = { symbol: Symbol.for("abc"), period: 60000 };

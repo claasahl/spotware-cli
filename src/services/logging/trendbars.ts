@@ -1,5 +1,6 @@
 import debug from "debug";
 import ms from "ms";
+import {finished} from "stream"
 
 import * as T from "../types";
 
@@ -14,4 +15,5 @@ export function logTrendbarEvents(stream: T.TrendbarsStream): void {
       log("%j", e);
     }
   })
+  finished(stream, err => err ? log(err) : log("ENDED"))
 }

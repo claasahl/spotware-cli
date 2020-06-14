@@ -1,4 +1,5 @@
 import debug from "debug";
+import {finished} from "stream"
 
 import * as T from "../types";
 
@@ -11,4 +12,5 @@ export function logAccountEvents(stream: T.AccountStream): void {
       log("%j", e);
     }
   })
+  finished(stream, err => err ? log(err) : log("ENDED"))
 }
