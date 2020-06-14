@@ -1,5 +1,5 @@
 import * as $ from "@claasahl/spotware-adapter"
-import {Readable} from "stream";
+import {Readable, finished} from "stream";
 import debug from "debug";
 
 import * as T from "../types"
@@ -158,9 +158,10 @@ function order<Props extends T.OrderProps>(props: Props, extras: { client: Spotw
                                     }
                                 }
                                 extras.spots.on("data", update);
-                                stream.once("close", () => extras.spots.off("data", update))
-                                stream.once("error", () => extras.spots.off("data", update))
-                                stream.once("end", () => extras.spots.off("data", update))
+                                const cleanup = finished(stream, () => {
+                                    cleanup();
+                                    extras.spots.off("data", update)
+                                })
                             } else if (props.tradeSide === "SELL") {
                                 const update = (e: T.SpotPricesEvent) => {
                                     if (e.type === "ASK_PRICE_CHANGED") {
@@ -170,9 +171,10 @@ function order<Props extends T.OrderProps>(props: Props, extras: { client: Spotw
                                     }
                                 }
                                 extras.spots.on("data", update);
-                                stream.once("close", () => extras.spots.off("data", update))
-                                stream.once("error", () => extras.spots.off("data", update))
-                                stream.once("end", () => extras.spots.off("data", update))
+                                const cleanup = finished(stream, () => {
+                                    cleanup();
+                                    extras.spots.off("data", update)
+                                })
                             }
                             break;
                         }
