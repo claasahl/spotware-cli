@@ -45,13 +45,13 @@ function placeOrder(props: PlaceOrderProps): T.OrderStream<T.StopOrderProps> {
   return order;
 }
 
-function endLastOrder(lastOrder: T.OrderStream<T.StopOrderProps> | undefined, cb: (err?: Error) => void): void {
-  if (lastOrder) {
-    lastOrder.once("error", err => cb(err));
-    lastOrder.once("end", () => cb());
-    lastOrder.endOrder();
-  } else {
-    cb();
+function endLastOrder(lastOrder: T.OrderStream<T.StopOrderProps> | undefined): void {
+  try {
+    if(lastOrder) {
+      lastOrder.endOrder();
+    }
+  } catch {
+    // ... well, we have it a try. Didn't work out.
   }
 }
 
@@ -89,20 +89,14 @@ export async function insideBarMomentumStrategy(props: Props): Promise<T.Account
         const enter = roundPrice(first.high + r * enterOffset);
         const stopLoss = roundPrice(first.high - r * stopLossOffset);
         const takeProfit = roundPrice(first.high + r * takeProfitOffset);
-        endLastOrder(lastOrder, err => {
-          if(!err) {
-            lastOrder = placeBuyOrder(e.timestamp+period, enter, stopLoss, takeProfit)
-          }
-        });
+        endLastOrder(lastOrder);
+        lastOrder = placeBuyOrder(e.timestamp+period, enter, stopLoss, takeProfit);
       } else if (bearish(first) && engulfed(first, second)) {
         const enter = roundPrice(first.low - r * enterOffset);
         const stopLoss = roundPrice(first.low + r * stopLossOffset);
         const takeProfit = roundPrice(first.low - r * takeProfitOffset);
-        endLastOrder(lastOrder, err => {
-          if(!err) {
-            lastOrder = placeSellOrder(e.timestamp+period, enter, stopLoss, takeProfit)
-          }
-        });
+        endLastOrder(lastOrder);
+        lastOrder = placeSellOrder(e.timestamp+period, enter, stopLoss, takeProfit);
       }
     }
   })
