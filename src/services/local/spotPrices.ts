@@ -1,6 +1,6 @@
 import fs from "fs";
 import readline from "readline";
-import { Readable, Transform, TransformCallback, TransformOptions, pipeline } from "stream";
+import { Readable, Transform, TransformCallback, TransformOptions } from "stream";
 import {obj as multistream} from "multistream";
 import debug from "debug";
 
@@ -28,11 +28,7 @@ async function* sampleData(): AsyncGenerator<string, void, unknown> {
 }
 
 export function fromSampleData(props: T.SpotPricesProps): T.SpotPricesStream {
-  return pipeline(
-    Readable.from(sampleData()),
-    new ChunkToSpotPrices(props),
-    err => console.log("pipeline callback", err)
-  )
+  return Readable.from(sampleData()).pipe(new ChunkToSpotPrices(props));
 }
 
 function fr0mFile(path: fs.PathLike): Readable {
@@ -46,21 +42,14 @@ function fr0mFile(path: fs.PathLike): Readable {
 
 export function fromFile(props: T.SpotPricesProps & { path: fs.PathLike }): T.SpotPricesStream {
   const { path, ...originalProps } = props;
-  return pipeline(
-    fr0mFile(path),
-    new ChunkToSpotPrices(originalProps),
-    err => console.log("pipeline callback", err)
-  );
+  return fr0mFile(path).pipe(new ChunkToSpotPrices(originalProps));
 }
 
 export function fromLogFiles(props: T.SpotPricesProps & { paths: fs.PathLike[] }): T.SpotPricesStream {
   const { paths, ...originalProps } = props;
   const streams = paths.map(fr0mFile);
-  return pipeline(
-    multistream(streams), // TODO is there a NodeJS native way? PassThrough?
-    new ChunkToSpotPrices(originalProps, chunk => chunk.includes("spotPrices:ask") || chunk.includes("spotPrices:bid")),
-    err => console.log("pipeline callback", err)
-  );
+  // TODO is there a NodeJS native way? PassThrough?
+  return multistream(streams).pipe(new ChunkToSpotPrices(originalProps, chunk => chunk.includes("spotPrices:ask") || chunk.includes("spotPrices:bid")));
 }
 const transformOptions: TransformOptions = {objectMode: true}
 class ChunkToSpotPrices extends Transform implements T.SpotPricesStream {

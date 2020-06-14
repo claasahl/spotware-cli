@@ -1,4 +1,4 @@
-import { Transform, TransformCallback, pipeline } from "stream";
+import { Transform, TransformCallback } from "stream";
 
 import * as T from "../types";
 import * as L from "../logging";
@@ -102,9 +102,5 @@ export class ToTrendbars extends Transform implements T.TrendbarsStream {
 
 export function toTrendbars(props: T.TrendbarsProps & { spots: T.SpotPricesStream }): T.TrendbarsStream {
   const { spots, ...originalProps } = props;
-  return pipeline(
-    spots,
-    new ToTrendbars(originalProps),
-    err => console.log("pipeline callback", err)
-  )
+  return spots.pipe(new ToTrendbars(originalProps));
 }

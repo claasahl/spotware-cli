@@ -1,5 +1,5 @@
 import assert from "assert";
-import { Transform, TransformCallback, pipeline } from "stream";
+import { Transform, TransformCallback } from "stream";
 import debug from "debug";
 
 import * as T from "../types"
@@ -128,11 +128,7 @@ function buy<Props extends T.OrderProps>(props: Props, spots: T.SpotPricesStream
         const stopLoss = props.stopLoss ? props.stopLoss >= e.bid : false;
         return takeProfit || stopLoss;
     }
-    return pipeline(
-        spots,
-        new ToBuyOrder(props, entryCondition, exitCondition),
-        err => console.log("pipeline callback", err)
-      );
+    return spots.pipe(new ToBuyOrder(props, entryCondition, exitCondition));
 }
 
 
@@ -258,11 +254,7 @@ function sell<Props extends T.OrderProps>(props: Props, spots: T.SpotPricesStrea
         const stopLoss = props.stopLoss ? props.stopLoss <= e.ask : false;
         return takeProfit || stopLoss;
     }
-    return pipeline(
-        spots,
-        new ToSellOrder(props, entryCondition, exitCondition),
-        err => console.log("pipeline callback", err)
-      );
+    return spots.pipe(new ToSellOrder(props, entryCondition, exitCondition));
 }
 
 export function marketOrderFromSpotPrices(props: Omit<T.MarketOrderProps & { spots: T.SpotPricesStream }, "orderType">): T.OrderStream<T.MarketOrderProps> {
