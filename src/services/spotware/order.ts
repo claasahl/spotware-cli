@@ -39,7 +39,7 @@ class SpotwareOrderStream<Props extends T.OrderProps> extends Readable implement
                 ctidTraderAccountId: this.ctidTraderAccountId,
                 positionId: this.positionId,
                 volume: this.props.volume * this.lotSize
-            })
+            }).catch(err => this.destroy(err))
             return;
         }
         throw new Error(`order ${this.props.id} cannot be closed (${JSON.stringify(this.lifecyle.state)};${this.lotSize};${this.ctidTraderAccountId};${this.positionId})`);
@@ -50,7 +50,7 @@ class SpotwareOrderStream<Props extends T.OrderProps> extends Readable implement
             this.client.cancelOrder({
                 ctidTraderAccountId: this.ctidTraderAccountId,
                 orderId: this.orderId
-            })
+            }).catch(err => this.destroy(err))
             return;
         }
         throw new Error(`order ${this.props.id} cannot be canceled (${JSON.stringify(this.lifecyle.state)};${this.ctidTraderAccountId};${this.orderId})`);
@@ -121,6 +121,7 @@ function order<Props extends T.OrderProps>(props: Props, extras: { client: Spotw
                             }
                             const timestamp = msg.order.utcLastUpdateTimestamp || 0;
                             stream.push({ type: "EXPIRED", timestamp });
+                            stream.destroy();
                             break;
                         }
                     case $.ProtoOAExecutionType.ORDER_CANCELLED:
@@ -130,6 +131,7 @@ function order<Props extends T.OrderProps>(props: Props, extras: { client: Spotw
                             }
                             const timestamp = msg.order.utcLastUpdateTimestamp || 0;
                             stream.push({ type: "CANCELED", timestamp });
+                            stream.destroy();
                             break;
                         }
                     case $.ProtoOAExecutionType.ORDER_FILLED:
@@ -142,6 +144,7 @@ function order<Props extends T.OrderProps>(props: Props, extras: { client: Spotw
                             if (msg.deal.closePositionDetail) {
                                 const profitLoss = msg.deal.closePositionDetail.grossProfit / Math.pow(10, digits);
                                 stream.push({ type: "CLOSED", timestamp, exit: executionPrice, profitLoss });
+                                stream.destroy();
                                 break;
                             }
 
@@ -155,6 +158,8 @@ function order<Props extends T.OrderProps>(props: Props, extras: { client: Spotw
                                     }
                                 }
                                 extras.spots.on("data", update);
+                                stream.once("close", () => extras.spots.off("data", update))
+                                stream.once("error", () => extras.spots.off("data", update))
                                 stream.once("end", () => extras.spots.off("data", update))
                             } else if (props.tradeSide === "SELL") {
                                 const update = (e: T.SpotPricesEvent) => {
@@ -165,6 +170,8 @@ function order<Props extends T.OrderProps>(props: Props, extras: { client: Spotw
                                     }
                                 }
                                 extras.spots.on("data", update);
+                                stream.once("close", () => extras.spots.off("data", update))
+                                stream.once("error", () => extras.spots.off("data", update))
                                 stream.once("end", () => extras.spots.off("data", update))
                             }
                             break;
@@ -177,6 +184,7 @@ function order<Props extends T.OrderProps>(props: Props, extras: { client: Spotw
                             const timestamp = msg.deal.executionTimestamp;
                             // TODO: msg.errorCode
                             stream.push({ type: "REJECTED", timestamp });
+                            stream.destroy();
                             break;
                         }
                     default:
