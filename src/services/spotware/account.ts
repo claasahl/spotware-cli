@@ -5,6 +5,7 @@ import { Readable } from "stream";
 import * as T from "../types";
 import * as D from "../debug";
 import * as G from "../generic";
+import * as L from "../logging";
 import { SpotwareClient } from "./client";
 import { marketOrder, stopOrder } from "./order";
 
@@ -185,6 +186,7 @@ class SpotwareAccountStream extends D.AccountStream {
             constructor(props: T.SpotPricesProps) {
                 super({objectMode:true, read: () => {}})
                 this.props = Object.freeze(props);
+                L.logSpotPriceEvents(this);
             }
             push(chunk: T.SpotPricesEvent, encoding?: BufferEncoding): boolean {
                 return super.push(chunk, encoding);
