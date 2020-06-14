@@ -67,6 +67,7 @@ function insideBarLocal() {
   ], symbol});
   const account = fromNothing({currency, initialBalance, spots})
   insideBarMomentumStrategy({ account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, expiresIn })
+  account.resume(); // consume account events
 }
 insideBarLocal;
 
@@ -77,6 +78,7 @@ async function insideBarSpotware() {
   const period = periodToMillis(config.period);
   const expiresIn = config.expirationOffset;
   insideBarMomentumStrategy({ ...config, account, symbol, period, expiresIn })
+  account.resume(); // consume account events
 }
 insideBarSpotware();
 
