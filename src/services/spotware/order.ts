@@ -3,7 +3,7 @@ import {Readable, finished} from "stream";
 
 import * as T from "../types"
 import { SpotwareClient } from "./client";
-import * as L from "../logging"
+import {logOrderEvents} from "../logging"
 
 class SpotwareOrderStream<Props extends T.OrderProps> extends Readable implements T.OrderStream<Props> {
     readonly props: Props;
@@ -18,7 +18,7 @@ class SpotwareOrderStream<Props extends T.OrderProps> extends Readable implement
         super({objectMode: true, read: () => {}});
         this.props = Object.freeze(props);
         this.client = client;
-        L.logOrderEvents(this);
+        logOrderEvents(this);
     }
     
     push(chunk: T.OrderEvent | null, encoding?: BufferEncoding): boolean {
@@ -119,7 +119,7 @@ function order<Props extends T.OrderProps>(props: Props, extras: { client: Spotw
                             }
                             const timestamp = msg.order.utcLastUpdateTimestamp || 0;
                             stream.push({ type: "EXPIRED", timestamp });
-                            stream.destroy();
+                            stream.push(null);
                             break;
                         }
                     case $.ProtoOAExecutionType.ORDER_CANCELLED:
@@ -129,7 +129,7 @@ function order<Props extends T.OrderProps>(props: Props, extras: { client: Spotw
                             }
                             const timestamp = msg.order.utcLastUpdateTimestamp || 0;
                             stream.push({ type: "CANCELED", timestamp });
-                            stream.destroy();
+                            stream.push(null);
                             break;
                         }
                     case $.ProtoOAExecutionType.ORDER_FILLED:
@@ -142,7 +142,7 @@ function order<Props extends T.OrderProps>(props: Props, extras: { client: Spotw
                             if (msg.deal.closePositionDetail) {
                                 const profitLoss = msg.deal.closePositionDetail.grossProfit / Math.pow(10, digits);
                                 stream.push({ type: "CLOSED", timestamp, exit: executionPrice, profitLoss });
-                                stream.destroy();
+                                stream.push(null);
                                 break;
                             }
 
@@ -184,7 +184,7 @@ function order<Props extends T.OrderProps>(props: Props, extras: { client: Spotw
                             const timestamp = msg.deal.executionTimestamp;
                             // TODO: msg.errorCode
                             stream.push({ type: "REJECTED", timestamp });
-                            stream.destroy();
+                            stream.push(null);
                             break;
                         }
                     default:
