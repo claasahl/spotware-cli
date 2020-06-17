@@ -1,6 +1,7 @@
 import * as $ from "@claasahl/spotware-adapter";
 import Lock from "async-lock"
 import { Readable } from "stream";
+import mem from "mem";
 
 import * as T from "../types";
 import * as D from "../debug";
@@ -180,7 +181,9 @@ class SpotwareAccountStream extends D.AccountStream {
         return stream;
     }
 
-    spotPrices(props: T.AccountSimpleSpotPricesProps): T.SpotPricesStream {
+    spotPrices = mem(this.sp0tPrices, {cacheKey: (arguments_: any) => JSON.stringify(arguments_.symbol)});
+
+    private sp0tPrices(props: T.AccountSimpleSpotPricesProps): T.SpotPricesStream {
         class Stream extends Readable implements T.SpotPricesStream {
             readonly props: T.SpotPricesProps;
             constructor(props: T.SpotPricesProps) {
