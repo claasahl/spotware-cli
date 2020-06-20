@@ -91,7 +91,10 @@ class ToBuyOrder<Props extends T.OrderProps> extends Transform implements T.Orde
         const { timestamp } = e;
         this.push({ type: "CREATED", timestamp })
         this.push({ type: "ACCEPTED", timestamp })
-        if (this.entryCondition(e)) {
+        if(this.props.expiresAt && timestamp >= this.props.expiresAt) {
+            this.push({ type: "EXPIRED", timestamp })
+            this.push(null)
+        } else if (this.entryCondition(e)) {
             const { timestamp, ask: entry } = e;
             this.filled = { type: "FILLED", timestamp, entry }
             this.push({ type: "FILLED", timestamp, entry })
@@ -215,7 +218,10 @@ class ToSellOrder<Props extends T.OrderProps> extends Transform implements T.Ord
         const { timestamp } = e;
         this.push({ type: "CREATED", timestamp })
         this.push({ type: "ACCEPTED", timestamp })
-        if (this.entryCondition(e)) {
+        if(this.props.expiresAt && timestamp >= this.props.expiresAt) {
+            this.push({ type: "EXPIRED", timestamp })
+            this.push(null)
+        } else if (this.entryCondition(e)) {
             const { timestamp, bid: entry } = e;
             this.filled = { type: "FILLED", timestamp, entry }
             this.push({ type: "FILLED", timestamp, entry })

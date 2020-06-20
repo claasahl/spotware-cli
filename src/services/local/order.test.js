@@ -148,6 +148,19 @@ describe("marketOrderFromSpotPrices", () => {
             })
             spots.push({ type: "ASK_PRICE_CHANGED", timestamp: 1, ask: 0})
         })
+        test("expire order asap", async done => {
+            const symbol = Symbol.for("abc")
+            const spots = new SpotPricesStream({ symbol })
+            const stream = await marketOrderFromSpotPrices({ id: "1", symbol, tradeSide: "BUY", volume: 2, expiresAt: 15, spots })
+            const event = { type: "EXPIRED", timestamp: 15 }
+            stream.on("data", e => {
+                if(e.type === "EXPIRED") {
+                    expect(e).toStrictEqual(event);
+                    done()
+                }
+            })
+            spots.push({ type: "ASK_PRICE_CHANGED", timestamp: 15, ask: 5 })
+        })
         test("fill order asap", async done => {
             const symbol = Symbol.for("abc")
             const spots = new SpotPricesStream({ symbol })
@@ -292,6 +305,19 @@ describe("marketOrderFromSpotPrices", () => {
                 }
             })
             spots.push({ type: "BID_PRICE_CHANGED", timestamp: 1, bid: 0})
+        })
+        test("expire order asap", async done => {
+            const symbol = Symbol.for("abc")
+            const spots = new SpotPricesStream({ symbol })
+            const stream = await marketOrderFromSpotPrices({ id: "1", symbol, tradeSide: "SELL", volume: 2, expiresAt: 15, spots })
+            const event = { type: "EXPIRED", timestamp: 15 }
+            stream.on("data", e => {
+                if(e.type === "EXPIRED") {
+                    expect(e).toStrictEqual(event);
+                    done()
+                }
+            })
+            spots.push({ type: "BID_PRICE_CHANGED", timestamp: 15, bid: 5 })
         })
         test("fill order asap", async done => {
             const symbol = Symbol.for("abc")
@@ -562,6 +588,19 @@ describe("stopOrderFromSpotPrices", () => {
             })
             spots.push({ type: "ASK_PRICE_CHANGED", timestamp: 1, ask: 0})
         })
+        test("expire order asap", async done => {
+            const symbol = Symbol.for("abc")
+            const spots = new SpotPricesStream({ symbol })
+            const stream = await stopOrderFromSpotPrices({ id: "1", symbol, tradeSide: "BUY", volume: 2, enter: 6, expiresAt: 15, spots })
+            const event = { type: "EXPIRED", timestamp: 15 }
+            stream.on("data", e => {
+                if(e.type === "EXPIRED") {
+                    expect(e).toStrictEqual(event);
+                    done()
+                }
+            })
+            spots.push({ type: "ASK_PRICE_CHANGED", timestamp: 15, ask: 6 })
+        })
         test("fill order asap", async done => {
             const symbol = Symbol.for("abc")
             const spots = new SpotPricesStream({ symbol })
@@ -706,6 +745,19 @@ describe("stopOrderFromSpotPrices", () => {
                 }
             })
             spots.push({ type: "BID_PRICE_CHANGED", timestamp: 1, bid: 0})
+        })
+        test("expire order asap", async done => {
+            const symbol = Symbol.for("abc")
+            const spots = new SpotPricesStream({ symbol })
+            const stream = await stopOrderFromSpotPrices({ id: "1", symbol, tradeSide: "SELL", volume: 2, enter: 4, expiresAt: 15, spots })
+            const event = { type: "EXPIRED", timestamp: 15 }
+            stream.on("data", e => {
+                if(e.type === "EXPIRED") {
+                    expect(e).toStrictEqual(event);
+                    done()
+                }
+            })
+            spots.push({ type: "BID_PRICE_CHANGED", timestamp: 15, bid: 4 })
         })
         test("fill order asap", async done => {
             const symbol = Symbol.for("abc")
