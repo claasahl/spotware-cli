@@ -54,21 +54,16 @@ export function fromLogFiles(props: T.SpotPricesProps & { paths: fs.PathLike[] }
 const transformOptions: TransformOptions = {objectMode: true}
 class ChunkToSpotPrices extends Transform implements T.SpotPricesStream {
   readonly props: T.SpotPricesProps;
-  private readonly cachedEvents: Map<T.SpotPricesEvent["type"], T.SpotPricesEvent>;
   private readonly filter: (chunk: string) => boolean;
   
   constructor(props: T.SpotPricesProps, filter: (chunk: string) => boolean = () => true) {
     super(transformOptions);
     this.props = Object.freeze(props);
-    this.cachedEvents = new Map();
     this.filter = filter;
     L.logSpotPriceEvents(this);
   }
 
   push(event: T.SpotPricesEvent | null): boolean {
-    if (event) {
-      this.cachedEvents.set(event.type, event);
-    }
     return super.push(event)
   }
   _transform(chunk: Buffer | string | any, encoding: string, callback: TransformCallback): void {
@@ -106,25 +101,5 @@ class ChunkToSpotPrices extends Transform implements T.SpotPricesStream {
 
   trendbars(_props: T.SpotPricesSimpleTrendbarsProps): T.TrendbarsStream {
     throw new Error("not implemented");
-  }
-
-  private cachedEventOrNull<T extends T.SpotPricesEvent>(type: T["type"]): T | null {
-    const event = this.cachedEvents.get(type)
-    if (event && event.type === type) {
-      return event as T;
-    }
-    return null;
-  }
-
-  askOrNull(): T.AskPriceChangedEvent | null {
-    return this.cachedEventOrNull("ASK_PRICE_CHANGED");
-  }
-
-  bidOrNull(): T.BidPriceChangedEvent | null {
-    return this.cachedEventOrNull("BID_PRICE_CHANGED");
-  }
-
-  priceOrNull(): T.PriceChangedEvent | null {
-    return this.cachedEventOrNull("PRICE_CHANGED");
   }
 }
