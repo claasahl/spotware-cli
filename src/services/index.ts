@@ -200,7 +200,12 @@ compare;
 
 
 async function review () {
-  const fileStream = fs.createReadStream('./dev copy.log');
+  const fileStream = multistream([
+    fs.createReadStream("../../Downloads/logs/2020-06-18.log"),
+    fs.createReadStream("../../Downloads/logs/2020-06-19.log"),
+    fs.createReadStream("../../Downloads/logs/2020-06-20.log")
+    // fs.createReadStream('./dev copy.log')
+  ])
   const rl = readline.createInterface({
     input: fileStream,
     crlfDelay: Infinity
@@ -215,25 +220,26 @@ async function review () {
         if(!orders.has(id)) {
           orders.set(id, {})
         }
-        delete data.type;
         const order = orders.get(id)!
-        const from = Math.min(data.timestamp, order.from || Number.MAX_VALUE)
-        const to = Math.max(data.timestamp, order.to || Number.MIN_VALUE)
-        const duration = ms(to-from)
-        Object.assign(order, data, {from, to, duration})
+        const fromTimestamp = Math.min(data.timestamp, order.fromTimestamp || Number.MAX_VALUE)
+        const toTimestamp = Math.max(data.timestamp, order.toTimestamp || Number.MIN_VALUE)
+        const from = new Date(fromTimestamp)
+        const to = new Date(toTimestamp)
+        const duration = ms(toTimestamp-fromTimestamp)
+        
+        delete data.type;
+        delete data.timestamp;
+        Object.assign(order, data, {fromTimestamp, toTimestamp, from, to, duration})
       }
     }
   }
 
   console.log(orders)
-  // const out = fs.createWriteStream("compare.csv")
-  // out.write(`timestamp;id;tradeSide;enter;entry;exit;profitLoss;;;timestamp;id;tradeSide;enter;entry;exit;profitLoss\n`)
-  // for(const data of newData) {
-  //   const tmp = oldData.shift();
-  //   if(tmp) {
-  //     out.write(`${data.timestamp};${data.id};${data.tradeSide};${data.enter};${data.entry || ""};${data.exit || ""};${data.profitLoss || ""};;;${tmp.timestamp};${tmp.id};${data.tradeSide};${data.enter};${tmp.entry || ""};${tmp.exit || ""};${tmp.profitLoss || ""}\n`)
-  //   }
-  // }
-  // out.end();
+  const out = fs.createWriteStream("compare.csv")
+  out.write(`id;type;tradeSide;volume;enter;stopLoss;takeProfit;fromTimestamp;from;toTimestamp;to;expiresTimestamp;expires;duration;entry;exit;price;profitLoss\n`)
+  for(const [_id, data] of orders) {
+      out.write(`${data.id};${data.orderType};${data.tradeSide};${data.volume};${data.enter};${data.stopLoss};${data.takeProfit};${data.fromTimestamp};${data.from.toISOString()};${data.toTimestamp};${data.to.toISOString()};${data.expiresAt};${new Date(data.expiresAt).toISOString()};${data.duration};${data.entry || ""};${data.exit || ""};${data.price || ""};${data.profitLoss || ""}\n`)
+  }
+  out.end();
 }
 review();
