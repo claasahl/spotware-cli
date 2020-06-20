@@ -48,8 +48,7 @@ export function fromFile(props: T.SpotPricesProps & { path: fs.PathLike }): T.Sp
 export function fromLogFiles(props: T.SpotPricesProps & { paths: fs.PathLike[] }): T.SpotPricesStream {
   const { paths, ...originalProps } = props;
   const streams = paths.map(fr0mFile);
-  // TODO is there a NodeJS native way? PassThrough?
-  return multistream(streams).pipe(new ChunkToSpotPrices(originalProps, chunk => chunk.includes("spotPrices:ask") || chunk.includes("spotPrices:bid")));
+  return multistream(streams).pipe(new ChunkToSpotPrices(originalProps, chunk => chunk.includes("spotPrices:") && (chunk.includes("ASK_PRICE_CHANGED") || chunk.includes("BID_PRICE_CHANGED"))));
 }
 const transformOptions: TransformOptions = {objectMode: true}
 class ChunkToSpotPrices extends Transform implements T.SpotPricesStream {
