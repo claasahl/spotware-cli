@@ -99,13 +99,8 @@ async function spotware() {
 }
 spotware;
 
-async function review () {
-  const fileStream = multistream([
-    fs.createReadStream("../../Downloads/logs/2020-06-18.log"),
-    fs.createReadStream("../../Downloads/logs/2020-06-19.log"),
-    fs.createReadStream("../../Downloads/logs/2020-06-20.log")
-    // fs.createReadStream('./dev copy.log')
-  ])
+async function review (output: string, inputs: string[]) {
+  const fileStream = multistream(inputs.map(file => fs.createReadStream(file)))
   const rl = readline.createInterface({
     input: fileStream,
     crlfDelay: Infinity
@@ -135,11 +130,16 @@ async function review () {
   }
 
   console.log(orders)
-  const out = fs.createWriteStream("compare.csv")
+  const out = fs.createWriteStream(output)
   out.write(`id;type;tradeSide;volume;enter;stopLoss;takeProfit;fromTimestamp;from;toTimestamp;to;expiresTimestamp;expires;duration;entry;exit;price;profitLoss\n`)
   for(const [_id, data] of orders) {
       out.write(`${data.id};${data.orderType};${data.tradeSide};${data.volume};${data.enter};${data.stopLoss};${data.takeProfit};${data.fromTimestamp};${data.from.toISOString()};${data.toTimestamp};${data.to.toISOString()};${data.expiresAt};${new Date(data.expiresAt).toISOString()};${data.duration};${data.entry || ""};${data.exit || ""};${data.price || ""};${data.profitLoss || ""}\n`)
   }
   out.end();
 }
-review();
+if(process.argv[2] === "review") {
+  // npm run review "output.csv" "input1.log" "input2.log" "input3.log"
+  const output = process.argv[3];
+  const inputs = process.argv.slice(4)
+  review(output, inputs);
+}
