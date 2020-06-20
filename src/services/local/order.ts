@@ -1,8 +1,8 @@
 import assert from "assert";
 import { Transform, TransformCallback } from "stream";
-import debug from "debug";
 
 import * as T from "../types"
+import * as L from "../logging"
 
 type Condition = (e: T.SpotPricesEvent) => boolean;
 
@@ -10,7 +10,6 @@ class ToBuyOrder<Props extends T.OrderProps> extends Transform implements T.Orde
     readonly props: Props;
     private readonly entryCondition: Condition;
     private readonly exitCondition: Condition;
-    private readonly log: debug.Debugger;
     private bidPrice: T.BidPriceChangedEvent | null = null;
     private filled: T.OrderFilledEvent | null = null;
     private profitLoss: T.OrderProfitLossEvent | null = null;
@@ -22,7 +21,7 @@ class ToBuyOrder<Props extends T.OrderProps> extends Transform implements T.Orde
       this.props = Object.freeze(props);
       this.entryCondition = entryCondition;
       this.exitCondition = exitCondition;
-      this.log = debug("order").extend(props.id);
+      L.logOrderEvents(this);
     }
 
     closeOrder(): void {
@@ -71,7 +70,6 @@ class ToBuyOrder<Props extends T.OrderProps> extends Transform implements T.Orde
         return true;
       }
       if (event) {
-        this.log("%j", event);
         this.timestamp = event.timestamp;
         this.lifecyle.update(event);
       }
@@ -136,7 +134,6 @@ class ToSellOrder<Props extends T.OrderProps> extends Transform implements T.Ord
     readonly props: Props;
     private readonly entryCondition: Condition;
     private readonly exitCondition: Condition;
-    private readonly log: debug.Debugger;
     private askPrice: T.AskPriceChangedEvent | null = null;
     private filled: T.OrderFilledEvent | null = null;
     private profitLoss: T.OrderProfitLossEvent | null = null;
@@ -148,7 +145,7 @@ class ToSellOrder<Props extends T.OrderProps> extends Transform implements T.Ord
       this.props = Object.freeze(props);
       this.entryCondition = entryCondition;
       this.exitCondition = exitCondition;
-      this.log = debug("order").extend(props.id);
+      L.logOrderEvents(this);
     }
 
     closeOrder(): void {
@@ -197,7 +194,6 @@ class ToSellOrder<Props extends T.OrderProps> extends Transform implements T.Ord
         return true;
       }
       if (event) {
-        this.log("%j", event);
         this.timestamp = event.timestamp;
         this.lifecyle.update(event);
       }

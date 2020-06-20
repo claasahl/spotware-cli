@@ -2,9 +2,9 @@ import fs from "fs";
 import readline from "readline";
 import { Readable, Transform, TransformCallback, TransformOptions } from "stream";
 import {obj as multistream} from "multistream";
-import debug from "debug";
 
 import * as T from "../types";
+import * as L from "../logging";
 
 async function* sampleData(): AsyncGenerator<string, void, unknown> {
   yield '{ "type": "ASK_PRICE_CHANGED", "timestamp": 1577663999771, "ask": 6611.79 }';
@@ -56,20 +56,18 @@ class ChunkToSpotPrices extends Transform implements T.SpotPricesStream {
   readonly props: T.SpotPricesProps;
   private readonly cachedEvents: Map<T.SpotPricesEvent["type"], T.SpotPricesEvent>;
   private readonly filter: (chunk: string) => boolean;
-  private readonly log: debug.Debugger;
-
+  
   constructor(props: T.SpotPricesProps, filter: (chunk: string) => boolean = () => true) {
     super(transformOptions);
     this.props = Object.freeze(props);
     this.cachedEvents = new Map();
     this.filter = filter;
-    this.log = debug("spotPrices").extend(props.symbol.toString());
+    L.logSpotPriceEvents(this);
   }
 
   push(event: T.SpotPricesEvent | null): boolean {
     if (event) {
       this.cachedEvents.set(event.type, event);
-      this.log("%j", event);
     }
     return super.push(event)
   }
