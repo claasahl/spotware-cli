@@ -6,6 +6,9 @@ import { periodToMillis } from "../utils";
 import ms from "ms";
 import {execFile} from "child_process";
 import debug from "debug";
+import fs from "fs"
+import readline from "readline";
+import {obj as multistream} from "multistream";
 
 // Idea: Write services which consume events (from other services) and produce events (for other services to consume).
 
@@ -49,7 +52,7 @@ local;
 
 function insideBarLocal() {
   const currency = Symbol.for("EUR");
-  const initialBalance = 221.33;
+  const initialBalance = 177.59;
   const period = ms("15min");
   const symbol = Symbol.for("BTC/EUR");
   const enterOffset = 0.1;
@@ -59,11 +62,9 @@ function insideBarLocal() {
   const volume = 0.01;
   const expiresIn = ms("30min")
   const spots = () => fromLogFiles({paths: [
-    "./store/2020-04-27.log",
-    "./store/2020-04-28.log",
-    "./store/2020-04-29.log",
-    "./store/2020-04-30.log",
-    "./store/2020-05-01.log",
+    "../../Downloads/logs/2020-06-18.log",
+    "../../Downloads/logs/2020-06-19.log",
+    "../../Downloads/logs/2020-06-20.log"
   ], symbol});
   const account = fromNothing({currency, initialBalance, spots})
   insideBarMomentumStrategy({ account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, expiresIn })
@@ -80,14 +81,159 @@ async function insideBarSpotware() {
   insideBarMomentumStrategy({ ...config, account, symbol, period, expiresIn })
   account.resume(); // consume account events
 }
-insideBarSpotware();
+insideBarSpotware;
 
 async function spotware() {
   const currency = Symbol.for("EUR");
   const symbol = Symbol.for("BTC/EUR");
   const account = fromSomething({...config, currency})
-  const stream = account.marketOrder({id: "1", symbol, tradeSide: "SELL", volume: 0.01, expiresAt: Date.now() + 10000})
-  stream.on("data", e => console.log("---", e));
-  // setTimeout(async () => console.log(stream.endOrder()), 15000)
+  account.trendbars({symbol, period: 10000}).on("data", console.log)
+  setTimeout(async () => {
+    const stream = account.stopOrder({id: "1", symbol, tradeSide: "SELL", volume: 0.01, expiresAt: Date.now() + 10000, enter: 7000})
+    stream.on("data", e => console.log("---", e));
+    stream.on("end", () => console.log("--- END", ));
+    stream.on("close", () => console.log("--- CLOSE", ));
+    // stream.on("error", err => console.log("--- ERROR", err));
+    setInterval(() => stream.endOrder(), 5000)
+  }, 15000)
 }
 spotware;
+
+async function compare () {
+  async function newFormat() {
+    const fileStream = fs.createReadStream('./dev copy.log');
+    const out = fs.createWriteStream("format-new.log")
+    const rl = readline.createInterface({
+      input: fileStream,
+      crlfDelay: Infinity
+    });
+    let orderFilled = null;
+    const data: any[] = []
+    for await (const line of rl) {
+      if(line.indexOf("account") >= 0 || line.indexOf("trendbars:") >= 0) {
+        if(line.indexOf("PROFITLOSS") >= 0) {
+          continue
+        } else if(line.indexOf("EQUITY_CHANGED") >= 0) {
+          continue
+        } else {
+          out.write(line)
+          out.write("\n")
+        }
+
+        if(line.indexOf("\"FILLED\"") >= 0) {
+          const logEntry = /({.*})/.exec(line);
+          orderFilled = JSON.parse(logEntry![1])
+        }
+        
+        if(line.indexOf("\"ENDED\"") >= 0) {
+          const logEntry = /({.*})/.exec(line);
+          data.push({...orderFilled, ...JSON.parse(logEntry![1])})
+          orderFilled = null;
+        }
+      }
+    }
+    out.end();
+    return data;
+  }
+
+  async function oldFormat() {
+    const fileStream = multistream([
+      fs.createReadStream("./store/2020-04-27.log"),
+      fs.createReadStream("./store/2020-04-28.log"),
+      fs.createReadStream("./store/2020-04-29.log"),
+      fs.createReadStream("./store/2020-04-30.log"),
+      fs.createReadStream("./store/2020-05-01.log"),
+    ])
+    const out = fs.createWriteStream("format-old.log")
+    
+    const rl = readline.createInterface({
+      input: fileStream,
+      crlfDelay: Infinity
+    });
+    let orderFilled = null;
+    let orderEnded = null;
+    const data: any[] = [];
+    for await (const line of rl) {
+      if(line.indexOf("order:") >= 0 && line.indexOf(":ended") >= 0) {
+        const logEntry = /({.*})/.exec(line);
+        orderEnded = JSON.parse(logEntry![1]);
+      } else if(line.indexOf("order:") >= 0 && line.indexOf(":filled") >= 0) {
+        const logEntry = /({.*})/.exec(line);
+        orderFilled = JSON.parse(logEntry![1]);
+      }
+      if(line.indexOf("account:") >= 0 || line.indexOf("trendbars:") >= 0) {
+        if(line.indexOf("PROFITLOSS") >= 0) {
+          continue
+        } else if(line.indexOf("account:equity") >= 0) {
+          continue
+        } else {
+          out.write(line)
+          out.write("\n")
+        }
+
+        if (line.indexOf("\"ENDED\"") >= 0) {
+          const logEntry = /({.*})/.exec(line);
+          data.push({...orderEnded, ...orderFilled,...JSON.parse(logEntry![1])})
+          orderEnded = null;
+          orderFilled = null;
+        }
+      }
+    }
+    out.end()
+    return data;
+  }
+  const newData = await newFormat();
+  const oldData = await oldFormat();
+  console.log(newData, oldData)
+  const out = fs.createWriteStream("compare.csv")
+  out.write(`timestamp;id;tradeSide;enter;entry;exit;profitLoss;;;timestamp;id;tradeSide;enter;entry;exit;profitLoss\n`)
+  for(const data of newData) {
+    const tmp = oldData.shift();
+    if(tmp) {
+      out.write(`${data.timestamp};${data.id};${data.tradeSide};${data.enter};${data.entry || ""};${data.exit || ""};${data.profitLoss || ""};;;${tmp.timestamp};${tmp.id};${data.tradeSide};${data.enter};${tmp.entry || ""};${tmp.exit || ""};${tmp.profitLoss || ""}\n`)
+    }
+  }
+  out.end();
+}
+compare;
+
+
+
+async function review () {
+  const fileStream = fs.createReadStream('./dev copy.log');
+  const rl = readline.createInterface({
+    input: fileStream,
+    crlfDelay: Infinity
+  });
+  const orders = new Map<string, any>()
+  for await (const line of rl) {
+    if(line.indexOf("account") >= 0) {
+      const logEntry = /({.*})/.exec(line);
+      const data = JSON.parse(logEntry![1])
+      if("id" in data) {
+        const id = data.id;
+        if(!orders.has(id)) {
+          orders.set(id, {})
+        }
+        delete data.type;
+        const order = orders.get(id)!
+        const from = Math.min(data.timestamp, order.from || Number.MAX_VALUE)
+        const to = Math.max(data.timestamp, order.to || Number.MIN_VALUE)
+        const duration = ms(to-from)
+        Object.assign(order, data, {from, to, duration})
+      }
+    }
+  }
+
+  console.log(orders)
+  // const out = fs.createWriteStream("compare.csv")
+  // out.write(`timestamp;id;tradeSide;enter;entry;exit;profitLoss;;;timestamp;id;tradeSide;enter;entry;exit;profitLoss\n`)
+  // for(const data of newData) {
+  //   const tmp = oldData.shift();
+  //   if(tmp) {
+  //     out.write(`${data.timestamp};${data.id};${data.tradeSide};${data.enter};${data.entry || ""};${data.exit || ""};${data.profitLoss || ""};;;${tmp.timestamp};${tmp.id};${data.tradeSide};${data.enter};${tmp.entry || ""};${tmp.exit || ""};${tmp.profitLoss || ""}\n`)
+  //   }
+  // }
+  // out.end();
+}
+review();
