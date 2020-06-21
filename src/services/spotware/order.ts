@@ -106,14 +106,10 @@ function order<Props extends T.OrderProps>(props: Props, extras: { client: Spotw
                                 return
                             }
                             if (msg.order.closingOrder) {
-                                const modifiedStopLoss = msg.order.limitPrice !== props.stopLoss
-                                const modifiedTakeProfit = msg.order.takeProfit !== props.takeProfit
-
-                                const timestamp = msg.order.utcLastUpdateTimestamp || 0;
-                                const ev = { type: "ACCEPTED" as "ACCEPTED", timestamp, modifiedStopLoss, modifiedTakeProfit };
-                                stream.push(ev);
                                 return;
                             }
+                            const timestamp = msg.order.utcLastUpdateTimestamp || 0;
+                            stream.push({ type: "ACCEPTED", timestamp });
                             break;
                         }
                     case $.ProtoOAExecutionType.ORDER_EXPIRED:
