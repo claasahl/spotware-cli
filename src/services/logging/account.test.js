@@ -59,13 +59,13 @@ describe("logging", () => {
         test("log 'end' events", done => {
             const stream = new PassThrough();
             logAccountEvents(stream);
-            stream.resume();
-            stream.end();
             finished(stream, () => {
                 expect(log).toHaveBeenCalledTimes(1)
                 expect(log).toHaveBeenCalledWith("ENDED");
                 done();
             })
+            stream.resume();
+            stream.end();
         })
 
         test("log 'error' events", done => {

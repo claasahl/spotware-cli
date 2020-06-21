@@ -39,13 +39,13 @@ describe("logging", () => {
             const stream = new PassThrough();
             stream.props = { symbol: Symbol.for("abc"), period: 60000 };
             logTrendbarEvents(stream);
-            stream.resume();
-            stream.end();
             finished(stream, () => {
                 expect(log).toHaveBeenCalledTimes(1)
                 expect(log).toHaveBeenCalledWith("ENDED");
                 done();
             })
+            stream.resume();
+            stream.end();
         })
 
         test("log 'error' events", done => {
