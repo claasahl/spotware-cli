@@ -51,7 +51,7 @@ describe("insideBarMomentumStrategy", () => {
         spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001750, bid: 15000 })
 
         spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002000, ask: 0 })
-        setImmediate(() => spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002001, ask: 0 })) // FIXME
+        spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002001, ask: 0 })
     })
     test("bearish pattern", async done => {
         const currency = Symbol.for("EUR");
@@ -100,7 +100,7 @@ describe("insideBarMomentumStrategy", () => {
         spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001750, bid: 15000 })
 
         spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002000, bid: 99999 })
-        setImmediate(() => spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002001, bid: 99999 }))
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002001, bid: 99999 })
     })
     test("cancel previous (BUY) order", async done => {
         const currency = Symbol.for("EUR");
@@ -153,16 +153,14 @@ describe("insideBarMomentumStrategy", () => {
         spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002500, bid: 14980 })
         spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002750, bid: 15000 })
 
-        setImmediate(() => {
-          spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1003000, ask: 0 })
-          spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003000, bid: 15000 })
-          spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003250, bid: 15000 })
-          spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003500, bid: 15000 })
-          spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003750, bid: 15000 })
+        spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1003000, ask: 0 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003000, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003250, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003500, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003750, bid: 15000 })
 
-          spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1004000, bid: 99999 })
-          setImmediate(() => spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1004000, bid: 99999 }))
-        })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1004000, bid: 99999 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1004000, bid: 99999 })
     })
     test("cancel previous (SELL) order", async done => {
         const currency = Symbol.for("EUR");
@@ -215,15 +213,13 @@ describe("insideBarMomentumStrategy", () => {
         spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002500, bid: 14980 })
         spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002750, bid: 15100 })
 
-        setImmediate(() => { // TODO needs to work without setImmediate
-            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003000, bid: 15000 })
-            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003250, bid: 15000 })
-            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003500, bid: 15000 })
-            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003750, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003000, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003250, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003500, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1003750, bid: 15000 })
 
-            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1004000, ask: 0 })
-            setImmediate(() => spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1004001, ask: 0 }))
-        })
+        spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1004000, ask: 0 })
+        spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1004001, ask: 0 })
     })
     test("close (BUY) order if entry price exceeds takeProfit", async done => {
         const currency = Symbol.for("EUR");
@@ -272,13 +268,9 @@ describe("insideBarMomentumStrategy", () => {
         spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001500, bid: 15000 })
         spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001750, bid: 15000 })
 
-        setImmediate(() => { // FIXME
-            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002000, ask: 15000 })
-            setImmediate(() => {
-                spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002001, ask: 15552 })
-                spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002001, bid: 15916 })
-            })
-        })
+        spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002000, ask: 15000 })
+        spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002001, ask: 15552 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002001, bid: 15916 })
     })
     test("close (SELL) order if entry price exceeds takeProfit", async done => {
         const currency = Symbol.for("EUR");
@@ -327,13 +319,9 @@ describe("insideBarMomentumStrategy", () => {
         spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001500, bid: 15000 })
         spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001750, bid: 15000 })
 
-        setImmediate(() => { // FIXME
-            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002000, bid: 15000 })
-            setImmediate(() => {
-                spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002001, bid: 14928 })
-                spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002001, ask: 14564 })
-            })
-        })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002000, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002001, bid: 14928 })
+        spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002001, ask: 14564 })
     })
     test("close (BUY) order if entry price exceeds stopLoss", async done => {
         const currency = Symbol.for("EUR");
@@ -382,13 +370,9 @@ describe("insideBarMomentumStrategy", () => {
         spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001500, bid: 15000 })
         spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001750, bid: 15000 })
 
-        setImmediate(() => { // FIXME
-            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002000, ask: 15000 })
-            setImmediate(() => {
-                spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002001, ask: 15552 })
-                spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002001, bid: 15292 })
-            })
-        })
+        spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002000, ask: 15000 })
+        spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002001, ask: 15552 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002001, bid: 15292 })
     })
     test("close (SELL) order if entry price exceeds stopLoss", async done => {
         const currency = Symbol.for("EUR");
@@ -437,12 +421,8 @@ describe("insideBarMomentumStrategy", () => {
         spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001500, bid: 15000 })
         spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1001750, bid: 15000 })
 
-        setImmediate(() => { // FIXME
-            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002000, bid: 15000 })
-            setImmediate(() => {
-                spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002001, bid: 14928 })
-                spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002001, ask: 15188 })
-            })
-        })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002000, bid: 15000 })
+        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 1002001, bid: 14928 })
+        spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1002001, ask: 15188 })
     })
 })

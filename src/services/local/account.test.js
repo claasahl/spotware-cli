@@ -117,15 +117,9 @@ describe("fromNothing", () => {
                 }
             })
             spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1, ask: 10 })
-            setImmediate(() => { // TODO needs to work without setImmediate
-                spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 2, bid: 15 })
-                setImmediate(() => {
-                    spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 3, ask: 12 })
-                    setImmediate(() => {
-                        spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 4, ask: 8 })
-                    })
-                })
-            })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 2, bid: 15 })
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 3, ask: 12 })
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 4, ask: 8 })
         })
         test("should produce 'balance' event", done => {
             const symbol = Symbol.for("abc/def")
@@ -255,15 +249,9 @@ describe("fromNothing", () => {
                 }
             })
             spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1, ask: 10 })
-            setImmediate(() => { // TODO needs to work without setImmediate
-                spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 2, bid: 15 })
-                setImmediate(() => {
-                    spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 3, bid: 12 })
-                    setImmediate(() => {
-                        spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 4, bid: 18 })
-                    })
-                })
-            })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 2, bid: 15 })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 3, bid: 12 })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 4, bid: 18 })
         })
         test("should produce 'balance' event", done => {
             const symbol = Symbol.for("abc/def")
