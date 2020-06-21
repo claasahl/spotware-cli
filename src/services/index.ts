@@ -16,8 +16,6 @@ import debug from "debug";
 
 // each service must expose a callback-function for every documented event, which provides access to the last event. The function must be named after the event.
 
-// implement insideBarMomentumStrategy
-
 // review all base/*.ts and local/*.ts files for "Promises vs callbacks" and "Promises vs 'sync' returns"
 
 // philosophy: for awesome readablity format all events like so {timestamp, type, ...rest}
