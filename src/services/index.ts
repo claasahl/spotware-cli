@@ -81,7 +81,7 @@ async function insideBarSpotware() {
   insideBarMomentumStrategy({ ...config, account, symbol, period, expiresIn })
   account.resume(); // consume account events
 }
-insideBarSpotware;
+insideBarSpotware();
 
 async function spotware() {
   const currency = Symbol.for("EUR");
