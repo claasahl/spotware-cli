@@ -11,6 +11,7 @@ export interface OrderAcceptedEvent {
 export interface OrderRejectedEvent {
   type: "REJECTED";
   timestamp: Timestamp;
+  message?: string;
 }
 export interface OrderCanceledEvent {
   type: "CANCELED";

@@ -186,8 +186,7 @@ function order<Props extends T.OrderProps>(props: Props, extras: { client: Spotw
                                 return
                             }
                             const timestamp = msg.deal.executionTimestamp;
-                            // TODO: msg.errorCode
-                            stream.push({ type: "REJECTED", timestamp });
+                            stream.push({ type: "REJECTED", timestamp, message: msg.errorCode });
                             stream.push(null);
                             break;
                         }

@@ -48,7 +48,7 @@ describe("logging", () => {
         test("log 'rejected' events", () => {
             const stream = new PassThrough();
             stream.props = { symbol: Symbol.for("abc"), id: "0" };
-            const event = { type: "REJECTED", timestamp: 123 };
+            const event = { type: "REJECTED", timestamp: 123, message: 'NOT_ENOUGH_MONEY' };
             logOrderEvents(stream);
             stream.emit("data", event)
             expect(log).toHaveBeenCalledTimes(1)

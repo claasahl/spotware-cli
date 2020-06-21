@@ -7,7 +7,7 @@ describe.skip("DebugOrderStream", () => {
             const stream = new DebugOrderStream(props)
             const events = [
                 {type: "CREATED", timestamp: 1},
-                {type: "REJECTED", timestamp: 123},
+                {type: "REJECTED", timestamp: 123, message: 'NOT_ENOUGH_MONEY'},
                 {type: "ENDED", timestamp: 123},
             ]
             stream.on("data", e => expect(e).toStrictEqual(events.shift()))
@@ -219,7 +219,7 @@ describe.skip("DebugOrderStream", () => {
             const stream = new DebugOrderStream(props)
             const events = [
                 {type: "CREATED", timestamp: 1},
-                {type: "REJECTED", timestamp: 2},
+                {type: "REJECTED", timestamp: 2, message: 'NOT_ENOUGH_MONEY'},
                 {type: "ENDED", timestamp: 2},
             ]
             stream.on("data", e => {
