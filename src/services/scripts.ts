@@ -113,5 +113,6 @@ if (process.argv[2] === "local") {
 } else {
     console.log("npm run script local")
     console.log("npm run script spotware")
+    console.log("npm run script insidebar")
     console.log("npm run script review \"output.csv\" \"input1.log\" \"input2.log\"")
 }
