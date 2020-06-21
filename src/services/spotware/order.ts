@@ -1,5 +1,6 @@
 import * as $ from "@claasahl/spotware-adapter"
 import {Readable, finished} from "stream";
+import debug from "debug";
 
 import * as T from "../types"
 import { SpotwareClient } from "./client";
@@ -65,6 +66,9 @@ class SpotwareOrderStream<Props extends T.OrderProps> extends Readable implement
 
 function order<Props extends T.OrderProps>(props: Props, extras: { client: SpotwareClient, spots: T.SpotPricesStream, ctidTraderAccountId: () => Promise<number>, spotwareSymbol: () => Promise<$.ProtoOASymbol>, partial: Partial<$.ProtoOANewOrderReq> & Pick<$.ProtoOANewOrderReq, "orderType"> }): T.OrderStream<Props> {
     const stream = new SpotwareOrderStream(props, extras.client);
+    const log = debug("order")
+    .extend(stream.props.symbol.toString())
+    .extend(stream.props.id)
     setImmediate(async () => {
         try {
             const ctidTraderAccountId = await extras.ctidTraderAccountId();
@@ -106,6 +110,24 @@ function order<Props extends T.OrderProps>(props: Props, extras: { client: Spotw
                                 return
                             }
                             if (msg.order.closingOrder) {
+                                const modifiedStopLoss = msg.order.limitPrice !== props.stopLoss
+                                const modifiedTakeProfit = msg.order.takeProfit !== props.takeProfit
+
+                                const timestamp = msg.order.utcLastUpdateTimestamp || 0;
+                                log("%j", {
+                                    type:"COMMENT",
+                                    timestamp,
+                                    spotware: {
+                                        limitPrice: msg.order.limitPrice,
+                                        takeProfit: msg.order.takeProfit
+                                    },
+                                    expected: {
+                                        stopLoss: props.stopLoss,
+                                        takeProfit: props.takeProfit
+                                    },
+                                    modifiedStopLoss,
+                                    modifiedTakeProfit
+                                })
                                 return;
                             }
                             const timestamp = msg.order.utcLastUpdateTimestamp || 0;
