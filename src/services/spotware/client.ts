@@ -145,6 +145,20 @@ export class SpotwareClient extends EventEmitter {
         return this.awaitResponse(clientMsgId, isResponse);
     }
 
+    amendOrder(payload: $.ProtoOAAmendOrderReq): Promise<$.ProtoOAExecutionEvent> {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_AMEND_ORDER_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2126>($.ProtoOAPayloadType.PROTO_OA_EXECUTION_EVENT)
+        return this.awaitResponse(clientMsgId, isResponse);
+    }
+
+    amendPositionSltp(payload: $.ProtoOAAmendPositionSLTPReq): Promise<$.ProtoOAExecutionEvent> {
+        const clientMsgId = v4()
+        this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_AMEND_POSITION_SLTP_REQ, payload, clientMsgId })
+        const isResponse = testResponse<$.ProtoMessage2126>($.ProtoOAPayloadType.PROTO_OA_EXECUTION_EVENT)
+        return this.awaitResponse(clientMsgId, isResponse);
+    }
+
     applicationAuth(payload: $.ProtoOAApplicationAuthReq): Promise<$.ProtoOAApplicationAuthRes> {
         const clientMsgId = v4()
         this.publish({ payloadType: $.ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_REQ, payload, clientMsgId })
@@ -347,10 +361,6 @@ export class SpotwareClient extends EventEmitter {
         const isResponse = testResponse<$.ProtoMessage2105>($.ProtoOAPayloadType.PROTO_OA_VERSION_RES)
         return this.awaitResponse(clientMsgId, isResponse);
     }
-
-    // TODO:
-    // PROTO_OA_AMEND_ORDER_REQ = 2109,
-    // PROTO_OA_AMEND_POSITION_SLTP_REQ = 2110,
 
     end() {
         this.socket.end();
