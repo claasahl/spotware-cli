@@ -29,20 +29,7 @@ interface PlaceOrderProps {
 }
 function placeOrder(props: PlaceOrderProps): T.OrderStream<T.StopOrderProps> {
   const { account, ...rest } = props;
-  const order = account.stopOrder(rest);
-  const guard = (e: T.OrderProfitLossEvent) => {
-    if (props.tradeSide === "BUY" && (e.price >= props.takeProfit || e.price <= props.stopLoss)) {
-      order.closeOrder();
-    } else if (props.tradeSide === "SELL" && (e.price <= props.takeProfit || e.price >= props.stopLoss)) {
-      order.closeOrder();
-    }
-  }
-  order.on("data", e => {
-    if(e.type === "PROFITLOSS") {
-      guard(e);  
-    }
-  });
-  return order;
+  return account.stopOrder(rest);
 }
 
 function endLastOrder(lastOrder: T.OrderStream<T.StopOrderProps> | undefined): void {
