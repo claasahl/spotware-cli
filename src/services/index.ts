@@ -1,9 +1,7 @@
-import { fromNothing, fromLogFiles } from "./local";
 import { insideBarMomentumStrategy } from "./insideBarMomentumStrategy";
 import config from "../config";
 import { fromSomething } from "./spotware/account";
 import { periodToMillis } from "../utils";
-import ms from "ms";
 import {execFile} from "child_process";
 import debug from "debug";
 
@@ -30,28 +28,6 @@ function header() {
   })
 }
 header();
-
-function insideBarLocal() {
-  const currency = Symbol.for("EUR");
-  const initialBalance = 177.59;
-  const period = ms("15min");
-  const symbol = Symbol.for("BTC/EUR");
-  const enterOffset = 0.1;
-  const stopLossOffset = 0.4;
-  const takeProfitOffset = 0.8;
-  const minTrendbarRange = 15;
-  const volume = 0.01;
-  const expiresIn = ms("30min")
-  const spots = () => fromLogFiles({paths: [
-    "../../Downloads/logs/2020-06-18.log",
-    "../../Downloads/logs/2020-06-19.log",
-    "../../Downloads/logs/2020-06-20.log"
-  ], symbol});
-  const account = fromNothing({currency, initialBalance, spots})
-  insideBarMomentumStrategy({ account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, expiresIn })
-  account.resume(); // consume account events
-}
-insideBarLocal;
 
 async function insideBarSpotware() {
   const currency = Symbol.for("EUR");
