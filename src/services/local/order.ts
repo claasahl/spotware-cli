@@ -70,13 +70,13 @@ class ToBuyOrder<Props extends T.OrderProps> extends Transform implements T.Orde
         return true;
       }
       if (event) {
-        this.timestamp = event.timestamp;
         this.lifecyle.update(event);
       }
       return super.push(event)
     }
 
     _transform(chunk: T.SpotPricesEvent, _encoding: string, callback: TransformCallback): void {
+        this.timestamp = chunk.timestamp;
         if(this.filled === null && chunk.type ==="ASK_PRICE_CHANGED") {
             this.tryToFillOrder(chunk);
         } else if(this.filled === null && chunk.type === "BID_PRICE_CHANGED") {
@@ -197,13 +197,13 @@ class ToSellOrder<Props extends T.OrderProps> extends Transform implements T.Ord
         return true;
       }
       if (event) {
-        this.timestamp = event.timestamp;
         this.lifecyle.update(event);
       }
       return super.push(event)
     }
 
     _transform(chunk: T.SpotPricesEvent, _encoding: string, callback: TransformCallback): void {
+        this.timestamp = chunk.timestamp;
         if(this.filled === null && chunk.type ==="BID_PRICE_CHANGED") {
             this.tryToFillOrder(chunk);
         } else if(this.filled === null && chunk.type === "ASK_PRICE_CHANGED") {
