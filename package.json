@@ -15,6 +15,8 @@
     "refresh": "ts-node -r dotenv/config ./src/refresh.ts",
     "predev": "npm run build",
     "dev": "node -r dotenv/config ./build/services/index.js > dev.log 2>&1",
+    "prescript": "npm run build",
+    "script": "node -r dotenv/config ./build/services/scripts.js",
     "preprof": "npm run build",
     "prof": "node --prof -r dotenv/config ./build/performance.js > dev.log 2>&1",
     "profProcess": "node --prof-process isolate-000002054DC3BEF0-13692-v8.log > process.txt"
