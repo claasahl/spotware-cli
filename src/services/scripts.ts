@@ -6,6 +6,7 @@ import ms from "ms";
 import fs from "fs"
 import readline from "readline";
 import { obj as multistream } from "multistream";
+import { AskPriceChangedEvent, BidPriceChangedEvent } from "./types";
 
 function local() {
     const name = "BTC/EUR";
@@ -99,6 +100,103 @@ async function review(output: string, inputs: string[]) {
     }
     out.end();
 }
+async function temp(output: string, inputs: string[]) {
+    const fileStream = multistream(inputs.map(file => fs.createReadStream(file)))
+    const rl = readline.createInterface({
+        input: fileStream,
+        crlfDelay: Infinity
+    });
+    const range = ms("30min");
+    const ranges = new Map<number, {
+        id: string
+        ask: {
+            high: AskPriceChangedEvent
+            low: AskPriceChangedEvent
+        },
+        bid: {
+            high: BidPriceChangedEvent
+            low: BidPriceChangedEvent
+        }
+    }>()
+    for await (const line of rl) {
+        if (line.indexOf("account") >= 0 && line.indexOf("\"CREATED\"") >= 0) {
+            console.log(line)
+            const logEntry = /({.*})/.exec(line);
+            const data = JSON.parse(logEntry![1])
+            if ("timestamp" in data) {
+                const { timestamp } = data;
+                if (!ranges.has(timestamp)) {
+                    ranges.set(timestamp, {
+                        id: data.id,
+                        ask: {
+                            high: {
+                                timestamp: 0,
+                                type: "ASK_PRICE_CHANGED",
+                                ask: Number.MIN_VALUE
+                            },
+                            low: {
+                                timestamp: 0,
+                                type: "ASK_PRICE_CHANGED",
+                                ask: Number.MAX_VALUE
+                            }
+                        },
+                        bid: {
+                            high: {
+                                timestamp: 0,
+                                type: "BID_PRICE_CHANGED",
+                                bid: Number.MIN_VALUE
+                            },
+                            low: {
+                                timestamp: 0,
+                                type: "BID_PRICE_CHANGED",
+                                bid: Number.MAX_VALUE
+                            }
+                        }
+                    })
+                }
+            }
+        } else if (line.indexOf("spotPrices:") >= 0 && line.indexOf("\"ASK_PRICE_CHANGED\"") >= 0) {
+            const logEntry = /({.*})/.exec(line);
+            const data = JSON.parse(logEntry![1])
+            for(const [key, value] of ranges) {
+                if(data.timestamp >= key && data.timestamp < key+range) {
+                    if(value.ask.high.ask < data.ask) {
+                        console.log("new high", line)
+                        value.ask.high = data;
+                    }
+                    if(value.ask.low.ask > data.ask) {
+                        console.log("now low", line)
+                        value.ask.low = data;
+                    }
+                    break;
+                }
+            }
+        } else if (line.indexOf("spotPrices:") >= 0 && line.indexOf("\"BID_PRICE_CHANGED\"") >= 0) {
+            const logEntry = /({.*})/.exec(line);
+            const data = JSON.parse(logEntry![1])
+            for(const [key, value] of ranges) {
+                if(data.timestamp >= key && data.timestamp < key+range) {
+                    if(value.bid.high.bid < data.bid) {
+                        console.log("new high", line)
+                        value.bid.high = data;
+                    }
+                    if(value.bid.low.bid > data.bid) {
+                        console.log("new low", line)
+                        value.bid.low = data;
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    const out = fs.createWriteStream(output)
+    out.write(`id;ask high;ask low;bid high;bid low\n`)
+    for (const [_id, data] of ranges) {
+        out.write(`${data.id};${data.ask.high.ask};${data.ask.low.ask};${data.bid.high.bid};${data.bid.low.bid}\n`)
+    }
+    out.end();
+}
 
 if (process.argv[2] === "local") {
     local();
@@ -106,6 +204,10 @@ if (process.argv[2] === "local") {
     spotware();
 } else if (process.argv[2] === "insidebar") {
     insideBarLocal();
+} else if (process.argv[2] === "temp") {
+    const output = process.argv[3];
+    const inputs = process.argv.slice(4)
+    temp(output, inputs);
 } else if (process.argv[2] === "review") {
     const output = process.argv[3];
     const inputs = process.argv.slice(4)
