@@ -1,4 +1,4 @@
-import { fromSampleData, fromNothing, fromLogFiles } from "./local";
+import { fromNothing, fromLogFiles } from "./local";
 import { insideBarMomentumStrategy } from "./insideBarMomentumStrategy";
 import config from "../config";
 import { fromSomething } from "./spotware/account";
@@ -30,22 +30,6 @@ function header() {
   })
 }
 header();
-
-function local() {
-  const name = "BTC/EUR";
-  const symbol = Symbol.for(name);
-  const currency = Symbol.for("EUR");
-  const account = fromNothing({currency, spots: fromSampleData, initialBalance: 1000})
-  setImmediate(() => {
-    account.trendbars({ symbol, period: 2000 });
-  });
-  setImmediate(() => {
-    // account.stopOrder({ id: "1", symbol, tradeSide: "SELL", volume: 1, enter: 6613});
-    // account.marketOrder({ id: "1", symbol, tradeSide: "BUY", volume: 1, takeProfit: 6614.0});
-    account.marketOrder({ id: "1", symbol, tradeSide: "SELL", volume: 1, stopLoss: 6613.0});
-  });
-}
-local;
 
 function insideBarLocal() {
   const currency = Symbol.for("EUR");
@@ -79,19 +63,3 @@ async function insideBarSpotware() {
   account.resume(); // consume account events
 }
 insideBarSpotware();
-
-async function spotware() {
-  const currency = Symbol.for("EUR");
-  const symbol = Symbol.for("BTC/EUR");
-  const account = fromSomething({...config, currency})
-  account.trendbars({symbol, period: 10000}).on("data", console.log)
-  setTimeout(async () => {
-    const stream = account.stopOrder({id: "1", symbol, tradeSide: "SELL", volume: 0.01, expiresAt: Date.now() + 10000, enter: 7000})
-    stream.on("data", e => console.log("---", e));
-    stream.on("end", () => console.log("--- END", ));
-    stream.on("close", () => console.log("--- CLOSE", ));
-    // stream.on("error", err => console.log("--- ERROR", err));
-    setInterval(() => stream.endOrder(), 5000)
-  }, 15000)
-}
-spotware;
