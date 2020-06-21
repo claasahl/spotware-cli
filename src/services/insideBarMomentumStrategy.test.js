@@ -178,18 +178,18 @@ describe("insideBarMomentumStrategy", () => {
         await insideBarMomentumStrategy({ account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume })
 
         const expectedAccountEvents = [
-            { "timestamp": 0, "type": "TRANSACTION", "amount": 1000 },
-            { "timestamp": 0, "type": "BALANCE_CHANGED", "balance": 1000 },
-            { "timestamp": 0, "type": "EQUITY_CHANGED", "equity": 1000 },
-            { "timestamp": 1002250, "type": "CREATED", "id": "1", symbol, "enter": 14928, "tradeSide": "SELL", "volume": 0.1, "stopLoss": 15188, "takeProfit": 14564, "orderType": "STOP", expiresAt: undefined },
-            { "timestamp": 1002250, "type": "ACCEPTED", "id": "1", symbol, "enter": 14928, "tradeSide": "SELL", "volume": 0.1, "stopLoss": 15188, "takeProfit": 14564, "orderType": "STOP", expiresAt: undefined },
-            { "timestamp": 1002250, "type": "CANCELED", "id": "1", symbol, "enter": 14928, "tradeSide": "SELL", "volume": 0.1, "stopLoss": 15188, "takeProfit": 14564, "orderType": "STOP", expiresAt: undefined },
-            { "timestamp": 1002250, "type": "ENDED", "id": "1", symbol, "enter": 14928, "tradeSide": "SELL", "volume": 0.1, "stopLoss": 15188, "takeProfit": 14564, "orderType": "STOP", expiresAt: undefined },
-            { "timestamp": 1002250, "type": "TRANSACTION", "amount": 0 },
-            { "timestamp": 1002250, "type": "BALANCE_CHANGED", "balance": 1000 },
-            { "timestamp": 1002250, "type": "EQUITY_CHANGED", "equity": 1000 },
-            { "timestamp": 1004001, "type": "CREATED", "id": "2", symbol, "enter": 15552, "tradeSide": "BUY", "volume": 0.1, "stopLoss": 15292, "takeProfit": 15916, "orderType": "STOP", expiresAt: undefined },
-            { "timestamp": 1004001, "type": "ACCEPTED", "id": "2", symbol, "enter": 15552, "tradeSide": "BUY", "volume": 0.1, "stopLoss": 15292, "takeProfit": 15916, "orderType": "STOP", expiresAt: undefined },
+            { timestamp: 0, type: "TRANSACTION", amount: 1000 },
+            { timestamp: 0, type: "BALANCE_CHANGED", balance: 1000 },
+            { timestamp: 0, type: "EQUITY_CHANGED", equity: 1000 },
+            { timestamp: 1002250, type: "CREATED", id: "1", symbol, enter: 14928, tradeSide: "SELL", volume: 0.1, stopLoss: 15188, takeProfit: 14564, orderType: "STOP", expiresAt: undefined },
+            { timestamp: 1002250, type: "ACCEPTED", id: "1", symbol, enter: 14928, tradeSide: "SELL", volume: 0.1, stopLoss: 15188, takeProfit: 14564, orderType: "STOP", expiresAt: undefined },
+            { timestamp: 1002250, type: "CANCELED", id: "1", symbol, enter: 14928, tradeSide: "SELL", volume: 0.1, stopLoss: 15188, takeProfit: 14564, orderType: "STOP", expiresAt: undefined },
+            { timestamp: 1002250, type: "ENDED", id: "1", symbol, enter: 14928, tradeSide: "SELL", volume: 0.1, stopLoss: 15188, takeProfit: 14564, orderType: "STOP", expiresAt: undefined },
+            { timestamp: 1002250, type: "TRANSACTION", amount: 0 },
+            { timestamp: 1002250, type: "BALANCE_CHANGED", balance: 1000 },
+            { timestamp: 1002250, type: "EQUITY_CHANGED", equity: 1000 },
+            { timestamp: 1004001, type: "CREATED", id: "2", symbol, enter: 15552, tradeSide: "BUY", volume: 0.1, stopLoss: 15292, takeProfit: 15916, orderType: "STOP", expiresAt: undefined },
+            { timestamp: 1004001, type: "ACCEPTED", id: "2", symbol, enter: 15552, tradeSide: "BUY", volume: 0.1, stopLoss: 15292, takeProfit: 15916, orderType: "STOP", expiresAt: undefined },
         ]
         account.on("data", e => {
             expect(e).toStrictEqual(expectedAccountEvents.shift());
