@@ -107,17 +107,23 @@ async function temp(output: string, inputs: string[]) {
         crlfDelay: Infinity
     });
     const range = ms("30min");
-    const ranges = new Map<number, {
+    const ranges: {
         id: string
+        fromTimestamp: number,
+        from: Date,
+        toTimestamp: number,
+        to: Date,
         ask: {
+            series: (AskPriceChangedEvent & { hl: "high" | "low" })[]
             high: AskPriceChangedEvent
             low: AskPriceChangedEvent
         },
         bid: {
+            series: (BidPriceChangedEvent & { hl: "high" | "low" })[]
             high: BidPriceChangedEvent
             low: BidPriceChangedEvent
         }
-    }>()
+    }[] = []
     for await (const line of rl) {
         if (line.indexOf("account") >= 0 && line.indexOf("\"CREATED\"") >= 0) {
             console.log(line)
@@ -125,48 +131,52 @@ async function temp(output: string, inputs: string[]) {
             const data = JSON.parse(logEntry![1])
             if ("timestamp" in data) {
                 const { timestamp } = data;
-                if (!ranges.has(timestamp)) {
-                    ranges.set(timestamp, {
-                        id: data.id,
-                        ask: {
-                            high: {
-                                timestamp: 0,
-                                type: "ASK_PRICE_CHANGED",
-                                ask: Number.MIN_VALUE
-                            },
-                            low: {
-                                timestamp: 0,
-                                type: "ASK_PRICE_CHANGED",
-                                ask: Number.MAX_VALUE
-                            }
+                ranges.push({
+                    id: data.id,
+                    fromTimestamp: timestamp,
+                    from: new Date(timestamp),
+                    toTimestamp: timestamp + range,
+                    to: new Date(timestamp + range),
+                    ask: {
+                        series: [],
+                        high: {
+                            timestamp: 0,
+                            type: "ASK_PRICE_CHANGED",
+                            ask: Number.MIN_VALUE
                         },
-                        bid: {
-                            high: {
-                                timestamp: 0,
-                                type: "BID_PRICE_CHANGED",
-                                bid: Number.MIN_VALUE
-                            },
-                            low: {
-                                timestamp: 0,
-                                type: "BID_PRICE_CHANGED",
-                                bid: Number.MAX_VALUE
-                            }
+                        low: {
+                            timestamp: 0,
+                            type: "ASK_PRICE_CHANGED",
+                            ask: Number.MAX_VALUE
                         }
-                    })
-                }
+                    },
+                    bid: {
+                        series: [],
+                        high: {
+                            timestamp: 0,
+                            type: "BID_PRICE_CHANGED",
+                            bid: Number.MIN_VALUE
+                        },
+                        low: {
+                            timestamp: 0,
+                            type: "BID_PRICE_CHANGED",
+                            bid: Number.MAX_VALUE
+                        }
+                    }
+                })
             }
         } else if (line.indexOf("spotPrices:") >= 0 && line.indexOf("\"ASK_PRICE_CHANGED\"") >= 0) {
             const logEntry = /({.*})/.exec(line);
             const data = JSON.parse(logEntry![1])
-            for(const [key, value] of ranges) {
-                if(data.timestamp >= key && data.timestamp < key+range) {
-                    if(value.ask.high.ask < data.ask) {
-                        console.log("new high", line)
-                        value.ask.high = data;
+            for (const range of ranges) {
+                if (data.timestamp >= range.fromTimestamp && data.timestamp < range.toTimestamp) {
+                    if (range.ask.high.ask < data.ask) {
+                        range.ask.series.push({ ...data, hl: "high" })
+                        range.ask.high = data;
                     }
-                    if(value.ask.low.ask > data.ask) {
-                        console.log("now low", line)
-                        value.ask.low = data;
+                    if (range.ask.low.ask > data.ask) {
+                        range.ask.series.push({ ...data, hl: "low" })
+                        range.ask.low = data;
                     }
                     break;
                 }
@@ -174,15 +184,15 @@ async function temp(output: string, inputs: string[]) {
         } else if (line.indexOf("spotPrices:") >= 0 && line.indexOf("\"BID_PRICE_CHANGED\"") >= 0) {
             const logEntry = /({.*})/.exec(line);
             const data = JSON.parse(logEntry![1])
-            for(const [key, value] of ranges) {
-                if(data.timestamp >= key && data.timestamp < key+range) {
-                    if(value.bid.high.bid < data.bid) {
-                        console.log("new high", line)
-                        value.bid.high = data;
+            for (const range of ranges) {
+                if (data.timestamp >= range.fromTimestamp && data.timestamp < range.toTimestamp) {
+                    if (range.bid.high.bid < data.bid) {
+                        range.bid.series.push({ ...data, hl: "high" })
+                        range.bid.high = data;
                     }
-                    if(value.bid.low.bid > data.bid) {
-                        console.log("new low", line)
-                        value.bid.low = data;
+                    if (range.bid.low.bid > data.bid) {
+                        range.bid.series.push({ ...data, hl: "low" })
+                        range.bid.low = data;
                     }
                     break;
                 }
@@ -191,10 +201,7 @@ async function temp(output: string, inputs: string[]) {
     }
 
     const out = fs.createWriteStream(output)
-    out.write(`id;ask high;ask low;bid high;bid low\n`)
-    for (const [_id, data] of ranges) {
-        out.write(`${data.id};${data.ask.high.ask};${data.ask.low.ask};${data.bid.high.bid};${data.bid.low.bid}\n`)
-    }
+    out.write(JSON.stringify(ranges, null, 2))
     out.end();
 }
 
