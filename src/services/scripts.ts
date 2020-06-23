@@ -171,10 +171,16 @@ async function temp(output: string, inputs: string[]) {
             for (const range of ranges) {
                 if (data.timestamp >= range.fromTimestamp && data.timestamp < range.toTimestamp) {
                     if (range.ask.high.ask < data.ask) {
+                        if(range.ask.series.length > 0 && range.ask.series[range.ask.series.length-1].hl === "high") {
+                            range.ask.series.pop()
+                        }
                         range.ask.series.push({ ...data, hl: "high" })
                         range.ask.high = data;
                     }
                     if (range.ask.low.ask > data.ask) {
+                        if(range.ask.series.length > 0 && range.ask.series[range.ask.series.length-1].hl === "low") {
+                            range.ask.series.pop()
+                        }
                         range.ask.series.push({ ...data, hl: "low" })
                         range.ask.low = data;
                     }
@@ -187,10 +193,16 @@ async function temp(output: string, inputs: string[]) {
             for (const range of ranges) {
                 if (data.timestamp >= range.fromTimestamp && data.timestamp < range.toTimestamp) {
                     if (range.bid.high.bid < data.bid) {
+                        if(range.bid.series.length > 0 && range.bid.series[range.bid.series.length-1].hl === "high") {
+                            range.bid.series.pop()
+                        }
                         range.bid.series.push({ ...data, hl: "high" })
                         range.bid.high = data;
                     }
                     if (range.bid.low.bid > data.bid) {
+                        if(range.bid.series.length > 0 && range.bid.series[range.bid.series.length-1].hl === "low") {
+                            range.bid.series.pop()
+                        }
                         range.bid.series.push({ ...data, hl: "low" })
                         range.bid.low = data;
                     }
