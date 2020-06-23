@@ -66,9 +66,6 @@ class SpotwareOrderStream<Props extends T.OrderProps> extends Readable implement
 
 function order<Props extends T.OrderProps>(props: Props, extras: { client: SpotwareClient, spots: T.SpotPricesStream, ctidTraderAccountId: () => Promise<number>, spotwareSymbol: () => Promise<$.ProtoOASymbol>, partial: Partial<$.ProtoOANewOrderReq> & Pick<$.ProtoOANewOrderReq, "orderType"> }): T.OrderStream<Props> {
     const stream = new SpotwareOrderStream(props, extras.client);
-    const log = debug("order")
-    .extend(stream.props.symbol.toString())
-    .extend(stream.props.id)
     setImmediate(async () => {
         try {
             const ctidTraderAccountId = await extras.ctidTraderAccountId();
@@ -114,7 +111,7 @@ function order<Props extends T.OrderProps>(props: Props, extras: { client: Spotw
                                 const modifiedTakeProfit = Math.abs((msg.order.takeProfit || 0) - (props.takeProfit || 0)) > 0.001
 
                                 const timestamp = msg.order.utcLastUpdateTimestamp || 0;
-                                log("%j", {
+                                const data = {
                                     type:"COMMENT",
                                     timestamp,
                                     spotware: {
@@ -127,7 +124,11 @@ function order<Props extends T.OrderProps>(props: Props, extras: { client: Spotw
                                     },
                                     modifiedStopLoss,
                                     modifiedTakeProfit
-                                })
+                                };
+                                debug("order")
+                                    .extend(stream.props.symbol.toString())
+                                    .extend(stream.props.id)("%j", data);
+                                debug("account")("%j", data);
                                 return;
                             }
                             const timestamp = msg.order.utcLastUpdateTimestamp || 0;
