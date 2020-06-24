@@ -109,6 +109,7 @@ async function temp(output: string, inputs: string[]) {
     const range = ms("30min");
     const ranges: {
         id: string
+        tradeSide: "SELL" | "BUY"
         fromTimestamp: number,
         from: Date,
         toTimestamp: number,
@@ -117,12 +118,16 @@ async function temp(output: string, inputs: string[]) {
             series: (AskPriceChangedEvent & { hl: "high" | "low" })[]
             high: AskPriceChangedEvent
             low: AskPriceChangedEvent
+            direction?: "bullish" | "bearish"
+            points?: number
         },
         bid: {
             series: (BidPriceChangedEvent & { hl: "high" | "low" })[]
             high: BidPriceChangedEvent
             low: BidPriceChangedEvent
-        }
+            direction?: "bullish" | "bearish"
+            points?: number
+        },
     }[] = []
     for await (const line of rl) {
         if (line.indexOf("account") >= 0 && line.indexOf("\"CREATED\"") >= 0) {
@@ -133,6 +138,7 @@ async function temp(output: string, inputs: string[]) {
                 const { timestamp } = data;
                 ranges.push({
                     id: data.id,
+                    tradeSide: data.tradeSide,
                     fromTimestamp: timestamp,
                     from: new Date(timestamp),
                     toTimestamp: timestamp + range,
@@ -184,6 +190,8 @@ async function temp(output: string, inputs: string[]) {
                         range.ask.series.push({ ...data, hl: "low" })
                         range.ask.low = data;
                     }
+                    range.ask.direction = range.ask.high.timestamp > range.ask.low.timestamp ? "bullish" : "bearish"
+                    range.ask.points = range.ask.high.ask - range.ask.low.ask
                     break;
                 }
             }
@@ -206,6 +214,8 @@ async function temp(output: string, inputs: string[]) {
                         range.bid.series.push({ ...data, hl: "low" })
                         range.bid.low = data;
                     }
+                    range.bid.direction = range.bid.high.timestamp > range.bid.low.timestamp ? "bullish" : "bearish"
+                    range.bid.points = range.bid.high.bid - range.bid.low.bid
                     break;
                 }
             }
