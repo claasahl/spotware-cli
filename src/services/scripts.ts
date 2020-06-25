@@ -60,7 +60,6 @@ function insideBarLocal() {
     insideBarMomentumStrategy({ account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, expiresIn })
     account.resume(); // consume account events
 }
-insideBarLocal;
 
 async function review(output: string, inputs: string[]) {
     const fileStream = multistream(inputs.map(file => fs.createReadStream(file)))
