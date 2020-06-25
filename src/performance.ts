@@ -1,4 +1,4 @@
-import { fromLogFiles } from "./services/local";
+import { fromFiles } from "./services/local";
 import ms from "ms";
 
 function main() {
@@ -9,7 +9,7 @@ function main() {
   process.on("exit", () => console.log(ms(Date.now() - time)))
 
   const symbol = Symbol.for("BTC/EUR");
-  const spots = fromLogFiles({
+  const spots = fromFiles({
     paths: [
       "./store/2020-04-27.log",
       "./store/2020-04-28.log",

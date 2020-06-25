@@ -1,5 +1,5 @@
 import { insideBarMomentumStrategy } from "./insideBarMomentumStrategy";
-import { fromSampleData, fromNothing, fromLogFiles } from "./local";
+import { fromSampleData, fromNothing, fromFiles } from "./local";
 import config from "../config";
 import { fromSomething } from "./spotware/account";
 import ms from "ms";
@@ -49,7 +49,7 @@ function insideBarLocal(inputs: string[]) {
     const minTrendbarRange = 15;
     const volume = 0.01;
     const expiresIn = ms("30min")
-    const spots = () => fromLogFiles({
+    const spots = () => fromFiles({
         paths: inputs,
         symbol
     });

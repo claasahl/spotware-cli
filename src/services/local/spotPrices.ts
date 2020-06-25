@@ -40,15 +40,16 @@ function fr0mFile(path: fs.PathLike): Readable {
   return Readable.from(rl);
 }
 
-export function fromFile(props: T.SpotPricesProps & { path: fs.PathLike }): T.SpotPricesStream {
-  const { path, ...originalProps } = props;
-  return fr0mFile(path).pipe(new ChunkToSpotPrices(originalProps));
-}
-
-export function fromLogFiles(props: T.SpotPricesProps & { paths: fs.PathLike[] }): T.SpotPricesStream {
+export function fromFiles(props: T.SpotPricesProps & { paths: fs.PathLike[] }): T.SpotPricesStream {
   const { paths, ...originalProps } = props;
   const streams = paths.map(fr0mFile);
-  return multistream(streams).pipe(new ChunkToSpotPrices(originalProps, chunk => chunk.includes("spotPrices:") && (chunk.includes("ASK_PRICE_CHANGED") || chunk.includes("BID_PRICE_CHANGED"))));
+  const filter = (chunk: string): boolean => {
+    if(chunk.indexOf("{") === 0) {
+      return true;
+    }
+    return chunk.includes("spotPrices:") && (chunk.includes("ASK_PRICE_CHANGED") || chunk.includes("BID_PRICE_CHANGED"))
+  }
+  return multistream(streams).pipe(new ChunkToSpotPrices(originalProps, filter));
 }
 const transformOptions: TransformOptions = {objectMode: true}
 class ChunkToSpotPrices extends Transform implements T.SpotPricesStream {
