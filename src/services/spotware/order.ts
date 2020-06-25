@@ -113,6 +113,7 @@ function order<Props extends T.OrderProps>(props: Props, extras: { client: Spotw
                                 const timestamp = msg.order.utcLastUpdateTimestamp || 0;
                                 const data = {
                                     type:"COMMENT",
+                                    id: props.id,
                                     timestamp,
                                     spotware: {
                                         limitPrice: msg.order.limitPrice,
