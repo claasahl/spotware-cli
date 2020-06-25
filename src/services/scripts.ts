@@ -191,11 +191,11 @@ async function temp(output: string, inputs: string[]) {
                         range.ask.low = data;
                     }
                     if(range.tradeSide === "SELL") {
-                        const len = range.bid.series.length
-                        const prices = range.bid.series;
+                        const len = range.ask.series.length
+                        const prices = range.ask.series;
                         if(len >= 2 && prices[len-1].hl === "low" && prices[len-2].hl === "high") {
-                            range.bid.direction = "bearish"
-                            range.bid.points = prices[len-2].bid-prices[len-1].bid
+                            range.ask.direction = "bearish"
+                            range.ask.points = prices[len-2].ask-prices[len-1].ask
                         }
                     }
                     break;
