@@ -186,8 +186,14 @@ async function temp(output: string, inputs: string[]) {
                         range.ask.series.push({ ...data, hl: "low" })
                         range.ask.low = data;
                     }
-                    range.ask.direction = range.ask.high.timestamp > range.ask.low.timestamp ? "bullish" : "bearish"
-                    range.ask.points = range.ask.high.ask - range.ask.low.ask
+                    if(range.tradeSide === "SELL") {
+                        const len = range.bid.series.length
+                        const prices = range.bid.series;
+                        if(len >= 2 && prices[len-1].hl === "low" && prices[len-2].hl === "high") {
+                            range.bid.direction = "bearish"
+                            range.bid.points = prices[len-2].bid-prices[len-1].bid
+                        }
+                    }
                     break;
                 }
             }
@@ -210,8 +216,14 @@ async function temp(output: string, inputs: string[]) {
                         range.bid.series.push({ ...data, hl: "low" })
                         range.bid.low = data;
                     }
-                    range.bid.direction = range.bid.high.timestamp > range.bid.low.timestamp ? "bullish" : "bearish"
-                    range.bid.points = range.bid.high.bid - range.bid.low.bid
+                    if(range.tradeSide === "BUY") {
+                        const len = range.bid.series.length
+                        const prices = range.bid.series;
+                        if(len >= 2 && prices[len-1].hl === "high" && prices[len-2].hl === "low") {
+                            range.bid.direction = "bullish"
+                            range.bid.points = prices[len-1].bid-prices[len-2].bid
+                        }
+                    }
                     break;
                 }
             }
