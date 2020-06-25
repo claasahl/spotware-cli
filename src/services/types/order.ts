@@ -67,7 +67,11 @@ export interface StopOrderProps extends CommonOrderProps {
   readonly orderType: "STOP"
   readonly enter: Price;
 }
-export type OrderProps = MarketOrderProps | StopOrderProps
+export interface LimitOrderProps extends CommonOrderProps {
+  readonly orderType: "LIMIT"
+  readonly enter: Price;
+}
+export type OrderProps = MarketOrderProps | StopOrderProps | LimitOrderProps
 
 export interface OrderActions {
   closeOrder(): void;

@@ -24,6 +24,10 @@ export class AccountStream extends PassThrough implements T.AccountStream {
     throw new Error("Method not implemented.");
   }
 
+  limitOrder(_props: T.AccountSimpleLimitOrderProps): T.OrderStream<T.LimitOrderProps> {
+    throw new Error("Method not implemented.");
+  }
+
   spotPrices(_props: T.AccountSimpleSpotPricesProps): T.SpotPricesStream {
     throw new Error("Method not implemented.");
   }

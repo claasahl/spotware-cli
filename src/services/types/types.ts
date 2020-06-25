@@ -9,7 +9,7 @@ export type Timestamp = number;
 export type Symbol = symbol;
 export type Currency = symbol;
 export type TradeSide = "BUY" | "SELL";
-export type OrderType = "MARKET" | "STOP"
+export type OrderType = "MARKET" | "STOP" | "LIMIT"
 
 export interface GenericReadable<T> extends Readable {
     addListener(event: "close", listener: () => void): this;

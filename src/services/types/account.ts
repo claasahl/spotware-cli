@@ -1,5 +1,5 @@
 import { Price, Timestamp, Currency, GenericReadable } from "./types";
-import { OrderStream, MarketOrderProps, StopOrderProps, OrderEvent, OrderProps } from "./order";
+import { OrderStream, MarketOrderProps, StopOrderProps, LimitOrderProps, OrderEvent, OrderProps } from "./order";
 import { SpotPricesStream, SpotPricesProps } from "./spotPrices";
 import { TrendbarsProps, TrendbarsStream } from "./trendbars";
 
@@ -21,6 +21,7 @@ export interface EquityChangedEvent {
 export type OrderEvents = OrderEvent & OrderProps; // TODO revise/remove this
 export type AccountSimpleMarketOrderProps = Omit<MarketOrderProps, keyof AccountProps | "orderType">;
 export type AccountSimpleStopOrderProps = Omit<StopOrderProps, keyof AccountProps | "orderType">;
+export type AccountSimpleLimitOrderProps = Omit<LimitOrderProps, keyof AccountProps | "orderType">;
 export type AccountSimpleSpotPricesProps = Omit<SpotPricesProps, keyof AccountProps>;
 export type AccountSimpleTrendbarsProps = Omit<TrendbarsProps, keyof AccountProps>;
 export type AccountEvent = BalanceChangedEvent | TransactionEvent | EquityChangedEvent | OrderEvents;
@@ -31,6 +32,7 @@ export interface AccountProps {
 export interface AccountActions {
   marketOrder(props: AccountSimpleMarketOrderProps): OrderStream<MarketOrderProps>;
   stopOrder(props: AccountSimpleStopOrderProps): OrderStream<StopOrderProps>;
+  limitOrder(props: AccountSimpleLimitOrderProps): OrderStream<LimitOrderProps>;
   spotPrices(props: AccountSimpleSpotPricesProps): SpotPricesStream;
   trendbars(props: AccountSimpleTrendbarsProps): TrendbarsStream;
 }
