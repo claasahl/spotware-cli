@@ -1,5 +1,5 @@
 import { insideBarMomentumStrategy } from "./insideBarMomentumStrategy";
-import { fromSampleData, fromNothing, fromFiles } from "./local";
+import { fromNothing, fromFiles } from "./local";
 import config from "../config";
 import { fromSomething } from "./spotware/account";
 import ms from "ms";
@@ -8,19 +8,23 @@ import readline from "readline";
 import { obj as multistream } from "multistream";
 import { AskPriceChangedEvent, BidPriceChangedEvent } from "./types";
 
-function local() {
+function local(inputs: string[]) {
     const name = "BTC/EUR";
     const symbol = Symbol.for(name);
     const currency = Symbol.for("EUR");
-    const account = fromNothing({ currency, spots: fromSampleData, initialBalance: 1000 })
-    setImmediate(() => {
-        account.trendbars({ symbol, period: 2000 });
+    console.log(inputs);
+    const spots = () => fromFiles({
+        paths: inputs,
+        symbol
     });
+    const account = fromNothing({ currency, spots, initialBalance: 1000 })
+    account.trendbars({ symbol, period: ms("15min") }).resume();
     setImmediate(() => {
         // account.stopOrder({ id: "1", symbol, tradeSide: "SELL", volume: 1, enter: 6613});
         // account.marketOrder({ id: "1", symbol, tradeSide: "BUY", volume: 1, takeProfit: 6614.0});
-        account.marketOrder({ id: "1", symbol, tradeSide: "SELL", volume: 1, stopLoss: 6613.0 });
+        // account.marketOrder({ id: "1", symbol, tradeSide: "SELL", volume: 1, stopLoss: 6613.0 });
     });
+    account.resume(); // consume account events
 }
 
 async function spotware() {
@@ -236,7 +240,8 @@ async function temp(output: string, inputs: string[]) {
 }
 
 if (process.argv[2] === "local") {
-    local();
+    const inputs = process.argv.slice(3)
+    local(inputs);
 } else if (process.argv[2] === "spotware") {
     spotware();
 } else if (process.argv[2] === "insidebar") {
@@ -251,7 +256,7 @@ if (process.argv[2] === "local") {
     const inputs = process.argv.slice(4)
     review(output, inputs);
 } else {
-    console.log("npm run script local")
+    console.log("npm run script local \"input1.log\" \"input2.log\"")
     console.log("npm run script spotware")
     console.log("npm run script insidebar \"input1.log\" \"input2.log\"")
     console.log("npm run script review \"output.csv\" \"input1.log\" \"input2.log\"")
