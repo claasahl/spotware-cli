@@ -38,7 +38,7 @@ async function spotware() {
     }, 5000)
 }
 
-function insideBarLocal() {
+function insideBarLocal(inputs: string[]) {
     const currency = Symbol.for("EUR");
     const initialBalance = 177.59;
     const period = ms("15min");
@@ -50,11 +50,8 @@ function insideBarLocal() {
     const volume = 0.01;
     const expiresIn = ms("30min")
     const spots = () => fromLogFiles({
-        paths: [
-            "../../Downloads/logs/2020-06-18.log",
-            "../../Downloads/logs/2020-06-19.log",
-            "../../Downloads/logs/2020-06-20.log"
-        ], symbol
+        paths: inputs,
+        symbol
     });
     const account = fromNothing({ currency, initialBalance, spots })
     insideBarMomentumStrategy({ account, period, symbol, enterOffset, stopLossOffset, takeProfitOffset, minTrendbarRange, volume, expiresIn })
@@ -231,7 +228,8 @@ if (process.argv[2] === "local") {
 } else if (process.argv[2] === "spotware") {
     spotware();
 } else if (process.argv[2] === "insidebar") {
-    insideBarLocal();
+    const inputs = process.argv.slice(3)
+    insideBarLocal(inputs);
 } else if (process.argv[2] === "temp") {
     const output = process.argv[3];
     const inputs = process.argv.slice(4)
@@ -243,6 +241,6 @@ if (process.argv[2] === "local") {
 } else {
     console.log("npm run script local")
     console.log("npm run script spotware")
-    console.log("npm run script insidebar")
+    console.log("npm run script insidebar \"input1.log\" \"input2.log\"")
     console.log("npm run script review \"output.csv\" \"input1.log\" \"input2.log\"")
 }
