@@ -1,4 +1,4 @@
-const {fromFile, fromSampleData} = require("../../../build/services/local/spotPrices");
+const {fromFiles, fromSampleData} = require("../../../build/services/local/spotPrices");
 
 jest.mock("fs", () => ({
     createReadStream() {
@@ -31,7 +31,7 @@ abc`)
 describe("fromFile", () => {
     test("ask events", done => {
         const symbol = Symbol.for("abc")
-        const stream = fromFile({ symbol, path: "no.where" })
+        const stream = fromFiles({ symbol, paths: ["no.where"] })
 
         const events = [
             { type: "ASK_PRICE_CHANGED", timestamp: 9771, ask: 7611.79 },
@@ -55,7 +55,7 @@ describe("fromFile", () => {
     })
     test("bid events", done => {
         const symbol = Symbol.for("abc")
-        const stream = fromFile({ symbol, path: "no.where" })
+        const stream = fromFiles({ symbol, paths: ["no.where"] })
 
         const events = [
             { type: "BID_PRICE_CHANGED", timestamp: 9425, bid: 7612.03 },
@@ -84,7 +84,7 @@ describe("fromFile", () => {
     })
     test("price events", done => {
         const symbol = Symbol.for("abc")
-        const stream = fromFile({ symbol, path: "no.where" })
+        const stream = fromFiles({ symbol, paths: ["no.where"] })
 
         const events = [
             // { type: "PRICE_CHANGED", timestamp: 9425, ask: 7611.79, bid: 6612.03 },
