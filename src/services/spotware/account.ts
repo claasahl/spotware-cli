@@ -8,7 +8,7 @@ import * as D from "../debug";
 import * as G from "../generic";
 import * as L from "../logging";
 import { SpotwareClient } from "./client";
-import { marketOrder, stopOrder } from "./order";
+import { marketOrder, stopOrder, limitOrder } from "./order";
 
 interface Order {
     symbol: Symbol;
@@ -150,6 +150,44 @@ class SpotwareAccountStream extends D.AccountStream {
         const order: Order = { ...props, entry: 0, profitLoss: 0 }
         const spots = this.spotPrices(props);
         const stream = stopOrder({
+            ...props,
+            spots,
+            client,
+            ctidTraderAccountId: () => this.traderId(),
+            spotwareSymbol: () => this.symbol(props.symbol)
+        })
+        const update = (e: T.OrderProfitLossEvent) => {
+            order.profitLoss = e.profitLoss;
+            this.updateEquity(e)
+        }
+        stream.on("data", e => {
+            if(e.type === "PROFITLOSS") {
+                update(e);
+            } else if(e.type === "ACCEPTED") {
+                this.orders.get(props.id)!.push(order)
+            } else if(e.type === "ENDED") {
+                const all = this.orders.get(props.id)!
+                const toBeDeleted: number[] = [];
+                all.forEach((o, index) => {
+                    if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
+                        this.push({ type: "TRANSACTION", timestamp: e.timestamp, amount: o.profitLoss })
+                        toBeDeleted.push(index);
+                    }
+                });
+                toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
+            }
+            this.push({...e, ...stream.props})
+        })
+        return stream;
+    }
+    limitOrder(props: T.AccountSimpleLimitOrderProps): T.OrderStream<T.LimitOrderProps> {
+        const client = this.client;
+        if (!this.orders.has(props.id)) {
+            this.orders.set(props.id, [])
+        }
+        const order: Order = { ...props, entry: 0, profitLoss: 0 }
+        const spots = this.spotPrices(props);
+        const stream = limitOrder({
             ...props,
             spots,
             client,

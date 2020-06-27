@@ -235,3 +235,10 @@ export function stopOrder(props: Omit<T.StopOrderProps & { client: SpotwareClien
     const partial = { orderType: $.ProtoOAOrderType.STOP, stopPrice: props.enter }
     return order({ ...rest, orderType: "STOP"}, {...extras, partial })
 }
+
+export function limitOrder(props: Omit<T.LimitOrderProps & { client: SpotwareClient, spots: T.SpotPricesStream, ctidTraderAccountId: () => Promise<number>, spotwareSymbol: () => Promise<$.ProtoOASymbol> }, "orderType">): T.OrderStream<T.LimitOrderProps> {
+    const { client, spots, ctidTraderAccountId, spotwareSymbol, ...rest} = props;
+    const extras = { client, spots, ctidTraderAccountId, spotwareSymbol }
+    const partial = { orderType: $.ProtoOAOrderType.LIMIT, limitPrice: props.enter }
+    return order({ ...rest, orderType: "LIMIT"}, {...extras, partial })
+}
