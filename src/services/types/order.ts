@@ -106,7 +106,7 @@ export function lifecycle() {
         case "PROFITLOSS":
           return this.state === "FILLED"
         case "REJECTED":
-          return this.state === "CREATED" || this.state === "REJECTED"
+          return this.state === "CREATED" || this.state === "ACCEPTED" || this.state === "REJECTED"
       }
     }
 

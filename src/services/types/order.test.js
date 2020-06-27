@@ -1,313 +1,183 @@
-const {DebugOrderStream} = require("../../../build/services/types/order")
+const {lifecycle} = require("../../../build/services/types/order")
 
-describe.skip("DebugOrderStream", () => {
-    describe("order lifecylce", () => {
-        test("complete lifecyle: 'rejected'", done => {
-            const props = { id: "0", symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
-            const stream = new DebugOrderStream(props)
-            const events = [
-                {type: "CREATED", timestamp: 1},
-                {type: "REJECTED", timestamp: 123, message: 'NOT_ENOUGH_MONEY'},
-                {type: "ENDED", timestamp: 123},
-            ]
-            stream.on("data", e => expect(e).toStrictEqual(events.shift()))
-            stream.once("end", () => {
-                expect(events.length).toBe(0);
-                done();
-            })
-            stream.tryCreate({ timestamp: 1 })
-            stream.tryReject({ timestamp: 123 })
-        })
+describe("order lifecylce", () => {
+    test("complete lifecyle: 'rejected'", () => {
+        const stream = lifecycle()
+        expect(stream.update({type: "CREATED"})).toStrictEqual("CREATED")
+        expect(stream.update({type: "REJECTED"})).toStrictEqual("REJECTED")
+        expect(stream.update({type: "ENDED"})).toStrictEqual("REJECTED")
+    })
 
-        test("complete lifecyle: 'canceled'", done => {
-            const props = { id: "0", symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
-            const stream = new DebugOrderStream(props)
-            const events = [
-                {type: "CREATED", timestamp: 1},
-                {type: "ACCEPTED", timestamp: 2},
-                {type: "CANCELED", timestamp: 123},
-                {type: "ENDED", timestamp: 123},
-            ]
-            stream.on("data", e => expect(e).toStrictEqual(events.shift()))
-            stream.once("end", () => {
-                expect(events.length).toBe(0);
-                done();
-            })
-            stream.tryCreate({ timestamp: 1 })
-            stream.tryAccept({ timestamp: 2 })
-            stream.tryCancel({ timestamp: 123 })
-        })
+    test("complete lifecyle: 'rejected' (2)", () => {
+        const stream = lifecycle()
+        expect(stream.update({type: "CREATED"})).toStrictEqual("CREATED")
+        expect(stream.update({type: "ACCEPTED"})).toStrictEqual("ACCEPTED")
+        expect(stream.update({type: "REJECTED"})).toStrictEqual("REJECTED")
+        expect(stream.update({type: "ENDED"})).toStrictEqual("REJECTED")
+    })
 
-        test("complete lifecyle: 'expired'", done => {
-            const props = { id: "0", symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
-            const stream = new DebugOrderStream(props)
-            const events = [
-                {type: "CREATED", timestamp: 1},
-                {type: "ACCEPTED", timestamp: 2},
-                {type: "EXPIRED", timestamp: 123},
-                {type: "ENDED", timestamp: 123},
-            ]
-            stream.on("data", e => expect(e).toStrictEqual(events.shift()))
-            stream.once("end", () => {
-                expect(events.length).toBe(0);
-                done();
-            })
-            stream.tryCreate({ timestamp: 1 })
-            stream.tryAccept({ timestamp: 2 })
-            stream.tryExpire({ timestamp: 123 })
-        })
+    test("complete lifecyle: 'canceled'", () => {
+        const stream = lifecycle()
+        expect(stream.update({type: "CREATED"})).toStrictEqual("CREATED")
+        expect(stream.update({type: "ACCEPTED"})).toStrictEqual("ACCEPTED")
+        expect(stream.update({type: "CANCELED"})).toStrictEqual("CANCELED")
+        expect(stream.update({type: "ENDED"})).toStrictEqual("CANCELED")
+    })
 
-        test("complete lifecyle: 'closed'", done => {
-            const props = { id: "0", symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
-            const stream = new DebugOrderStream(props)
-            const events = [
-                {type: "CREATED", timestamp: 1},
-                {type: "ACCEPTED", timestamp: 2},
-                {type: "FILLED", timestamp: 3, entry: 23 },
-                {type: "PROFITLOSS", timestamp: 4, price: 124, profitLoss: 24 },
-                {type: "PROFITLOSS", timestamp: 5, price: 125, profitLoss: 25 },
-                {type: "CLOSED", timestamp: 123, exit: 42, profitLoss: 23},
-                {type: "ENDED", timestamp: 123, exit: 42, profitLoss: 23},
-            ]
-            stream.on("data", e => expect(e).toStrictEqual(events.shift()))
-            stream.once("end", () => {
-                expect(events.length).toBe(0);
-                done();
-            })
-            stream.tryCreate({ timestamp: 1 })
-            stream.tryAccept({ timestamp: 2 })
-            stream.tryFill({ timestamp: 3, entry: 23 })
-            stream.tryProfitLoss({ timestamp: 4, price: 124, profitLoss: 24 })
-            stream.tryProfitLoss({ timestamp: 5, price: 125, profitLoss: 25 })
-            stream.tryClose({ timestamp: 123, exit: 42, profitLoss: 23 })
-        })
+    test("complete lifecyle: 'expired'", () => {
+        const stream = lifecycle()
+        expect(stream.update({type: "CREATED"})).toStrictEqual("CREATED")
+        expect(stream.update({type: "ACCEPTED"})).toStrictEqual("ACCEPTED")
+        expect(stream.update({type: "EXPIRED"})).toStrictEqual("EXPIRED")
+        expect(stream.update({type: "ENDED"})).toStrictEqual("EXPIRED")
+    })
 
-        test("when in state 'uninitialized': emit no events, but 'created'", done => {
-            const props = { id: "0", symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
-            const stream = new DebugOrderStream(props)
-            stream.on("data", () => {
-                fail('should not have happened')
-            })
-            // stream.tryCreate({ timestamp: 1 })
-            stream.tryAccept({ timestamp: 2 })
-            stream.tryReject({ timestamp: 3 })
-            stream.tryExpire({ timestamp: 4 })
-            stream.tryCancel({ timestamp: 5 })
-            stream.tryFill({ timestamp: 6, entry: 23 })
-            stream.tryProfitLoss({ timestamp: 7, price: 124, profitLoss: 24 })
-            stream.tryProfitLoss({ timestamp: 8, price: 125, profitLoss: 25 })
-            stream.tryClose({ timestamp: 9, exit: 42, profitLoss: 23 })
-            setTimeout(done, 50)
-        })
-        test("when in state 'created': emit no events, but 'accepted', 'rejected', 'canceled'", done => {
-            const props = { id: "0", symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
-            const stream = new DebugOrderStream(props)
-            const events = [
-                {type: "CREATED", timestamp: 1}
-            ]
-            stream.on("data", e => {
-                expect(e).toStrictEqual(events.shift());
-                if(events.length === 0) {
-                    done()
-                }
-            })
-            // events to enter state
-            stream.tryCreate({ timestamp: 1 })
+    test("complete lifecyle: 'closed'", () => {
+        const stream = lifecycle()
+        expect(stream.update({type: "CREATED"})).toStrictEqual("CREATED")
+        expect(stream.update({type: "ACCEPTED"})).toStrictEqual("ACCEPTED")
+        expect(stream.update({type: "FILLED"})).toStrictEqual("FILLED")
+        expect(stream.update({type: "PROFITLOSS"})).toStrictEqual("FILLED")
+        expect(stream.update({type: "PROFITLOSS"})).toStrictEqual("FILLED")
+        expect(stream.update({type: "CLOSED"})).toStrictEqual("CLOSED")
+        expect(stream.update({type: "ENDED"})).toStrictEqual("CLOSED")
+    })
 
-            // should not have any effect
-            stream.tryCreate({ timestamp: 1 })
-            // stream.tryAccept({ timestamp: 2 })
-            // stream.tryReject({ timestamp: 3 })
-            stream.tryExpire({ timestamp: 4 })
-            // stream.tryCancel({ timestamp: 5 })
-            stream.tryFill({ timestamp: 6, entry: 23 })
-            stream.tryProfitLoss({ timestamp: 7, price: 124, profitLoss: 24 })
-            stream.tryProfitLoss({ timestamp: 8, price: 125, profitLoss: 25 })
-            stream.tryClose({ timestamp: 9, exit: 42, profitLoss: 23 })
-        })
-        test("when in state 'accepted': emit no events, but 'expired', 'canceled', 'filled'", done => {
-            const props = { id: "0", symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
-            const stream = new DebugOrderStream(props)
-            const events = [
-                {type: "CREATED", timestamp: 1},
-                {type: "ACCEPTED", timestamp: 2}
-            ]
-            stream.on("data", e => {
-                expect(e).toStrictEqual(events.shift());
-                if(events.length === 0) {
-                    done()
-                }
-            })
-            // events to enter state
-            stream.tryCreate({ timestamp: 1 })
-            stream.tryAccept({ timestamp: 2 })
+    test("when in state 'uninitialized': emit no events, but 'created'", () => {
+        const stream = lifecycle()
+        // expect(stream.update({type: "CREATED"})).toStrictEqual("CREATED")
+        expect(stream.update({type: "ACCEPTED"})).toBeUndefined()
+        expect(stream.update({type: "REJECTED"})).toBeUndefined()
+        expect(stream.update({type: "EXPIRED"})).toBeUndefined()
+        expect(stream.update({type: "CANCELED"})).toBeUndefined()
+        expect(stream.update({type: "FILLED"})).toBeUndefined()
+        expect(stream.update({type: "PROFITLOSS"})).toBeUndefined()
+        expect(stream.update({type: "PROFITLOSS"})).toBeUndefined()
+        expect(stream.update({type: "CLOSED"})).toBeUndefined()
+        expect(stream.update({type: "ENDED"})).toBeUndefined()
+    })
+    test("when in state 'created': emit no events, but 'accepted', 'rejected', 'canceled'", () => {
+        const stream = lifecycle()
+        expect(stream.update({type: "CREATED"})).toStrictEqual("CREATED")
 
-            // should not have any effect
-            stream.tryCreate({ timestamp: 1 })
-            stream.tryAccept({ timestamp: 2 })
-            stream.tryReject({ timestamp: 3 })
-            // stream.tryExpire({ timestamp: 4 })
-            // stream.tryCancel({ timestamp: 5 })
-            // stream.tryFill({ timestamp: 6, entry: 23 })
-            stream.tryProfitLoss({ timestamp: 7, price: 124, profitLoss: 24 })
-            stream.tryProfitLoss({ timestamp: 8, price: 125, profitLoss: 25 })
-            stream.tryClose({ timestamp: 9, exit: 42, profitLoss: 23 })
-        })
-        test("when in state 'filled': emit no events, but 'profitloss', 'closed'", done => {
-            const props = { id: "0", symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
-            const stream = new DebugOrderStream(props)
-            const events = [
-                {type: "CREATED", timestamp: 1},
-                {type: "ACCEPTED", timestamp: 2},
-                {type: "FILLED", timestamp: 6, entry: 23 },
-            ]
-            stream.on("data", e => {
-                expect(e).toStrictEqual(events.shift());
-                if(events.length === 0) {
-                    done()
-                }
-            })
-            // events to enter state
-            stream.tryCreate({ timestamp: 1 })
-            stream.tryAccept({ timestamp: 2 })
-            stream.tryFill({ timestamp: 6, entry: 23 })
+        // should not have any effect
+        expect(stream.update({type: "CREATED"})).toStrictEqual("CREATED")
+        // expect(stream.update({type: "ACCEPTED"})).toStrictEqual("CREATED")
+        // expect(stream.update({type: "REJECTED"})).toStrictEqual("CREATED")
+        expect(stream.update({type: "EXPIRED"})).toStrictEqual("CREATED")
+        // expect(stream.update({type: "CANCELED"})).toStrictEqual("CREATED")
+        expect(stream.update({type: "FILLED"})).toStrictEqual("CREATED")
+        expect(stream.update({type: "PROFITLOSS"})).toStrictEqual("CREATED")
+        expect(stream.update({type: "PROFITLOSS"})).toStrictEqual("CREATED")
+        expect(stream.update({type: "CLOSED"})).toStrictEqual("CREATED")
+        expect(stream.update({type: "ENDED"})).toStrictEqual("CREATED")
+    })
+    test("when in state 'accepted': emit no events, but 'rejected', 'expired', 'canceled', 'filled'", () => {
+        const stream = lifecycle()
+        expect(stream.update({type: "CREATED"})).toStrictEqual("CREATED")
+        expect(stream.update({type: "ACCEPTED"})).toStrictEqual("ACCEPTED")
 
-            // should not have any effect
-            stream.tryCreate({ timestamp: 1 })
-            stream.tryAccept({ timestamp: 2 })
-            stream.tryReject({ timestamp: 3 })
-            stream.tryExpire({ timestamp: 4 })
-            stream.tryCancel({ timestamp: 5 })
-            stream.tryFill({ timestamp: 6, entry: 23 })
-            // stream.tryProfitLoss({ timestamp: 7, price: 124, profitLoss: 24 })
-            // stream.tryProfitLoss({ timestamp: 8, price: 125, profitLoss: 25 })
-            // stream.tryClose({ timestamp: 9, exit: 42, profitLoss: 23 })
-        })
-        test("when in state 'expired': emit no more events", done => {
-            const props = { id: "0", symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
-            const stream = new DebugOrderStream(props)
-            const events = [
-                {type: "CREATED", timestamp: 1},
-                {type: "ACCEPTED", timestamp: 2},
-                {type: "EXPIRED", timestamp: 3},
-                {type: "ENDED", timestamp: 3},
-            ]
-            stream.on("data", e => {
-                expect(e).toStrictEqual(events.shift());
-                if(events.length === 0) {
-                    done()
-                }
-            })
-            // events to enter state
-            stream.tryCreate({ timestamp: 1 })
-            stream.tryAccept({ timestamp: 2 })
-            stream.tryExpire({ timestamp: 3 })
+        // should not have any effect
+        expect(stream.update({type: "CREATED"})).toStrictEqual("ACCEPTED")
+        expect(stream.update({type: "ACCEPTED"})).toStrictEqual("ACCEPTED")
+        // expect(stream.update({type: "REJECTED"})).toStrictEqual("ACCEPTED")
+        // expect(stream.update({type: "EXPIRED"})).toStrictEqual("ACCEPTED")
+        // expect(stream.update({type: "CANCELED"})).toStrictEqual("ACCEPTED")
+        // expect(stream.update({type: "FILLED"}))..toStrictEqual("ACCEPTED")
+        expect(stream.update({type: "PROFITLOSS"})).toStrictEqual("ACCEPTED")
+        expect(stream.update({type: "PROFITLOSS"})).toStrictEqual("ACCEPTED")
+        expect(stream.update({type: "CLOSED"})).toStrictEqual("ACCEPTED")
+        expect(stream.update({type: "ENDED"})).toStrictEqual("ACCEPTED")
+    })
+    test("when in state 'filled': emit no events, but 'profitloss', 'closed'", () => {
+        const stream = lifecycle()
+        expect(stream.update({type: "CREATED"})).toStrictEqual("CREATED")
+        expect(stream.update({type: "ACCEPTED"})).toStrictEqual("ACCEPTED")
+        expect(stream.update({type: "FILLED"})).toStrictEqual("FILLED")
 
-            // should not have any effect
-            stream.tryCreate({ timestamp: 1 })
-            stream.tryAccept({ timestamp: 2 })
-            stream.tryReject({ timestamp: 3 })
-            stream.tryExpire({ timestamp: 4 })
-            stream.tryCancel({ timestamp: 5 })
-            stream.tryFill({ timestamp: 6, entry: 23 })
-            stream.tryProfitLoss({ timestamp: 7, price: 124, profitLoss: 24 })
-            stream.tryProfitLoss({ timestamp: 8, price: 125, profitLoss: 25 })
-            stream.tryClose({ timestamp: 9, exit: 42, profitLoss: 23 })
-        })
-        test("when in state 'rejected': emit no more events", done => {
-            const props = { id: "0", symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
-            const stream = new DebugOrderStream(props)
-            const events = [
-                {type: "CREATED", timestamp: 1},
-                {type: "REJECTED", timestamp: 2, message: 'NOT_ENOUGH_MONEY'},
-                {type: "ENDED", timestamp: 2},
-            ]
-            stream.on("data", e => {
-                expect(e).toStrictEqual(events.shift());
-                if(events.length === 0) {
-                    done()
-                }
-            })
-            // events to enter state
-            stream.tryCreate({ timestamp: 1 })
-            stream.tryReject({ timestamp: 2 })
+        // should not have any effect
+        expect(stream.update({type: "CREATED"})).toStrictEqual("FILLED")
+        expect(stream.update({type: "ACCEPTED"})).toStrictEqual("FILLED")
+        expect(stream.update({type: "REJECTED"})).toStrictEqual("FILLED")
+        expect(stream.update({type: "EXPIRED"})).toStrictEqual("FILLED")
+        expect(stream.update({type: "CANCELED"})).toStrictEqual("FILLED")
+        expect(stream.update({type: "FILLED"})).toStrictEqual("FILLED")
+        // expect(stream.update({type: "PROFITLOSS"})).toStrictEqual("FILLED")
+        // expect(stream.update({type: "PROFITLOSS"})).toStrictEqual("FILLED")
+        // expect(stream.update({type: "CLOSED"})).toStrictEqual("FILLED")
+        expect(stream.update({type: "ENDED"})).toStrictEqual("FILLED")
+    })
+    test("when in state 'expired': emit no more events", () => {
+        const stream = lifecycle()
+        expect(stream.update({type: "CREATED"})).toStrictEqual("CREATED")
+        expect(stream.update({type: "ACCEPTED"})).toStrictEqual("ACCEPTED")
+        expect(stream.update({type: "EXPIRED"})).toStrictEqual("EXPIRED")
+        expect(stream.update({type: "ENDED"})).toStrictEqual("EXPIRED")
 
-            // should not have any effect
-            stream.tryCreate({ timestamp: 1 })
-            stream.tryAccept({ timestamp: 2 })
-            stream.tryReject({ timestamp: 3 })
-            stream.tryExpire({ timestamp: 4 })
-            stream.tryCancel({ timestamp: 5 })
-            stream.tryFill({ timestamp: 6, entry: 23 })
-            stream.tryProfitLoss({ timestamp: 7, price: 124, profitLoss: 24 })
-            stream.tryProfitLoss({ timestamp: 8, price: 125, profitLoss: 25 })
-            stream.tryClose({ timestamp: 9, exit: 42, profitLoss: 23 })
-        })
-        test("when in state 'canceled': emit no more events", done => {
-            const props = { id: "0", symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
-            const stream = new DebugOrderStream(props)
-            const events = [
-                {type: "CREATED", timestamp: 1},
-                {type: "CANCELED", timestamp: 5},
-                {type: "ENDED", timestamp: 5},
-            ]
-            stream.on("data", e => {
-                expect(e).toStrictEqual(events.shift());
-                if(events.length === 0) {
-                    done()
-                }
-            })
-            // events to enter state
-            stream.tryCreate({ timestamp: 1 })
-            stream.tryCancel({ timestamp: 5 })
+        // should not have any effect
+        expect(stream.update({type: "CREATED"})).toStrictEqual("EXPIRED")
+        expect(stream.update({type: "ACCEPTED"})).toStrictEqual("EXPIRED")
+        expect(stream.update({type: "REJECTED"})).toStrictEqual("EXPIRED")
+        expect(stream.update({type: "EXPIRED"})).toStrictEqual("EXPIRED")
+        expect(stream.update({type: "CANCELED"})).toStrictEqual("EXPIRED")
+        expect(stream.update({type: "FILLED"})).toStrictEqual("EXPIRED")
+        expect(stream.update({type: "PROFITLOSS"})).toStrictEqual("EXPIRED")
+        expect(stream.update({type: "PROFITLOSS"})).toStrictEqual("EXPIRED")
+        expect(stream.update({type: "CLOSED"})).toStrictEqual("EXPIRED")
+    })
+    test("when in state 'rejected': emit no more events", () => {
+        const stream = lifecycle()
+        expect(stream.update({type: "CREATED"})).toStrictEqual("CREATED")
+        expect(stream.update({type: "REJECTED"})).toStrictEqual("REJECTED")
+        expect(stream.update({type: "ENDED"})).toStrictEqual("REJECTED")
 
-            // should not have any effect
-            stream.tryCreate({ timestamp: 1 })
-            stream.tryAccept({ timestamp: 2 })
-            stream.tryReject({ timestamp: 3 })
-            stream.tryExpire({ timestamp: 4 })
-            stream.tryCancel({ timestamp: 5 })
-            stream.tryFill({ timestamp: 6, entry: 23 })
-            stream.tryProfitLoss({ timestamp: 7, price: 124, profitLoss: 24 })
-            stream.tryProfitLoss({ timestamp: 8, price: 125, profitLoss: 25 })
-            stream.tryClose({ timestamp: 9, exit: 42, profitLoss: 23 })
-        })
-        test("when in state 'closed': emit no more events", done => {
-            const props = { id: "0", symbol: Symbol.for("abc"), tradeSide: "BUY", volume: 1, orderType: "MARKET", a: 2 }
-            const stream = new DebugOrderStream(props)
-            const events = [
-                {type: "CREATED", timestamp: 1},
-                {type: "ACCEPTED", timestamp: 2},
-                {type: "FILLED", timestamp: 6, entry: 23 },
-                {type: "PROFITLOSS", timestamp: 7, price: 124, profitLoss: 24 },
-                {type: "PROFITLOSS", timestamp: 8, price: 125, profitLoss: 25 },
-                {type: "CLOSED", timestamp: 9, exit: 42, profitLoss: 23},
-                {type: "ENDED", timestamp: 9, exit: 42, profitLoss: 23},
-            ]
-            stream.on("data", e => {
-                expect(e).toStrictEqual(events.shift());
-                if(events.length === 0) {
-                    done()
-                }
-            })
-            // events to enter state
-            stream.tryCreate({ timestamp: 1 })
-            stream.tryAccept({ timestamp: 2 })
-            stream.tryFill({ timestamp: 6, entry: 23 })
-            stream.tryProfitLoss({ timestamp: 7, price: 124, profitLoss: 24 })
-            stream.tryProfitLoss({ timestamp: 8, price: 125, profitLoss: 25 })
-            stream.tryClose({ timestamp: 9, exit: 42, profitLoss: 23 })
+        // should not have any effect
+        expect(stream.update({type: "CREATED"})).toStrictEqual("REJECTED")
+        expect(stream.update({type: "ACCEPTED"})).toStrictEqual("REJECTED")
+        expect(stream.update({type: "REJECTED"})).toStrictEqual("REJECTED")
+        expect(stream.update({type: "EXPIRED"})).toStrictEqual("REJECTED")
+        expect(stream.update({type: "CANCELED"})).toStrictEqual("REJECTED")
+        expect(stream.update({type: "FILLED"})).toStrictEqual("REJECTED")
+        expect(stream.update({type: "PROFITLOSS"})).toStrictEqual("REJECTED")
+        expect(stream.update({type: "PROFITLOSS"})).toStrictEqual("REJECTED")
+        expect(stream.update({type: "CLOSED"})).toStrictEqual("REJECTED")
+    })
+    test("when in state 'canceled': emit no more events", () => {
+        const stream = lifecycle()
+        expect(stream.update({type: "CREATED"})).toStrictEqual("CREATED")
+        expect(stream.update({type: "CANCELED"})).toStrictEqual("CANCELED")
+        expect(stream.update({type: "ENDED"})).toStrictEqual("CANCELED")
 
-            // should not have any effect
-            stream.tryCreate({ timestamp: 1 })
-            stream.tryAccept({ timestamp: 2 })
-            stream.tryReject({ timestamp: 3 })
-            stream.tryExpire({ timestamp: 4 })
-            stream.tryCancel({ timestamp: 5 })
-            stream.tryFill({ timestamp: 6, entry: 23 })
-            stream.tryProfitLoss({ timestamp: 7, price: 124, profitLoss: 24 })
-            stream.tryProfitLoss({ timestamp: 8, price: 125, profitLoss: 25 })
-            stream.tryClose({ timestamp: 9, exit: 42, profitLoss: 23 })
-        })
+        // should not have any effect
+        expect(stream.update({type: "CREATED"})).toStrictEqual("CANCELED")
+        expect(stream.update({type: "ACCEPTED"})).toStrictEqual("CANCELED")
+        expect(stream.update({type: "REJECTED"})).toStrictEqual("CANCELED")
+        expect(stream.update({type: "EXPIRED"})).toStrictEqual("CANCELED")
+        expect(stream.update({type: "CANCELED"})).toStrictEqual("CANCELED")
+        expect(stream.update({type: "FILLED"})).toStrictEqual("CANCELED")
+        expect(stream.update({type: "PROFITLOSS"})).toStrictEqual("CANCELED")
+        expect(stream.update({type: "PROFITLOSS"})).toStrictEqual("CANCELED")
+        expect(stream.update({type: "CLOSED"})).toStrictEqual("CANCELED")
+    })
+    test("when in state 'closed': emit no more events", () => {
+        const stream = lifecycle()
+        expect(stream.update({type: "CREATED"})).toStrictEqual("CREATED")
+        expect(stream.update({type: "ACCEPTED"})).toStrictEqual("ACCEPTED")
+        expect(stream.update({type: "FILLED"})).toStrictEqual("FILLED")
+        expect(stream.update({type: "PROFITLOSS"})).toStrictEqual("FILLED")
+        expect(stream.update({type: "PROFITLOSS"})).toStrictEqual("FILLED")
+        expect(stream.update({type: "CLOSED"})).toStrictEqual("CLOSED")
+        expect(stream.update({type: "ENDED"})).toStrictEqual("CLOSED")
+
+        // should not have any effect
+        expect(stream.update({type: "CREATED"})).toStrictEqual("CLOSED")
+        expect(stream.update({type: "ACCEPTED"})).toStrictEqual("CLOSED")
+        expect(stream.update({type: "REJECTED"})).toStrictEqual("CLOSED")
+        expect(stream.update({type: "EXPIRED"})).toStrictEqual("CLOSED")
+        expect(stream.update({type: "CANCELED"})).toStrictEqual("CLOSED")
+        expect(stream.update({type: "FILLED"})).toStrictEqual("CLOSED")
+        expect(stream.update({type: "PROFITLOSS"})).toStrictEqual("CLOSED")
+        expect(stream.update({type: "PROFITLOSS"})).toStrictEqual("CLOSED")
+        expect(stream.update({type: "CLOSED"})).toStrictEqual("CLOSED")
     })
 })
