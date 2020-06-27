@@ -107,8 +107,8 @@ function order<Props extends T.OrderProps>(props: Props, extras: { client: Spotw
                                 return
                             }
                             if (msg.order.closingOrder) {
-                                const modifiedStopLoss = Math.abs((msg.order.limitPrice || 0) - (props.stopLoss || 0)) > 0.001
-                                const modifiedTakeProfit = Math.abs((msg.order.takeProfit || 0) - (props.takeProfit || 0)) > 0.001
+                                const modifiedStopLoss = Math.abs((msg.order.stopLoss || 0) - (props.stopLoss || 0)) > 0.001
+                                const modifiedTakeProfit = Math.abs((msg.order.limitPrice || 0) - (props.takeProfit || 0)) > 0.001
 
                                 const timestamp = msg.order.utcLastUpdateTimestamp || 0;
                                 const data = {
