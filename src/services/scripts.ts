@@ -20,8 +20,8 @@ function local(inputs: string[]) {
     const account = fromNothing({ currency, spots, initialBalance: 1000 })
     const trendbars = account.trendbars({ symbol, period: ms("15min") })
     trendbars.on("data", e => {
-        if(e.timestamp === 1592934300000) {
-            account.limitOrder({ id: "1", symbol, tradeSide: "SELL", volume: 1, enter: 8565.43, stopLoss: 8565.43001, takeProfit: 8550.04}).resume();
+        if(e.timestamp === 1593110700000) {
+            account.limitOrder({ id: "1", symbol, tradeSide: "BUY", volume: 1, enter: 8244.84, takeProfit: 8254.66}).resume();
         }
     })
     setImmediate(() => {
