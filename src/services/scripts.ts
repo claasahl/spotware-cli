@@ -111,7 +111,7 @@ async function temp(output: string, inputs: string[]) {
         input: fileStream,
         crlfDelay: Infinity
     });
-    const range = ms("120min");
+    const range = ms("30min");
     type Oppurtunity = {orderType: "BUY", enter: AskPriceChangedEvent, exit: BidPriceChangedEvent} | {orderType: "SELL", enter: BidPriceChangedEvent, exit: AskPriceChangedEvent}
     const ranges: {
         id: string
@@ -122,15 +122,15 @@ async function temp(output: string, inputs: string[]) {
         to: Date,
         ask: {
             series: (AskPriceChangedEvent & { hl: "high" | "low", date: Date })[]
-            high: AskPriceChangedEvent & { date: Date }
-            low: AskPriceChangedEvent & { date: Date }
+            highs: (AskPriceChangedEvent & { date: Date })[]
+            lows: (AskPriceChangedEvent & { date: Date })[]
             direction?: "bullish" | "bearish"
             points?: number
         },
         bid: {
             series: (BidPriceChangedEvent & { hl: "high" | "low", date: Date })[]
-            high: BidPriceChangedEvent & { date: Date }
-            low: BidPriceChangedEvent & { date: Date }
+            highs: (BidPriceChangedEvent & { date: Date })[]
+            lows:( BidPriceChangedEvent & { date: Date })[]
             direction?: "bullish" | "bearish"
             points?: number
         },
@@ -152,33 +152,13 @@ async function temp(output: string, inputs: string[]) {
                     to: new Date(timestamp + range),
                     ask: {
                         series: [],
-                        high: {
-                            timestamp: 0,
-                            date: new Date(0),
-                            type: "ASK_PRICE_CHANGED",
-                            ask: Number.MIN_VALUE
-                        },
-                        low: {
-                            timestamp: 0,
-                            date: new Date(0),
-                            type: "ASK_PRICE_CHANGED",
-                            ask: Number.MAX_VALUE
-                        }
+                        highs: [],
+                        lows: []
                     },
                     bid: {
                         series: [],
-                        high: {
-                            timestamp: 0,
-                            date: new Date(0),
-                            type: "BID_PRICE_CHANGED",
-                            bid: Number.MIN_VALUE
-                        },
-                        low: {
-                            timestamp: 0,
-                            date: new Date(0),
-                            type: "BID_PRICE_CHANGED",
-                            bid: Number.MAX_VALUE
-                        }
+                        highs: [],
+                        lows: []
                     },
                     oppurtunities: []
                 })
@@ -188,19 +168,19 @@ async function temp(output: string, inputs: string[]) {
             const data = JSON.parse(logEntry![1])
             for (const range of ranges) {
                 if (data.timestamp >= range.fromTimestamp && data.timestamp < range.toTimestamp) {
-                    if (range.ask.high.ask < data.ask) {
+                    if (range.ask.highs.length === 0 || range.ask.highs[range.ask.highs.length-1].ask < data.ask) {
                         if(range.ask.series.length > 0 && range.ask.series[range.ask.series.length-1].hl === "high") {
                             range.ask.series.pop()
                         }
                         range.ask.series.push({ ...data, hl: "high", date: new Date(data.timestamp) })
-                        range.ask.high = {...data, date: new Date(data.timestamp)};
+                        range.ask.highs.push({ ...data, date: new Date(data.timestamp) })
                     }
-                    if (range.ask.low.ask > data.ask) {
+                    if (range.ask.lows.length === 0 || range.ask.lows[range.ask.lows.length-1].ask > data.ask) {
                         if(range.ask.series.length > 0 && range.ask.series[range.ask.series.length-1].hl === "low") {
                             range.ask.series.pop()
                         }
                         range.ask.series.push({ ...data, hl: "low", date: new Date(data.timestamp) })
-                        range.ask.low = {...data, date: new Date(data.timestamp)};
+                        range.ask.lows.push({ ...data, date: new Date(data.timestamp) })
                     }
                     if(range.tradeSide === "SELL") {
                         const len = range.ask.series.length
@@ -218,19 +198,20 @@ async function temp(output: string, inputs: string[]) {
             const data = JSON.parse(logEntry![1])
             for (const range of ranges) {
                 if (data.timestamp >= range.fromTimestamp && data.timestamp < range.toTimestamp) {
-                    if (range.bid.high.bid < data.bid) {
+                    if (range.bid.highs.length === 0 || range.bid.highs[range.bid.highs.length-1].bid < data.bid) {
+                        console.log("-----> high", data)
                         if(range.bid.series.length > 0 && range.bid.series[range.bid.series.length-1].hl === "high") {
                             range.bid.series.pop()
                         }
                         range.bid.series.push({ ...data, hl: "high", date: new Date(data.timestamp) })
-                        range.bid.high = {...data, date: new Date(data.timestamp)};
+                        range.bid.highs.push({ ...data, date: new Date(data.timestamp) })
                     }
-                    if (range.bid.low.bid > data.bid) {
+                    if (range.bid.lows.length === 0 || range.bid.lows[range.bid.lows.length-1].bid > data.bid) {
                         if(range.bid.series.length > 0 && range.bid.series[range.bid.series.length-1].hl === "low") {
                             range.bid.series.pop()
                         }
                         range.bid.series.push({ ...data, hl: "low", date: new Date(data.timestamp) })
-                        range.bid.low = {...data, date: new Date(data.timestamp)};
+                        range.bid.lows.push({ ...data, hl: "low", date: new Date(data.timestamp) })
                     }
                     if(range.tradeSide === "BUY") {
                         const len = range.bid.series.length
@@ -247,8 +228,8 @@ async function temp(output: string, inputs: string[]) {
     }
 
     for(const range of ranges) {
-        const lowAsk = range.ask.high
-        const highBid = range.bid.high
+        const lowAsk = range.ask.lows[range.ask.lows.length-1]
+        const highBid = range.bid.highs[range.bid.highs.length-1]
         if(lowAsk.timestamp < highBid.timestamp && lowAsk.ask < highBid.bid) {
             range.oppurtunities.push({orderType: "BUY", enter: lowAsk, exit: highBid})
         } else if(highBid.timestamp < lowAsk.timestamp && highBid.bid > lowAsk.ask) {
