@@ -111,7 +111,7 @@ async function temp(output: string, inputs: string[]) {
         input: fileStream,
         crlfDelay: Infinity
     });
-    const range = ms("60min");
+    const range = ms("120min");
     type Oppurtunity = {orderType: "BUY", enter: AskPriceChangedEvent, exit: BidPriceChangedEvent} | {orderType: "SELL", enter: BidPriceChangedEvent, exit: AskPriceChangedEvent}
     const ranges: {
         id: string
@@ -121,16 +121,16 @@ async function temp(output: string, inputs: string[]) {
         toTimestamp: number,
         to: Date,
         ask: {
-            series: (AskPriceChangedEvent & { hl: "high" | "low" })[]
-            high: AskPriceChangedEvent
-            low: AskPriceChangedEvent
+            series: (AskPriceChangedEvent & { hl: "high" | "low", date: Date })[]
+            high: AskPriceChangedEvent & { date: Date }
+            low: AskPriceChangedEvent & { date: Date }
             direction?: "bullish" | "bearish"
             points?: number
         },
         bid: {
-            series: (BidPriceChangedEvent & { hl: "high" | "low" })[]
-            high: BidPriceChangedEvent
-            low: BidPriceChangedEvent
+            series: (BidPriceChangedEvent & { hl: "high" | "low", date: Date })[]
+            high: BidPriceChangedEvent & { date: Date }
+            low: BidPriceChangedEvent & { date: Date }
             direction?: "bullish" | "bearish"
             points?: number
         },
@@ -154,11 +154,13 @@ async function temp(output: string, inputs: string[]) {
                         series: [],
                         high: {
                             timestamp: 0,
+                            date: new Date(0),
                             type: "ASK_PRICE_CHANGED",
                             ask: Number.MIN_VALUE
                         },
                         low: {
                             timestamp: 0,
+                            date: new Date(0),
                             type: "ASK_PRICE_CHANGED",
                             ask: Number.MAX_VALUE
                         }
@@ -167,11 +169,13 @@ async function temp(output: string, inputs: string[]) {
                         series: [],
                         high: {
                             timestamp: 0,
+                            date: new Date(0),
                             type: "BID_PRICE_CHANGED",
                             bid: Number.MIN_VALUE
                         },
                         low: {
                             timestamp: 0,
+                            date: new Date(0),
                             type: "BID_PRICE_CHANGED",
                             bid: Number.MAX_VALUE
                         }
@@ -188,15 +192,15 @@ async function temp(output: string, inputs: string[]) {
                         if(range.ask.series.length > 0 && range.ask.series[range.ask.series.length-1].hl === "high") {
                             range.ask.series.pop()
                         }
-                        range.ask.series.push({ ...data, hl: "high" })
-                        range.ask.high = data;
+                        range.ask.series.push({ ...data, hl: "high", date: new Date(data.timestamp) })
+                        range.ask.high = {...data, date: new Date(data.timestamp)};
                     }
                     if (range.ask.low.ask > data.ask) {
                         if(range.ask.series.length > 0 && range.ask.series[range.ask.series.length-1].hl === "low") {
                             range.ask.series.pop()
                         }
-                        range.ask.series.push({ ...data, hl: "low" })
-                        range.ask.low = data;
+                        range.ask.series.push({ ...data, hl: "low", date: new Date(data.timestamp) })
+                        range.ask.low = {...data, date: new Date(data.timestamp)};
                     }
                     if(range.tradeSide === "SELL") {
                         const len = range.ask.series.length
@@ -218,15 +222,15 @@ async function temp(output: string, inputs: string[]) {
                         if(range.bid.series.length > 0 && range.bid.series[range.bid.series.length-1].hl === "high") {
                             range.bid.series.pop()
                         }
-                        range.bid.series.push({ ...data, hl: "high" })
-                        range.bid.high = data;
+                        range.bid.series.push({ ...data, hl: "high", date: new Date(data.timestamp) })
+                        range.bid.high = {...data, date: new Date(data.timestamp)};
                     }
                     if (range.bid.low.bid > data.bid) {
                         if(range.bid.series.length > 0 && range.bid.series[range.bid.series.length-1].hl === "low") {
                             range.bid.series.pop()
                         }
-                        range.bid.series.push({ ...data, hl: "low" })
-                        range.bid.low = data;
+                        range.bid.series.push({ ...data, hl: "low", date: new Date(data.timestamp) })
+                        range.bid.low = {...data, date: new Date(data.timestamp)};
                     }
                     if(range.tradeSide === "BUY") {
                         const len = range.bid.series.length
