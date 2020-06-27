@@ -18,7 +18,12 @@ function local(inputs: string[]) {
         symbol
     });
     const account = fromNothing({ currency, spots, initialBalance: 1000 })
-    account.trendbars({ symbol, period: ms("15min") }).resume();
+    const trendbars = account.trendbars({ symbol, period: ms("15min") })
+    trendbars.on("data", e => {
+        if(e.timestamp === 1592934300000) {
+            account.limitOrder({ id: "1", symbol, tradeSide: "SELL", volume: 1, enter: 8565.43, stopLoss: 8565.43001, takeProfit: 8550.04}).resume();
+        }
+    })
     setImmediate(() => {
         // account.stopOrder({ id: "1", symbol, tradeSide: "SELL", volume: 1, enter: 6613});
         // account.marketOrder({ id: "1", symbol, tradeSide: "BUY", volume: 1, takeProfit: 6614.0});
@@ -33,7 +38,7 @@ async function spotware() {
     const account = fromSomething({ ...config, currency })
     account.trendbars({ symbol, period: 10000 }).on("data", console.log)
     setTimeout(async () => {
-        const stream = account.stopOrder({ id: "1", symbol, tradeSide: "SELL", volume: 10, enter: 7000, stopLoss: 7100, takeProfit: 6900, expiresAt: Date.now() + 100000 })
+        const stream = account.limitOrder({ id: "1", symbol, tradeSide: "BUY", volume: 0.01, enter: 17000, stopLoss: 16900, takeProfit: 17100, expiresAt: Date.now() + 10000 })
         stream.on("data", e => console.log("---", e));
         stream.on("end", () => console.log("--- END",));
         stream.on("close", () => console.log("--- CLOSE",));
