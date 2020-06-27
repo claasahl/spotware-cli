@@ -274,3 +274,12 @@ export function stopOrderFromSpotPrices(props: Omit<T.StopOrderProps & { spots: 
     }
     return sell({ ...rest, orderType: "STOP" }, spots, e => e.type === "BID_PRICE_CHANGED" && e.bid <= props.enter)
 }
+
+export function limitOrderFromSpotPrices(props: Omit<T.LimitOrderProps & { spots: T.SpotPricesStream }, "orderType">): T.OrderStream<T.LimitOrderProps> {
+    const { spots, ...rest } = props;
+    if (props.tradeSide === "BUY") {
+        return buy({ ...rest, orderType: "LIMIT" }, spots, e => e.type === "ASK_PRICE_CHANGED" && e.ask <= props.enter)
+    } else {
+        return sell({ ...rest, orderType: "LIMIT" }, spots, e => e.type === "BID_PRICE_CHANGED" && e.bid >= props.enter)
+    }
+}

@@ -3,7 +3,7 @@ import mem from "mem";
 import * as T from "../types";
 import * as D from "../debug";
 import * as G from "../generic";
-import { marketOrderFromSpotPrices, stopOrderFromSpotPrices } from "./order";
+import { marketOrderFromSpotPrices, stopOrderFromSpotPrices, limitOrderFromSpotPrices } from "./order";
 import { includesCurrency } from "./util";
 
 interface Order {
@@ -101,6 +101,48 @@ class LocalAccountStream extends D.AccountStream {
         const order: Order = { ...props, entry: 0, profitLoss: 0 }
         const spots = this.spotPrices({ symbol: props.symbol })
         const stream = stopOrderFromSpotPrices({ ...props, spots })
+        const update = (e: T.OrderProfitLossEvent) => {
+            order.profitLoss = e.profitLoss;
+            this.updateEquity(e)
+        }
+        stream.on("data", e => {
+            this.push({...e, ...stream.props})
+            if(e.type === "PROFITLOSS") {
+                update(e);
+            } else if(e.type === "ACCEPTED") {
+                this.orders.get(props.id)!.push(order)
+            } else if(e.type === "ENDED") {
+                const all = this.orders.get(props.id)!
+                const toBeDeleted: number[] = [];
+                const amounts: T.Price[] = [];
+                all.forEach((o, index) => {
+                    if (order.tradeSide === o.tradeSide && order.volume >= o.volume) {
+                        amounts.push(o.profitLoss);
+                        toBeDeleted.push(index);
+                    }
+                });
+                toBeDeleted.reverse().forEach(i => all?.splice(i, 1));
+                amounts.forEach(amount => this.push({ type: "TRANSACTION", timestamp: e.timestamp, amount }));
+            }
+        })
+        return stream;
+    }
+
+    limitOrder(props: T.AccountSimpleLimitOrderProps): T.OrderStream<T.LimitOrderProps> {
+        if (!includesCurrency(props.symbol, this.props.currency)) {
+            const symbol = props.symbol.toString();
+            const currency = this.props.currency.toString()
+            throw new Error(
+                `symbol ${symbol} does not involve currency ${currency}. This account only supports currency pairs with ${currency}.`
+            );
+        }
+
+        if (!this.orders.has(props.id)) {
+            this.orders.set(props.id, [])
+        }
+        const order: Order = { ...props, entry: 0, profitLoss: 0 }
+        const spots = this.spotPrices({ symbol: props.symbol })
+        const stream = limitOrderFromSpotPrices({ ...props, spots })
         const update = (e: T.OrderProfitLossEvent) => {
             order.profitLoss = e.profitLoss;
             this.updateEquity(e)

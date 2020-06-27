@@ -331,4 +331,132 @@ describe("fromNothing", () => {
             spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 2, bid: 15 })
         })
     })
+    describe("limit order", () => {
+        test("should emit 'order' event", done => {
+            const symbol = Symbol.for("abc/def")
+            const spotPrices = new SpotPricesStream({ symbol })
+            const currency = Symbol.for("abc")
+            const spots = () => spotPrices
+            const stream = fromNothing({ currency, spots, initialBalance: 500 })
+            const order = { id: "346", symbol, tradeSide: "BUY", volume: 4, enter: 6, takeProfit: 18 }
+            stream.limitOrder(order)
+            const events = [
+                { timestamp: 1, type: "CREATED", orderType: "LIMIT", ...order },
+                { timestamp: 1, type: "ACCEPTED", orderType: "LIMIT", ...order }
+            ]
+            stream.on("data", e => {
+                if(events.map(e => e.type).includes(e.type)) {
+                    expect(e).toStrictEqual(events.shift());
+                    if(events.length === 0) {
+                        done()
+                    }
+                }
+            })
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1, ask: 4 })
+        })
+        test("should produce 'equity' events", done => {
+            const symbol = Symbol.for("abc/def")
+            const spotPrices = new SpotPricesStream({ symbol })
+            const currency = Symbol.for("abc")
+            const spots = () => spotPrices
+            const stream = fromNothing({ currency, spots, initialBalance: 500})
+            stream.limitOrder({ id: "346", symbol, tradeSide: "BUY", volume: 4, enter: 3, takeProfit: 18 })
+            const events = [
+                expect.anything(),
+                { type: "EQUITY_CHANGED", timestamp: 2, equity: 552 },
+                { type: "EQUITY_CHANGED", timestamp: 3, equity: 540 },
+                { type: "EQUITY_CHANGED", timestamp: 4, equity: 564 },
+                { type: "EQUITY_CHANGED", timestamp: 4, equity: 564 }
+            ]
+            stream.on("data", e => {
+                if(e.type === "EQUITY_CHANGED") {
+                    expect(e).toStrictEqual(events.shift());
+                    if(events.length === 0) {
+                        done()
+                    }
+                }
+            })
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1, ask: 2 })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 2, bid: 15 })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 3, bid: 12 })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 4, bid: 18 })
+        })
+        test("should produce 'balance' event", done => {
+            const symbol = Symbol.for("abc/def")
+            const spotPrices = new SpotPricesStream({ symbol })
+            const currency = Symbol.for("abc")
+            const spots = () => spotPrices
+            const stream = fromNothing({ currency, spots, initialBalance: 500})
+            stream.limitOrder({ id: "346", symbol, tradeSide: "BUY", volume: 4, enter: 3, takeProfit: 8 })
+            const events = [
+                expect.anything(),
+                { type: "BALANCE_CHANGED", timestamp: 2, balance: 520 }
+            ]
+            stream.on("data", e => {
+                if(e.type === "BALANCE_CHANGED") {
+                    expect(e).toStrictEqual(events.shift());
+                    if(events.length === 0) {
+                        done()
+                    }
+                }
+            })
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1, ask: 3 })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 2, bid: 8 })
+        })
+        test("should produce 'transaction' event", done => {
+            const symbol = Symbol.for("abc/def")
+            const spotPrices = new SpotPricesStream({ symbol })
+            const currency = Symbol.for("abc")
+            const spots = () => spotPrices
+            const stream = fromNothing({ currency, spots, initialBalance: 500})
+            stream.limitOrder({ id: "346", symbol, tradeSide: "BUY", volume: 4, enter: 3, takeProfit: 15 })
+            const events = [
+                expect.anything(),
+                { type: "TRANSACTION", timestamp: 2, amount: 48 }
+            ]
+            stream.on("data", e => {
+                if(e.type === "TRANSACTION") {
+                    expect(e).toStrictEqual(events.shift());
+                    if(events.length === 0) {
+                        done()
+                    }
+                }
+            })
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1, ask: 3 })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 2, bid: 15 })
+        })
+        test("complete order lifecyle", done => {
+            const symbol = Symbol.for("abc/def")
+            const spotPrices = new SpotPricesStream({ symbol })
+            const currency = Symbol.for("abc")
+            const spots = () => spotPrices
+            const stream = fromNothing({ currency, spots, initialBalance: 500})
+            stream.stopOrder({ id: "1", symbol, tradeSide: "BUY", volume: 4, enter: 3, takeProfit: 15 })
+
+            const expectedAccountEvents = [
+                {timestamp: 0, type: "TRANSACTION", amount: 500},
+                {timestamp: 0, type: "BALANCE_CHANGED", balance: 500},
+                {timestamp: 0, type: "EQUITY_CHANGED", equity: 500},
+                {timestamp: 1, type: "CREATED", id: "1", symbol, tradeSide: "BUY", volume: 4, orderType: "STOP", enter: 3, takeProfit: 15},
+                {timestamp: 1, type: "ACCEPTED", id: "1", symbol, tradeSide: "BUY", volume: 4, orderType: "STOP", enter: 3, takeProfit: 15},
+                {timestamp: 1, type: "FILLED", id: "1", symbol, tradeSide: "BUY", volume: 4, orderType: "STOP", enter: 3, takeProfit: 15, entry: 10},
+                {timestamp: 2, type: "PROFITLOSS", id: "1", symbol, tradeSide: "BUY", volume: 4, orderType: "STOP", enter: 3, takeProfit: 15, price: 15, profitLoss: 20},
+                {timestamp: 2, type: "EQUITY_CHANGED", equity: 520},
+                {timestamp: 2, type: "CLOSED", id: "1", symbol, tradeSide: "BUY", volume: 4, orderType: "STOP", enter: 3, takeProfit: 15, exit: 15, profitLoss: 20},
+                {timestamp: 2, type: "ENDED", id: "1", symbol, tradeSide: "BUY", volume: 4, orderType: "STOP", enter: 3, takeProfit: 15, exit: 15, profitLoss: 20},
+                {timestamp: 2, type: "TRANSACTION", amount: 20},
+                {timestamp: 2, type: "BALANCE_CHANGED", balance: 520},
+                {timestamp: 2, type: "EQUITY_CHANGED", equity: 520},
+            ]
+            stream.on("data", e => {
+                expect(e).toStrictEqual(expectedAccountEvents.shift());
+                if(expectedAccountEvents.length === 0) {
+                    done();
+                }
+            })
+
+            spotPrices.push({ type: "ASK_PRICE_CHANGED", timestamp: 1, ask: 10 })
+            spotPrices.push({ type: "BID_PRICE_CHANGED", timestamp: 2, bid: 15 })
+        })
+    })
 })
