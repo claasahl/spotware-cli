@@ -111,7 +111,8 @@ async function temp(output: string, inputs: string[]) {
         input: fileStream,
         crlfDelay: Infinity
     });
-    const range = ms("30min");
+    const range = ms("60min");
+    type Oppurtunity = {orderType: "BUY", enter: AskPriceChangedEvent, exit: BidPriceChangedEvent} | {orderType: "SELL", enter: BidPriceChangedEvent, exit: AskPriceChangedEvent}
     const ranges: {
         id: string
         tradeSide: "SELL" | "BUY"
@@ -133,6 +134,7 @@ async function temp(output: string, inputs: string[]) {
             direction?: "bullish" | "bearish"
             points?: number
         },
+        oppurtunities: Oppurtunity[]
     }[] = []
     for await (const line of rl) {
         if (line.indexOf("account") >= 0 && line.indexOf("\"CREATED\"") >= 0) {
@@ -173,7 +175,8 @@ async function temp(output: string, inputs: string[]) {
                             type: "BID_PRICE_CHANGED",
                             bid: Number.MAX_VALUE
                         }
-                    }
+                    },
+                    oppurtunities: []
                 })
             }
         } else if (line.indexOf("spotPrices:") >= 0 && line.indexOf("\"ASK_PRICE_CHANGED\"") >= 0) {
@@ -236,6 +239,16 @@ async function temp(output: string, inputs: string[]) {
                     break;
                 }
             }
+        }
+    }
+
+    for(const range of ranges) {
+        const lowAsk = range.ask.high
+        const highBid = range.bid.high
+        if(lowAsk.timestamp < highBid.timestamp && lowAsk.ask < highBid.bid) {
+            range.oppurtunities.push({orderType: "BUY", enter: lowAsk, exit: highBid})
+        } else if(highBid.timestamp < lowAsk.timestamp && highBid.bid > lowAsk.ask) {
+            range.oppurtunities.push({orderType: "SELL", enter: highBid, exit: lowAsk})
         }
     }
 
