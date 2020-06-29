@@ -1,5 +1,6 @@
 import * as $ from "@claasahl/spotware-adapter"
 import { EventEmitter } from "events"
+import { finished } from "stream";
 import debug from "debug"
 import {v4} from "uuid"
 
@@ -42,6 +43,7 @@ export class SpotwareClient extends EventEmitter {
         this.log = debug("spotware");
         this.socket.on("connect", () => this.log("connected"));
         this.socket.on("close", () => this.log("disconnected"));
+        finished(this.socket, () => this.log("socket finished"))
         const input = this.log.extend("input");
         this.socket.on("PROTO_MESSAGE.INPUT.*", msg => input("%j", msg));
         const output = this.log.extend("output");
@@ -70,7 +72,7 @@ export class SpotwareClient extends EventEmitter {
             });
         }
         const publisher: NodeJS.Timeout = setInterval(publish, 300);
-        this.socket.on("close", () => clearInterval(publisher));
+        finished(this.socket, () => clearInterval(publisher));
     }
 
     private pacemaker() {
@@ -82,7 +84,7 @@ export class SpotwareClient extends EventEmitter {
             }
             pacemaker = setTimeout(() => this.publish(heartbeat), 10000);
         });
-        this.socket.on("close", () => {if(pacemaker) clearTimeout(pacemaker)});
+        finished(this.socket, () => {if(pacemaker) clearTimeout(pacemaker)});
     }
 
     private mirrorIO() {
