@@ -197,7 +197,6 @@ async function temp(output: string, inputs: string[]) {
             for (const range of ranges) {
                 if (data.timestamp >= range.fromTimestamp && data.timestamp < range.toTimestamp) {
                     if (range.bid.highs.length === 0 || range.bid.highs[range.bid.highs.length-1].bid < data.bid) {
-                        console.log("-----> high", data)
                         if(range.bid.series.length > 0 && range.bid.series[range.bid.series.length-1].hl === "high") {
                             range.bid.series.pop()
                         }
