@@ -6,7 +6,11 @@ import ms from "ms";
 import fs from "fs"
 import readline from "readline";
 import { obj as multistream } from "multistream";
+import { finished } from "stream";
 import { AskPriceChangedEvent, BidPriceChangedEvent } from "./types";
+import * as G from "./generic"
+import * as T from "./types"
+import { bullish, bearish } from "indicators"
 
 function local(inputs: string[]) {
     const name = "BTC/EUR";
@@ -106,12 +110,6 @@ async function review(output: string, inputs: string[]) {
     out.end();
 }
 async function temp(output: string, inputs: string[]) {
-    const fileStream = multistream(inputs.map(file => fs.createReadStream(file)))
-    const rl = readline.createInterface({
-        input: fileStream,
-        crlfDelay: Infinity
-    });
-    const range = ms("30min");
     type Oppurtunity = {
         orderType: "BUY",
         enter: AskPriceChangedEvent,
@@ -142,95 +140,117 @@ async function temp(output: string, inputs: string[]) {
         },
         oppurtunities: Oppurtunity[]
     }[] = []
-    for await (const line of rl) {
-        if (line.indexOf("account") >= 0 && line.indexOf("\"CREATED\"") >= 0) {
-            console.log(line)
-            const logEntry = /({.*})/.exec(line);
-            const data = JSON.parse(logEntry![1])
-            if ("timestamp" in data) {
-                const { timestamp } = data;
-                ranges.push({
-                    id: data.id,
-                    tradeSide: data.tradeSide,
-                    fromTimestamp: timestamp,
-                    from: new Date(timestamp),
-                    toTimestamp: timestamp + range,
-                    to: new Date(timestamp + range),
-                    ask: {
-                        series: [],
-                        highs: [],
-                        lows: []
-                    },
-                    bid: {
-                        series: [],
-                        highs: [],
-                        lows: []
-                    },
-                    oppurtunities: []
-                })
-            }
-        } else if (line.indexOf("spotPrices:") >= 0 && line.indexOf("\"ASK_PRICE_CHANGED\"") >= 0) {
-            const logEntry = /({.*})/.exec(line);
-            const data = JSON.parse(logEntry![1])
+    const emptyRange = (timestamp: T.Timestamp, id: string, tradeSide: T.TradeSide) => ({
+            id,
+            tradeSide,
+            fromTimestamp: timestamp,
+            from: new Date(timestamp),
+            toTimestamp: timestamp + range,
+            to: new Date(timestamp + range),
+            ask: {
+                series: [],
+                highs: [],
+                lows: []
+            },
+            bid: {
+                series: [],
+                highs: [],
+                lows: []
+            },
+            oppurtunities: []
+        })
+        function engulfed(candleA: T.TrendbarEvent, candleB: T.TrendbarEvent): boolean {
+            const upperA = candleA.high;
+            const lowerA = candleA.low;
+            const upperB = candleB.high;
+            const lowerB = candleB.low;
+            return (
+              (upperA >= upperB && lowerA < lowerB) ||
+              (upperA > upperB && lowerA <= lowerB)
+            );
+          }
+
+    const period = ms("15min");
+    const symbol = Symbol.for("BTC/EUR");
+    const spots = fromFiles({
+        paths: inputs,
+        symbol
+    });
+    const trendbars = G.toTrendbars({period, symbol, spots})
+    const range = ms("30min");
+    const trendbarEvents: T.TrendbarEvent[] = []
+    trendbars.on("data", e => {
+        trendbarEvents.push(e);
+        if (trendbarEvents.length >= 2) {
+          const first = trendbarEvents.shift()!;
+          const second = trendbarEvents[0];
+          if (bullish(first) && engulfed(first, second)) {
+              ranges.push(emptyRange(e.timestamp, ranges.length.toString(), "BUY"))
+          } else if (bearish(first) && engulfed(first, second)) {
+              ranges.push(emptyRange(e.timestamp, ranges.length.toString(), "SELL"))
+          }
+        }
+    });
+    spots.on("data", e => {
+        if(e.type === "ASK_PRICE_CHANGED") {
             for (const range of ranges) {
-                if (data.timestamp >= range.fromTimestamp && data.timestamp < range.toTimestamp) {
-                    if (range.ask.highs.length === 0 || range.ask.highs[range.ask.highs.length-1].ask < data.ask) {
+                if (e.timestamp >= range.fromTimestamp && e.timestamp < range.toTimestamp) {
+                    if (range.ask.highs.length === 0 || range.ask.highs[range.ask.highs.length-1].ask < e.ask) {
                         if(range.ask.series.length > 0 && range.ask.series[range.ask.series.length-1].hl === "high") {
                             range.ask.series.pop()
                         }
-                        range.ask.series.push({ ...data, hl: "high", date: new Date(data.timestamp) })
-                        range.ask.highs.push({ ...data, date: new Date(data.timestamp) })
+                        range.ask.series.push({ ...e, hl: "high", date: new Date(e.timestamp) })
+                        range.ask.highs.push({ ...e, date: new Date(e.timestamp) })
                     }
-                    if (range.ask.lows.length === 0 || range.ask.lows[range.ask.lows.length-1].ask > data.ask) {
+                    if (range.ask.lows.length === 0 || range.ask.lows[range.ask.lows.length-1].ask > e.ask) {
                         if(range.ask.series.length > 0 && range.ask.series[range.ask.series.length-1].hl === "low") {
                             range.ask.series.pop()
                         }
-                        range.ask.series.push({ ...data, hl: "low", date: new Date(data.timestamp) })
-                        range.ask.lows.push({ ...data, date: new Date(data.timestamp) })
+                        range.ask.series.push({ ...e, hl: "low", date: new Date(e.timestamp) })
+                        range.ask.lows.push({ ...e, date: new Date(e.timestamp) })
                     }
                     break;
                 }
             }
-        } else if (line.indexOf("spotPrices:") >= 0 && line.indexOf("\"BID_PRICE_CHANGED\"") >= 0) {
-            const logEntry = /({.*})/.exec(line);
-            const data = JSON.parse(logEntry![1])
+        } else if(e.type === "BID_PRICE_CHANGED") {
             for (const range of ranges) {
-                if (data.timestamp >= range.fromTimestamp && data.timestamp < range.toTimestamp) {
-                    if (range.bid.highs.length === 0 || range.bid.highs[range.bid.highs.length-1].bid < data.bid) {
+                if (e.timestamp >= range.fromTimestamp && e.timestamp < range.toTimestamp) {
+                    if (range.bid.highs.length === 0 || range.bid.highs[range.bid.highs.length-1].bid < e.bid) {
                         if(range.bid.series.length > 0 && range.bid.series[range.bid.series.length-1].hl === "high") {
                             range.bid.series.pop()
                         }
-                        range.bid.series.push({ ...data, hl: "high", date: new Date(data.timestamp) })
-                        range.bid.highs.push({ ...data, date: new Date(data.timestamp) })
+                        range.bid.series.push({ ...e, hl: "high", date: new Date(e.timestamp) })
+                        range.bid.highs.push({ ...e, date: new Date(e.timestamp) })
                     }
-                    if (range.bid.lows.length === 0 || range.bid.lows[range.bid.lows.length-1].bid > data.bid) {
+                    if (range.bid.lows.length === 0 || range.bid.lows[range.bid.lows.length-1].bid > e.bid) {
                         if(range.bid.series.length > 0 && range.bid.series[range.bid.series.length-1].hl === "low") {
                             range.bid.series.pop()
                         }
-                        range.bid.series.push({ ...data, hl: "low", date: new Date(data.timestamp) })
-                        range.bid.lows.push({ ...data, hl: "low", date: new Date(data.timestamp) })
+                        range.bid.series.push({ ...e, hl: "low", date: new Date(e.timestamp) })
+                        range.bid.lows.push({ ...e, date: new Date(e.timestamp) })
                     }
                     break;
                 }
             }
         }
-    }
-
-    for(const range of ranges) {
-        const lowAsk = range.ask.lows[range.ask.lows.length-1]
-        const highBid = range.bid.highs[range.bid.highs.length-1]
-        if(lowAsk.timestamp < highBid.timestamp && lowAsk.ask < highBid.bid) {
-            const lowBid = range.bid.lows[range.bid.lows.length-1]
-            range.oppurtunities.push({orderType: "BUY", enter: lowAsk, takeProfit: highBid, stopLoss: lowBid})
-        } else if(highBid.timestamp < lowAsk.timestamp && highBid.bid > lowAsk.ask) {
-            const highAsk = range.ask.highs[range.ask.highs.length-1]
-            range.oppurtunities.push({orderType: "SELL", enter: highBid, takeProfit: lowAsk, stopLoss: highAsk})
+    })
+    finished(spots, () => {
+        for(const range of ranges) {
+            const lowAsk = range.ask.lows[range.ask.lows.length-1]
+            const highBid = range.bid.highs[range.bid.highs.length-1]
+            if(lowAsk.timestamp < highBid.timestamp && lowAsk.ask < highBid.bid) {
+                const lowBid = range.bid.lows[range.bid.lows.length-1]
+                range.oppurtunities.push({orderType: "BUY", enter: lowAsk, takeProfit: highBid, stopLoss: lowBid})
+            } else if(highBid.timestamp < lowAsk.timestamp && highBid.bid > lowAsk.ask) {
+                const highAsk = range.ask.highs[range.ask.highs.length-1]
+                range.oppurtunities.push({orderType: "SELL", enter: highBid, takeProfit: lowAsk, stopLoss: highAsk})
+            }
         }
-    }
-
-    const out = fs.createWriteStream(output)
-    out.write(JSON.stringify(ranges, null, 2))
-    out.end();
+    
+        const out = fs.createWriteStream(output)
+        out.write(JSON.stringify(ranges, null, 2))
+        out.end();
+    })
 }
 
 if (process.argv[2] === "local") {
