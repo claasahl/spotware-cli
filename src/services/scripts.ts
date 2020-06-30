@@ -21,7 +21,7 @@ function local(inputs: string[]) {
     const trendbars = account.trendbars({ symbol, period: ms("15min") })
     trendbars.on("data", e => {
         if(e.timestamp === 1593110700000) {
-            account.limitOrder({ id: "1", symbol, tradeSide: "BUY", volume: 1, enter: 8244.84, takeProfit: 8254.66}).resume();
+            account.limitOrder({ id: "1", symbol, tradeSide: "BUY", volume: 0.01, enter: 8244.84, takeProfit: 8254.66, stopLoss: 8232.99}).resume();
         }
     })
     setImmediate(() => {
@@ -112,7 +112,17 @@ async function temp(output: string, inputs: string[]) {
         crlfDelay: Infinity
     });
     const range = ms("30min");
-    type Oppurtunity = {orderType: "BUY", enter: AskPriceChangedEvent, exit: BidPriceChangedEvent} | {orderType: "SELL", enter: BidPriceChangedEvent, exit: AskPriceChangedEvent}
+    type Oppurtunity = {
+        orderType: "BUY",
+        enter: AskPriceChangedEvent,
+        takeProfit: BidPriceChangedEvent,
+        stopLoss: BidPriceChangedEvent
+    } | {
+        orderType: "SELL",
+        enter: BidPriceChangedEvent,
+        takeProfit: AskPriceChangedEvent,
+        stopLoss: AskPriceChangedEvent
+    }
     const ranges: {
         id: string
         tradeSide: "SELL" | "BUY"
@@ -231,9 +241,11 @@ async function temp(output: string, inputs: string[]) {
         const lowAsk = range.ask.lows[range.ask.lows.length-1]
         const highBid = range.bid.highs[range.bid.highs.length-1]
         if(lowAsk.timestamp < highBid.timestamp && lowAsk.ask < highBid.bid) {
-            range.oppurtunities.push({orderType: "BUY", enter: lowAsk, exit: highBid})
+            const lowBid = range.bid.lows[range.bid.lows.length-1]
+            range.oppurtunities.push({orderType: "BUY", enter: lowAsk, takeProfit: highBid, stopLoss: lowBid})
         } else if(highBid.timestamp < lowAsk.timestamp && highBid.bid > lowAsk.ask) {
-            range.oppurtunities.push({orderType: "SELL", enter: highBid, exit: lowAsk})
+            const highAsk = range.ask.highs[range.ask.highs.length-1]
+            range.oppurtunities.push({orderType: "SELL", enter: highBid, takeProfit: lowAsk, stopLoss: highAsk})
         }
     }
 
