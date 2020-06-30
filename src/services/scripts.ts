@@ -238,7 +238,9 @@ async function temp(output: string, inputs: string[]) {
         for(const range of ranges) {
             const lowAsk = range.ask.lows[range.ask.lows.length-1]
             const highBid = range.bid.highs[range.bid.highs.length-1]
-            if(lowAsk.timestamp < highBid.timestamp && lowAsk.ask < highBid.bid) {
+            if(!lowAsk || !highBid) {
+                continue;
+            } else if(lowAsk.timestamp < highBid.timestamp && lowAsk.ask < highBid.bid) {
                 const lowBid = range.bid.lows[range.bid.lows.length-1]
                 range.oppurtunities.push({orderType: "BUY", enter: lowAsk, takeProfit: highBid, stopLoss: lowBid})
             } else if(highBid.timestamp < lowAsk.timestamp && highBid.bid > lowAsk.ask) {
