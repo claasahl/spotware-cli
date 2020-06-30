@@ -4,6 +4,7 @@ import config from "../config";
 import { fromSomething } from "./spotware/account";
 import ms from "ms";
 import fs from "fs"
+import path from "path"
 import readline from "readline";
 import { obj as multistream } from "multistream";
 import { finished } from "stream";
@@ -248,10 +249,37 @@ async function temp(output: string, inputs: string[]) {
                 range.oppurtunities.push({orderType: "SELL", enter: highBid, takeProfit: lowAsk, stopLoss: highAsk})
             }
         }
+        const cleaned = ranges
+            .map(r => ({...r, ask: undefined, bid: undefined}))
+            .map(r => {
+                r.oppurtunities = r.oppurtunities.filter(o => {
+                        if(o.orderType === "BUY") {
+                            return Math.abs(o.enter.ask - o.takeProfit.bid) > Math.abs(o.enter.ask - o.stopLoss.bid);
+                        } else if(o.orderType === "SELL") {
+                            return Math.abs(o.enter.bid - o.takeProfit.ask) > Math.abs(o.enter.bid - o.stopLoss.ask);
+                        }
+                        return true;
+                    })
+                    .filter(o => {
+                        if(o.orderType === "BUY") {
+                            return Math.abs(o.enter.ask - o.takeProfit.bid) > 20
+                        } else if(o.orderType === "SELL") {
+                            return Math.abs(o.enter.bid - o.takeProfit.ask) > 20
+                        }
+                        return true;
+                    })
+                return r;
+            })
+            .filter(r => r.oppurtunities.length > 0)
     
         const out = fs.createWriteStream(output)
         out.write(JSON.stringify(ranges, null, 2))
         out.end();
+
+        const cleanedOutput = path.join(path.dirname(output), `cleaned_${path.basename(output)}`)
+        const outCleaned = fs.createWriteStream(cleanedOutput)
+        outCleaned.write(JSON.stringify(cleaned, null, 2))
+        outCleaned.end();
     })
 }
 
