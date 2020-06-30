@@ -134,15 +134,11 @@ async function temp(output: string, inputs: string[]) {
             series: (AskPriceChangedEvent & { hl: "high" | "low", date: Date })[]
             highs: (AskPriceChangedEvent & { date: Date })[]
             lows: (AskPriceChangedEvent & { date: Date })[]
-            direction?: "bullish" | "bearish"
-            points?: number
         },
         bid: {
             series: (BidPriceChangedEvent & { hl: "high" | "low", date: Date })[]
             highs: (BidPriceChangedEvent & { date: Date })[]
             lows:( BidPriceChangedEvent & { date: Date })[]
-            direction?: "bullish" | "bearish"
-            points?: number
         },
         oppurtunities: Oppurtunity[]
     }[] = []
@@ -192,14 +188,6 @@ async function temp(output: string, inputs: string[]) {
                         range.ask.series.push({ ...data, hl: "low", date: new Date(data.timestamp) })
                         range.ask.lows.push({ ...data, date: new Date(data.timestamp) })
                     }
-                    if(range.tradeSide === "SELL") {
-                        const len = range.ask.series.length
-                        const prices = range.ask.series;
-                        if(len >= 2 && prices[len-1].hl === "low" && prices[len-2].hl === "high") {
-                            range.ask.direction = "bearish"
-                            range.ask.points = prices[len-2].ask-prices[len-1].ask
-                        }
-                    }
                     break;
                 }
             }
@@ -222,14 +210,6 @@ async function temp(output: string, inputs: string[]) {
                         }
                         range.bid.series.push({ ...data, hl: "low", date: new Date(data.timestamp) })
                         range.bid.lows.push({ ...data, hl: "low", date: new Date(data.timestamp) })
-                    }
-                    if(range.tradeSide === "BUY") {
-                        const len = range.bid.series.length
-                        const prices = range.bid.series;
-                        if(len >= 2 && prices[len-1].hl === "high" && prices[len-2].hl === "low") {
-                            range.bid.direction = "bullish"
-                            range.bid.points = prices[len-1].bid-prices[len-2].bid
-                        }
                     }
                     break;
                 }
