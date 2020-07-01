@@ -114,13 +114,13 @@ async function temp(output: string, inputs: string[]) {
     type Oppurtunity = {
         orderType: "BUY",
         enter: AskPriceChangedEvent,
-        takeProfit: BidPriceChangedEvent,
-        stopLoss: BidPriceChangedEvent
+        high: BidPriceChangedEvent,
+        low: BidPriceChangedEvent
     } | {
         orderType: "SELL",
         enter: BidPriceChangedEvent,
-        takeProfit: AskPriceChangedEvent,
-        stopLoss: AskPriceChangedEvent
+        high: AskPriceChangedEvent,
+        low: AskPriceChangedEvent
     }
     const ranges: {
         id: string
@@ -243,10 +243,10 @@ async function temp(output: string, inputs: string[]) {
                 continue;
             } else if(lowAsk.timestamp < highBid.timestamp && lowAsk.ask < highBid.bid) {
                 const lowBid = range.bid.lows[range.bid.lows.length-1]
-                range.oppurtunities.push({orderType: "BUY", enter: lowAsk, takeProfit: highBid, stopLoss: lowBid})
+                range.oppurtunities.push({orderType: "BUY", enter: lowAsk, high: highBid, low: lowBid})
             } else if(highBid.timestamp < lowAsk.timestamp && highBid.bid > lowAsk.ask) {
                 const highAsk = range.ask.highs[range.ask.highs.length-1]
-                range.oppurtunities.push({orderType: "SELL", enter: highBid, takeProfit: lowAsk, stopLoss: highAsk})
+                range.oppurtunities.push({orderType: "SELL", enter: highBid, high: highAsk, low: lowAsk})
             }
         }
         const cleaned = ranges
@@ -254,17 +254,17 @@ async function temp(output: string, inputs: string[]) {
             .map(r => {
                 r.oppurtunities = r.oppurtunities.filter(o => {
                         if(o.orderType === "BUY") {
-                            return Math.abs(o.enter.ask - o.takeProfit.bid) > Math.abs(o.enter.ask - o.stopLoss.bid);
+                            return Math.abs(o.enter.ask - o.high.bid) > Math.abs(o.enter.ask - o.low.bid);
                         } else if(o.orderType === "SELL") {
-                            return Math.abs(o.enter.bid - o.takeProfit.ask) > Math.abs(o.enter.bid - o.stopLoss.ask);
+                            return Math.abs(o.enter.bid - o.high.ask) > Math.abs(o.enter.bid - o.low.ask);
                         }
                         return true;
                     })
                     .filter(o => {
                         if(o.orderType === "BUY") {
-                            return Math.abs(o.enter.ask - o.takeProfit.bid) > 20
+                            return Math.abs(o.enter.ask - o.high.bid) > 20
                         } else if(o.orderType === "SELL") {
-                            return Math.abs(o.enter.bid - o.takeProfit.ask) > 20
+                            return Math.abs(o.enter.bid - o.high.ask) > 20
                         }
                         return true;
                     })
