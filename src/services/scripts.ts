@@ -125,6 +125,7 @@ async function temp(output: string, inputs: string[]) {
     const ranges: {
         id: string
         tradeSide: "SELL" | "BUY"
+        trendbars: T.TrendbarEvent[]
         fromTimestamp: number,
         from: Date,
         toTimestamp: number,
@@ -141,9 +142,10 @@ async function temp(output: string, inputs: string[]) {
         },
         oppurtunities: Oppurtunity[]
     }[] = []
-    const emptyRange = (timestamp: T.Timestamp, id: string, tradeSide: T.TradeSide) => ({
+    const emptyRange = (timestamp: T.Timestamp, id: string, tradeSide: T.TradeSide, trendbars: T.TrendbarEvent[]) => ({
             id,
             tradeSide,
+            trendbars,
             fromTimestamp: timestamp,
             from: new Date(timestamp),
             toTimestamp: timestamp + range,
@@ -186,9 +188,9 @@ async function temp(output: string, inputs: string[]) {
           const first = trendbarEvents.shift()!;
           const second = trendbarEvents[0];
           if (bullish(first) && engulfed(first, second)) {
-              ranges.push(emptyRange(e.timestamp, ranges.length.toString(), "BUY"))
+              ranges.push(emptyRange(e.timestamp, ranges.length.toString(), "BUY", [first, second]))
           } else if (bearish(first) && engulfed(first, second)) {
-              ranges.push(emptyRange(e.timestamp, ranges.length.toString(), "SELL"))
+              ranges.push(emptyRange(e.timestamp, ranges.length.toString(), "SELL", [first, second]))
           }
         }
     });
@@ -252,25 +254,34 @@ async function temp(output: string, inputs: string[]) {
         const cleaned = ranges
             .map(r => ({...r, ask: undefined, bid: undefined}))
             .map(r => {
-                r.oppurtunities = r.oppurtunities.filter(o => {
+                const oppurtunities = r.oppurtunities
+                    .map(o => {
                         if(o.orderType === "BUY") {
-                            return Math.abs(o.enter.ask - o.high.bid) > Math.abs(o.enter.ask - o.low.bid);
+                            return {orderType: o.orderType, enter: o.enter.ask, high: o.high.bid, low: o.low.bid};
                         } else if(o.orderType === "SELL") {
-                            return Math.abs(o.enter.bid - o.high.ask) > Math.abs(o.enter.bid - o.low.ask);
+                            return {orderType: o.orderType, enter: o.enter.bid, high: o.high.ask, low: o.low.ask};
                         }
-                        return true;
+                        return undefined;
                     })
-                    .filter(o => {
-                        if(o.orderType === "BUY") {
-                            return Math.abs(o.enter.ask - o.high.bid) > 20
-                        } else if(o.orderType === "SELL") {
-                            return Math.abs(o.enter.bid - o.high.ask) > 20
-                        }
-                        return true;
+                    .filter(o => o && Math.abs(o.enter - o.high) > Math.abs(o.enter - o.low))
+                    .filter(o => Math.abs(o!.enter - o!.high) > 20)
+                const trendbars = r.trendbars
+                    .map(t => {
+                        delete t.timestamp
+                        delete t.volume
+                        delete t.type
+                        return {...t}
                     })
-                return r;
+                return {...r, trendbars, oppurtunities};
             })
             .filter(r => r.oppurtunities.length > 0)
+            .map(r => {
+                delete r.from
+                delete r.fromTimestamp
+                delete r.to
+                delete r.toTimestamp
+                return {...r}
+            })
     
         const out = fs.createWriteStream(output)
         out.write(JSON.stringify(ranges, null, 2))
