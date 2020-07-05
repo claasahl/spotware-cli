@@ -74,6 +74,50 @@ function engulfed(candleA: T.TrendbarEvent, candleB: T.TrendbarEvent): boolean {
     );
 }
 
+function trackAskPrices(ranges: Range[], e: AskPriceChangedEvent) {
+    for (const range of ranges) {
+        if (e.timestamp >= range.fromTimestamp && e.timestamp < range.toTimestamp) {
+            if (range.ask.highs.length === 0 || range.ask.highs[range.ask.highs.length - 1].ask < e.ask) {
+                if (range.ask.series.length > 0 && range.ask.series[range.ask.series.length - 1].hl === "high") {
+                    range.ask.series.pop()
+                }
+                range.ask.series.push({ ...e, hl: "high", date: new Date(e.timestamp) })
+                range.ask.highs.push({ ...e, date: new Date(e.timestamp) })
+            }
+            if (range.ask.lows.length === 0 || range.ask.lows[range.ask.lows.length - 1].ask > e.ask) {
+                if (range.ask.series.length > 0 && range.ask.series[range.ask.series.length - 1].hl === "low") {
+                    range.ask.series.pop()
+                }
+                range.ask.series.push({ ...e, hl: "low", date: new Date(e.timestamp) })
+                range.ask.lows.push({ ...e, date: new Date(e.timestamp) })
+            }
+            break;
+        }
+    }
+}
+
+function trackBidPrices(ranges: Range[], e: BidPriceChangedEvent) {
+    for (const range of ranges) {
+        if (e.timestamp >= range.fromTimestamp && e.timestamp < range.toTimestamp) {
+            if (range.bid.highs.length === 0 || range.bid.highs[range.bid.highs.length - 1].bid < e.bid) {
+                if (range.bid.series.length > 0 && range.bid.series[range.bid.series.length - 1].hl === "high") {
+                    range.bid.series.pop()
+                }
+                range.bid.series.push({ ...e, hl: "high", date: new Date(e.timestamp) })
+                range.bid.highs.push({ ...e, date: new Date(e.timestamp) })
+            }
+            if (range.bid.lows.length === 0 || range.bid.lows[range.bid.lows.length - 1].bid > e.bid) {
+                if (range.bid.series.length > 0 && range.bid.series[range.bid.series.length - 1].hl === "low") {
+                    range.bid.series.pop()
+                }
+                range.bid.series.push({ ...e, hl: "low", date: new Date(e.timestamp) })
+                range.bid.lows.push({ ...e, date: new Date(e.timestamp) })
+            }
+            break;
+        }
+    }
+}
+
 function generateOppurtunities(range: Range): Oppurtunity[] {
     const lowAsk = range.ask.lows[range.ask.lows.length - 1]
     const highAsk = range.ask.highs[range.ask.highs.length - 1]
@@ -157,45 +201,9 @@ export default async function main(output: string, inputs: string[], simplifiedF
     });
     spots.on("data", e => {
         if (e.type === "ASK_PRICE_CHANGED") {
-            for (const range of ranges) {
-                if (e.timestamp >= range.fromTimestamp && e.timestamp < range.toTimestamp) {
-                    if (range.ask.highs.length === 0 || range.ask.highs[range.ask.highs.length - 1].ask < e.ask) {
-                        if (range.ask.series.length > 0 && range.ask.series[range.ask.series.length - 1].hl === "high") {
-                            range.ask.series.pop()
-                        }
-                        range.ask.series.push({ ...e, hl: "high", date: new Date(e.timestamp) })
-                        range.ask.highs.push({ ...e, date: new Date(e.timestamp) })
-                    }
-                    if (range.ask.lows.length === 0 || range.ask.lows[range.ask.lows.length - 1].ask > e.ask) {
-                        if (range.ask.series.length > 0 && range.ask.series[range.ask.series.length - 1].hl === "low") {
-                            range.ask.series.pop()
-                        }
-                        range.ask.series.push({ ...e, hl: "low", date: new Date(e.timestamp) })
-                        range.ask.lows.push({ ...e, date: new Date(e.timestamp) })
-                    }
-                    break;
-                }
-            }
+            trackAskPrices(ranges, e);
         } else if (e.type === "BID_PRICE_CHANGED") {
-            for (const range of ranges) {
-                if (e.timestamp >= range.fromTimestamp && e.timestamp < range.toTimestamp) {
-                    if (range.bid.highs.length === 0 || range.bid.highs[range.bid.highs.length - 1].bid < e.bid) {
-                        if (range.bid.series.length > 0 && range.bid.series[range.bid.series.length - 1].hl === "high") {
-                            range.bid.series.pop()
-                        }
-                        range.bid.series.push({ ...e, hl: "high", date: new Date(e.timestamp) })
-                        range.bid.highs.push({ ...e, date: new Date(e.timestamp) })
-                    }
-                    if (range.bid.lows.length === 0 || range.bid.lows[range.bid.lows.length - 1].bid > e.bid) {
-                        if (range.bid.series.length > 0 && range.bid.series[range.bid.series.length - 1].hl === "low") {
-                            range.bid.series.pop()
-                        }
-                        range.bid.series.push({ ...e, hl: "low", date: new Date(e.timestamp) })
-                        range.bid.lows.push({ ...e, date: new Date(e.timestamp) })
-                    }
-                    break;
-                }
-            }
+            trackBidPrices(ranges, e);
         }
     })
     finished(spots, () => {
