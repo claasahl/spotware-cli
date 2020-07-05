@@ -75,7 +75,8 @@ function engulfed(candleA: T.TrendbarEvent, candleB: T.TrendbarEvent): boolean {
 }
 
 function trackAskPrices(ranges: Range[], e: AskPriceChangedEvent) {
-    for (const range of ranges) {
+    for(let i = ranges.length-1; i >= 0; i--) {
+        const range = ranges[i];
         if (e.timestamp >= range.fromTimestamp && e.timestamp < range.toTimestamp) {
             if (range.ask.highs.length === 0 || range.ask.highs[range.ask.highs.length - 1].ask < e.ask) {
                 if (range.ask.series.length > 0 && range.ask.series[range.ask.series.length - 1].hl === "high") {
@@ -97,7 +98,8 @@ function trackAskPrices(ranges: Range[], e: AskPriceChangedEvent) {
 }
 
 function trackBidPrices(ranges: Range[], e: BidPriceChangedEvent) {
-    for (const range of ranges) {
+    for(let i = ranges.length-1; i >= 0; i--) {
+        const range = ranges[i];
         if (e.timestamp >= range.fromTimestamp && e.timestamp < range.toTimestamp) {
             if (range.bid.highs.length === 0 || range.bid.highs[range.bid.highs.length - 1].bid < e.bid) {
                 if (range.bid.series.length > 0 && range.bid.series[range.bid.series.length - 1].hl === "high") {
