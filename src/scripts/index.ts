@@ -63,14 +63,16 @@ yargs
     ({currency, symbol}) => spotware(currency, symbol)
 )
 .command(
-    "insideBarLocal [inputs...]", 
+    "insideBarLocal", 
     "run 'inside bar momentum' strategy from local price data",
     yargs => yargs.options({
         currency: {type: 'string', default: 'EUR'},
         symbol: {type: 'string', default: 'BTC/EUR'},
+        period: {type: 'string', default: '15min'},
+        expiresIn: {type: 'string', default: '30min'},
         inputs: {type: 'string', demandOption: true},
     }).array("inputs"),
-    ({currency, symbol, inputs}) => insideBarLocal(inputs, currency, symbol)
+    ({period, expiresIn, currency, symbol, inputs}) => insideBarLocal(inputs, period, expiresIn, currency, symbol)
 )
 .command(
     "insideBarRemote", 
