@@ -263,8 +263,6 @@ async function temp(output: string, inputs: string[]) {
                         }
                         return undefined;
                     })
-                    .filter(o => o && Math.abs(o.enter - o.high) > Math.abs(o.enter - o.low))
-                    .filter(o => Math.abs(o!.enter - o!.high) > 20)
                 const trendbars = r.trendbars
                     .map(t => {
                         delete t.timestamp
