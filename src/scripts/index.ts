@@ -6,6 +6,7 @@ import config from "../config"
 import local from "./local"
 import refresh from "./refresh"
 import fetch from "./fetch"
+import performance from "./performance"
 import spotware from "./spotware"
 import insideBarLocal from "./insideBarLocal"
 import insideBarRemote from "./insideBarRemote"
@@ -88,6 +89,14 @@ yargs
         currency: {type: 'string', default: 'EUR'},
     }).array("inputs"),
     ({currency}) => insideBarRemote(currency)
+)
+.command(
+    "performance",
+    "test script for measuring peformance",
+    yargs => yargs.options({
+        symbol: {type: 'string', default: 'BTC/EUR'},
+    }).array("inputs"),
+    ({symbol}) => performance(symbol)
 )
 .command(
     "oppurtunities <simplified> <output> [inputs...]", 
