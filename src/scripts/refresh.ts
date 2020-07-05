@@ -2,8 +2,8 @@ import debug from "debug";
 import fs from "fs";
 import { parse } from "dotenv";
 
-import config from "./config";
-import { SpotwareClient } from "./services/spotware/client";
+import config from "../config";
+import { SpotwareClient } from "../services/spotware/client";
 
 function dotenv(env: object): string {
   return Object.entries(env)
@@ -11,7 +11,7 @@ function dotenv(env: object): string {
     .join("\n");
 }
 
-async function main() {
+export default async function main() {
   const log = debug("refresh-access-token");
   log("configuration is %j", config);
 
@@ -26,4 +26,3 @@ async function main() {
   fs.writeFileSync(".env", dotenv(env));
   client.end();
 }
-main();

@@ -1,6 +1,8 @@
 import yargs from 'yargs'
 
 import local from "./local"
+import refresh from "./refresh"
+import fetch from "./fetch"
 import spotware from "./spotware"
 import insideBar from "./insideBar"
 import oppurtunities from "./oppurtunities"
@@ -16,6 +18,23 @@ yargs
         inputs: {type: 'string', demandOption: true},
     }).array("inputs"),
     ({currency, symbol, inputs}) => local(inputs, currency, symbol)
+)
+.command(
+    "refresh",
+    "refresh spotware tokens in .env-file",
+    {},
+    () => refresh()
+)
+.command(
+    "fetch <from> <to> <output>",
+    "fetch price data from spotware",
+    yargs => yargs.options({
+        from: {type: 'string', description: "e.g. 2020-01-01T00:00:00.000Z"},
+        to: {type: 'string', description: "e.g. 2020-07-01T00:00:00.000Z"},
+        output: {type: 'string', description: "e.g. 2020-h1.json", demandOption: true},
+        symbol: {type: 'string', default: 'BTC/EUR'},
+    }),
+    ({from, to, output, symbol}) => fetch(from, to, output, symbol)
 )
 .command(
     "spotware", 

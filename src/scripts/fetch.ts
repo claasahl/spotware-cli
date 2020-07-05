@@ -3,9 +3,9 @@ import * as $ from "@claasahl/spotware-adapter";
 import fs from "fs"
 import ms from "ms";
 
-import config from "./config";
-import * as T from "./services/types"
-import { SpotwareClient } from "./services/spotware/client";
+import config from "../config";
+import * as T from "../services/types"
+import { SpotwareClient } from "../services/spotware/client";
 
 interface Interval {
   fromTimestamp: number,
@@ -77,13 +77,11 @@ function appendSpotPrices(path: string, spots: (T.AskPriceChangedEvent | T.BidPr
   stream.close()
 }
 
-async function main() {
-  const path = "./store/test4.json"
-  const from = new Date("2020-03-01T00:00:00.000Z").getTime()
-  const to = new Date("2020-04-01T00:00:00.000Z").getTime()
+export default async function main(fromDate: string = "2020-03-01T00:00:00.000Z", toDate: string = "2020-04-01T00:00:00.000Z", output: string = "./store/test4.json", symbolName: string = "BTC/EUR") {
+  const from = new Date(fromDate).getTime()
+  const to = new Date(toDate).getTime()
   const intervals = split(from, to)
 
-  const symbolName = "BTC/EUR";
   const client = new SpotwareClient(config);
 
   await client.applicationAuth(config);
@@ -96,8 +94,8 @@ async function main() {
   assert.equal(symbols.length, 1)
   const symbolId = symbols[0].symbolId
 
-  if(fs.existsSync(path)) {
-    fs.unlinkSync(path);
+  if(fs.existsSync(output)) {
+    fs.unlinkSync(output);
   }
   for(const interval of intervals) {
       const F = (type: $.ProtoOAQuoteType) => fetch(client, ctidTraderAccountId, symbolId, type, interval);
@@ -106,8 +104,7 @@ async function main() {
       const spots: (T.AskPriceChangedEvent | T.BidPriceChangedEvent)[] = []
       spots.push(...askSpots)
       spots.push(...bidSpots)
-      appendSpotPrices(path, spots);
+      appendSpotPrices(output, spots);
   }
   client.end();
 }
-main();
