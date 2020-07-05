@@ -156,7 +156,7 @@ function outputSimplifiedFormat(ranges: Range[], output: string): void {
                 })
             const trendbars = r.trendbars
                 .map(t => {
-                    delete t.timestamp
+                    // delete t.timestamp
                     delete t.volume
                     delete t.type
                     return { ...t }
