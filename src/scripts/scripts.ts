@@ -1,16 +1,16 @@
-import { insideBarMomentumStrategy } from "./insideBarMomentumStrategy";
-import { fromNothing, fromFiles } from "./local";
+import { insideBarMomentumStrategy } from "../services/insideBarMomentumStrategy";
+import { fromNothing, fromFiles } from "../services/local";
 import config from "../config";
-import { fromSomething } from "./spotware/account";
+import { fromSomething } from "../services/spotware/account";
 import ms from "ms";
 import fs from "fs"
 import path from "path"
 import readline from "readline";
 import { obj as multistream } from "multistream";
 import { finished } from "stream";
-import { AskPriceChangedEvent, BidPriceChangedEvent } from "./types";
-import * as G from "./generic"
-import * as T from "./types"
+import { AskPriceChangedEvent, BidPriceChangedEvent } from "../services/types";
+import * as G from "../services/generic"
+import * as T from "../services/types"
 import { bullish, bearish } from "indicators"
 
 function local(inputs: string[]) {
