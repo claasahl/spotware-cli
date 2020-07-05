@@ -74,6 +74,21 @@ function engulfed(candleA: T.TrendbarEvent, candleB: T.TrendbarEvent): boolean {
     );
 }
 
+function generateOppurtunities(range: Range): Oppurtunity[] {
+    const lowAsk = range.ask.lows[range.ask.lows.length - 1]
+    const highAsk = range.ask.highs[range.ask.highs.length - 1]
+    const lowBid = range.bid.lows[range.bid.lows.length - 1]
+    const highBid = range.bid.highs[range.bid.highs.length - 1]
+    if (!lowAsk || !highBid) {
+        return [];
+    } else if (lowAsk.timestamp < highBid.timestamp && lowAsk.timestamp <= lowBid.timestamp && lowAsk.ask < highBid.bid) {
+        return [{ orderType: "BUY", enter: lowAsk, high: highBid, low: lowBid }]
+    } else if (highBid.timestamp < lowAsk.timestamp && highBid.timestamp <= highAsk.timestamp && highBid.bid > lowAsk.ask) {
+        return [{ orderType: "SELL", enter: highBid, high: highAsk, low: lowAsk }]
+    }
+    return [];
+}
+
 export default async function main(output: string, inputs: string[], simplifiedFormat: boolean, range: string, period: string, symbolName: string) {
     const ranges: Range[] = []
     const spots = fromFiles({
@@ -143,17 +158,7 @@ export default async function main(output: string, inputs: string[], simplifiedF
     })
     finished(spots, () => {
         for (const range of ranges) {
-            const lowAsk = range.ask.lows[range.ask.lows.length - 1]
-            const highAsk = range.ask.highs[range.ask.highs.length - 1]
-            const lowBid = range.bid.lows[range.bid.lows.length - 1]
-            const highBid = range.bid.highs[range.bid.highs.length - 1]
-            if (!lowAsk || !highBid) {
-                continue;
-            } else if (lowAsk.timestamp < highBid.timestamp && lowAsk.timestamp <= lowBid.timestamp && lowAsk.ask < highBid.bid) {
-                range.oppurtunities.push({ orderType: "BUY", enter: lowAsk, high: highBid, low: lowBid })
-            } else if (highBid.timestamp < lowAsk.timestamp && highBid.timestamp <= highAsk.timestamp && highBid.bid > lowAsk.ask) {
-                range.oppurtunities.push({ orderType: "SELL", enter: highBid, high: highAsk, low: lowAsk })
-            }
+            range.oppurtunities = generateOppurtunities(range);
         }
         const cleaned = ranges
             .map(r => ({ ...r, ask: undefined, bid: undefined }))
