@@ -1,14 +1,13 @@
 import { fromFiles } from "../services/local";
 import ms from "ms";
 import fs from "fs"
-import path from "path"
 import { finished } from "stream";
 import { AskPriceChangedEvent, BidPriceChangedEvent } from "../services/types";
 import * as G from "../services/generic"
 import * as T from "../services/types"
 import { bullish, bearish } from "indicators"
 
-export default async function main(output: string, inputs: string[]) {
+export default async function main(simplifiedFormat: boolean, output: string, inputs: string[]) {
     type Oppurtunity = {
         orderType: "BUY",
         enter: AskPriceChangedEvent,
@@ -180,12 +179,11 @@ export default async function main(output: string, inputs: string[]) {
             })
     
         const out = fs.createWriteStream(output)
-        out.write(JSON.stringify(ranges, null, 2))
+        if(simplifiedFormat) {
+            out.write(JSON.stringify(cleaned, null, 2))
+        } else {
+            out.write(JSON.stringify(ranges, null, 2))
+        }
         out.end();
-
-        const cleanedOutput = path.join(path.dirname(output), `cleaned_${path.basename(output)}`)
-        const outCleaned = fs.createWriteStream(cleanedOutput)
-        outCleaned.write(JSON.stringify(cleaned, null, 2))
-        outCleaned.end();
     })
 }

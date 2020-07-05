@@ -37,13 +37,14 @@ yargs
     ({currency, symbol, inputs}) => insideBar(inputs, currency, symbol)
 )
 .command(
-    "oppurtunities <output> [inputs...]", 
+    "oppurtunities <simplified> <output> [inputs...]", 
     "generates JSON-file with trading oppurtunities",
     yargs => yargs.options({
         inputs: {type: 'string', demandOption: true},
         output: {type: 'string', demandOption: true},
+        simplified: {type: 'boolean', demandOption: true}
     }).array("inputs"),
-    ({output, inputs}) => oppurtunities(output, inputs)
+    ({output, inputs, simplified}) => oppurtunities(simplified, output, inputs)
 )
 .command(
     "review <output> [inputs...]", 
