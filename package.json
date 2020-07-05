@@ -10,7 +10,7 @@
     "prepare": "npm run build",
     "build": "tsc",
     "prestart": "npm run build && npm run script refresh",
-    "start": "node -r dotenv/config ./build/services/index.js 2>&1 | multilog s16777215 n100 dir ./logs",
+    "start": "npm run script insideBarRemote 2>&1 | multilog s16777215 n100 dir ./logs",
     "predev": "npm run build",
     "dev": "node -r dotenv/config ./build/services/index.js > dev.log 2>&1",
     "prescript": "npm run build",
