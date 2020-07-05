@@ -1,8 +1,5 @@
 import yargs from 'yargs'
-import {execFile} from "child_process";
-import debug from "debug"
 
-import config from "../config"
 import local from "./local"
 import refresh from "./refresh"
 import fetch from "./fetch"
@@ -27,13 +24,6 @@ import review from "./review"
 // review all base/*.ts and local/*.ts files for "Promises vs callbacks" and "Promises vs 'sync' returns"
 
 // philosophy: for awesome readablity format all events like so {timestamp, type, ...rest}
-
-function header() {
-    execFile("git", ["rev-parse", "HEAD"], (_error, stdout, _stderr) => {
-      debug("CONFIG")("%j", {config, git: stdout, env: process.env})
-    })
-  }
-  header();
 
 yargs
 .command(
@@ -117,6 +107,5 @@ yargs
     }).array("inputs"),
     ({output, inputs}) => review(output, inputs)
 )
-.demandCommand()
 .help('h')
 .alias('h', 'help').argv;
