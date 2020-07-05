@@ -91,14 +91,17 @@ yargs
     ({symbol}) => performance(symbol)
 )
 .command(
-    "oppurtunities <simplified> <output> [inputs...]", 
+    "oppurtunities", 
     "generates JSON-file with trading oppurtunities",
     yargs => yargs.options({
+        range: {type: 'string', default: '30min'},
+        period: {type: 'string', default: '15min'},
+        symbol: {type: 'string', default: 'BTC/EUR'},
         inputs: {type: 'string', demandOption: true},
         output: {type: 'string', demandOption: true},
-        simplified: {type: 'boolean', demandOption: true}
+        simplified: {type: 'boolean', default: false}
     }).array("inputs"),
-    ({output, inputs, simplified}) => oppurtunities(simplified, output, inputs)
+    ({output, inputs, simplified, range, period, symbol}) => oppurtunities(output, inputs, simplified, range, period, symbol)
 )
 .command(
     "review <output> [inputs...]", 
