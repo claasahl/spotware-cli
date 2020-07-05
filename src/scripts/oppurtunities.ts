@@ -89,6 +89,48 @@ function generateOppurtunities(range: Range): Oppurtunity[] {
     return [];
 }
 
+function outputDefaultFormat(ranges: Range[], output: string): void {
+    const out = fs.createWriteStream(output)
+    out.write(JSON.stringify(ranges, null, 2))
+    out.end();
+}
+
+function outputSimplifiedFormat(ranges: Range[], output: string): void {
+    const cleaned = ranges
+        .map(r => ({ ...r, ask: undefined, bid: undefined }))
+        .map(r => {
+            const oppurtunities = r.oppurtunities
+                .map(o => {
+                    if (o.orderType === "BUY") {
+                        return { orderType: o.orderType, enter: o.enter.ask, high: o.high.bid, low: o.low.bid };
+                    } else if (o.orderType === "SELL") {
+                        return { orderType: o.orderType, enter: o.enter.bid, high: o.high.ask, low: o.low.ask };
+                    }
+                    return undefined;
+                })
+            const trendbars = r.trendbars
+                .map(t => {
+                    delete t.timestamp
+                    delete t.volume
+                    delete t.type
+                    return { ...t }
+                })
+            return { ...r, trendbars, oppurtunities };
+        })
+        .filter(r => r.oppurtunities.length > 0)
+        .map(r => {
+            delete r.from
+            delete r.fromTimestamp
+            delete r.to
+            delete r.toTimestamp
+            return { ...r }
+        })
+
+    const out = fs.createWriteStream(output)
+    out.write(JSON.stringify(cleaned, null, 2))
+    out.end();
+}
+
 export default async function main(output: string, inputs: string[], simplifiedFormat: boolean, range: string, period: string, symbolName: string) {
     const ranges: Range[] = []
     const spots = fromFiles({
@@ -160,42 +202,10 @@ export default async function main(output: string, inputs: string[], simplifiedF
         for (const range of ranges) {
             range.oppurtunities = generateOppurtunities(range);
         }
-        const cleaned = ranges
-            .map(r => ({ ...r, ask: undefined, bid: undefined }))
-            .map(r => {
-                const oppurtunities = r.oppurtunities
-                    .map(o => {
-                        if (o.orderType === "BUY") {
-                            return { orderType: o.orderType, enter: o.enter.ask, high: o.high.bid, low: o.low.bid };
-                        } else if (o.orderType === "SELL") {
-                            return { orderType: o.orderType, enter: o.enter.bid, high: o.high.ask, low: o.low.ask };
-                        }
-                        return undefined;
-                    })
-                const trendbars = r.trendbars
-                    .map(t => {
-                        delete t.timestamp
-                        delete t.volume
-                        delete t.type
-                        return { ...t }
-                    })
-                return { ...r, trendbars, oppurtunities };
-            })
-            .filter(r => r.oppurtunities.length > 0)
-            .map(r => {
-                delete r.from
-                delete r.fromTimestamp
-                delete r.to
-                delete r.toTimestamp
-                return { ...r }
-            })
-
-        const out = fs.createWriteStream(output)
         if (simplifiedFormat) {
-            out.write(JSON.stringify(cleaned, null, 2))
+            outputSimplifiedFormat(ranges, output);
         } else {
-            out.write(JSON.stringify(ranges, null, 2))
+            outputDefaultFormat(ranges, output);
         }
-        out.end();
     })
 }
