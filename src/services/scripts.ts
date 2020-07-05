@@ -240,14 +240,14 @@ async function temp(output: string, inputs: string[]) {
     finished(spots, () => {
         for(const range of ranges) {
             const lowAsk = range.ask.lows[range.ask.lows.length-1]
+            const highAsk = range.ask.highs[range.ask.highs.length-1]
+            const lowBid = range.bid.lows[range.bid.lows.length-1]
             const highBid = range.bid.highs[range.bid.highs.length-1]
             if(!lowAsk || !highBid) {
                 continue;
-            } else if(lowAsk.timestamp < highBid.timestamp && lowAsk.ask < highBid.bid) {
-                const lowBid = range.bid.lows[range.bid.lows.length-1]
+            } else if(lowAsk.timestamp < highBid.timestamp && lowAsk.timestamp <= lowBid.timestamp && lowAsk.ask < highBid.bid) {
                 range.oppurtunities.push({orderType: "BUY", enter: lowAsk, high: highBid, low: lowBid})
-            } else if(highBid.timestamp < lowAsk.timestamp && highBid.bid > lowAsk.ask) {
-                const highAsk = range.ask.highs[range.ask.highs.length-1]
+            } else if(highBid.timestamp < lowAsk.timestamp && highBid.timestamp <= highAsk.timestamp && highBid.bid > lowAsk.ask) {
                 range.oppurtunities.push({orderType: "SELL", enter: highBid, high: highAsk, low: lowAsk})
             }
         }
