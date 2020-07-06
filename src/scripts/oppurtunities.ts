@@ -225,7 +225,7 @@ export default async function main(output: string, inputs: string[], simplifiedF
     })
     finished(spots, () => {
         for (const range of ranges) {
-            range.oppurtunities = generateOppurtunities(range);
+            range.oppurtunities = [...generateOppurtunities(range,0), ...generateOppurtunities(range,1)];
         }
         if (simplifiedFormat) {
             outputSimplifiedFormat(ranges, output);
