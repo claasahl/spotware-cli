@@ -19,7 +19,7 @@ type Oppurtunity = {
     low: AskPriceChangedEvent
 }
 
-type Range = {
+export type Range = {
     id: string
     tradeSide: "SELL" | "BUY"
     trendbars: T.TrendbarEvent[]

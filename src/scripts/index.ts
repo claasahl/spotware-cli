@@ -9,6 +9,7 @@ import insideBarLocal from "./insideBarLocal"
 import insideBarRemote from "./insideBarRemote"
 import oppurtunities from "./oppurtunities"
 import review from "./review"
+import csv from "./csv"
 
 // Idea: Write services which consume events (from other services) and produce events (for other services to consume).
 
@@ -102,6 +103,15 @@ yargs
         simplified: {type: 'boolean', default: false}
     }).array("inputs"),
     ({output, inputs, simplified, range, period, symbol}) => oppurtunities(output, inputs, simplified, range, period, symbol)
+)
+.command(
+    "csv", 
+    "converts a JSON-file with oppurtunities into a CSV-file",
+    yargs => yargs.options({
+        input: {type: 'string', demandOption: true},
+        output: {type: 'string', demandOption: true}
+    }),
+    ({output, input}) => csv(output, input)
 )
 .command(
     "review <output> [inputs...]", 
