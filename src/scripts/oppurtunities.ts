@@ -120,19 +120,34 @@ function trackBidPrices(ranges: Range[], e: BidPriceChangedEvent) {
     }
 }
 
-function generateOppurtunities(range: Range): Oppurtunity[] {
-    const lowAsk = range.ask.lows[range.ask.lows.length - 1]
-    const highAsk = range.ask.highs[range.ask.highs.length - 1]
-    const lowBid = range.bid.lows[range.bid.lows.length - 1]
-    const highBid = range.bid.highs[range.bid.highs.length - 1]
-    if (!lowAsk || !highBid) {
-        return [];
-    } else if (lowAsk.timestamp < highBid.timestamp && lowAsk.timestamp <= lowBid.timestamp && lowAsk.ask < highBid.bid) {
-        return [{ orderType: "BUY", enter: lowAsk, high: highBid, low: lowBid }]
-    } else if (highBid.timestamp < lowAsk.timestamp && highBid.timestamp <= highAsk.timestamp && highBid.bid > lowAsk.ask) {
-        return [{ orderType: "SELL", enter: highBid, high: highAsk, low: lowAsk }]
+export function generateOppurtunities(range: Range, offset: number = 0): Oppurtunity[] {
+    const oppurtinities: Oppurtunity[] = []
+    const lowAsk = range.ask.lows[range.ask.lows.length - 1 - offset]
+    const highAsk = range.ask.highs[range.ask.highs.length - 1 - offset]
+    const lowBid = range.bid.lows[range.bid.lows.length - 1 - offset]
+    const highBid = range.bid.highs[range.bid.highs.length - 1 - offset]
+
+    // buy
+    if(lowBid && highBid && lowAsk) {
+        const lowThenHigh = lowBid.timestamp < highBid.timestamp;
+        const entryThenLow = lowAsk.timestamp <= lowBid.timestamp;
+        const profitable = lowAsk.ask < highBid.bid;
+        if(lowThenHigh && entryThenLow && profitable) {
+            oppurtinities.push({ orderType: "BUY", enter: lowAsk, high: highBid, low: lowBid })
+        }
     }
-    return [];
+
+    // sell
+    if(highAsk && lowAsk && highBid) {
+        const highThenLow = highAsk.timestamp < lowAsk.timestamp;
+        const entryThenHigh = highBid.timestamp <= highAsk.timestamp;
+        const profitable = highBid.bid > lowAsk.ask;
+        if(highThenLow && entryThenHigh && profitable) {
+            oppurtinities.push({ orderType: "SELL", enter: highBid, high: highAsk, low: lowAsk })
+        }
+    }
+
+    return oppurtinities;
 }
 
 function outputDefaultFormat(ranges: Range[], output: string): void {
