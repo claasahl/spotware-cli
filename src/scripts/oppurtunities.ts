@@ -70,8 +70,7 @@ function engulfed(candleA: T.TrendbarEvent, candleB: T.TrendbarEvent): boolean {
 }
 
 function trackAskPrices(ranges: Range[], e: PriceChangedEvent) {
-    for(let i = ranges.length-1; i >= 0; i--) {
-        const range = ranges[i];
+    for(const range of ranges) {
         if (e.timestamp >= range.fromTimestamp && e.timestamp < range.toTimestamp) {
             const [lastEntry] = range.ask.series.slice(-1)
             if (range.ask.high.ask < e.ask) {
@@ -88,14 +87,12 @@ function trackAskPrices(ranges: Range[], e: PriceChangedEvent) {
                 range.ask.series.push({ ...e, hl: "low", date: new Date(e.timestamp) })
                 range.ask.low = { ...e, date: new Date(e.timestamp) }
             }
-            break;
         }
     }
 }
 
 function trackBidPrices(ranges: Range[], e: PriceChangedEvent) {
-    for(let i = ranges.length-1; i >= 0; i--) {
-        const range = ranges[i];
+    for(const range of ranges) {
         if (e.timestamp >= range.fromTimestamp && e.timestamp < range.toTimestamp) {
             const [lastEntry] = range.bid.series.slice(-1)
             if (range.bid.high.bid < e.bid) {
@@ -112,7 +109,6 @@ function trackBidPrices(ranges: Range[], e: PriceChangedEvent) {
                 range.bid.series.push({ ...e, hl: "low", date: new Date(e.timestamp) })
                 range.bid.low = { ...e, date: new Date(e.timestamp) }
             }
-            break;
         }
     }
 }
@@ -214,9 +210,9 @@ export default async function main(output: string, inputs: string[], simplifiedF
             const first = trendbarEvents.shift()!;
             const second = trendbarEvents[0];
             if (bullish(first) && engulfed(first, second)) {
-                ranges.push(emptyRange(e.timestamp, ranges.length.toString(), "BUY", [first, second], ms(range)))
+                ranges.push(emptyRange(e.timestamp + ms(period), ranges.length.toString(), "BUY", [first, second], ms(range)))
             } else if (bearish(first) && engulfed(first, second)) {
-                ranges.push(emptyRange(e.timestamp, ranges.length.toString(), "SELL", [first, second], ms(range)))
+                ranges.push(emptyRange(e.timestamp + ms(period), ranges.length.toString(), "SELL", [first, second], ms(range)))
             }
         }
     });
