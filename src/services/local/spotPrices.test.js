@@ -87,23 +87,23 @@ describe("fromFile", () => {
         const stream = fromFiles({ symbol, paths: ["no.where"] })
 
         const events = [
-            // { type: "PRICE_CHANGED", timestamp: 9425, ask: 7611.79, bid: 6612.03 },
-            // { type: "PRICE_CHANGED", timestamp: 9425, ask: 7611.79, bid: 6612.28 },
-            // { type: "PRICE_CHANGED", timestamp: 9425, ask: 7612.52, bid: 6612.28 },
-            // { type: "PRICE_CHANGED", timestamp: 9425, ask: 7612.52, bid: 6612.73 },
-            // { type: "PRICE_CHANGED", timestamp: 9425, ask: 7612.52, bid: 6613.18 },
-            // { type: "PRICE_CHANGED", timestamp: 9425, ask: 7613.21, bid: 6613.18 },
-            // { type: "PRICE_CHANGED", timestamp: 9425, ask: 7613.21, bid: 6613.11 },
-            // { type: "PRICE_CHANGED", timestamp: 9425, ask: 7613.21, bid: 6613.18 },
-            // { type: "PRICE_CHANGED", timestamp: 9425, ask: 7613.21, bid: 6613.21 },
-            // { type: "PRICE_CHANGED", timestamp: 9425, ask: 7613.24, bid: 6613.21 },
-            // { type: "PRICE_CHANGED", timestamp: 9425, ask: 7613.24, bid: 6613.98 },
-            // { type: "PRICE_CHANGED", timestamp: 9425, ask: 7613.24, bid: 6614.08 },
-               { type: "PRICE_CHANGED", timestamp: 5198, ask: 7613, bid: 6613.91 },
-               { type: "PRICE_CHANGED", timestamp: 4564, ask: 7613, bid: 6613.17 },
-               { type: "PRICE_CHANGED", timestamp: 4182, ask: 7613, bid: 6613.14 },
-            // { type: "PRICE_CHANGED", timestamp: 4182, ask: 7613, bid: 6613.21 },
-            // { type: "PRICE_CHANGED", timestamp: 4182, ask: 7612.72, bid: 6613.21 },
+            { type: "PRICE_CHANGED", timestamp: 9425, ask: 7611.79, bid: 7612.03 },
+            { type: "PRICE_CHANGED", timestamp: 9110, ask: 7611.79, bid: 7612.28 },
+            { type: "PRICE_CHANGED", timestamp: 8928, ask: 7612.52, bid: 7612.28 },
+            { type: "PRICE_CHANGED", timestamp: 8447, ask: 7612.52, bid: 7612.73 },
+            { type: "PRICE_CHANGED", timestamp: 8021, ask: 7612.52, bid: 7613.18 },
+            { type: "PRICE_CHANGED", timestamp: 7680, ask: 7613.21, bid: 7613.18 },
+            { type: "PRICE_CHANGED", timestamp: 7264, ask: 7613.21, bid: 7613.11 },
+            { type: "PRICE_CHANGED", timestamp: 7026, ask: 7613.21, bid: 7613.18 },
+            { type: "PRICE_CHANGED", timestamp: 6609, ask: 7613.21, bid: 7613.21 },
+            { type: "PRICE_CHANGED", timestamp: 5996, ask: 7613.24, bid: 7613.21 },
+            { type: "PRICE_CHANGED", timestamp: 5829, ask: 7613.24, bid: 7613.98 },
+            { type: "PRICE_CHANGED", timestamp: 5601, ask: 7613.24, bid: 7614.08 },
+            { type: "PRICE_CHANGED", timestamp: 5198, ask: 7613, bid: 6613.91 },
+            { type: "PRICE_CHANGED", timestamp: 4564, ask: 7613, bid: 6613.17 },
+            { type: "PRICE_CHANGED", timestamp: 4182, ask: 7613, bid: 6613.14 },
+            { type: "PRICE_CHANGED", timestamp: 3987, ask: 7613, bid: 7613.21 },
+            { type: "PRICE_CHANGED", timestamp: 3516, ask: 7612.72, bid: 7613.21 },
         ];
         stream.on("data", e => {
             if(e.type === "PRICE_CHANGED") {
@@ -176,9 +176,23 @@ describe("fromSampleData", () => {
         const stream = fromSampleData({ symbol })
 
         const events = [
+            { type: "PRICE_CHANGED", timestamp: 1577663999425, ask: 6611.79, bid: 6612.03 },
+            { type: "PRICE_CHANGED", timestamp: 1577663999110, ask: 6611.79, bid: 6612.28 },
+            { type: "PRICE_CHANGED", timestamp: 1577663998928, ask: 6612.52, bid: 6612.28 },
+            { type: "PRICE_CHANGED", timestamp: 1577663998447, ask: 6612.52, bid: 6612.73 },
+            { type: "PRICE_CHANGED", timestamp: 1577663998021, ask: 6612.52, bid: 6613.18 },
+            { type: "PRICE_CHANGED", timestamp: 1577663997680, ask: 6613.21, bid: 6613.18 },
+            { type: "PRICE_CHANGED", timestamp: 1577663997264, ask: 6613.21, bid: 6613.11 },
+            { type: "PRICE_CHANGED", timestamp: 1577663997026, ask: 6613.21, bid: 6613.18 },
+            { type: "PRICE_CHANGED", timestamp: 1577663996609, ask: 6613.21, bid: 6613.21 },
+            { type: "PRICE_CHANGED", timestamp: 1577663995996, ask: 6613.24, bid: 6613.21 },
+            { type: "PRICE_CHANGED", timestamp: 1577663995829, ask: 6613.24, bid: 6613.98 },
+            { type: "PRICE_CHANGED", timestamp: 1577663995601, ask: 6613.24, bid: 6614.08 },
             { type: "PRICE_CHANGED", timestamp: 1577663995198, ask: 6613, bid: 6613.91 },
             { type: "PRICE_CHANGED", timestamp: 1577663994564, ask: 6613, bid: 6613.17 },
-            { type: "PRICE_CHANGED", timestamp: 1577663994182, ask: 6613, bid: 6613.14 }
+            { type: "PRICE_CHANGED", timestamp: 1577663994182, ask: 6613, bid: 6613.14 },
+            { type: "PRICE_CHANGED", timestamp: 1577663993987, ask: 6613, bid: 6613.21 },
+            { type: "PRICE_CHANGED", timestamp: 1577663993516, ask: 6612.72, bid: 6613.21 },
         ];
         stream.on("data", e => {
             if(e.type === "PRICE_CHANGED") {

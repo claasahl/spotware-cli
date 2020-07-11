@@ -55,6 +55,7 @@ const transformOptions: TransformOptions = {objectMode: true}
 class ChunkToSpotPrices extends Transform implements T.SpotPricesStream {
   readonly props: T.SpotPricesProps;
   private readonly filter: (chunk: string) => boolean;
+  private readonly cachedPrices: { ask?: number, bid?: number } = { ask: undefined, bid: undefined }
   
   constructor(props: T.SpotPricesProps, filter: (chunk: string) => boolean = () => true) {
     super(transformOptions);
@@ -84,9 +85,23 @@ class ChunkToSpotPrices extends Transform implements T.SpotPricesStream {
         }
         if ("ask" in data && !("bid" in data)) {
           this.push({ type: "ASK_PRICE_CHANGED", timestamp: data.timestamp, ask: data.ask });
+          
+          this.cachedPrices.ask = data.ask;
+          const latestBid = this.cachedPrices.bid
+          if(latestBid) {
+            this.push({ type: "PRICE_CHANGED", timestamp: data.timestamp, ask: data.ask, bid: latestBid });
+          }
         } else if (!("ask" in data) && "bid" in data) {
           this.push({ type: "BID_PRICE_CHANGED", timestamp: data.timestamp, bid: data.bid });
+          
+          this.cachedPrices.bid = data.bid;
+          const latestAsk = this.cachedPrices.ask;
+          if(latestAsk) {
+            this.push({ type: "PRICE_CHANGED", timestamp: data.timestamp, ask: latestAsk, bid: data.bid });
+          }
         } else if ("ask" in data && "bid" in data) {
+          this.cachedPrices.ask = data.ask;
+          this.cachedPrices.bid = data.bid;
           this.push({ type: "ASK_PRICE_CHANGED", timestamp: data.timestamp, ask: data.ask });
           this.push({ type: "BID_PRICE_CHANGED", timestamp: data.timestamp, bid: data.bid });
           this.push({ type: "PRICE_CHANGED", timestamp: data.timestamp, ask: data.ask, bid: data.bid });
