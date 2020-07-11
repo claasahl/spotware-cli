@@ -99,10 +99,9 @@ yargs
         period: {type: 'string', default: '15min'},
         symbol: {type: 'string', default: 'BTC/EUR'},
         inputs: {type: 'string', demandOption: true},
-        output: {type: 'string', demandOption: true},
-        simplified: {type: 'boolean', default: false}
+        output: {type: 'string', demandOption: true}
     }).array("inputs"),
-    ({output, inputs, simplified, range, period, symbol}) => oppurtunities(output, inputs, simplified, range, period, symbol)
+    ({output, inputs, range, period, symbol}) => oppurtunities(output, inputs, range, period, symbol)
 )
 .command(
     "csv", 
