@@ -128,22 +128,20 @@ export function generateOppurtunities(range: Range, offset: number = 0): Oppurtu
     const highBid = bid1.hl === "high" ? bid1 : (bid2.hl === "high" ? bid2 : undefined);
 
     // buy
-    if(lowBid && highBid && lowAsk) {
+    if(lowBid && highBid) {
         const lowThenHigh = lowBid.timestamp < highBid.timestamp;
-        const entryThenLow = lowAsk.timestamp <= lowBid.timestamp;
-        const profitable = lowAsk.ask < highBid.bid;
-        if(lowThenHigh && entryThenLow && profitable) {
-            oppurtinities.push({ orderType: "BUY", enter: lowAsk, high: highBid, low: lowBid })
+        const profitable = lowBid.ask < highBid.bid;
+        if(lowThenHigh && profitable) {
+            oppurtinities.push({ orderType: "BUY", enter: lowBid, high: highBid, low: lowBid })
         }
     }
 
     // sell
-    if(highAsk && lowAsk && highBid) {
+    if(highAsk && lowAsk) {
         const highThenLow = highAsk.timestamp < lowAsk.timestamp;
-        const entryThenHigh = highBid.timestamp <= highAsk.timestamp;
-        const profitable = highBid.bid > lowAsk.ask;
-        if(highThenLow && entryThenHigh && profitable) {
-            oppurtinities.push({ orderType: "SELL", enter: highBid, high: highAsk, low: lowAsk })
+        const profitable = highAsk.bid > lowAsk.ask;
+        if(highThenLow && profitable) {
+            oppurtinities.push({ orderType: "SELL", enter: highAsk, high: highAsk, low: lowAsk })
         }
     }
 
