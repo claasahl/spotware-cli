@@ -2,21 +2,16 @@ import { fromFiles } from "../services/local";
 import ms from "ms";
 import fs from "fs"
 import { finished } from "stream";
-import { AskPriceChangedEvent, BidPriceChangedEvent } from "../services/types";
+import { PriceChangedEvent } from "../services/types";
 import * as G from "../services/generic"
 import * as T from "../services/types"
 import { bullish, bearish } from "indicators"
 
-type Oppurtunity = {
-    orderType: "BUY",
-    enter: AskPriceChangedEvent,
-    high: BidPriceChangedEvent,
-    low: BidPriceChangedEvent
-} | {
-    orderType: "SELL",
-    enter: BidPriceChangedEvent,
-    high: AskPriceChangedEvent,
-    low: AskPriceChangedEvent
+export type Oppurtunity = {
+    orderType: "BUY" | "SELL",
+    enter: PriceChangedEvent,
+    high: PriceChangedEvent,
+    low: PriceChangedEvent
 }
 
 export type Range = {
@@ -28,14 +23,14 @@ export type Range = {
     toTimestamp: number,
     to: Date,
     ask: {
-        series: (AskPriceChangedEvent & { hl: "high" | "low", date: Date })[]
-        highs: (AskPriceChangedEvent & { date: Date })[]
-        lows: (AskPriceChangedEvent & { date: Date })[]
+        series: (PriceChangedEvent & { hl: "high" | "low", date: Date })[]
+        highs: (PriceChangedEvent & { date: Date })[]
+        lows: (PriceChangedEvent & { date: Date })[]
     },
     bid: {
-        series: (BidPriceChangedEvent & { hl: "high" | "low", date: Date })[]
-        highs: (BidPriceChangedEvent & { date: Date })[]
-        lows: (BidPriceChangedEvent & { date: Date })[]
+        series: (PriceChangedEvent & { hl: "high" | "low", date: Date })[]
+        highs: (PriceChangedEvent & { date: Date })[]
+        lows: (PriceChangedEvent & { date: Date })[]
     },
     oppurtunities: Oppurtunity[]
 }
@@ -74,7 +69,7 @@ function engulfed(candleA: T.TrendbarEvent, candleB: T.TrendbarEvent): boolean {
     );
 }
 
-function trackAskPrices(ranges: Range[], e: AskPriceChangedEvent) {
+function trackAskPrices(ranges: Range[], e: PriceChangedEvent) {
     for(let i = ranges.length-1; i >= 0; i--) {
         const range = ranges[i];
         if (e.timestamp >= range.fromTimestamp && e.timestamp < range.toTimestamp) {
@@ -97,7 +92,7 @@ function trackAskPrices(ranges: Range[], e: AskPriceChangedEvent) {
     }
 }
 
-function trackBidPrices(ranges: Range[], e: BidPriceChangedEvent) {
+function trackBidPrices(ranges: Range[], e: PriceChangedEvent) {
     for(let i = ranges.length-1; i >= 0; i--) {
         const range = ranges[i];
         if (e.timestamp >= range.fromTimestamp && e.timestamp < range.toTimestamp) {
@@ -217,9 +212,8 @@ export default async function main(output: string, inputs: string[], simplifiedF
         }
     });
     spots.on("data", e => {
-        if (e.type === "ASK_PRICE_CHANGED") {
+        if (e.type === "PRICE_CHANGED") {
             trackAskPrices(ranges, e);
-        } else if (e.type === "BID_PRICE_CHANGED") {
             trackBidPrices(ranges, e);
         }
     })

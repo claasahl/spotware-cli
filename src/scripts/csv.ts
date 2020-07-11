@@ -1,6 +1,5 @@
 import fs from "fs";
-import {Range} from "./oppurtunities"
-import { BidPriceChangedEvent, AskPriceChangedEvent } from "../services/types";
+import {Range, Oppurtunity} from "./oppurtunities"
 
 interface Flattened {
     tb0_open: number;
@@ -34,22 +33,38 @@ interface Flattened {
     rel_low: number;
 }
 
-function price(price: BidPriceChangedEvent | AskPriceChangedEvent): number {
-    if(price.type === "ASK_PRICE_CHANGED") {
-        return price.ask;
-    } else if(price.type === "BID_PRICE_CHANGED") {
-        return price.bid;
+function enterPrice(o: Oppurtunity): number {
+    if(o.orderType === "BUY") {
+        return o.enter.ask
+    } else if(o.orderType === "SELL") {
+        return o.enter.bid
     }
-    return 0
+    return 0;
+}
+function lowPrice(o: Oppurtunity): number {
+    if(o.orderType === "BUY") {
+        return o.low.bid
+    } else if(o.orderType === "SELL") {
+        return o.low.ask
+    }
+    return 0;
+}
+function highPrice(o: Oppurtunity): number {
+    if(o.orderType === "BUY") {
+        return o.high.bid
+    } else if(o.orderType === "SELL") {
+        return o.high.ask
+    }
+    return 0;
 }
 
 function flatten(r: Range): Flattened {
-    const opp0_enter = price(r.oppurtunities[0].enter)
-    const opp0_high = price(r.oppurtunities[0].high)
-    const opp0_low = price(r.oppurtunities[0].low)
-    const opp1_enter = price(r.oppurtunities[1].enter)
-    const opp1_high = price(r.oppurtunities[1].high)
-    const opp1_low = price(r.oppurtunities[1].low)
+    const opp0_enter = enterPrice(r.oppurtunities[0])
+    const opp0_high = highPrice(r.oppurtunities[0])
+    const opp0_low = lowPrice(r.oppurtunities[0])
+    const opp1_enter = enterPrice(r.oppurtunities[1])
+    const opp1_high = highPrice(r.oppurtunities[1])
+    const opp1_low = lowPrice(r.oppurtunities[1])
     const tb0_high = r.trendbars[0].high
     const tb0_range = Math.abs(tb0_high - r.trendbars[0].low)
     const tb1_range = Math.abs(r.trendbars[1].high - r.trendbars[1].low)
