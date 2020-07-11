@@ -117,10 +117,17 @@ function trackBidPrices(ranges: Range[], e: PriceChangedEvent) {
 
 export function generateOppurtunities(range: Range, offset: number = 0): Oppurtunity[] {
     const oppurtinities: Oppurtunity[] = []
-    const lowAsk = range.ask.lows[range.ask.lows.length - 1 - offset]
-    const highAsk = range.ask.highs[range.ask.highs.length - 1 - offset]
-    const lowBid = range.bid.lows[range.bid.lows.length - 1 - offset]
-    const highBid = range.bid.highs[range.bid.highs.length - 1 - offset]
+    const [ask1, ask2] = range.ask.series.slice(-2 * (offset + 1))
+    const [bid1, bid2] = range.bid.series.slice(-2 * (offset + 1))
+
+    // enough data?
+    if(!(ask1 && ask2 && bid1 && bid2)) {
+        return oppurtinities;
+    }
+    const lowAsk = ask1.hl === "low" ? ask1 : (ask2.hl === "low" ? ask2 : undefined);
+    const highAsk = ask1.hl === "high" ? ask1 : (ask2.hl === "high" ? ask2 : undefined);
+    const lowBid = bid1.hl === "low" ? bid1 : (bid2.hl === "low" ? bid2 : undefined);
+    const highBid = bid1.hl === "high" ? bid1 : (bid2.hl === "high" ? bid2 : undefined);
 
     // buy
     if(lowBid && highBid && lowAsk) {
