@@ -24,13 +24,13 @@ export type Range = {
     to: Date,
     ask: {
         series: (PriceChangedEvent & { hl: "high" | "low", date: Date })[]
-        highs: (PriceChangedEvent & { date: Date })[]
-        lows: (PriceChangedEvent & { date: Date })[]
+        high: (PriceChangedEvent & { date: Date })
+        low: (PriceChangedEvent & { date: Date })
     },
     bid: {
         series: (PriceChangedEvent & { hl: "high" | "low", date: Date })[]
-        highs: (PriceChangedEvent & { date: Date })[]
-        lows: (PriceChangedEvent & { date: Date })[]
+        high: (PriceChangedEvent & { date: Date })
+        low: (PriceChangedEvent & { date: Date })
     },
     oppurtunities: Oppurtunity[]
 }
@@ -46,13 +46,13 @@ function emptyRange(timestamp: T.Timestamp, id: string, tradeSide: T.TradeSide, 
         to: new Date(timestamp + range),
         ask: {
             series: [],
-            highs: [],
-            lows: []
+            high: {type: "PRICE_CHANGED",timestamp:0, date: new Date(0), ask: Number.MIN_VALUE, bid: Number.MIN_VALUE},
+            low: {type: "PRICE_CHANGED",timestamp:0, date: new Date(0), ask: Number.MAX_VALUE, bid: Number.MAX_VALUE},
         },
         bid: {
             series: [],
-            highs: [],
-            lows: []
+            high: {type: "PRICE_CHANGED",timestamp:0, date: new Date(0), ask: Number.MIN_VALUE, bid: Number.MIN_VALUE},
+            low: {type: "PRICE_CHANGED",timestamp:0, date: new Date(0), ask: Number.MAX_VALUE, bid: Number.MAX_VALUE},
         },
         oppurtunities: []
     }
@@ -73,19 +73,20 @@ function trackAskPrices(ranges: Range[], e: PriceChangedEvent) {
     for(let i = ranges.length-1; i >= 0; i--) {
         const range = ranges[i];
         if (e.timestamp >= range.fromTimestamp && e.timestamp < range.toTimestamp) {
-            if (range.ask.highs.length === 0 || range.ask.highs[range.ask.highs.length - 1].ask < e.ask) {
-                if (range.ask.series.length > 0 && range.ask.series[range.ask.series.length - 1].hl === "high") {
+            const [lastEntry] = range.ask.series.slice(-1)
+            if (range.ask.high.ask < e.ask) {
+                if (lastEntry && lastEntry.hl === "high") {
                     range.ask.series.pop()
                 }
                 range.ask.series.push({ ...e, hl: "high", date: new Date(e.timestamp) })
-                range.ask.highs.push({ ...e, date: new Date(e.timestamp) })
+                range.ask.high = { ...e, date: new Date(e.timestamp) }
             }
-            if (range.ask.lows.length === 0 || range.ask.lows[range.ask.lows.length - 1].ask > e.ask) {
-                if (range.ask.series.length > 0 && range.ask.series[range.ask.series.length - 1].hl === "low") {
+            if (range.ask.low.ask > e.ask) {
+                if (lastEntry && lastEntry.hl === "low") {
                     range.ask.series.pop()
                 }
                 range.ask.series.push({ ...e, hl: "low", date: new Date(e.timestamp) })
-                range.ask.lows.push({ ...e, date: new Date(e.timestamp) })
+                range.ask.low = { ...e, date: new Date(e.timestamp) }
             }
             break;
         }
@@ -96,19 +97,20 @@ function trackBidPrices(ranges: Range[], e: PriceChangedEvent) {
     for(let i = ranges.length-1; i >= 0; i--) {
         const range = ranges[i];
         if (e.timestamp >= range.fromTimestamp && e.timestamp < range.toTimestamp) {
-            if (range.bid.highs.length === 0 || range.bid.highs[range.bid.highs.length - 1].bid < e.bid) {
-                if (range.bid.series.length > 0 && range.bid.series[range.bid.series.length - 1].hl === "high") {
+            const [lastEntry] = range.bid.series.slice(-1)
+            if (range.bid.high.bid < e.bid) {
+                if (lastEntry && lastEntry.hl === "high") {
                     range.bid.series.pop()
                 }
                 range.bid.series.push({ ...e, hl: "high", date: new Date(e.timestamp) })
-                range.bid.highs.push({ ...e, date: new Date(e.timestamp) })
+                range.bid.high = { ...e, date: new Date(e.timestamp) }
             }
-            if (range.bid.lows.length === 0 || range.bid.lows[range.bid.lows.length - 1].bid > e.bid) {
-                if (range.bid.series.length > 0 && range.bid.series[range.bid.series.length - 1].hl === "low") {
+            if (range.bid.low.bid > e.bid) {
+                if (lastEntry && lastEntry.hl === "low") {
                     range.bid.series.pop()
                 }
                 range.bid.series.push({ ...e, hl: "low", date: new Date(e.timestamp) })
-                range.bid.lows.push({ ...e, date: new Date(e.timestamp) })
+                range.bid.low = { ...e, date: new Date(e.timestamp) }
             }
             break;
         }
