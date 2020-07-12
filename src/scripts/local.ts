@@ -13,7 +13,8 @@ export default function main(inputs: string[], currencyName: string = "EUR", sym
     const trendbars = account.trendbars({ symbol, period: ms("15min") })
     trendbars.on("data", e => {
         if(e.timestamp === 1593110700000) {
-            account.limitOrder({ id: "1", symbol, tradeSide: "BUY", volume: 0.01, enter: 8244.84, takeProfit: 8254.66, stopLoss: 8232.99}).resume();
+            // account.limitOrder({ id: "1", symbol, tradeSide: "BUY", volume: 0.01, enter: 8248.4, takeProfit: 8254.66, stopLoss: 8232.99}).resume();
+            account.stopOrder({ id: "1", symbol, tradeSide: "SELL", volume: 0.01, enter: 8251.16, takeProfit: 8244.84, stopLoss: 8271.78 + 0.01}).resume();
         }
     })
     setImmediate(() => {
