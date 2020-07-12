@@ -154,6 +154,12 @@ export function generateOppurtunities(range: Range): Oppurtunity[] {
 
 function outputDefaultFormat(ranges: Range[], output: string): void {
     const out = fs.createWriteStream(output)
+    for(const range of ranges) {
+        delete range.ask.high;
+        delete range.ask.low;
+        delete range.bid.high;
+        delete range.bid.low;
+    }
     out.write(JSON.stringify(ranges, null, 2))
     out.end();
 }
