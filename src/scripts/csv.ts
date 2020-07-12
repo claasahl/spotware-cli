@@ -15,18 +15,10 @@ interface Flattened {
     tb1_timestamp: number;
     tb1_range: number;
     
-    opp0_type: "BUY" | "SELL";
-    opp0_enter: number;
-    opp0_high: number;
-    opp0_low: number;
-    opp1_type: "BUY" | "SELL";
-    opp1_enter: number;
-    opp1_high: number;
-    opp1_low: number;
-
-    range_enter: number;
-    range_high: number;
-    range_low: number;
+    opp_type: "BUY" | "SELL";
+    opp_enter: number;
+    opp_high: number;
+    opp_low: number;
 
     rel_enter: number;
     rel_high: number;
@@ -58,13 +50,10 @@ function highPrice(o: Oppurtunity): number {
     return 0;
 }
 
-function flatten(r: Range): Flattened {
-    const opp0_enter = enterPrice(r.oppurtunities[0])
-    const opp0_high = highPrice(r.oppurtunities[0])
-    const opp0_low = lowPrice(r.oppurtunities[0])
-    const opp1_enter = enterPrice(r.oppurtunities[1])
-    const opp1_high = highPrice(r.oppurtunities[1])
-    const opp1_low = lowPrice(r.oppurtunities[1])
+function flatten(r: Range, opp: Oppurtunity): Flattened {
+    const opp_enter = enterPrice(opp)
+    const opp_high = highPrice(opp)
+    const opp_low = lowPrice(opp)
     const tb0_high = r.trendbars[0].high
     const tb0_range = Math.abs(tb0_high - r.trendbars[0].low)
     const tb1_range = Math.abs(r.trendbars[1].high - r.trendbars[1].low)
@@ -83,38 +72,32 @@ function flatten(r: Range): Flattened {
         tb1_timestamp:r.trendbars[1].timestamp,
         tb1_range,
         
-        opp0_type:r.oppurtunities[0].orderType,
-        opp0_enter,
-        opp0_high,
-        opp0_low,
-        opp1_type:r.oppurtunities[1].orderType,
-        opp1_enter,
-        opp1_high,
-        opp1_low,
+        opp_type:opp.orderType,
+        opp_enter,
+        opp_high,
+        opp_low,
 
-        range_enter: Math.abs(opp0_enter - opp1_enter),
-        range_high: Math.abs(opp0_high - opp1_high),
-        range_low: Math.abs(opp0_low - opp1_low),
-
-        rel_enter: (opp0_enter - tb0_high) / tb0_range,
-        rel_high: (opp0_high - tb0_high) / tb0_range,
-        rel_low: (opp0_low - tb0_high) / tb0_range,
+        rel_enter: (opp_enter - tb0_high) / tb0_range,
+        rel_high: (opp_high - tb0_high) / tb0_range,
+        rel_low: (opp_low - tb0_high) / tb0_range,
     }
 }
 
 function header(): string {
-    return "tb0_open;tb0_high;tb0_low;tb0_close;tb0_timestamp;tb0_range;tb1_open;tb1_high;tb1_low;tb1_close;tb1_timestamp;tb1_range;opp0_type;opp0_enter;opp0_high;opp0_low;opp1_type;opp1_enter;opp1_high;opp1_low;range_enter;range_high;range_low;rel_enter;rel_high;rel_low"
+    return "tb0_open;tb0_high;tb0_low;tb0_close;tb0_timestamp;tb0_range;tb1_open;tb1_high;tb1_low;tb1_close;tb1_timestamp;tb1_range;opp0_type;opp0_enter;opp0_high;opp0_low;rel_enter;rel_high;rel_low"
 }
 
 function row(r: Flattened): string {
-    return `${r.tb0_open};${r.tb0_high};${r.tb0_low};${r.tb0_close};${new Date(r.tb0_timestamp).toISOString()};${r.tb0_range};${r.tb1_open};${r.tb1_high};${r.tb1_low};${r.tb1_close};${new Date(r.tb1_timestamp).toISOString()};${r.tb1_range};${r.opp0_type};${r.opp0_enter};${r.opp0_high};${r.opp0_low};${r.opp1_type};${r.opp1_enter};${r.opp1_high};${r.opp1_low};${r.range_enter};${r.range_high};${r.range_low};${r.rel_enter};${r.rel_high};${r.rel_low};`
+    return `${r.tb0_open};${r.tb0_high};${r.tb0_low};${r.tb0_close};${new Date(r.tb0_timestamp).toISOString()};${r.tb0_range};${r.tb1_open};${r.tb1_high};${r.tb1_low};${r.tb1_close};${new Date(r.tb1_timestamp).toISOString()};${r.tb1_range};${r.opp_type};${r.opp_enter};${r.opp_high};${r.opp_low};${r.rel_enter};${r.rel_high};${r.rel_low};`
 }
 
 export default async function main(output: string, input: string) {
     const ranges = JSON.parse((await fs.promises.readFile(input)).toString()) as Range[];
-    const rows: string[] = ranges
-        .filter(r => r.oppurtunities.length === 2)
-        .map(r => flatten(r))
-        .map(r => row(r))
+    const rows: string[] = []
+    for(const range of ranges) {
+        for(const opp of range.oppurtunities) {
+            rows.push(row(flatten(range, opp)))
+        }
+    }
     await fs.promises.writeFile(output, [header(), ...rows].join("\n"))
 }
