@@ -12,6 +12,8 @@ export type Oppurtunity = {
     enter: PriceChangedEvent,
     high: PriceChangedEvent,
     low: PriceChangedEvent
+    a: PriceChangedEvent,
+    b: PriceChangedEvent,
 }
 
 export type Range = {
@@ -115,8 +117,8 @@ function trackBidPrices(ranges: Range[], e: PriceChangedEvent) {
 
 export function generateOppurtunities(range: Range, offset: number = 0): Oppurtunity[] {
     const oppurtinities: Oppurtunity[] = []
-    const [ask1, ask2] = range.ask.series.slice(-2 * (offset + 1))
-    const [bid1, bid2] = range.bid.series.slice(-2 * (offset + 1))
+    const [ask0, ask1, ask2] = range.ask.series.slice(-3 - offset)
+    const [bid0, bid1, bid2] = range.bid.series.slice(-3 - offset)
 
     // enough data?
     if(!(ask1 && ask2 && bid1 && bid2)) {
@@ -132,7 +134,7 @@ export function generateOppurtunities(range: Range, offset: number = 0): Oppurtu
         const lowThenHigh = lowBid.timestamp < highBid.timestamp;
         const profitable = lowBid.ask < highBid.bid;
         if(lowThenHigh && profitable) {
-            oppurtinities.push({ orderType: "BUY", enter: lowBid, high: highBid, low: lowBid })
+            oppurtinities.push({ orderType: "BUY", enter: lowBid, high: highBid, low: lowBid, a: highBid, b: bid0 })
         }
     }
 
@@ -141,7 +143,7 @@ export function generateOppurtunities(range: Range, offset: number = 0): Oppurtu
         const highThenLow = highAsk.timestamp < lowAsk.timestamp;
         const profitable = highAsk.bid > lowAsk.ask;
         if(highThenLow && profitable) {
-            oppurtinities.push({ orderType: "SELL", enter: highAsk, high: highAsk, low: lowAsk })
+            oppurtinities.push({ orderType: "SELL", enter: highAsk, high: highAsk, low: lowAsk, a: lowAsk, b: ask0 })
         }
     }
 
