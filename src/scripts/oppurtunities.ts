@@ -113,35 +113,39 @@ function trackBidPrices(ranges: Range[], e: PriceChangedEvent) {
     }
 }
 
-export function generateOppurtunities(range: Range, offset: number = 0): Oppurtunity[] {
+export function generateOppurtunities(range: Range): Oppurtunity[] {
     const oppurtinities: Oppurtunity[] = []
-    const [ask1, ask2] = range.ask.series.slice(-2 * (offset + 1))
-    const [bid1, bid2] = range.bid.series.slice(-2 * (offset + 1))
+    const askSeriesLen = range.ask.series.length - 1
+    const bidSeriesLen = range.bid.series.length - 1
+    const maxOffset = Math.min(askSeriesLen, bidSeriesLen);
+    for(let offset = 0; offset < maxOffset; offset++) {
+        const ask1 = range.ask.series[askSeriesLen - 1 - offset];
+        const ask2 = range.ask.series[askSeriesLen - offset];
+        const bid1 = range.bid.series[bidSeriesLen - 1 - offset];
+        const bid2 = range.bid.series[bidSeriesLen - offset];
 
-    // enough data?
-    if(!(ask1 && ask2 && bid1 && bid2)) {
-        return oppurtinities;
-    }
-    const lowAsk = ask1.hl === "low" ? ask1 : (ask2.hl === "low" ? ask2 : undefined);
-    const highAsk = ask1.hl === "high" ? ask1 : (ask2.hl === "high" ? ask2 : undefined);
-    const lowBid = bid1.hl === "low" ? bid1 : (bid2.hl === "low" ? bid2 : undefined);
-    const highBid = bid1.hl === "high" ? bid1 : (bid2.hl === "high" ? bid2 : undefined);
+        // preparations
+        const lowAsk = ask1.hl === "low" ? ask1 : (ask2.hl === "low" ? ask2 : undefined);
+        const highAsk = ask1.hl === "high" ? ask1 : (ask2.hl === "high" ? ask2 : undefined);
+        const lowBid = bid1.hl === "low" ? bid1 : (bid2.hl === "low" ? bid2 : undefined);
+        const highBid = bid1.hl === "high" ? bid1 : (bid2.hl === "high" ? bid2 : undefined);
 
-    // buy
-    if(lowBid && highBid) {
-        const lowThenHigh = lowBid.timestamp < highBid.timestamp;
-        const profitable = lowBid.ask < highBid.bid;
-        if(lowThenHigh && profitable) {
-            oppurtinities.push({ orderType: "BUY", enter: lowBid, high: highBid, low: lowBid })
+        // buy
+        if(lowBid && highBid) {
+            const lowThenHigh = lowBid.timestamp < highBid.timestamp;
+            const profitable = lowBid.ask < highBid.bid;
+            if(lowThenHigh && profitable) {
+                oppurtinities.push({ orderType: "BUY", enter: lowBid, high: highBid, low: lowBid })
+            }
         }
-    }
 
-    // sell
-    if(highAsk && lowAsk) {
-        const highThenLow = highAsk.timestamp < lowAsk.timestamp;
-        const profitable = highAsk.bid > lowAsk.ask;
-        if(highThenLow && profitable) {
-            oppurtinities.push({ orderType: "SELL", enter: highAsk, high: highAsk, low: lowAsk })
+        // sell
+        if(highAsk && lowAsk) {
+            const highThenLow = highAsk.timestamp < lowAsk.timestamp;
+            const profitable = highAsk.bid > lowAsk.ask;
+            if(highThenLow && profitable) {
+                oppurtinities.push({ orderType: "SELL", enter: highAsk, high: highAsk, low: lowAsk })
+            }
         }
     }
 
@@ -186,7 +190,7 @@ export default async function main(output: string, inputs: string[], range: stri
     })
     finished(spots, () => {
         for (const range of ranges) {
-            range.oppurtunities = [...generateOppurtunities(range,0), ...generateOppurtunities(range,1)];
+            range.oppurtunities = generateOppurtunities(range);
         }
         outputDefaultFormat(ranges, output);
     })
