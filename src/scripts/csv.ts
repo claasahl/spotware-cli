@@ -1,6 +1,10 @@
 import fs from "fs";
 import {Range, Oppurtunity} from "./oppurtunities"
 
+interface Bucket {
+    [bucket: string]: number
+}
+
 interface Flattened {
     tb0_open: number;
     tb0_high: number;
@@ -50,6 +54,18 @@ function highPrice(o: Oppurtunity): number {
     return 0;
 }
 
+function buckets(relativeHigh: number, relativeLow: number, bucketSize = 0.1): Bucket {
+    const bucket: Bucket = {}
+    const highestBucket = Math.floor(relativeHigh / bucketSize)
+    const lowestBucket = Math.floor(relativeLow / bucketSize)
+    for(let tmp = -3; tmp <= 3; tmp+=bucketSize) {
+        const key = `b${("00" + Math.round((tmp+3)*10)).slice(-2)}`
+        const value = lowestBucket <= tmp && (tmp+bucketSize) <= highestBucket ? 1 : 0
+        bucket[key] = value;
+    }
+    return bucket;
+}
+
 function flatten(r: Range, opp: Oppurtunity): Flattened {
     const opp_enter = enterPrice(opp)
     const opp_high = highPrice(opp)
@@ -84,11 +100,11 @@ function flatten(r: Range, opp: Oppurtunity): Flattened {
 }
 
 function header(): string {
-    return "tb0_open;tb0_high;tb0_low;tb0_close;tb0_timestamp;tb0_range;tb1_open;tb1_high;tb1_low;tb1_close;tb1_timestamp;tb1_range;opp0_type;opp0_enter;opp0_high;opp0_low;rel_enter;rel_high;rel_low"
+    return `tb0_open;tb0_high;tb0_low;tb0_close;tb0_timestamp;tb0_range;tb1_open;tb1_high;tb1_low;tb1_close;tb1_timestamp;tb1_range;opp0_type;opp0_enter;opp0_high;opp0_low;rel_enter;rel_high;rel_low;${Object.keys(buckets(0,0)).sort().join(";")}`
 }
 
-function row(r: Flattened): string {
-    return `${r.tb0_open};${r.tb0_high};${r.tb0_low};${r.tb0_close};${new Date(r.tb0_timestamp).toISOString()};${r.tb0_range};${r.tb1_open};${r.tb1_high};${r.tb1_low};${r.tb1_close};${new Date(r.tb1_timestamp).toISOString()};${r.tb1_range};${r.opp_type};${r.opp_enter};${r.opp_high};${r.opp_low};${r.rel_enter};${r.rel_high};${r.rel_low};`
+function row(r: Flattened, bucket: Bucket): string {
+    return `${r.tb0_open};${r.tb0_high};${r.tb0_low};${r.tb0_close};${new Date(r.tb0_timestamp).toISOString()};${r.tb0_range};${r.tb1_open};${r.tb1_high};${r.tb1_low};${r.tb1_close};${new Date(r.tb1_timestamp).toISOString()};${r.tb1_range};${r.opp_type};${r.opp_enter};${r.opp_high};${r.opp_low};${r.rel_enter};${r.rel_high};${r.rel_low};${Object.keys(bucket).sort().map(k => `${bucket[k]}`).join(";")}`
 }
 
 export default async function main(output: string, input: string) {
@@ -96,7 +112,9 @@ export default async function main(output: string, input: string) {
     const rows: string[] = []
     for(const range of ranges) {
         for(const opp of range.oppurtunities) {
-            rows.push(row(flatten(range, opp)))
+            const f = flatten(range, opp);
+            const b = buckets(f.rel_high, f.rel_low)
+            rows.push(row(f, b))
         }
     }
     await fs.promises.writeFile(output, [header(), ...rows].join("\n"))
