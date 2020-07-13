@@ -4,7 +4,7 @@ import ms from "ms";
 
 export default function main(inputs: string[], period: string, expiresIn: string, currencyName: string, symbolName: string) {
     const currency = Symbol.for(currencyName);
-    const initialBalance = 177.59;
+    const initialBalance = 1000;
     const symbol = Symbol.for(symbolName);
     const enterOffset = 0.1;
     const stopLossOffset = 0.4;
