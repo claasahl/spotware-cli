@@ -71,7 +71,7 @@ export class SpotwareClient extends EventEmitter {
                 }
             });
         }
-        const publisher: NodeJS.Timeout = setInterval(publish, 300);
+        const publisher: NodeJS.Timeout = setInterval(publish, 25);
         finished(this.socket, () => clearInterval(publisher));
     }
 
