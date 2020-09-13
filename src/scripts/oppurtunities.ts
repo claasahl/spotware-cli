@@ -152,7 +152,8 @@ export function generateOppurtunities(range: Range): Oppurtunity[] {
     return oppurtinities;
 }
 
-function outputDefaultFormat(ranges: Range[], output: string): void {
+type RangeWithOptionalData = (Omit<Range, "ask" | "bid"> & {ask: Partial<Range["ask"]>, bid: Partial<Range["bid"]>});
+function outputDefaultFormat(ranges: RangeWithOptionalData[], output: string): void {
     const out = fs.createWriteStream(output)
     for(const range of ranges) {
         delete range.ask.high;
