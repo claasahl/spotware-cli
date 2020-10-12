@@ -6,7 +6,8 @@
   "scripts": {
     "prepare": "tsc",
     "build": "tsc",
-    "start": "ts-node src/index.ts"
+    "client": "ts-node -r dotenv/config src/client/index.ts",
+    "server": "ts-node -r dotenv/config src/server/index.ts"
   },
   "repository": {
     "type": "git",
@@ -37,6 +38,7 @@
     "@claasahl/spotware-adapter": "^3.1.0",
     "@types/bytes": "^3.1.0",
     "bytes": "^3.1.0",
+    "dotenv": "^8.2.0",
     "uuid": "^8.3.1"
   }
 }
