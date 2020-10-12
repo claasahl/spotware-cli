@@ -14,6 +14,7 @@ export interface Symbol {
 }
 
 export interface SpotEvent {
+  ctidTraderAccountId: number;
   date: Date;
   symbolId: number;
   ask?: number;

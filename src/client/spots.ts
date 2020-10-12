@@ -1,5 +1,6 @@
-import { ProtoOAQuoteType } from "@claasahl/spotware-protobuf";
+import { ProtoOAQuoteType, ProtoOATickData } from "@claasahl/spotware-protobuf";
 import ms from "ms";
+import { v4 as uuid } from "uuid";
 import {
   SpotwareClientSocket,
   Messages,
@@ -9,68 +10,50 @@ import {
 import { Events, SpotEvent, Symbol } from "./events";
 
 const FACTOR = Math.pow(10, 5);
+const INTERVAL = ms("1min");
 
-export default class Spots {
+interface Interval {
+  from: number;
+  to: number;
+}
+function intervals(from: number, to: number): Interval[] {
+  const chunks: Interval[] = [{ from, to: Math.min(to, from + INTERVAL) }];
+  while (chunks[chunks.length - 1].to < to) {
+    const last = chunks[chunks.length - 1];
+    chunks.push({ from: last.to, to: Math.min(to, last.to + INTERVAL) });
+  }
+  return chunks;
+}
+
+interface Config {
+  ctidTraderAccountId: number;
+  symbolId: number;
+  type: ProtoOAQuoteType;
+  fromTimestamp: number;
+  toTimestamp: number;
+}
+class Historical {
   private stream;
   private events;
-  private toTimestamp;
-  private fromTimestamp;
-  private askClientMsgId = "4BD4794ECAFDAE137BADA498D6CCFB51";
-  private bidClientMsgId = "988DAC7C9E6EE91644787917EF2E27B9";
-  private shouldCache;
-  private asks: SpotEvent[];
-  private bids: SpotEvent[];
-  private spots: SpotEvent[];
+  private chunks;
+  private clientMsgId;
+  private type;
   readonly ctidTraderAccountId;
   readonly symbolId;
 
-  constructor(stream: SpotwareClientSocket, symbol: Symbol, events: Events) {
+  constructor(stream: SpotwareClientSocket, config: Config, events: Events) {
     this.stream = stream;
     this.events = events;
-    this.toTimestamp = Date.now();
-    this.fromTimestamp = this.toTimestamp - ms("1d");
-    this.shouldCache = true;
-    this.asks = [];
-    this.bids = [];
-    this.spots = [];
-    this.ctidTraderAccountId = symbol.ctidTraderAccountId;
-    this.symbolId = symbol.symbolId;
+    this.chunks = intervals(config.fromTimestamp, config.toTimestamp);
+    this.clientMsgId = uuid();
+    this.ctidTraderAccountId = config.ctidTraderAccountId;
+    this.symbolId = config.symbolId;
+    this.type = config.type;
+    this.stream.on("data", this.onMessage.bind(this));
   }
 
   onInit() {
-    const {
-      ctidTraderAccountId,
-      fromTimestamp,
-      toTimestamp,
-      askClientMsgId,
-    } = this;
-    this.stream.write(
-      FACTORY.PROTO_OA_SUBSCRIBE_SPOTS_REQ({
-        ctidTraderAccountId,
-        symbolId: [this.symbolId],
-      })
-    );
-    this.stream.write(
-      FACTORY.PROTO_OA_GET_TICKDATA_REQ(
-        {
-          ctidTraderAccountId,
-          symbolId: this.symbolId,
-          fromTimestamp,
-          toTimestamp,
-          type: ProtoOAQuoteType.ASK,
-        },
-        askClientMsgId
-      )
-    );
-    // this.stream.write(
-    //   FACTORY.PROTO_OA_GET_TICKDATA_REQ({
-    //     ctidTraderAccountId,
-    //     symbolId: this.symbolId,
-    //     fromTimestamp,
-    //     toTimestamp,
-    //     type: ProtoOAQuoteType.BID
-    //   }, bidClientMsgId)
-    // );
+    this.requestChunk();
   }
 
   onMessage(msg: Messages) {
@@ -81,68 +64,106 @@ export default class Spots {
           if (ctidTraderAccountId !== this.ctidTraderAccountId) {
             // skip other accounts
             break;
-          } else if (!this.shouldCache) {
-            // no more caching
-            break;
           }
-          if (msg.clientMsgId === this.askClientMsgId) {
-            this.asks.push(
-              ...tickData.map((t) => ({
-                date: new Date(t.timestamp),
-                symbolId: this.symbolId,
-                ask: t.tick / FACTOR,
-              }))
+          if (msg.clientMsgId === this.clientMsgId && hasMore) {
+            this.stream.destroy(
+              new Error("adjust interval size or implement this properly")
             );
-          } else if (msg.clientMsgId === this.bidClientMsgId) {
-            this.bids.push(
-              ...tickData.map((t) => ({
-                date: new Date(t.timestamp),
+          } else if (msg.clientMsgId === this.clientMsgId) {
+            const acc: ProtoOATickData = { timestamp: 0, tick: 0 };
+            const spots: SpotEvent[] = [];
+            for (const t of tickData) {
+              const price = (acc.tick + t.tick) / FACTOR;
+              const event = {
+                ctidTraderAccountId,
+                date: new Date(acc.timestamp + t.timestamp),
                 symbolId: this.symbolId,
-                bid: t.tick / FACTOR,
-              }))
-            );
-          }
+                ask: this.type === ProtoOAQuoteType.ASK ? price : undefined,
+                bid: this.type === ProtoOAQuoteType.BID ? price : undefined,
+              };
+              spots.push(event);
 
-          if (
-            hasMore &&
-            msg.clientMsgId === this.askClientMsgId &&
-            tickData.length > 0
-          ) {
-            const toTimestamp = tickData[0].timestamp;
-            this.stream.write(
-              FACTORY.PROTO_OA_GET_TICKDATA_REQ(
-                {
-                  ctidTraderAccountId,
-                  symbolId: this.symbolId,
-                  fromTimestamp: this.fromTimestamp,
-                  toTimestamp,
-                  type: ProtoOAQuoteType.ASK,
-                },
-                msg.clientMsgId
-              )
-            );
-          } else if (
-            hasMore &&
-            msg.clientMsgId === this.bidClientMsgId &&
-            tickData.length > 0
-          ) {
-            const toTimestamp = tickData[0].timestamp;
-            this.stream.write(
-              FACTORY.PROTO_OA_GET_TICKDATA_REQ(
-                {
-                  ctidTraderAccountId,
-                  symbolId: this.symbolId,
-                  fromTimestamp: this.fromTimestamp,
-                  toTimestamp,
-                  type: ProtoOAQuoteType.BID,
-                },
-                msg.clientMsgId
-              )
-            );
-          } else if (!hasMore) {
-            // done
-            console.log("skdf");
+              acc.timestamp += t.timestamp;
+              acc.tick += t.tick;
+            }
+            spots.reverse().forEach((event) => this.events.emit("spot", event));
+            this.requestChunk();
           }
+        }
+        break;
+    }
+  }
+
+  private requestChunk() {
+    const chunk = this.chunks.shift();
+    if (chunk) {
+      this.stream.write(
+        FACTORY.PROTO_OA_GET_TICKDATA_REQ(
+          {
+            ctidTraderAccountId: this.ctidTraderAccountId,
+            symbolId: this.symbolId,
+            fromTimestamp: chunk.from,
+            toTimestamp: chunk.to,
+            type: this.type,
+          },
+          this.clientMsgId
+        )
+      );
+    } else {
+      this.stream.off("data", this.onMessage.bind(this));
+    }
+  }
+}
+
+export default class Spots {
+  private stream;
+  private events;
+  private fromTimestamp;
+  private toTimestamp;
+  private historicalAsk;
+  private shouldCache;
+  private spots: SpotEvent[];
+  readonly ctidTraderAccountId;
+  readonly symbolId;
+
+  constructor(stream: SpotwareClientSocket, symbol: Symbol, events: Events) {
+    this.stream = stream;
+    this.events = events;
+    this.toTimestamp = Date.now();
+    this.fromTimestamp = this.toTimestamp - ms("2min");
+    this.historicalAsk = new Historical(
+      stream,
+      {
+        ctidTraderAccountId: symbol.ctidTraderAccountId,
+        symbolId: symbol.symbolId,
+        fromTimestamp: this.fromTimestamp,
+        toTimestamp: this.toTimestamp,
+        type: ProtoOAQuoteType.ASK,
+      },
+      events
+    );
+    this.shouldCache = true;
+    this.spots = [];
+    this.ctidTraderAccountId = symbol.ctidTraderAccountId;
+    this.symbolId = symbol.symbolId;
+  }
+
+  onInit() {
+    this.stream.write(
+      FACTORY.PROTO_OA_SUBSCRIBE_SPOTS_REQ({
+        ctidTraderAccountId: this.ctidTraderAccountId,
+        symbolId: [this.symbolId],
+      })
+    );
+    this.historicalAsk.onInit();
+  }
+
+  onMessage(msg: Messages) {
+    switch (msg.payloadType) {
+      case ProtoOAPayloadType.PROTO_OA_GET_TICKDATA_RES:
+        {
+          // consider emitting processed PROTO_OA_GET_TICKDATA_RES in Historical
+          // ... and here emitting spot prices
         }
         break;
       case ProtoOAPayloadType.PROTO_OA_SPOT_EVENT:
@@ -157,6 +178,7 @@ export default class Spots {
           }
 
           const event = {
+            ctidTraderAccountId: this.ctidTraderAccountId,
             date: new Date(),
             symbolId,
             ask: ask ? ask / FACTOR : undefined,
