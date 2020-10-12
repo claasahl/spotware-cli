@@ -6,7 +6,7 @@ import {
   ProtoOAAssetClass,
   ProtoOASymbolCategory,
   ProtoOALightSymbol,
-} from "..";
+} from "@claasahl/spotware-adapter";
 import { Events } from "./events";
 
 export default class Symbols {

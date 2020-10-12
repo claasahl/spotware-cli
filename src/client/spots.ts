@@ -5,7 +5,7 @@ import {
   Messages,
   ProtoOAPayloadType,
   FACTORY,
-} from "..";
+} from "@claasahl/spotware-adapter";
 import { Events, SpotEvent, Symbol } from "./events";
 
 const FACTOR = Math.pow(10, 5);

@@ -3,7 +3,7 @@ import {
   Messages,
   ProtoOAPayloadType,
   FACTORY,
-} from "..";
+} from "@claasahl/spotware-adapter";
 import { Events, Account } from "./events";
 
 interface Config {
