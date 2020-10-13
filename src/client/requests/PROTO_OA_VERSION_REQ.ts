@@ -34,9 +34,10 @@ function toError(message: ProtoErrorRes | ProtoOAErrorRes): Error {
   return new Error(parts.join(" "));
 }
 
-function version(
+export default function request(
   socket: SpotwareClientSocket,
   cb: (
+    // this does not work for all requests. the result for some requests might change over time (i.e. auth account... account can get "kicked" out)
     error: Error | undefined | null,
     response: ProtoOAVersionRes | undefined | null,
     request: ProtoOAVersionReq
