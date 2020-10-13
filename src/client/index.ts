@@ -1,8 +1,8 @@
 import { connect as tlsConnect } from "tls";
 import { connect as netConnect } from "net";
-import { SpotwareClientSocket, FACTORY } from "@claasahl/spotware-adapter";
+import { SpotwareClientSocket } from "@claasahl/spotware-adapter";
 
-import { request as PROTO_OA_VERSION_REQ } from "./requests/PROTO_OA_VERSION_REQ";
+import * as R from "./requests";
 import Accounts from "./accounts";
 import { Events } from "./events";
 import Spots from "./spots";
@@ -23,7 +23,7 @@ const socket = isLocalhost
   : tlsConnect(config.port, config.host);
 const event = isLocalhost ? "connect" : "secureConnect";
 const s = new SpotwareClientSocket(socket);
-socket.once(event, () => PROTO_OA_VERSION_REQ(s, {}, () => {}));
+socket.once(event, () => R.PROTO_OA_VERSION_REQ(s, {}, () => {}));
 
 const accounts = new Accounts(s, config, events);
 s.on("data", (msg) => accounts.onMessage(msg));
