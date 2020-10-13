@@ -6,33 +6,16 @@ import {
   ProtoOAPayloadType,
   ProtoOAVersionReq,
   ProtoOAVersionRes,
-  ProtoErrorRes,
-  ProtoOAErrorRes,
 } from "@claasahl/spotware-adapter";
 import { v4 as uuid } from "uuid";
+
+import { error } from "./utils";
 
 // version
 
 // auth app
 // lookup accounts by access token (refresh token if needed)
 // initial account.ts for each account
-
-function toError(message: ProtoErrorRes | ProtoOAErrorRes): Error {
-  const parts: string[] = [];
-  if (message.description) {
-    parts.push(`${message.errorCode}: ${message.description}`);
-  } else {
-    parts.push(message.errorCode);
-  }
-  if (message.maintenanceEndTimestamp) {
-    const date = new Date(message.maintenanceEndTimestamp);
-    parts.push(`(end of maintenance: ${date.toISOString()})`);
-  }
-  if ("ctidTraderAccountId" in message && message.ctidTraderAccountId) {
-    parts.push(`(account: ${message.ctidTraderAccountId})`);
-  }
-  return new Error(parts.join(" "));
-}
 
 export default function request(
   socket: SpotwareClientSocket,
@@ -56,10 +39,10 @@ export default function request(
         cb(null, message.payload, request);
         break;
       case ProtoPayloadType.ERROR_RES:
-        cb(toError(message.payload), null, request);
+        cb(error(message.payload), null, request);
         break;
       case ProtoOAPayloadType.PROTO_OA_ERROR_RES:
-        cb(toError(message.payload), null, request);
+        cb(error(message.payload), null, request);
         break;
     }
   };
