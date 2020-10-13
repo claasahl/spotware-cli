@@ -17,7 +17,7 @@ import { error } from "./utils";
 // lookup accounts by access token (refresh token if needed)
 // initial account.ts for each account
 
-export default function request(
+export function request(
   socket: SpotwareClientSocket,
   request: PROTO_OA_VERSION_REQ["payload"],
   cb: (

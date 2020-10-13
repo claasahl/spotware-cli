@@ -11,7 +11,7 @@ import { v4 as uuid } from "uuid";
 
 import { error } from "./utils";
 
-export default function request(
+export function request(
   socket: SpotwareClientSocket,
   request: PROTO_OA_GET_TICKDATA_REQ["payload"],
   cb: (
