@@ -4,8 +4,8 @@ import {
   Messages,
   ProtoPayloadType,
   ProtoOAPayloadType,
-  ProtoOAVersionReq,
-  ProtoOAVersionRes,
+  PROTO_OA_VERSION_RES,
+  PROTO_OA_VERSION_REQ,
 } from "@claasahl/spotware-adapter";
 import { v4 as uuid } from "uuid";
 
@@ -19,15 +19,15 @@ import { error } from "./utils";
 
 export default function request(
   socket: SpotwareClientSocket,
+  request: PROTO_OA_VERSION_REQ["payload"],
   cb: (
     // this does not work for all requests. the result for some requests might change over time (i.e. auth account... account can get "kicked" out)
     error: Error | undefined | null,
-    response: ProtoOAVersionRes | undefined | null,
-    request: ProtoOAVersionReq
+    response: PROTO_OA_VERSION_RES["payload"] | undefined | null,
+    request: PROTO_OA_VERSION_REQ["payload"]
   ) => void
 ) {
   const clientMsgId = uuid();
-  const request: ProtoOAVersionReq = {};
   socket.write(FACTORY.PROTO_OA_VERSION_REQ(request, clientMsgId));
   const listener = (message: Messages) => {
     if (message.clientMsgId !== clientMsgId) {
@@ -43,6 +43,9 @@ export default function request(
         break;
       case ProtoOAPayloadType.PROTO_OA_ERROR_RES:
         cb(error(message.payload), null, request);
+        break;
+      default:
+        cb(new Error(), null, request);
         break;
     }
   };
