@@ -1,6 +1,10 @@
 import { connect as tlsConnect } from "tls";
 import { connect as netConnect } from "net";
-import { SpotwareClientSocket } from "@claasahl/spotware-adapter";
+import {
+  ProtoOAAssetClass,
+  ProtoOASymbolCategory,
+  SpotwareClientSocket,
+} from "@claasahl/spotware-adapter";
 
 import * as R from "./requests";
 import * as M from "./macros";
@@ -39,7 +43,34 @@ events.on("account", async (account) => {
     return;
   }
   const { ctidTraderAccountId } = account;
-  await M.symbols(s, { ctidTraderAccountId });
+  const result = await M.symbols(s, { ctidTraderAccountId });
+  const classes = new Map<number, ProtoOAAssetClass>();
+  result.classes.forEach((c) => {
+    if (c.id) {
+      classes.set(c.id, c);
+    }
+  });
+  const categories = new Map<number, ProtoOASymbolCategory>();
+  result.categories.forEach((c) => categories.set(c.id, c));
+  for (const symbol of result.symbols) {
+    if (!symbol.symbolCategoryId) {
+      continue;
+    }
+    const category = categories.get(symbol.symbolCategoryId);
+    if (!category?.assetClassId) {
+      continue;
+    }
+    const clazz = classes.get(category.assetClassId);
+    if (!clazz?.name) {
+      continue;
+    }
+    events.emit("symbol", {
+      ctidTraderAccountId,
+      symbolId: symbol.symbolId,
+      symbolName: symbol.symbolName || "",
+      assetClass: clazz.name,
+    });
+  }
 });
 
 const ASSET_CLASSES = ["Forex", "Metals", "Crypto Currency"];
