@@ -3,7 +3,6 @@ import {
   ProtoOAPayloadType,
   PROTO_OA_VERSION_REQ,
   PROTO_OA_VERSION_RES,
-  SpotwareClientSocket,
 } from "@claasahl/spotware-adapter";
 
 import { behest } from "./utils";
