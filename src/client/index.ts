@@ -1,15 +1,11 @@
 import { connect as tlsConnect } from "tls";
 import { connect as netConnect } from "net";
-import {
-  ProtoOATrader,
-  SpotwareClientSocket,
-} from "@claasahl/spotware-adapter";
+import { SpotwareClientSocket } from "@claasahl/spotware-adapter";
 
 import * as R from "./requests";
 import * as M from "./macros";
 import { Events } from "./events";
 import Spots from "./spots";
-import Symbols from "./symbols";
 
 const config = {
   host: process.env.SPOTWARE__HOST || "live.ctraderapi.com",
@@ -38,13 +34,12 @@ socket.once(event, async () => {
   }
 });
 
-events.on("account", (account) => {
+events.on("account", async (account) => {
   if (!account.authenticated || !account.depositAssetId) {
     return;
   }
-  const symbols = new Symbols(s, account.ctidTraderAccountId, events);
-  s.on("data", (msg) => symbols.onMessage(msg));
-  symbols.onInit();
+  const { ctidTraderAccountId } = account;
+  await M.symbols(s, { ctidTraderAccountId });
 });
 
 const ASSET_CLASSES = ["Forex", "Metals", "Crypto Currency"];
