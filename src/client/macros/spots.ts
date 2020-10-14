@@ -5,6 +5,7 @@ import {
 } from "@claasahl/spotware-adapter";
 import ms from "ms";
 
+import { SpotEvent } from "../events";
 import * as R from "../requests";
 
 const FACTOR = Math.pow(10, 5);
@@ -35,6 +36,53 @@ function inflate(tickData: ProtoOATickData[]): ProtoOATickData[] {
       tick: acc.tick / FACTOR,
     });
   }
+  return spots.reverse();
+}
+
+function merge(
+  deflatedAskTicks: ProtoOATickData[],
+  deflatedBidTicks: ProtoOATickData[]
+) {
+  const asks = inflate(deflatedAskTicks);
+  const bids = inflate(deflatedBidTicks);
+  const spots: Omit<SpotEvent, "ctidTraderAccountId" | "symbolId">[] = [];
+  while (asks.length > 0 || bids.length > 0) {
+    if (asks.length > 0 && bids.length > 0) {
+      if (asks[0].timestamp === bids[0].timestamp) {
+        spots.push({
+          date: new Date(asks[0].timestamp),
+          ask: asks[0].tick,
+          bid: bids[0].tick,
+        });
+        asks.shift();
+        bids.shift();
+      } else if (asks[0].timestamp < bids[0].timestamp) {
+        spots.push({
+          date: new Date(asks[0].timestamp),
+          ask: asks[0].tick,
+        });
+        asks.shift();
+      } else if (asks[0].timestamp > bids[0].timestamp) {
+        spots.push({
+          date: new Date(bids[0].timestamp),
+          bid: bids[0].tick,
+        });
+        bids.shift();
+      }
+    } else if (asks.length > 0) {
+      spots.push({
+        date: new Date(asks[0].timestamp),
+        ask: asks[0].tick,
+      });
+      asks.shift();
+    } else if (bids.length > 0) {
+      spots.push({
+        date: new Date(bids[0].timestamp),
+        bid: bids[0].tick,
+      });
+      bids.shift();
+    }
+  }
   return spots;
 }
 
@@ -63,9 +111,7 @@ async function loadInterval(
   if (asks.hasMore || bids.hasMore) {
     throw new Error("interval size too small");
   }
-  const askTicks = inflate(asks.tickData);
-  const bidTicks = inflate(bids.tickData);
-  console.log(askTicks.length, bidTicks.length);
+  return merge(asks.tickData, bids.tickData);
 }
 
 export interface Options {
@@ -77,15 +123,23 @@ export interface Options {
 export async function macro(
   socket: SpotwareClientSocket,
   options: Options
-): Promise<void> {
+): Promise<SpotEvent[]> {
   const { ctidTraderAccountId, symbolId } = options;
   const toTimestamp = Date.now();
   const fromTimestamp = toTimestamp - ms(options.loadThisMuchHistoricalData);
+  const spots: SpotEvent[] = [];
   for (const interval of intervals(fromTimestamp, toTimestamp)) {
-    await loadInterval(socket, ctidTraderAccountId, symbolId, interval);
+    const chunk = await loadInterval(
+      socket,
+      ctidTraderAccountId,
+      symbolId,
+      interval
+    );
+    chunk.forEach((c) => spots.push({ ctidTraderAccountId, symbolId, ...c }));
   }
   await R.PROTO_OA_SUBSCRIBE_SPOTS_REQ(socket, {
     ctidTraderAccountId,
     symbolId: [symbolId],
   });
+  return spots;
 }
