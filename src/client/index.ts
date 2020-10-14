@@ -23,7 +23,7 @@ const socket = isLocalhost
   : tlsConnect(config.port, config.host);
 const event = isLocalhost ? "connect" : "secureConnect";
 const s = new SpotwareClientSocket(socket);
-socket.once(event, () => R.PROTO_OA_VERSION_REQ(s, {}, () => {}));
+socket.once(event, () => R.PROTO_OA_VERSION_REQ(s, {}));
 
 const accounts = new Accounts(s, config, events);
 s.on("data", (msg) => accounts.onMessage(msg));

@@ -30,42 +30,39 @@ export function error(
 
 export type BEHEST<REQ extends Messages, RES extends Messages> = (
   socket: SpotwareClientSocket,
-  request: REQ["payload"],
-  cb: (
-    error: Error | undefined | null,
-    response: RES["payload"] | undefined | null,
-    request: REQ["payload"]
-  ) => void
-) => void;
+  request: REQ["payload"]
+) => Promise<RES["payload"]>;
 
 export function behest<REQ extends Messages, RES extends Messages>(
   builder: (payload: REQ["payload"], clientMsgId?: string) => REQ,
   _requestType: REQ["payloadType"],
   responseType: RES["payloadType"]
 ): BEHEST<REQ, RES> {
-  return (socket, request, cb) => {
-    const clientMsgId = uuid();
-    socket.write(builder(request, clientMsgId));
-    const listener = (message: Messages) => {
-      if (message.clientMsgId !== clientMsgId) {
-        return;
-      }
-      socket.off("data", listener);
-      switch (message.payloadType) {
-        case responseType:
-          cb(null, message.payload, request);
-          break;
-        case ProtoPayloadType.ERROR_RES:
-          cb(error(message.payload), null, request);
-          break;
-        case ProtoOAPayloadType.PROTO_OA_ERROR_RES:
-          cb(error(message.payload), null, request);
-          break;
-        default:
-          cb(new Error(), null, request);
-          break;
-      }
-    };
-    socket.on("data", listener);
+  return (socket, request) => {
+    return new Promise<RES["payload"]>((resolve, reject) => {
+      const clientMsgId = uuid();
+      socket.write(builder(request, clientMsgId));
+      const listener = (message: Messages) => {
+        if (message.clientMsgId !== clientMsgId) {
+          return;
+        }
+        socket.off("data", listener);
+        switch (message.payloadType) {
+          case responseType:
+            resolve(message.payload);
+            break;
+          case ProtoPayloadType.ERROR_RES:
+            reject(error(message.payload));
+            break;
+          case ProtoOAPayloadType.PROTO_OA_ERROR_RES:
+            reject(error(message.payload));
+            break;
+          default:
+            reject(new Error());
+            break;
+        }
+      };
+      socket.on("data", listener);
+    });
   };
 }
