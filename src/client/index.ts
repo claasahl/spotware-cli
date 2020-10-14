@@ -9,7 +9,6 @@ import {
 import * as R from "./requests";
 import * as M from "./macros";
 import { Events } from "./events";
-import Spots from "./spots";
 
 const config = {
   host: process.env.SPOTWARE__HOST || "live.ctraderapi.com",
@@ -74,15 +73,17 @@ events.on("account", async (account) => {
 });
 
 const ASSET_CLASSES = ["Forex", "Metals", "Crypto Currency"];
-events.on("symbol", (symbol) => {
+events.on("symbol", async (symbol) => {
   if (!ASSET_CLASSES.includes(symbol.assetClass)) {
     return;
   }
   console.log(symbol.symbolId, symbol.symbolName);
   if (symbol.symbolName === "BTC/EUR") {
-    const spots = new Spots(s, symbol, events);
-    s.on("data", (msg) => spots.onMessage(msg));
-    spots.onInit();
+    await M.spots(s, {
+      ctidTraderAccountId: symbol.ctidTraderAccountId,
+      loadThisMuchHistoricalData: "3min",
+      symbolId: symbol.symbolId,
+    });
   }
 });
 
