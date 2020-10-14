@@ -3,6 +3,7 @@ import {
   SpotwareClientSocket,
 } from "@claasahl/spotware-adapter";
 
+import { macro as authenticateAccount } from "./authenticateAccount";
 import * as R from "../requests";
 
 export interface Options {
@@ -21,15 +22,8 @@ export async function macro(
     accessToken,
   });
   return Promise.all(
-    accounts.ctidTraderAccount.map(async ({ ctidTraderAccountId }) => {
-      await R.PROTO_OA_ACCOUNT_AUTH_REQ(socket, {
-        accessToken,
-        ctidTraderAccountId,
-      });
-      const { trader } = await R.PROTO_OA_TRADER_REQ(socket, {
-        ctidTraderAccountId,
-      });
-      return trader;
+    accounts.ctidTraderAccount.map(({ ctidTraderAccountId }) => {
+      return authenticateAccount(socket, { accessToken, ctidTraderAccountId });
     })
   );
 }
