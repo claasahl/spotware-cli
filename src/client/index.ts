@@ -1,9 +1,12 @@
 import { connect as tlsConnect } from "tls";
 import { connect as netConnect } from "net";
-import { SpotwareClientSocket } from "@claasahl/spotware-adapter";
+import {
+  ProtoOATrader,
+  SpotwareClientSocket,
+} from "@claasahl/spotware-adapter";
 
 import * as R from "./requests";
-import Accounts from "./accounts";
+import * as M from "./macros";
 import { Events } from "./events";
 import Spots from "./spots";
 import Symbols from "./symbols";
@@ -23,11 +26,17 @@ const socket = isLocalhost
   : tlsConnect(config.port, config.host);
 const event = isLocalhost ? "connect" : "secureConnect";
 const s = new SpotwareClientSocket(socket);
-socket.once(event, () => R.PROTO_OA_VERSION_REQ(s, {}));
-
-const accounts = new Accounts(s, config, events);
-s.on("data", (msg) => accounts.onMessage(msg));
-socket.once(event, () => accounts.onInit());
+socket.once(event, async () => R.PROTO_OA_VERSION_REQ(s, {}));
+socket.once(event, async () => {
+  const traders = await M.authenticate(s, config);
+  for (const trader of traders) {
+    events.emit("account", {
+      ctidTraderAccountId: trader.ctidTraderAccountId,
+      authenticated: true,
+      depositAssetId: trader.depositAssetId,
+    });
+  }
+});
 
 events.on("account", (account) => {
   if (!account.authenticated || !account.depositAssetId) {
