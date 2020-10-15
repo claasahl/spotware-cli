@@ -1,10 +1,6 @@
 import { connect as tlsConnect } from "tls";
 import { connect as netConnect } from "net";
-import {
-  ProtoOAAssetClass,
-  ProtoOASymbolCategory,
-  SpotwareClientSocket,
-} from "@claasahl/spotware-adapter";
+import { SpotwareClientSocket } from "@claasahl/spotware-adapter";
 
 import * as R from "./requests";
 import * as M from "./macros";
@@ -28,14 +24,7 @@ const s = new SpotwareClientSocket(socket);
 socket.once(event, async () => R.PROTO_OA_VERSION_REQ(s, {}));
 socket.once(event, async () => {
   const traders = await M.authenticate(s, config);
-  // make the following a macro
-  for (const trader of traders) {
-    events.emit("account", {
-      ctidTraderAccountId: trader.ctidTraderAccountId,
-      authenticated: true,
-      depositAssetId: trader.depositAssetId,
-    });
-  }
+  await M.emitAccounts({ events, traders });
 });
 
 events.on("account", async (account) => {
@@ -44,34 +33,7 @@ events.on("account", async (account) => {
   }
   const { ctidTraderAccountId } = account;
   const result = await M.symbols(s, { ctidTraderAccountId });
-  // make the following a macro
-  const classes = new Map<number, ProtoOAAssetClass>();
-  result.classes.forEach((c) => {
-    if (c.id) {
-      classes.set(c.id, c);
-    }
-  });
-  const categories = new Map<number, ProtoOASymbolCategory>();
-  result.categories.forEach((c) => categories.set(c.id, c));
-  for (const symbol of result.symbols) {
-    if (!symbol.symbolCategoryId) {
-      continue;
-    }
-    const category = categories.get(symbol.symbolCategoryId);
-    if (!category?.assetClassId) {
-      continue;
-    }
-    const clazz = classes.get(category.assetClassId);
-    if (!clazz?.name) {
-      continue;
-    }
-    events.emit("symbol", {
-      ctidTraderAccountId,
-      symbolId: symbol.symbolId,
-      symbolName: symbol.symbolName || "",
-      assetClass: clazz.name,
-    });
-  }
+  await M.emitSymbols({ ...result, events, ctidTraderAccountId });
 });
 
 const ASSET_CLASSES = ["Forex", "Metals", "Crypto Currency"];
@@ -81,12 +43,12 @@ events.on("symbol", async (symbol) => {
   }
   console.log(symbol.symbolId, symbol.symbolName);
   if (symbol.symbolName === "BTC/EUR") {
-    const result = await M.spots(s, {
+    const spots = await M.spots(s, {
       ctidTraderAccountId: symbol.ctidTraderAccountId,
       loadThisMuchHistoricalData: "3min",
       symbolId: symbol.symbolId,
     });
-    result.forEach((e) => events.emit("spot", e));
+    await M.emitSpots({ events, spots });
   }
 });
 
