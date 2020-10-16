@@ -30,18 +30,20 @@ const socket = isLocalhost
 const event = isLocalhost ? "connect" : "secureConnect";
 const s = new CustomSpotwareSocket(new SpotwareClientSocket(socket));
 socket.once(event, async () => R.PROTO_OA_VERSION_REQ(s, {}));
-socket.once(event, async () => {
-  const traders = await M.authenticate(s, config);
-  await M.emitAccounts({ events, traders });
-});
+socket.once(event, async () => M.authenticate(s, config));
 
-events.on("account", async (account) => {
-  if (!account.authenticated || !account.depositAssetId) {
-    return;
+s.on("data", async (msg) => {
+  switch (msg.payloadType) {
+    case CustomPayloadType.ACCOUNT:
+      const account = msg.payload;
+      if (!account.authenticated || !account.depositAssetId) {
+        return;
+      }
+      const { ctidTraderAccountId } = account;
+      const result = await M.symbols(s, { ctidTraderAccountId });
+      await M.emitSymbols({ ...result, events, ctidTraderAccountId });
+      break;
   }
-  const { ctidTraderAccountId } = account;
-  const result = await M.symbols(s, { ctidTraderAccountId });
-  await M.emitSymbols({ ...result, events, ctidTraderAccountId });
 });
 
 const ASSET_CLASSES = ["Forex", "Metals", "Crypto Currency"];
@@ -68,20 +70,6 @@ events.on("symbol", async (symbol) => {
 
 events.on("spot", (spot) => {
   console.log(spot);
-});
-
-s.on("data", (msg) => {
-  switch (msg.payloadType) {
-    case CustomPayloadType.A:
-      console.log(msg.payload);
-      break;
-    case CustomPayloadType.B:
-      console.log(msg.payload);
-      break;
-    case ProtoPayloadType.ERROR_RES:
-      console.log(msg.payload);
-      break;
-  }
 });
 
 // "break out" separate stream that focuses on (highlevel) application (ideally both read and write)

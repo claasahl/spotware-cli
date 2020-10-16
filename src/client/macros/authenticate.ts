@@ -2,7 +2,10 @@ import { ProtoOATrader } from "@claasahl/spotware-adapter";
 
 import { macro as authenticateAccount } from "./authenticateAccount";
 import * as R from "../requests";
-import { CustomSpotwareSocket } from "../CustomSpotwareSocket";
+import {
+  CustomPayloadType,
+  CustomSpotwareSocket,
+} from "../CustomSpotwareSocket";
 
 export interface Options {
   clientId: string;
@@ -19,9 +22,20 @@ export async function macro(
   const accounts = await R.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ(socket, {
     accessToken,
   });
-  return Promise.all(
+  const traders = await Promise.all(
     accounts.ctidTraderAccount.map(({ ctidTraderAccountId }) => {
       return authenticateAccount(socket, { accessToken, ctidTraderAccountId });
     })
   );
+  traders.forEach((trader) =>
+    socket.emit("data", {
+      payloadType: CustomPayloadType.ACCOUNT,
+      payload: {
+        ctidTraderAccountId: trader.ctidTraderAccountId,
+        authenticated: true,
+        depositAssetId: trader.depositAssetId,
+      },
+    })
+  );
+  return traders;
 }

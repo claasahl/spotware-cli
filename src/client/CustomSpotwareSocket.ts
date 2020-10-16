@@ -1,6 +1,7 @@
 import { Messages } from "@claasahl/spotware-adapter";
 import { Duplex, Readable, DuplexOptions } from "stream";
 import debug from "debug";
+import { Account } from "./events";
 
 const spotware = debug("spotware");
 const input = spotware.extend("input");
@@ -51,6 +52,7 @@ export function logOutput(msg: CustomMessages) {
 export enum CustomPayloadType {
   A = 10000,
   B = 10001,
+  ACCOUNT = 10002,
 }
 export interface CustomMessage<P, T extends CustomPayloadType> {
   payloadType: T;
@@ -59,8 +61,9 @@ export interface CustomMessage<P, T extends CustomPayloadType> {
 
 export type MsgA = CustomMessage<{ a: string }, CustomPayloadType.A>;
 export type MsgB = CustomMessage<{ b: number }, CustomPayloadType.B>;
+export type MsgAccount = CustomMessage<Account, CustomPayloadType.ACCOUNT>;
 
-export type CustomMessages = Messages | MsgA | MsgB;
+export type CustomMessages = Messages | MsgA | MsgB | MsgAccount;
 
 export declare interface CustomSpotwareSocket extends Duplex {
   addListener(event: "close", listener: () => void): this;
