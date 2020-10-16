@@ -35,6 +35,8 @@ socket.once(event, async () => M.authenticate(s, config));
 s.on("data", async (msg) => {
   switch (msg.payloadType) {
     case CustomPayloadType.ACCOUNT:
+      // ... not so much different than emitting stuff on a separate EventEmitter
+      // maybe backpressure... probably not even that since we are directly emitting the event (without regard for the mode in which the stream is)
       const account = msg.payload;
       if (!account.authenticated || !account.depositAssetId) {
         return;
@@ -84,3 +86,6 @@ events.on("spot", (spot) => {
 
 // prepare list of relevant messages for each of the above streams
 // ... alternatively, consider wrapping spotware stream in another Duplex stream which transforms spotware events into a more digestable format
+// ... or a Transform stream which transforms live trendbars into sensible trendbars
+
+// we want all custom events to be emitted on the same stream (i.e. global ordering / no stream merging)
