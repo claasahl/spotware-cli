@@ -117,7 +117,7 @@ async function loadInterval(
 export interface Options {
   ctidTraderAccountId: number;
   symbolId: number;
-  loadThisMuchHistoricalData: string;
+  loadThisMuchHistoricalData?: string;
 }
 
 export async function macro(
@@ -125,17 +125,19 @@ export async function macro(
   options: Options
 ): Promise<SpotEvent[]> {
   const { ctidTraderAccountId, symbolId } = options;
-  const toTimestamp = Date.now();
-  const fromTimestamp = toTimestamp - ms(options.loadThisMuchHistoricalData);
   const spots: SpotEvent[] = [];
-  for (const interval of intervals(fromTimestamp, toTimestamp)) {
-    const chunk = await loadInterval(
-      socket,
-      ctidTraderAccountId,
-      symbolId,
-      interval
-    );
-    chunk.forEach((c) => spots.push({ ctidTraderAccountId, symbolId, ...c }));
+  if (options.loadThisMuchHistoricalData) {
+    const toTimestamp = Date.now();
+    const fromTimestamp = toTimestamp - ms(options.loadThisMuchHistoricalData);
+    for (const interval of intervals(fromTimestamp, toTimestamp)) {
+      const chunk = await loadInterval(
+        socket,
+        ctidTraderAccountId,
+        symbolId,
+        interval
+      );
+      chunk.forEach((c) => spots.push({ ctidTraderAccountId, symbolId, ...c }));
+    }
   }
   await R.PROTO_OA_SUBSCRIBE_SPOTS_REQ(socket, {
     ctidTraderAccountId,
