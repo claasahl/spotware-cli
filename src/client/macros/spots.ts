@@ -1,9 +1,12 @@
-import { ProtoOAQuoteType, ProtoOATickData } from "@claasahl/spotware-adapter";
+import {
+  SpotwareClientSocket,
+  ProtoOAQuoteType,
+  ProtoOATickData,
+} from "@claasahl/spotware-adapter";
 import ms from "ms";
 
 import { SpotEvent } from "../events";
 import * as R from "../requests";
-import { CustomSpotwareSocket } from "../CustomSpotwareSocket";
 
 const FACTOR = Math.pow(10, 5);
 const INTERVAL = ms("1min");
@@ -84,7 +87,7 @@ function merge(
 }
 
 async function loadInterval(
-  socket: CustomSpotwareSocket,
+  socket: SpotwareClientSocket,
   ctidTraderAccountId: number,
   symbolId: number,
   interval: Interval
@@ -118,7 +121,7 @@ export interface Options {
 }
 
 export async function macro(
-  socket: CustomSpotwareSocket,
+  socket: SpotwareClientSocket,
   options: Options
 ): Promise<SpotEvent[]> {
   const { ctidTraderAccountId, symbolId } = options;

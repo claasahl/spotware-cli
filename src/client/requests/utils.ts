@@ -8,8 +8,6 @@ import {
 } from "@claasahl/spotware-adapter";
 import { v4 as uuid } from "uuid";
 
-import { CustomSpotwareSocket } from "../CustomSpotwareSocket";
-
 export function error(
   message: PROTO_OA_ERROR_RES["payload"] | ERROR_RES["payload"]
 ): Error {
@@ -30,7 +28,7 @@ export function error(
 }
 
 export type BEHEST<REQ extends Messages, RES extends Messages> = (
-  socket: CustomSpotwareSocket,
+  socket: SpotwareClientSocket,
   request: REQ["payload"]
 ) => Promise<RES["payload"]>;
 

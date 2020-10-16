@@ -1,11 +1,11 @@
 import {
+  SpotwareClientSocket,
   ProtoOATickData,
   ProtoOATrendbarPeriod,
 } from "@claasahl/spotware-adapter";
 import ms from "ms";
 
 import * as R from "../requests";
-import { CustomSpotwareSocket } from "../CustomSpotwareSocket";
 
 const FACTOR = Math.pow(10, 5);
 const INTERVAL = ms("35d");
@@ -46,7 +46,7 @@ export interface Options {
 }
 
 export async function macro(
-  socket: CustomSpotwareSocket,
+  socket: SpotwareClientSocket,
   options: Options
 ): Promise<void> {
   const { ctidTraderAccountId, symbolId, period } = options;

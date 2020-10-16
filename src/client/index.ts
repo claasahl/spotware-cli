@@ -3,16 +3,11 @@ import { connect as netConnect } from "net";
 import {
   ProtoOATrendbarPeriod,
   SpotwareClientSocket,
-  ProtoPayloadType,
 } from "@claasahl/spotware-adapter";
 
 import * as R from "./requests";
 import * as M from "./macros";
 import { Events } from "./events";
-import {
-  CustomSpotwareSocket,
-  CustomPayloadType,
-} from "./CustomSpotwareSocket";
 
 const config = {
   host: process.env.SPOTWARE__HOST || "live.ctraderapi.com",
@@ -28,24 +23,20 @@ const socket = isLocalhost
   ? netConnect(config.port, config.host)
   : tlsConnect(config.port, config.host);
 const event = isLocalhost ? "connect" : "secureConnect";
-const s = new CustomSpotwareSocket(new SpotwareClientSocket(socket));
+const s = new SpotwareClientSocket(socket);
 socket.once(event, async () => R.PROTO_OA_VERSION_REQ(s, {}));
-socket.once(event, async () => M.authenticate(s, config));
+socket.once(event, async () => {
+  const traders = await M.authenticate(s, config);
+  await M.emitAccounts({ events, traders });
+});
 
-s.on("data", async (msg) => {
-  switch (msg.payloadType) {
-    case CustomPayloadType.ACCOUNT:
-      // ... not so much different than emitting stuff on a separate EventEmitter
-      // maybe backpressure... probably not even that since we are directly emitting the event (without regard for the mode in which the stream is)
-      const account = msg.payload;
-      if (!account.authenticated || !account.depositAssetId) {
-        return;
-      }
-      const { ctidTraderAccountId } = account;
-      const result = await M.symbols(s, { ctidTraderAccountId });
-      await M.emitSymbols({ ...result, events, ctidTraderAccountId });
-      break;
+events.on("account", async (account) => {
+  if (!account.authenticated || !account.depositAssetId) {
+    return;
   }
+  const { ctidTraderAccountId } = account;
+  const result = await M.symbols(s, { ctidTraderAccountId });
+  await M.emitSymbols({ ...result, events, ctidTraderAccountId });
 });
 
 const ASSET_CLASSES = ["Forex", "Metals", "Crypto Currency"];

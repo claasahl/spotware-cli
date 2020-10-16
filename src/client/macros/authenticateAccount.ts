@@ -1,7 +1,9 @@
-import { ProtoOATrader } from "@claasahl/spotware-adapter";
+import {
+  SpotwareClientSocket,
+  ProtoOATrader,
+} from "@claasahl/spotware-adapter";
 
 import * as R from "../requests";
-import { CustomSpotwareSocket } from "../CustomSpotwareSocket";
 
 export interface Options {
   accessToken: string;
@@ -9,7 +11,7 @@ export interface Options {
 }
 
 export async function macro(
-  socket: CustomSpotwareSocket,
+  socket: SpotwareClientSocket,
   options: Options
 ): Promise<ProtoOATrader> {
   const { accessToken, ctidTraderAccountId } = options;
