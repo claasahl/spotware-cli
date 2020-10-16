@@ -1,6 +1,9 @@
 import { connect as tlsConnect } from "tls";
 import { connect as netConnect } from "net";
-import { SpotwareClientSocket } from "@claasahl/spotware-adapter";
+import {
+  ProtoOATrendbarPeriod,
+  SpotwareClientSocket,
+} from "@claasahl/spotware-adapter";
 
 import * as R from "./requests";
 import * as M from "./macros";
@@ -43,12 +46,18 @@ events.on("symbol", async (symbol) => {
   }
   console.log(symbol.symbolId, symbol.symbolName);
   if (symbol.symbolName === "BTC/EUR") {
-    const spots = await M.spots(s, {
+    // const spots = await M.spots(s, {
+    //   ctidTraderAccountId: symbol.ctidTraderAccountId,
+    //   loadThisMuchHistoricalData: "3min",
+    //   symbolId: symbol.symbolId,
+    // });
+    // await M.emitSpots({ events, spots });
+    await M.trendbars(s, {
       ctidTraderAccountId: symbol.ctidTraderAccountId,
-      loadThisMuchHistoricalData: "3min",
+      loadThisMuchHistoricalData: "1year",
       symbolId: symbol.symbolId,
+      period: ProtoOATrendbarPeriod.M1,
     });
-    await M.emitSpots({ events, spots });
   }
 });
 
