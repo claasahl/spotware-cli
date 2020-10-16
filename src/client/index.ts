@@ -3,11 +3,16 @@ import { connect as netConnect } from "net";
 import {
   ProtoOATrendbarPeriod,
   SpotwareClientSocket,
+  ProtoPayloadType,
 } from "@claasahl/spotware-adapter";
 
 import * as R from "./requests";
 import * as M from "./macros";
 import { Events } from "./events";
+import {
+  CustomSpotwareSocket,
+  CustomPayloadType,
+} from "./CustomSpotwareSocket";
 
 const config = {
   host: process.env.SPOTWARE__HOST || "live.ctraderapi.com",
@@ -23,7 +28,7 @@ const socket = isLocalhost
   ? netConnect(config.port, config.host)
   : tlsConnect(config.port, config.host);
 const event = isLocalhost ? "connect" : "secureConnect";
-const s = new SpotwareClientSocket(socket);
+const s = new CustomSpotwareSocket(new SpotwareClientSocket(socket));
 socket.once(event, async () => R.PROTO_OA_VERSION_REQ(s, {}));
 socket.once(event, async () => {
   const traders = await M.authenticate(s, config);
@@ -63,6 +68,20 @@ events.on("symbol", async (symbol) => {
 
 events.on("spot", (spot) => {
   console.log(spot);
+});
+
+s.on("data", (msg) => {
+  switch (msg.payloadType) {
+    case CustomPayloadType.A:
+      console.log(msg.payload);
+      break;
+    case CustomPayloadType.B:
+      console.log(msg.payload);
+      break;
+    case ProtoPayloadType.ERROR_RES:
+      console.log(msg.payload);
+      break;
+  }
 });
 
 // "break out" separate stream that focuses on (highlevel) application (ideally both read and write)

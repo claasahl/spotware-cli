@@ -2,10 +2,10 @@ import {
   ProtoOAAssetClass,
   ProtoOALightSymbol,
   ProtoOASymbolCategory,
-  SpotwareClientSocket,
 } from "@claasahl/spotware-adapter";
 
 import * as R from "../requests";
+import { CustomSpotwareSocket } from "../CustomSpotwareSocket";
 
 export interface Options {
   ctidTraderAccountId: number;
@@ -18,7 +18,7 @@ export interface Result {
 }
 
 export async function macro(
-  socket: SpotwareClientSocket,
+  socket: CustomSpotwareSocket,
   options: Options
 ): Promise<Result> {
   const { ctidTraderAccountId } = options;
