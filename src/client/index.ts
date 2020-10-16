@@ -1,6 +1,10 @@
+import { Transform, TransformCallback } from "stream";
 import { connect as tlsConnect } from "tls";
 import { connect as netConnect } from "net";
 import {
+  Messages,
+  ProtoOAPayloadType,
+  ProtoOATrendbar,
   ProtoOATrendbarPeriod,
   SpotwareClientSocket,
 } from "@claasahl/spotware-adapter";
@@ -54,7 +58,7 @@ events.on("symbol", async (symbol) => {
     // await M.emitSpots({ events, spots });
     await M.trendbars(s, {
       ctidTraderAccountId: symbol.ctidTraderAccountId,
-      loadThisMuchHistoricalData: "1year",
+      loadThisMuchHistoricalData: "1m",
       symbolId: symbol.symbolId,
       period: ProtoOATrendbarPeriod.M1,
     });
@@ -80,3 +84,56 @@ events.on("spot", (spot) => {
 // ... or a Transform stream which transforms live trendbars into sensible trendbars
 
 // we want all custom events to be emitted on the same stream (i.e. global ordering / no stream merging)
+
+class JustDoIt extends Transform {
+  // types are missing
+  private FACTOR = Math.pow(10, 5);
+  constructor() {
+    super({ allowHalfOpen: false, autoDestroy: true, objectMode: true });
+  }
+
+  _transform(
+    chunk: Messages,
+    _encoding: string,
+    callback: TransformCallback
+  ): void {
+    this.push(chunk); // TODO add backpressure support
+    switch (chunk.payloadType) {
+      case ProtoOAPayloadType.PROTO_OA_SPOT_EVENT:
+        {
+          const { bid, trendbar } = chunk.payload;
+          if (bid) {
+            trendbar
+              .filter(
+                (bar): bar is Required<ProtoOATrendbar> =>
+                  typeof bar.deltaHigh === "number" &&
+                  typeof bar.deltaOpen === "number" &&
+                  typeof bar.low === "number" &&
+                  typeof bar.period === "number" &&
+                  typeof bar.utcTimestampInMinutes === "number"
+              )
+              .map((bar) => ({
+                payloadType: 11111,
+                timestamp: new Date(bar.utcTimestampInMinutes * 60000),
+                open: (bar.low + bar.deltaOpen) / this.FACTOR,
+                high: (bar.low + bar.deltaHigh) / this.FACTOR,
+                low: bar.low / this.FACTOR,
+                close: bid / this.FACTOR,
+                volume: bar.volume,
+              }))
+              .forEach((b) => this.push(b)); // TODO add backpressure support
+          }
+        }
+        break;
+    }
+    callback();
+  }
+}
+const a = s.pipe(new JustDoIt());
+a.on("data", (msg) => {
+  switch (msg.payloadType) {
+    case 11111:
+      console.log("----------", msg);
+      break;
+  }
+});
