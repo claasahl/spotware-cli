@@ -30,16 +30,18 @@ export function insideBarMomentum(options: Options) {
     ...options,
     periods: 3,
   });
+  let lastTimestamp = 0;
   return (msg: Messages) => {
-    const { bars, added, removed } = buffered(msg);
+    const { bars } = buffered(msg);
     if (bars.length !== 3) {
       return;
-    } else if (added.length === 0 && removed.length === 0) {
+    } else if (lastTimestamp >= bars[0].timestamp) {
       return;
     }
     const first = bars[0];
     const second = bars[1];
     const r = range(first);
+    lastTimestamp = first.timestamp;
     if (bullish(first) && engulfed(first, second)) {
       const enter = Math.round(first.high + r * options.enterOffset);
       const stopLoss = Math.round(first.high - r * options.stopLossOffset);
