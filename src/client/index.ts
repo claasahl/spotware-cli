@@ -140,29 +140,10 @@ class JustDoIt extends Transform {
 //   }
 // });
 
-const trendbars: utils.Trendbar[] = [];
 s.on("data", (msg) => {
   switch (msg.payloadType) {
     case ProtoOAPayloadType.PROTO_OA_SPOT_EVENT:
-      {
-        const bars = utils
-          .trendbars(msg)
-          .filter((bar) => bar.period === ProtoOATrendbarPeriod.M1);
-        if (bars.length !== 1) {
-          return;
-        }
-
-        if (
-          trendbars.length > 0 &&
-          trendbars[trendbars.length - 1].timestamp === bars[0].timestamp
-        ) {
-          trendbars.pop();
-          trendbars.push(bars[0]);
-        } else {
-          trendbars.push(bars[0]);
-        }
-        console.log(JSON.stringify(trendbars));
-      }
+      console.log(sma(msg));
       break;
   }
 });
@@ -197,10 +178,10 @@ namespace utils {
       .map((bar) => ({
         timestamp: bar.utcTimestampInMinutes * 60000,
         period: bar.period,
-        open: (bar.low + bar.deltaOpen) / FACTOR,
-        high: (bar.low + bar.deltaHigh) / FACTOR,
-        low: bar.low / FACTOR,
-        close: bid / FACTOR,
+        open: bar.low + bar.deltaOpen,
+        high: bar.low + bar.deltaHigh,
+        low: bar.low,
+        close: bid,
         volume: bar.volume,
       }));
   }
@@ -237,4 +218,63 @@ namespace utils {
         throw new Error("cannot convert 1MN to millis");
     }
   }
+
+  interface SmaOptions {
+    ctidTraderAccountId: number;
+    symbolId: number;
+    period: ProtoOATrendbarPeriod;
+    periods: number;
+  }
+  export function sma(options: SmaOptions) {
+    const trendbars: Trendbar[] = [];
+    let sum = 0;
+    function value() {
+      if (trendbars.length > 0 && trendbars.length <= options.periods) {
+        return Math.round(sum / trendbars.length);
+      }
+      return 0;
+    }
+    return (msg: PROTO_OA_SPOT_EVENT): number => {
+      if (msg.payload.ctidTraderAccountId !== options.ctidTraderAccountId) {
+        return value();
+      } else if (msg.payload.symbolId !== options.symbolId) {
+        return value();
+      }
+
+      const bars = utils
+        .trendbars(msg)
+        .filter((bar) => bar.period === options.period);
+
+      if (bars.length === 0) {
+        return value();
+      } else if (bars.length !== 1) {
+        throw new Error(
+          "what is gooooing ooon? more trendars with the same period?"
+        );
+      }
+
+      if (
+        trendbars.length > 0 &&
+        trendbars[trendbars.length - 1].timestamp === bars[0].timestamp
+      ) {
+        sum -= trendbars[trendbars.length - 1].close;
+        trendbars.pop();
+      }
+      trendbars.push(bars[0]);
+      sum += bars[0].close;
+
+      while (trendbars.length > options.periods) {
+        sum -= trendbars[0].close;
+        trendbars.shift();
+      }
+      return value();
+    };
+  }
 }
+
+const sma = utils.sma({
+  ctidTraderAccountId: 17403192,
+  symbolId: 22396,
+  period: ProtoOATrendbarPeriod.M1,
+  periods: 2,
+});
