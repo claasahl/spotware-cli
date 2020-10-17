@@ -1,6 +1,9 @@
 import {
+  Messages,
+  ProtoOAPayloadType,
   ProtoOATrendbar,
   ProtoOATrendbarPeriod,
+  PROTO_OA_GET_TRENDBARS_RES,
   PROTO_OA_SPOT_EVENT,
 } from "@claasahl/spotware-adapter";
 import ms from "ms";
@@ -19,6 +22,31 @@ export function price(price: number): number {
   return price / FACTOR;
 }
 
+function hasRequiredFields(
+  bar: ProtoOATrendbar
+): bar is Required<Omit<ProtoOATrendbar, "deltaClose">> {
+  return (
+    typeof bar.deltaHigh === "number" &&
+    typeof bar.deltaOpen === "number" &&
+    typeof bar.low === "number" &&
+    typeof bar.period === "number" &&
+    typeof bar.utcTimestampInMinutes === "number"
+  );
+}
+function toTrendbar(
+  bar: Required<Omit<ProtoOATrendbar, "deltaClose">>,
+  close: number
+): Trendbar {
+  return {
+    timestamp: bar.utcTimestampInMinutes * 60000,
+    period: bar.period,
+    open: bar.low + bar.deltaOpen,
+    high: bar.low + bar.deltaHigh,
+    low: bar.low,
+    close,
+    volume: bar.volume,
+  };
+}
 export function trendbars(message: PROTO_OA_SPOT_EVENT): Trendbar[] {
   const bid = message.payload.bid;
   if (!bid) {
@@ -26,23 +54,8 @@ export function trendbars(message: PROTO_OA_SPOT_EVENT): Trendbar[] {
   }
 
   return message.payload.trendbar
-    .filter(
-      (bar): bar is Required<ProtoOATrendbar> =>
-        typeof bar.deltaHigh === "number" &&
-        typeof bar.deltaOpen === "number" &&
-        typeof bar.low === "number" &&
-        typeof bar.period === "number" &&
-        typeof bar.utcTimestampInMinutes === "number"
-    )
-    .map((bar) => ({
-      timestamp: bar.utcTimestampInMinutes * 60000,
-      period: bar.period,
-      open: bar.low + bar.deltaOpen,
-      high: bar.low + bar.deltaHigh,
-      low: bar.low,
-      close: bid,
-      volume: bar.volume,
-    }));
+    .filter(hasRequiredFields)
+    .map((bar) => toTrendbar(bar, bid));
 }
 
 export function period(period: ProtoOATrendbarPeriod): number {
@@ -93,7 +106,7 @@ export function sma(options: SmaOptions) {
     }
     return 0;
   }
-  return (msg: PROTO_OA_SPOT_EVENT): number => {
+  function proto_oa_spot_event(msg: PROTO_OA_SPOT_EVENT): number {
     if (msg.payload.ctidTraderAccountId !== options.ctidTraderAccountId) {
       return value();
     } else if (msg.payload.symbolId !== options.symbolId) {
@@ -125,5 +138,13 @@ export function sma(options: SmaOptions) {
       data.shift();
     }
     return value();
+  }
+  return (msg: Messages): number => {
+    switch (msg.payloadType) {
+      case ProtoOAPayloadType.PROTO_OA_SPOT_EVENT:
+        return proto_oa_spot_event(msg);
+      default:
+        return value();
+    }
   };
 }
