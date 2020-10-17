@@ -56,7 +56,7 @@ events.on("symbol", async (symbol) => {
     // await M.emitSpots({ events, spots });
     await M.trendbars(s, {
       ctidTraderAccountId: symbol.ctidTraderAccountId,
-      loadThisMuchHistoricalData: "1m",
+      loadThisMuchHistoricalData: "4h",
       symbolId: symbol.symbolId,
       period: ProtoOATrendbarPeriod.M1,
     });
@@ -87,6 +87,10 @@ events.on("spot", (spot) => {
 
 s.on("data", (msg) => {
   switch (msg.payloadType) {
+    case ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES:
+      sma50(msg);
+      sma200(msg);
+      break;
     case ProtoOAPayloadType.PROTO_OA_SPOT_EVENT:
       const bid = msg.payload.bid;
       if (!bid) {
