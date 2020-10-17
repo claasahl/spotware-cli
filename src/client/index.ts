@@ -90,6 +90,7 @@ s.on("data", (msg) => {
     case ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES:
       sma50(msg);
       sma200(msg);
+      wpr(msg);
       break;
     case ProtoOAPayloadType.PROTO_OA_SPOT_EVENT:
       const bid = msg.payload.bid;
@@ -98,6 +99,7 @@ s.on("data", (msg) => {
       }
       const SMA50 = sma50(msg);
       const SMA200 = sma200(msg);
+      const WPR = wpr(msg);
       console.log({
         priceOverSMA50: bid > SMA50,
         priceOverSMA200: bid > SMA200,
@@ -105,6 +107,7 @@ s.on("data", (msg) => {
         price: bid,
         SMA50,
         SMA200,
+        WPR,
       });
       break;
   }
@@ -121,4 +124,10 @@ const sma200 = utils.sma({
   symbolId: 22396,
   period: ProtoOATrendbarPeriod.M1,
   periods: 200,
+});
+const wpr = utils.WilliamsPercentRange({
+  ctidTraderAccountId: 17403192,
+  symbolId: 22396,
+  period: ProtoOATrendbarPeriod.M1,
+  periods: 30,
 });
