@@ -1,15 +1,14 @@
 import { connect as tlsConnect } from "tls";
 import { connect as netConnect } from "net";
 import {
-  ProtoOAPayloadType,
   ProtoOATrendbarPeriod,
   SpotwareClientSocket,
 } from "@claasahl/spotware-adapter";
 
-import * as utils from "../utils";
 import * as R from "./requests";
 import * as M from "./macros";
 import { Events } from "./events";
+import { insideBarMomentum } from "./strategies";
 
 const config = {
   host: process.env.SPOTWARE__HOST || "live.ctraderapi.com",
@@ -85,70 +84,14 @@ events.on("spot", (spot) => {
 // - we want all custom events to be emitted on the same stream (i.e. global ordering / no stream merging)
 // - keep prices in integer format for as long as possible, otherwise one will most likely accumulate rounding errors over time
 
-s.on("data", (msg) => {
-  switch (msg.payloadType) {
-    case ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES:
-      sma50(msg);
-      sma200(msg);
-      wpr(msg);
-      ism(msg);
-      break;
-    case ProtoOAPayloadType.PROTO_OA_SPOT_EVENT:
-      const bid = msg.payload.bid;
-      if (!bid) {
-        break;
-      }
-      const SMA50 = sma50(msg);
-      const SMA200 = sma200(msg);
-      const WPR = wpr(msg);
-      const ISM = ism(msg);
-      console.log({
-        priceOverSMA50: bid > SMA50,
-        priceOverSMA200: bid > SMA200,
-        SMA50OverSMA200: SMA50 > SMA200,
-        price: bid,
-        SMA50,
-        SMA200,
-        WPR,
-        ISM,
-      });
-      if (!WPR || !ISM) {
-        break;
-      }
-      const bullish =
-        bid > SMA50 && bid > SMA200 && SMA50 > SMA200 && WPR >= -20;
-      const bearish =
-        bid < SMA50 && bid < SMA200 && SMA50 < SMA200 && WPR <= -80;
-      if (bullish || bearish) {
-        // place order!
-      }
-      break;
-  }
-});
+// make this work with a bunch of symbols
+// deploy to linode
 
-const sma50 = utils.sma({
+const ibm = insideBarMomentum({
   ctidTraderAccountId: 17403192,
   symbolId: 22396,
   period: ProtoOATrendbarPeriod.M1,
-  periods: 50,
 });
-const sma200 = utils.sma({
-  ctidTraderAccountId: 17403192,
-  symbolId: 22396,
-  period: ProtoOATrendbarPeriod.M1,
-  periods: 200,
-});
-const wpr = utils.WilliamsPercentRange({
-  ctidTraderAccountId: 17403192,
-  symbolId: 22396,
-  period: ProtoOATrendbarPeriod.M1,
-  periods: 30,
-});
-const ism = utils.insideBarMomentum({
-  ctidTraderAccountId: 17403192,
-  symbolId: 22396,
-  period: ProtoOATrendbarPeriod.M1,
-  enterOffset: 0.1,
-  stopLossOffset: 0.4,
-  takeProfitOffset: 0.8,
+s.on("data", (msg) => {
+  ibm(msg);
 });
