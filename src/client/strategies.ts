@@ -56,6 +56,7 @@ export function insideBarMomentum(options: Options) {
         const WPR = wpr(msg);
         const ISM = ism(msg);
         console.log({
+          symbolId,
           priceOverSMA50: bid > SMA50,
           priceOverSMA200: bid > SMA200,
           SMA50OverSMA200: SMA50 > SMA200,
