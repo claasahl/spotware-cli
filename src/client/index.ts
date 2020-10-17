@@ -47,18 +47,20 @@ events.on("symbol", async (symbol) => {
   }
   console.log(symbol.symbolId, symbol.symbolName);
   if (symbol.symbolName === "BTC/EUR") {
-    // const spots = await M.spots(s, {
-    //   ctidTraderAccountId: symbol.ctidTraderAccountId,
-    //   loadThisMuchHistoricalData: "3min",
-    //   symbolId: symbol.symbolId,
-    // });
-    // await M.emitSpots({ events, spots });
     await M.trendbars(s, {
       ctidTraderAccountId: symbol.ctidTraderAccountId,
       loadThisMuchHistoricalData: "4h",
       symbolId: symbol.symbolId,
       period: ProtoOATrendbarPeriod.M1,
     });
+    s.on(
+      "data",
+      insideBarMomentum({
+        ctidTraderAccountId: symbol.ctidTraderAccountId,
+        symbolId: symbol.symbolId,
+        period: ProtoOATrendbarPeriod.M1,
+      })
+    );
   }
 });
 
@@ -84,14 +86,5 @@ events.on("spot", (spot) => {
 // - we want all custom events to be emitted on the same stream (i.e. global ordering / no stream merging)
 // - keep prices in integer format for as long as possible, otherwise one will most likely accumulate rounding errors over time
 
-// make this work with a bunch of symbols
-// deploy to linode
-
-const ibm = insideBarMomentum({
-  ctidTraderAccountId: 17403192,
-  symbolId: 22396,
-  period: ProtoOATrendbarPeriod.M1,
-});
-s.on("data", (msg) => {
-  ibm(msg);
-});
+// actually place orders ...
+//   deploy to linode
