@@ -6,6 +6,7 @@
   "scripts": {
     "prepare": "tsc",
     "build": "tsc",
+    "client-log": "ts-node -r dotenv/config src/client/index.ts > client.log 2>&1",
     "client": "ts-node -r dotenv/config src/client/index.ts",
     "server": "ts-node -r dotenv/config src/server/index.ts"
   },
@@ -42,6 +43,7 @@
     "bytes": "^3.1.0",
     "debug": "^4.2.0",
     "dotenv": "^8.2.0",
+    "indicators": "^0.1.5",
     "ms": "^2.1.2",
     "uuid": "^8.3.1"
   }

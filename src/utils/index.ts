@@ -1,3 +1,4 @@
+export * from "./insideBarMomentum";
 export * from "./period";
 export * from "./sma";
 export * from "./trendbar";
