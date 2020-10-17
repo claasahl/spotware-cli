@@ -96,7 +96,7 @@ s.on("data", (msg) => {
     case ProtoOAPayloadType.PROTO_OA_SPOT_EVENT:
       const bid = msg.payload.bid;
       if (!bid) {
-        return;
+        break;
       }
       const SMA50 = sma50(msg);
       const SMA200 = sma200(msg);
@@ -112,6 +112,16 @@ s.on("data", (msg) => {
         WPR,
         ISM,
       });
+      if (!WPR || !ISM) {
+        break;
+      }
+      const bullish =
+        bid > SMA50 && bid > SMA200 && SMA50 > SMA200 && WPR >= -20;
+      const bearish =
+        bid < SMA50 && bid < SMA200 && SMA50 < SMA200 && WPR <= -80;
+      if (bullish || bearish) {
+        // place order!
+      }
       break;
   }
 });
