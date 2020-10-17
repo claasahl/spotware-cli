@@ -1,6 +1,5 @@
 import {
   Messages,
-  ProtoOAOrderType,
   ProtoOATradeSide,
   ProtoOATrendbarPeriod,
 } from "@claasahl/spotware-adapter";
