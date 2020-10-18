@@ -20,13 +20,12 @@ const event = isLocalhost ? "connect" : "secureConnect";
 const s = new SpotwareClientSocket(socket);
 socket.once(event, async () => R.PROTO_OA_VERSION_REQ(s, {}));
 socket.once(event, async () => {
-  const config = await M.refreshToken(s, {
+  const traders = await M.authenticate(s, {
     clientId: process.env.SPOTWARE__CLIENT_ID || "",
     clientSecret: process.env.SPOTWARE__CLIENT_SECRET || "",
     accessToken: process.env.accessToken || "",
     refreshToken: process.env.refreshToken || "",
   });
-  const traders = await M.authenticate(s, config);
   await M.emitAccounts({ events, traders });
 });
 
