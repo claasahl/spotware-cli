@@ -10,8 +10,8 @@ import * as M from "./macros";
 import * as S from "./strategies";
 import { Events } from "./events";
 
-const host = process.env.SPOTWARE__HOST || "live.ctraderapi.com";
-const port = Number(process.env.SPOTWARE__PORT) || 5035;
+const host = process.env.host || "live.ctraderapi.com";
+const port = Number(process.env.port) || 5035;
 
 const events = new Events();
 const isLocalhost = host === "localhost";
