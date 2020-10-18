@@ -113,9 +113,7 @@ export function bufferedTrendbars(options: Options) {
     }
 
     const removed = [...data];
-    const reference =
-      Date.now() - (options.periods + 1) * period(options.period);
-    const bars = trendbars(msg).filter((bar) => bar.timestamp >= reference);
+    const bars = trendbars(msg);
     const tmp = [...bars, ...data].sort((a, b) => a.timestamp - b.timestamp);
     if (tmp.length > options.periods) {
       tmp.splice(0, tmp.length - options.periods);
