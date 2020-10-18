@@ -54,14 +54,13 @@ export async function macro(
     const toTimestamp = Date.now();
     const fromTimestamp = toTimestamp - ms(options.loadThisMuchHistoricalData);
     for (const interval of intervals(fromTimestamp, toTimestamp)) {
-      const bars = await R.PROTO_OA_GET_TRENDBARS_REQ(socket, {
+      await R.PROTO_OA_GET_TRENDBARS_REQ(socket, {
         ctidTraderAccountId,
         fromTimestamp: interval.from,
         toTimestamp: interval.to,
         symbolId,
         period,
       });
-      console.log(bars);
     }
   }
   await R.PROTO_OA_SUBSCRIBE_SPOTS_REQ(socket, {

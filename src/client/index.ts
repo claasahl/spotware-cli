@@ -1,5 +1,6 @@
 import { connect as tlsConnect } from "tls";
 import { connect as netConnect } from "net";
+import debug from "debug";
 import {
   ProtoOATrendbarPeriod,
   SpotwareClientSocket,
@@ -10,6 +11,7 @@ import * as M from "./macros";
 import * as S from "./strategies";
 import { Events } from "./events";
 
+const log = debug("custom-client");
 const host = process.env.host || "live.ctraderapi.com";
 const port = Number(process.env.port) || 5035;
 
@@ -43,7 +45,7 @@ events.on("symbol", async (symbol) => {
   if (!ASSET_CLASSES.includes(symbol.assetClass)) {
     return;
   }
-  console.log(symbol.symbolId, symbol.symbolName);
+  log("%j", symbol);
   if (symbol.symbolName === "BTC/EUR") {
     s.on(
       "data",
@@ -61,10 +63,6 @@ events.on("symbol", async (symbol) => {
       period: ProtoOATrendbarPeriod.M1,
     });
   }
-});
-
-events.on("spot", (spot) => {
-  console.log(spot);
 });
 
 // "break out" separate stream that focuses on (highlevel) application (ideally both read and write)

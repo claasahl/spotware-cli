@@ -6,9 +6,12 @@ import {
   SpotwareClientSocket,
 } from "@claasahl/spotware-adapter";
 import ms from "ms";
+import debug from "debug";
 
 import * as utils from "../utils";
 import * as R from "./requests";
+
+const log = debug("inside-bar-momentum");
 
 interface Options {
   socket: SpotwareClientSocket;
@@ -82,7 +85,7 @@ export function insideBarMomentum(options: Options) {
         const SMA200 = sma200(msg);
         const WPR = wpr(msg);
         const ISM = ism(msg);
-        console.log({
+        log("%j", {
           symbolId,
           priceOverSMA50: SMA50 ? bid > SMA50 : undefined,
           priceOverSMA200: SMA200 ? bid > SMA200 : undefined,

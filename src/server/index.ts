@@ -7,20 +7,23 @@ import {
 } from "@claasahl/spotware-protobuf";
 import { Server, Socket } from "net";
 import bytes from "bytes";
+import debug from "debug";
 import {
   SpotwareSocket,
   ProtoOAPayloadType,
   FACTORY,
 } from "@claasahl/spotware-adapter";
 
+const log = debug("custom-server");
+
 const port = Number(process.env.SPOTWARE__PORT);
 const server = new Server(serve);
-server.listen(port, () => console.log(`listening on port ${port}`));
+server.listen(port, () => log(`listening on port ${port}`));
 
 function serve(socket: Socket): void {
-  console.log("new connection");
+  log("new connection");
   const s = new SpotwareSocket(socket);
-  s.on("error", console.log);
+  s.on("error", log);
   s.on("data", (message) => {
     const { clientMsgId } = message;
     switch (message.payloadType) {
