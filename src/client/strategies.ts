@@ -1,42 +1,69 @@
 import {
   Messages,
+  ProtoOAOrderType,
   ProtoOAPayloadType,
   ProtoOATrendbarPeriod,
+  SpotwareClientSocket,
 } from "@claasahl/spotware-adapter";
+import ms from "ms";
+
 import * as utils from "../utils";
+import * as R from "./requests";
 
 interface Options {
+  socket: SpotwareClientSocket;
   ctidTraderAccountId: number;
   symbolId: number;
   period: ProtoOATrendbarPeriod;
+  shortTermSmaPeriods?: number;
+  longTermSmaPeriods?: number;
+  williamsPercentRangePeriods?: number;
+  enterOffset?: number;
+  stopLossOffset?: number;
+  takeProfitOffset?: number;
+  expirationOffset?: number;
+  tradeVolumeInLots?: number;
 }
 export function insideBarMomentum(options: Options) {
-  const { ctidTraderAccountId, symbolId, period } = options;
+  const {
+    socket,
+    ctidTraderAccountId,
+    symbolId,
+    period,
+    shortTermSmaPeriods = 50,
+    longTermSmaPeriods = 200,
+    williamsPercentRangePeriods = 30,
+    enterOffset = 0.1,
+    stopLossOffset = 0.4,
+    takeProfitOffset = 0.8,
+    expirationOffset = ms("1h"),
+    tradeVolumeInLots = 0.01,
+  } = options;
   const sma50 = utils.sma({
     ctidTraderAccountId,
     symbolId,
     period,
-    periods: 50,
+    periods: shortTermSmaPeriods,
   });
   const sma200 = utils.sma({
     ctidTraderAccountId,
     symbolId,
     period,
-    periods: 200,
+    periods: longTermSmaPeriods,
   });
   const wpr = utils.WilliamsPercentRange({
     ctidTraderAccountId,
     symbolId,
     period,
-    periods: 30,
+    periods: williamsPercentRangePeriods,
   });
   const ism = utils.insideBarMomentum({
     ctidTraderAccountId,
     symbolId,
     period,
-    enterOffset: 0.1,
-    stopLossOffset: 0.4,
-    takeProfitOffset: 0.8,
+    enterOffset,
+    stopLossOffset,
+    takeProfitOffset,
   });
   return (msg: Messages) => {
     switch (msg.payloadType) {
@@ -74,7 +101,17 @@ export function insideBarMomentum(options: Options) {
         const bearish =
           bid < SMA50 && bid < SMA200 && SMA50 < SMA200 && WPR <= -80;
         if (bullish || bearish) {
-          // place order!
+          R.PROTO_OA_NEW_ORDER_REQ(socket, {
+            ctidTraderAccountId,
+            symbolId,
+            orderType: ProtoOAOrderType.STOP,
+            tradeSide: ISM.tradeSide,
+            volume: tradeVolumeInLots * 100,
+            stopPrice: utils.price(ISM.enter),
+            stopLoss: utils.price(ISM.stopLoss),
+            takeProfit: utils.price(ISM.takeProfit),
+            expirationTimestamp: Date.now() + expirationOffset,
+          });
         }
         break;
     }

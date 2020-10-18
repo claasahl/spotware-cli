@@ -7,8 +7,8 @@ import {
 
 import * as R from "./requests";
 import * as M from "./macros";
+import * as S from "./strategies";
 import { Events } from "./events";
-import { insideBarMomentum } from "./strategies";
 
 const config = {
   host: process.env.SPOTWARE__HOST || "live.ctraderapi.com",
@@ -55,7 +55,8 @@ events.on("symbol", async (symbol) => {
     });
     s.on(
       "data",
-      insideBarMomentum({
+      S.insideBarMomentum({
+        socket: s,
         ctidTraderAccountId: symbol.ctidTraderAccountId,
         symbolId: symbol.symbolId,
         period: ProtoOATrendbarPeriod.M1,
@@ -85,6 +86,3 @@ events.on("spot", (spot) => {
 // rule of thumb:
 // - we want all custom events to be emitted on the same stream (i.e. global ordering / no stream merging)
 // - keep prices in integer format for as long as possible, otherwise one will most likely accumulate rounding errors over time
-
-// actually place orders ...
-//   deploy to linode
