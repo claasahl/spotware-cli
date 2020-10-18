@@ -45,12 +45,6 @@ events.on("symbol", async (symbol) => {
   }
   console.log(symbol.symbolId, symbol.symbolName);
   if (symbol.symbolName === "BTC/EUR") {
-    await M.trendbars(s, {
-      ctidTraderAccountId: symbol.ctidTraderAccountId,
-      loadThisMuchHistoricalData: "4h",
-      symbolId: symbol.symbolId,
-      period: ProtoOATrendbarPeriod.M1,
-    });
     s.on(
       "data",
       S.insideBarMomentum({
@@ -60,6 +54,12 @@ events.on("symbol", async (symbol) => {
         period: ProtoOATrendbarPeriod.M1,
       })
     );
+    await M.trendbars(s, {
+      ctidTraderAccountId: symbol.ctidTraderAccountId,
+      loadThisMuchHistoricalData: "4h",
+      symbolId: symbol.symbolId,
+      period: ProtoOATrendbarPeriod.M1,
+    });
   }
 });
 
