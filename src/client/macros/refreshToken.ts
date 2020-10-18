@@ -11,6 +11,9 @@ function dotenv(env: object): string {
 }
 
 export interface Options {
+  clientId: string;
+  clientSecret: string;
+  accessToken: string;
   refreshToken: string;
   envFile?: string;
 }
@@ -18,14 +21,20 @@ export interface Options {
 export async function macro(
   socket: SpotwareClientSocket,
   options: Options
-): Promise<void> {
+): Promise<Omit<Options, "envFile">> {
   const { refreshToken, envFile = ".env" } = options;
   const result = await R.PROTO_OA_REFRESH_TOKEN_REQ(socket, { refreshToken });
 
-  const env = {};
+  const env: any = {};
   const data = await fs.promises.readFile(envFile);
   Object.assign(env, parse(data));
   Object.assign(env, result);
   await fs.promises.copyFile(envFile, `${envFile}_${Date.now()}`);
   await fs.promises.writeFile(envFile, dotenv(env));
+  return {
+    clientId: options.clientId,
+    clientSecret: options.clientSecret,
+    accessToken: env.accessToken,
+    refreshToken: env.refreshToken,
+  };
 }
