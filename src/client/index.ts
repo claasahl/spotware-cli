@@ -84,3 +84,4 @@ events.on("spot", (spot) => {
 // rule of thumb:
 // - we want all custom events to be emitted on the same stream (i.e. global ordering / no stream merging)
 // - keep prices in integer format for as long as possible, otherwise one will most likely accumulate rounding errors over time
+// - only produce outputs for SMA (and similar) when enough data has been buffered (i.e. all required candles / trendbars)

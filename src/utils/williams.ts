@@ -12,7 +12,7 @@ export function WilliamsPercentRange(options: Options) {
   const buffered = bufferedTrendbars(options);
   return (message: Messages) => {
     const { bars } = buffered(message);
-    if (bars.length === 0) {
+    if (bars.length !== options.periods) {
       return undefined;
     }
     let high = Number.MIN_SAFE_INTEGER;

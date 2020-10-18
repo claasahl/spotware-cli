@@ -11,13 +11,13 @@ interface SmaOptions {
 export function sma(options: SmaOptions) {
   const buffer = bufferedTrendbars(options);
   let sum = 0;
-  return (msg: Messages): number => {
+  return (msg: Messages): number | undefined => {
     const { bars, added, removed } = buffer(msg);
     sum += added.reduce((prev, curr) => prev + curr.close, 0);
     sum -= removed.reduce((prev, curr) => prev + curr.close, 0);
-    if (bars.length > 0 && bars.length <= options.periods) {
-      return Math.round(sum / bars.length);
+    if (bars.length !== options.periods) {
+      return undefined;
     }
-    return 0;
+    return Math.round(sum / options.periods);
   };
 }

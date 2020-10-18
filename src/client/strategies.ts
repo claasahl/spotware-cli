@@ -84,16 +84,16 @@ export function insideBarMomentum(options: Options) {
         const ISM = ism(msg);
         console.log({
           symbolId,
-          priceOverSMA50: bid > SMA50,
-          priceOverSMA200: bid > SMA200,
-          SMA50OverSMA200: SMA50 > SMA200,
+          priceOverSMA50: SMA50 ? bid > SMA50 : undefined,
+          priceOverSMA200: SMA200 ? bid > SMA200 : undefined,
+          SMA50OverSMA200: SMA50 && SMA200 ? SMA50 > SMA200 : undefined,
           price: bid,
           SMA50,
           SMA200,
           WPR,
           ISM,
         });
-        if (!WPR || !ISM) {
+        if (!WPR || !ISM || !SMA50 || !SMA200) {
           break;
         }
         const bullish =
