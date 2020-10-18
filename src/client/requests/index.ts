@@ -9,6 +9,7 @@ export { request as PROTO_OA_REFRESH_TOKEN_REQ } from "./PROTO_OA_REFRESH_TOKEN_
 export { request as PROTO_OA_SUBSCRIBE_LIVE_TRENDBAR_REQ } from "./PROTO_OA_SUBSCRIBE_LIVE_TRENDBAR_REQ";
 export { request as PROTO_OA_SUBSCRIBE_SPOTS_REQ } from "./PROTO_OA_SUBSCRIBE_SPOTS_REQ";
 export { request as PROTO_OA_SYMBOLS_LIST_REQ } from "./PROTO_OA_SYMBOLS_LIST_REQ";
+export { request as PROTO_OA_SYMBOL_BY_ID_REQ } from "./PROTO_OA_SYMBOL_BY_ID_REQ";
 export { request as PROTO_OA_SYMBOL_CATEGORY_REQ } from "./PROTO_OA_SYMBOL_CATEGORY_REQ";
 export { request as PROTO_OA_TRADER_REQ } from "./PROTO_OA_TRADER_REQ";
 export { request as PROTO_OA_VERSION_REQ } from "./PROTO_OA_VERSION_REQ";
