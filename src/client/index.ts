@@ -21,8 +21,8 @@ const s = new SpotwareClientSocket(socket);
 socket.once(event, async () => R.PROTO_OA_VERSION_REQ(s, {}));
 socket.once(event, async () => {
   const traders = await M.authenticate(s, {
-    clientId: process.env.SPOTWARE__CLIENT_ID || "",
-    clientSecret: process.env.SPOTWARE__CLIENT_SECRET || "",
+    clientId: process.env.clientId || "",
+    clientSecret: process.env.clientSecret || "",
     accessToken: process.env.accessToken || "",
     refreshToken: process.env.refreshToken || "",
   });
