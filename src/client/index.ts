@@ -49,7 +49,7 @@ events.on("symbol", async (symbol) => {
   if (symbol.symbolName === "BTC/EUR") {
     s.on(
       "data",
-      S.insideBarMomentum({
+      await S.insideBarMomentum({
         socket: s,
         ctidTraderAccountId: symbol.ctidTraderAccountId,
         symbolId: symbol.symbolId,

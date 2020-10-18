@@ -27,7 +27,7 @@ interface Options {
   expirationOffset?: number;
   tradeVolumeInLots?: number;
 }
-export function insideBarMomentum(options: Options) {
+export async function insideBarMomentum(options: Options) {
   const {
     socket,
     ctidTraderAccountId,
@@ -68,6 +68,11 @@ export function insideBarMomentum(options: Options) {
     stopLossOffset,
     takeProfitOffset,
   });
+  const details = await R.PROTO_OA_SYMBOL_BY_ID_REQ(socket, {
+    ctidTraderAccountId,
+    symbolId: [symbolId],
+  });
+  const digits = details.symbol[0].digits;
   return (msg: Messages) => {
     switch (msg.payloadType) {
       case ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES:
@@ -110,9 +115,9 @@ export function insideBarMomentum(options: Options) {
             orderType: ProtoOAOrderType.STOP,
             tradeSide: ISM.tradeSide,
             volume: tradeVolumeInLots * 100,
-            stopPrice: utils.price(ISM.enter),
-            stopLoss: utils.price(ISM.stopLoss),
-            takeProfit: utils.price(ISM.takeProfit),
+            stopPrice: utils.price(ISM.enter, digits),
+            stopLoss: utils.price(ISM.stopLoss, digits),
+            takeProfit: utils.price(ISM.takeProfit, digits),
             expirationTimestamp: Date.now() + expirationOffset,
           });
         }
