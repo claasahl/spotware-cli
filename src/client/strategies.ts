@@ -74,54 +74,53 @@ export async function insideBarMomentum(options: Options) {
   });
   const digits = details.symbol[0].digits;
   return (msg: Messages) => {
-    switch (msg.payloadType) {
-      case ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES:
-        sma50(msg);
-        sma200(msg);
-        wpr(msg);
-        ism(msg);
-        break;
-      case ProtoOAPayloadType.PROTO_OA_SPOT_EVENT:
-        const bid = msg.payload.bid;
-        if (!bid) {
-          break;
-        }
-        const SMA50 = sma50(msg);
-        const SMA200 = sma200(msg);
-        const WPR = wpr(msg);
-        const ISM = ism(msg);
-        log("%j", {
-          symbolId,
-          priceOverSMA50: SMA50 ? bid > SMA50 : undefined,
-          priceOverSMA200: SMA200 ? bid > SMA200 : undefined,
-          SMA50OverSMA200: SMA50 && SMA200 ? SMA50 > SMA200 : undefined,
-          price: bid,
-          SMA50,
-          SMA200,
-          WPR,
-          ISM,
-        });
-        if (!WPR || !ISM || !SMA50 || !SMA200) {
-          break;
-        }
-        const bullish =
-          bid > SMA50 && bid > SMA200 && SMA50 > SMA200 && WPR >= -20;
-        const bearish =
-          bid < SMA50 && bid < SMA200 && SMA50 < SMA200 && WPR <= -80;
-        if (bullish || bearish) {
-          R.PROTO_OA_NEW_ORDER_REQ(socket, {
-            ctidTraderAccountId,
-            symbolId,
-            orderType: ProtoOAOrderType.STOP,
-            tradeSide: ISM.tradeSide,
-            volume: tradeVolumeInLots * 100,
-            stopPrice: utils.price(ISM.enter, digits),
-            stopLoss: utils.price(ISM.stopLoss, digits),
-            takeProfit: utils.price(ISM.takeProfit, digits),
-            expirationTimestamp: Date.now() + expirationOffset,
-          });
-        }
-        break;
+    const SMA50 = sma50(msg);
+    const SMA200 = sma200(msg);
+    const WPR = wpr(msg);
+    const ISM = ism(msg);
+
+    if (msg.payloadType !== ProtoOAPayloadType.PROTO_OA_SPOT_EVENT) {
+      return;
+    } else if (msg.payload.ctidTraderAccountId !== ctidTraderAccountId) {
+      return;
+    } else if (msg.payload.symbolId !== symbolId) {
+      return;
+    }
+
+    const bid = msg.payload.bid;
+    log("%j", { symbolId, SMA50, SMA200, WPR, ISM, price: bid });
+    if (!SMA50 || !SMA200 || !WPR || !ISM || !bid) {
+      return;
+    }
+    const bullish = bid > SMA50 && bid > SMA200 && SMA50 > SMA200 && WPR >= -20;
+    const bearish = bid < SMA50 && bid < SMA200 && SMA50 < SMA200 && WPR <= -80;
+    log("%j", {
+      symbolId,
+      bullish,
+      bearish,
+      priceOverSMA50: bid > SMA50,
+      priceOverSMA200: bid > SMA200,
+      SMA50OverSMA200: SMA50 > SMA200,
+      topRange: WPR >= -20,
+      bottomRange: WPR <= -80,
+      price: bid,
+      SMA50,
+      SMA200,
+      WPR,
+      ISM,
+    });
+    if (bullish || bearish) {
+      R.PROTO_OA_NEW_ORDER_REQ(socket, {
+        ctidTraderAccountId,
+        symbolId,
+        orderType: ProtoOAOrderType.STOP,
+        tradeSide: ISM.tradeSide,
+        volume: tradeVolumeInLots * 100,
+        stopPrice: utils.price(ISM.enter, digits),
+        stopLoss: utils.price(ISM.stopLoss, digits),
+        takeProfit: utils.price(ISM.takeProfit, digits),
+        expirationTimestamp: Date.now() + expirationOffset,
+      });
     }
   };
 }
