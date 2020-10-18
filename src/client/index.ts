@@ -46,23 +46,26 @@ events.on("symbol", async (symbol) => {
     return;
   }
   log("%j", symbol);
-  if (symbol.symbolName === "BTC/EUR") {
-    s.on(
-      "data",
-      await S.insideBarMomentum({
-        socket: s,
-        ctidTraderAccountId: symbol.ctidTraderAccountId,
-        symbolId: symbol.symbolId,
-        period: ProtoOATrendbarPeriod.M1,
-      })
-    );
-    await M.trendbars(s, {
+  // if (symbol.symbolName !== "BTC/EUR") {
+  //   return;
+  // }
+  const period = ProtoOATrendbarPeriod.H1;
+  const loadThisMuchHistoricalData = "15d";
+  s.on(
+    "data",
+    await S.insideBarMomentum({
+      socket: s,
       ctidTraderAccountId: symbol.ctidTraderAccountId,
-      loadThisMuchHistoricalData: "4h",
       symbolId: symbol.symbolId,
-      period: ProtoOATrendbarPeriod.M1,
-    });
-  }
+      period,
+    })
+  );
+  await M.trendbars(s, {
+    ctidTraderAccountId: symbol.ctidTraderAccountId,
+    loadThisMuchHistoricalData,
+    symbolId: symbol.symbolId,
+    period,
+  });
 });
 
 // "break out" separate stream that focuses on (highlevel) application (ideally both read and write)
