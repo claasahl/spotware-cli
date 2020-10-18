@@ -40,7 +40,7 @@ export async function insideBarMomentum(options: Options) {
     stopLossOffset = 0.4,
     takeProfitOffset = 0.8,
     expirationOffset = ms("1h"),
-    tradeVolumeInLots = 0.01,
+    tradeVolumeInLots = 0.1,
   } = options;
   const sma50 = utils.sma({
     ctidTraderAccountId,
