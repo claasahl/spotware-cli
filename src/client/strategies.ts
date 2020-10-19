@@ -72,7 +72,7 @@ export async function insideBarMomentum(options: Options) {
     ctidTraderAccountId,
     symbolId: [symbolId],
   });
-  const digits = details.symbol[0].digits;
+  const { digits, lotSize = 1 } = details.symbol[0];
   return (msg: Messages) => {
     const SMA50 = sma50(msg);
     const SMA200 = sma200(msg);
@@ -115,7 +115,7 @@ export async function insideBarMomentum(options: Options) {
         symbolId,
         orderType: ProtoOAOrderType.STOP,
         tradeSide: ISM.tradeSide,
-        volume: tradeVolumeInLots * 100,
+        volume: tradeVolumeInLots * lotSize,
         stopPrice: utils.price(ISM.enter, digits),
         stopLoss: utils.price(ISM.stopLoss, digits),
         takeProfit: utils.price(ISM.takeProfit, digits),
