@@ -7,6 +7,8 @@ import {
 } from "@claasahl/spotware-adapter";
 import ms from "ms";
 import debug from "debug";
+import git from "isomorphic-git";
+import fs from "fs";
 
 import * as utils from "../utils";
 import * as R from "./requests";
@@ -68,6 +70,7 @@ export async function insideBarMomentum(options: Options) {
     stopLossOffset,
     takeProfitOffset,
   });
+  const [{ oid: label }] = await git.log({ fs, dir: process.cwd(), depth: 1 });
   const details = await R.PROTO_OA_SYMBOL_BY_ID_REQ(socket, {
     ctidTraderAccountId,
     symbolId: [symbolId],
@@ -120,6 +123,7 @@ export async function insideBarMomentum(options: Options) {
         stopLoss: utils.price(ISM.stopLoss, digits),
         takeProfit: utils.price(ISM.takeProfit, digits),
         expirationTimestamp: Date.now() + expirationOffset,
+        label,
       });
     }
   };
