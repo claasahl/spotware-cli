@@ -21,11 +21,7 @@ export function request(socket: SpotwareSocket) {
         return;
       }
 
-      response(
-        socket,
-        { ctidTraderAccountId, hasMore: false, tickData: [] },
-        clientMsgId
-      );
+      response(socket, entry.ticks(message.payload), clientMsgId);
     }
   };
 }

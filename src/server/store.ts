@@ -2,6 +2,10 @@ import {
   FACTORY,
   ProtoOAAssetClass,
   ProtoOACtidTraderAccount,
+  ProtoOAGetTickDataReq,
+  ProtoOAGetTickDataRes,
+  ProtoOAGetTrendbarsReq,
+  ProtoOAGetTrendbarsRes,
   ProtoOALightSymbol,
   ProtoOASymbol,
   ProtoOASymbolCategory,
@@ -17,15 +21,16 @@ export interface Account {
   assetClasses: ProtoOAAssetClass[];
   categories: ProtoOASymbolCategory[];
   symbols: (ProtoOALightSymbol & ProtoOASymbol)[];
-  subscriptions: {
-    [symbolId: number]: NodeJS.Timeout;
-  };
   hasSubscription(socket: SpotwareSocket, symbolId: number): boolean;
   subscribe(socket: SpotwareSocket, symbolId: number): void;
   unsubscribe(socket: SpotwareSocket, symbolId: number): void;
+  ticks(req: ProtoOAGetTickDataReq): ProtoOAGetTickDataRes;
+  trendbars(req: ProtoOAGetTrendbarsReq): ProtoOAGetTrendbarsRes;
 }
 function account(ctidTraderAccountId: number): Account {
-  const subscriptions: Account["subscriptions"] = {};
+  const subscriptions: {
+    [symbolId: number]: NodeJS.Timeout;
+  } = {};
   return {
     accessTokens: [],
     account: {
@@ -120,7 +125,6 @@ function account(ctidTraderAccountId: number): Account {
         schedule: [],
       },
     ],
-    subscriptions,
     hasSubscription: (_socket, symbolId) => !!subscriptions[symbolId],
     subscribe: (socket, symbolId) => {
       const timer = setInterval(() => {
@@ -138,6 +142,14 @@ function account(ctidTraderAccountId: number): Account {
       clearInterval(subscriptions[symbolId]);
       delete subscriptions[symbolId];
     },
+    ticks: (_req) => ({ ctidTraderAccountId, hasMore: false, tickData: [] }),
+    trendbars: ({ period, symbolId }) => ({
+      ctidTraderAccountId,
+      period,
+      symbolId,
+      timestamp: 0,
+      trendbar: [],
+    }),
   };
 }
 
