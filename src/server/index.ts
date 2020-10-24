@@ -2,6 +2,7 @@ import {
   ProtoOAAssetClass,
   ProtoOACtidTraderAccount,
   ProtoOALightSymbol,
+  ProtoOASymbol,
   ProtoOASymbolCategory,
   ProtoOATrader,
 } from "@claasahl/spotware-protobuf";
@@ -152,6 +153,28 @@ function serve(socket: Socket): void {
           }
         }
         break;
+      case ProtoOAPayloadType.PROTO_OA_SYMBOL_BY_ID_REQ:
+        {
+          const { ctidTraderAccountId } = message.payload;
+          const entry = STORE[ctidTraderAccountId];
+          if (entry) {
+            s.write(
+              FACTORY.PROTO_OA_SYMBOL_BY_ID_RES(
+                {
+                  ctidTraderAccountId,
+                  archivedSymbol: [],
+                  symbol: entry.symbols,
+                },
+                clientMsgId
+              )
+            );
+          } else {
+            s.write(
+              FACTORY.PROTO_OA_ERROR_RES({ errorCode: "E9" }, clientMsgId)
+            );
+          }
+        }
+        break;
       case ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_REQ:
         {
           const { ctidTraderAccountId, symbolId: symbolIds } = message.payload;
@@ -278,7 +301,7 @@ interface Account {
   trader: ProtoOATrader;
   assetClasses: ProtoOAAssetClass[];
   categories: ProtoOASymbolCategory[];
-  symbols: ProtoOALightSymbol[];
+  symbols: (ProtoOALightSymbol & ProtoOASymbol)[];
   subscriptions: {
     [symbolId: number]: NodeJS.Timeout;
   };
@@ -336,6 +359,10 @@ function account(ctidTraderAccountId: number): Account {
         quoteAssetId: 2,
         enabled: true,
         symbolCategoryId: 1,
+        digits: 2,
+        holiday: [],
+        pipPosition: 5,
+        schedule: [],
       },
       {
         symbolId: 2,
@@ -344,6 +371,10 @@ function account(ctidTraderAccountId: number): Account {
         quoteAssetId: 2,
         enabled: true,
         symbolCategoryId: 2,
+        digits: 2,
+        holiday: [],
+        pipPosition: 5,
+        schedule: [],
       },
       {
         symbolId: 3,
@@ -352,6 +383,10 @@ function account(ctidTraderAccountId: number): Account {
         quoteAssetId: 2,
         enabled: false,
         symbolCategoryId: 3,
+        digits: 2,
+        holiday: [],
+        pipPosition: 5,
+        schedule: [],
       },
       {
         symbolId: 4,
@@ -360,6 +395,10 @@ function account(ctidTraderAccountId: number): Account {
         quoteAssetId: 2,
         enabled: false,
         symbolCategoryId: 4,
+        digits: 2,
+        holiday: [],
+        pipPosition: 5,
+        schedule: [],
       },
     ],
     subscriptions: {},
