@@ -4,7 +4,12 @@ import {
   ProtoOAPayloadType,
   SpotwareSocket,
 } from "@claasahl/spotware-adapter";
+
 import { STORE } from "../store";
+import * as U from "./utils";
+
+const response = U.response(FACTORY.PROTO_OA_SYMBOL_CATEGORY_RES);
+const error = U.response(FACTORY.PROTO_OA_ERROR_RES);
 
 export function request(socket: SpotwareSocket) {
   return (message: Messages) => {
@@ -15,16 +20,13 @@ export function request(socket: SpotwareSocket) {
       const { ctidTraderAccountId } = message.payload;
       const entry = STORE[ctidTraderAccountId];
       if (entry) {
-        socket.write(
-          FACTORY.PROTO_OA_SYMBOL_CATEGORY_RES(
-            { ctidTraderAccountId, symbolCategory: entry.categories },
-            clientMsgId
-          )
+        response(
+          socket,
+          { ctidTraderAccountId, symbolCategory: entry.categories },
+          clientMsgId
         );
       } else {
-        socket.write(
-          FACTORY.PROTO_OA_ERROR_RES({ errorCode: "E4" }, clientMsgId)
-        );
+        error(socket, { errorCode: "E4" }, clientMsgId);
       }
     }
   };

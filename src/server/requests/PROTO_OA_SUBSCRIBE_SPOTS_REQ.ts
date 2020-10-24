@@ -4,7 +4,12 @@ import {
   ProtoOAPayloadType,
   SpotwareSocket,
 } from "@claasahl/spotware-adapter";
+
 import { STORE } from "../store";
+import * as U from "./utils";
+
+const response = U.response(FACTORY.PROTO_OA_SUBSCRIBE_SPOTS_RES);
+const error = U.response(FACTORY.PROTO_OA_ERROR_RES);
 
 export function request(socket: SpotwareSocket) {
   return (message: Messages) => {
@@ -19,22 +24,14 @@ export function request(socket: SpotwareSocket) {
           .map((id) => !!entry.subscriptions[id])
           .find((p) => p);
         if (alreadySubscribed) {
-          socket.write(
-            FACTORY.PROTO_OA_ERROR_RES(
-              {
-                errorCode: "E6 - only one subscription per symbol allowed",
-              },
-              clientMsgId
-            )
+          error(
+            socket,
+            { errorCode: "E6 - only one subscription per symbol allowed" },
+            clientMsgId
           );
           return;
         }
-        socket.write(
-          FACTORY.PROTO_OA_SUBSCRIBE_SPOTS_RES(
-            { ctidTraderAccountId },
-            clientMsgId
-          )
-        );
+        response(socket, { ctidTraderAccountId }, clientMsgId);
 
         for (const symbolId of symbolIds) {
           const timer = setInterval(() => {
@@ -48,9 +45,7 @@ export function request(socket: SpotwareSocket) {
           entry.subscriptions[symbolId] = timer;
         }
       } else {
-        socket.write(
-          FACTORY.PROTO_OA_ERROR_RES({ errorCode: "E6" }, clientMsgId)
-        );
+        error(socket, { errorCode: "E6" }, clientMsgId);
       }
     }
   };

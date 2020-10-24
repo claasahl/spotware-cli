@@ -4,7 +4,12 @@ import {
   ProtoOAPayloadType,
   SpotwareSocket,
 } from "@claasahl/spotware-adapter";
+
 import { STORE } from "../store";
+import * as U from "./utils";
+
+const response = U.response(FACTORY.PROTO_OA_UNSUBSCRIBE_SPOTS_RES);
+const error = U.response(FACTORY.PROTO_OA_ERROR_RES);
 
 export function request(socket: SpotwareSocket) {
   return (message: Messages) => {
@@ -19,29 +24,17 @@ export function request(socket: SpotwareSocket) {
           .map((id) => !entry.subscriptions[id])
           .find((p) => p);
         if (alreadyUnsubscribed) {
-          socket.write(
-            FACTORY.PROTO_OA_ERROR_RES(
-              { errorCode: "E7 - no subscription" },
-              clientMsgId
-            )
-          );
+          error(socket, { errorCode: "E7 - no subscription" }, clientMsgId);
           return;
         }
-        socket.write(
-          FACTORY.PROTO_OA_UNSUBSCRIBE_SPOTS_RES(
-            { ctidTraderAccountId },
-            clientMsgId
-          )
-        );
+        response(socket, { ctidTraderAccountId }, clientMsgId);
 
         for (const symbolId of symbolIds) {
           clearInterval(entry.subscriptions[symbolId]);
           delete entry.subscriptions[symbolId];
         }
       } else {
-        socket.write(
-          FACTORY.PROTO_OA_ERROR_RES({ errorCode: "E7" }, clientMsgId)
-        );
+        error(socket, { errorCode: "E7" }, clientMsgId);
       }
     }
   };

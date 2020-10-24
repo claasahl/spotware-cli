@@ -6,11 +6,22 @@ import {
   SpotwareSocket,
 } from "@claasahl/spotware-adapter";
 
+import { STORE } from "../store";
+import * as U from "./utils";
+
+const response = U.response(FACTORY.PROTO_OA_GET_TRENDBARS_RES);
+const error = U.response(FACTORY.PROTO_OA_ERROR_RES);
+
 export function request(socket: SpotwareSocket) {
   return (message: Messages) => {
     if (message.payloadType === ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_REQ) {
       const { clientMsgId } = message;
       const { ctidTraderAccountId, symbolId, period } = message.payload;
+      const entry = STORE[ctidTraderAccountId];
+      if (!entry) {
+        error(socket, { errorCode: "???" }, clientMsgId);
+        return;
+      }
       const timestamp = 1603144800000;
       const trendbar: ProtoOATrendbar[] = [
         {
@@ -54,11 +65,10 @@ export function request(socket: SpotwareSocket) {
           utcTimestampInMinutes: 26697720,
         },
       ];
-      socket.write(
-        FACTORY.PROTO_OA_GET_TRENDBARS_RES(
-          { ctidTraderAccountId, period, timestamp, trendbar, symbolId },
-          clientMsgId
-        )
+      response(
+        socket,
+        { ctidTraderAccountId, period, timestamp, trendbar, symbolId },
+        clientMsgId
       );
     }
   };

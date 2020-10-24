@@ -6,6 +6,10 @@ import {
 } from "@claasahl/spotware-adapter";
 
 import { STORE } from "../store";
+import * as U from "./utils";
+
+const response = U.response(FACTORY.PROTO_OA_ACCOUNT_AUTH_RES);
+const error = U.response(FACTORY.PROTO_OA_ERROR_RES);
 
 export function request(socket: SpotwareSocket) {
   return (message: Messages) => {
@@ -14,16 +18,9 @@ export function request(socket: SpotwareSocket) {
       const { ctidTraderAccountId, accessToken } = message.payload;
       const entry = STORE[ctidTraderAccountId];
       if (entry && entry.accessTokens.includes(accessToken)) {
-        socket.write(
-          FACTORY.PROTO_OA_ACCOUNT_AUTH_RES(
-            { ctidTraderAccountId },
-            clientMsgId
-          )
-        );
+        response(socket, { ctidTraderAccountId }, clientMsgId);
       } else {
-        socket.write(
-          FACTORY.PROTO_OA_ERROR_RES({ errorCode: "E1" }, clientMsgId)
-        );
+        error(socket, { errorCode: "E1" }, clientMsgId);
       }
     }
   };

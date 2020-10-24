@@ -7,6 +7,9 @@ import {
 } from "@claasahl/spotware-adapter";
 
 import { STORE } from "../store";
+import * as U from "./utils";
+
+const response = U.response(FACTORY.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES);
 
 export function request(socket: SpotwareSocket) {
   return (message: Messages) => {
@@ -26,12 +29,7 @@ export function request(socket: SpotwareSocket) {
           ctidTraderAccount.push(entry.account);
         }
       }
-      socket.write(
-        FACTORY.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES(
-          { accessToken, ctidTraderAccount },
-          clientMsgId
-        )
-      );
+      response(socket, { accessToken, ctidTraderAccount }, clientMsgId);
     }
   };
 }
