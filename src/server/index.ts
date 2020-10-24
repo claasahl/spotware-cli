@@ -25,32 +25,6 @@ function serve(socket: Socket): void {
   s.on("data", (message) => {
     const { clientMsgId } = message;
     switch (message.payloadType) {
-      case ProtoOAPayloadType.PROTO_OA_VERSION_REQ:
-        {
-          s.write(FACTORY.PROTO_OA_VERSION_RES({ version: "00" }, clientMsgId));
-        }
-        break;
-      case ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ:
-        {
-          const { accessToken } = message.payload;
-          const ctidTraderAccount: ProtoOACtidTraderAccount[] = [];
-          for (const key in STORE) {
-            const entry = STORE[key];
-            if (entry.accessTokens.length === 0) {
-              entry.accessTokens.push(accessToken);
-              ctidTraderAccount.push(entry.account);
-            } else if (entry.accessTokens.includes(accessToken)) {
-              ctidTraderAccount.push(entry.account);
-            }
-          }
-          s.write(
-            FACTORY.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES(
-              { accessToken, ctidTraderAccount },
-              clientMsgId
-            )
-          );
-        }
-        break;
       case ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_REQ:
         {
           const { ctidTraderAccountId, accessToken } = message.payload;
