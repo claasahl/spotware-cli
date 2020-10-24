@@ -7,7 +7,6 @@ import {
   ProtoOATrader,
 } from "@claasahl/spotware-protobuf";
 import { Server, Socket } from "net";
-import bytes from "bytes";
 import debug from "debug";
 import {
   SpotwareSocket,
@@ -209,23 +208,6 @@ function serve(socket: Socket): void {
                     clientMsgId
                   )
                 );
-                s.write(
-                  FACTORY.PROTO_OA_ERROR_RES(
-                    {
-                      errorCode: `the next count will be ${count} bytes (${bytes(
-                        count
-                      )})`,
-                    },
-                    clientMsgId
-                  )
-                );
-                s.write(
-                  FACTORY.PROTO_OA_ERROR_RES(
-                    { errorCode: "1".repeat(count) },
-                    clientMsgId
-                  )
-                );
-                count *= 2;
               }, 1000);
               entry.subscriptions[symbolId] = timer;
             }
@@ -292,8 +274,6 @@ function serve(socket: Socket): void {
     }
   });
 }
-
-let count = 1;
 
 interface Account {
   accessTokens: string[];
