@@ -1,9 +1,9 @@
-import { Account, account } from "./account";
+import { Account } from "./account";
 
 export const VERSION = "00";
 
 export const STORE: {
   [ctidTraderAccountId: number]: Account;
 } = {
-  123456: account(123456),
+  123456: new Account(123456),
 };
