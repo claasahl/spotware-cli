@@ -9,12 +9,15 @@ import {
 import { STORE } from "../store";
 
 export function request(socket: SpotwareSocket) {
-  return (msg: Messages) => {
+  return (message: Messages) => {
     if (
-      msg.payloadType ===
+      message.payloadType ===
       ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ
     ) {
-      const { accessToken } = msg.payload;
+      const {
+        clientMsgId,
+        payload: { accessToken },
+      } = message;
       const ctidTraderAccount: ProtoOACtidTraderAccount[] = [];
       for (const key in STORE) {
         const entry = STORE[key];
@@ -28,7 +31,7 @@ export function request(socket: SpotwareSocket) {
       socket.write(
         FACTORY.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_RES(
           { accessToken, ctidTraderAccount },
-          msg.clientMsgId
+          clientMsgId
         )
       );
     }
