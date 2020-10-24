@@ -1,10 +1,12 @@
 import {
+  FACTORY,
   ProtoOAAssetClass,
   ProtoOACtidTraderAccount,
   ProtoOALightSymbol,
   ProtoOASymbol,
   ProtoOASymbolCategory,
   ProtoOATrader,
+  SpotwareSocket,
 } from "@claasahl/spotware-adapter";
 
 export const VERSION = "00";
@@ -18,8 +20,12 @@ export interface Account {
   subscriptions: {
     [symbolId: number]: NodeJS.Timeout;
   };
+  hasSubscription(socket: SpotwareSocket, symbolId: number): boolean;
+  subscribe(socket: SpotwareSocket, symbolId: number): void;
+  unsubscribe(socket: SpotwareSocket, symbolId: number): void;
 }
 function account(ctidTraderAccountId: number): Account {
+  const subscriptions: Account["subscriptions"] = {};
   return {
     accessTokens: [],
     account: {
@@ -114,7 +120,24 @@ function account(ctidTraderAccountId: number): Account {
         schedule: [],
       },
     ],
-    subscriptions: {},
+    subscriptions,
+    hasSubscription: (_socket, symbolId) => !!subscriptions[symbolId],
+    subscribe: (socket, symbolId) => {
+      const timer = setInterval(() => {
+        socket.write(
+          FACTORY.PROTO_OA_SPOT_EVENT({
+            ctidTraderAccountId,
+            symbolId,
+            trendbar: [],
+          })
+        );
+      }, 1000);
+      subscriptions[symbolId] = timer;
+    },
+    unsubscribe: (_socket, symbolId) => {
+      clearInterval(subscriptions[symbolId]);
+      delete subscriptions[symbolId];
+    },
   };
 }
 
