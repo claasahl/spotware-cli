@@ -16,7 +16,7 @@ const host = process.env.host || "live.ctraderapi.com";
 const port = Number(process.env.port) || 5035;
 
 const events = new Events();
-const useTLS = Boolean(process.env.useTLS);
+const useTLS = process.env.useTLS === "true";
 const socket = useTLS ? tlsConnect(port, host) : netConnect(port, host);
 const event = useTLS ? "secureConnect" : "connect";
 const s = new SpotwareClientSocket(socket);
