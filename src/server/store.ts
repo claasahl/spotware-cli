@@ -154,10 +154,10 @@ function account(ctidTraderAccountId: number): Account {
             trendbar.push({
               volume: 0,
               period,
-              low: 0,
+              low: 15,
               deltaOpen: 1,
               deltaHigh: 2,
-              utcTimestampInMinutes: 0,
+              utcTimestampInMinutes: Math.round(Date.now() % 60000),
             });
           }
         }
@@ -166,9 +166,10 @@ function account(ctidTraderAccountId: number): Account {
             ctidTraderAccountId,
             symbolId,
             trendbar,
+            bid: Math.random() * 1000000,
           })
         );
-      }, 1000);
+      }, 10);
       subscriptions[symbolId] = timer;
     },
     unsubscribe: (_socket, symbolId) => {
