@@ -16,9 +16,9 @@ const host = process.env.host || "live.ctraderapi.com";
 const port = Number(process.env.port) || 5035;
 
 const events = new Events();
-const isLocalhost = host === "localhost";
-const socket = isLocalhost ? netConnect(port, host) : tlsConnect(port, host);
-const event = isLocalhost ? "connect" : "secureConnect";
+const useTLS = Boolean(process.env.useTLS);
+const socket = useTLS ? tlsConnect(port, host) : netConnect(port, host);
+const event = useTLS ? "secureConnect" : "connect";
 const s = new SpotwareClientSocket(socket);
 socket.once(event, async () => R.PROTO_OA_VERSION_REQ(s, {}));
 socket.once(event, async () => {
