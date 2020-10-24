@@ -1,0 +1,53 @@
+import { ProtoOALightSymbol, ProtoOASymbol } from "@claasahl/spotware-adapter";
+
+const symbols: (ProtoOALightSymbol & ProtoOASymbol)[] = [
+  Object.freeze({
+    symbolId: 1,
+    symbolName: "BTC/EUR",
+    baseAssetId: 1,
+    quoteAssetId: 2,
+    enabled: true,
+    symbolCategoryId: 1,
+    digits: 2,
+    holiday: [],
+    pipPosition: 5,
+    schedule: [],
+  }),
+  Object.freeze({
+    symbolId: 2,
+    symbolName: "SYMBOL2",
+    baseAssetId: 1,
+    quoteAssetId: 2,
+    enabled: true,
+    symbolCategoryId: 2,
+    digits: 2,
+    holiday: [],
+    pipPosition: 5,
+    schedule: [],
+  }),
+  Object.freeze({
+    symbolId: 3,
+    symbolName: "SYMBOL3",
+    baseAssetId: 1,
+    quoteAssetId: 2,
+    enabled: false,
+    symbolCategoryId: 3,
+    digits: 2,
+    holiday: [],
+    pipPosition: 5,
+    schedule: [],
+  }),
+  Object.freeze({
+    symbolId: 4,
+    symbolName: "SYMBOL4",
+    baseAssetId: 1,
+    quoteAssetId: 2,
+    enabled: false,
+    symbolCategoryId: 4,
+    digits: 2,
+    holiday: [],
+    pipPosition: 5,
+    schedule: [],
+  }),
+];
+export default symbols;
