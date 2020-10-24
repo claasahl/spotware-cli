@@ -22,7 +22,7 @@ export function request(socket: SpotwareSocket) {
         return;
       }
 
-      if (entry.accessTokens.includes(accessToken)) {
+      if (!entry.accessTokens.includes(accessToken)) {
         error(socket, { errorCode: "E???1" }, clientMsgId);
         return;
       }
