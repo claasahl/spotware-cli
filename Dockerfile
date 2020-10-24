@@ -12,4 +12,4 @@ RUN npm run test
 # RUN npm ci --only=production
 
 EXPOSE 9229
-CMD npm run client
+CMD npm run inspect
