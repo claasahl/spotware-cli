@@ -11,7 +11,7 @@ import {
   SpotwareSocket,
 } from "@claasahl/spotware-adapter";
 
-import { period } from "../../utils";
+import * as U from "../../utils";
 import assetClasses from "./assetClasses";
 import categories from "./categories";
 import symbols from "./symbols";
@@ -57,13 +57,15 @@ export class Account {
       const periods = this.trendbarSubscriptions.get(symbolId);
       if (periods) {
         for (const period of periods) {
+          const MILLIS = U.period(period);
+          const timestamp = Math.round(Date.now() / MILLIS) * MILLIS;
           trendbar.push({
-            volume: 0,
+            volume: 100,
             period,
             low: 15,
             deltaOpen: 1,
             deltaHigh: 2,
-            utcTimestampInMinutes: Math.round(Date.now() % 60000),
+            utcTimestampInMinutes: Math.round(timestamp / 60000),
           });
         }
       }
@@ -72,7 +74,7 @@ export class Account {
           ctidTraderAccountId: this.ctidTraderAccountId,
           symbolId,
           trendbar,
-          bid: Math.random() * 1000000,
+          bid: 12356,
         })
       );
     }, 10);
@@ -132,13 +134,13 @@ export class Account {
 
   trendbars(req: ProtoOAGetTrendbarsReq): ProtoOAGetTrendbarsRes {
     const trendbar: ProtoOATrendbar[] = [];
-    const MILLIS = period(req.period);
+    const MILLIS = U.period(req.period);
     const timestamp = Math.round(req.fromTimestamp / MILLIS) * MILLIS;
     let a = timestamp;
     while (a < req.toTimestamp) {
       trendbar.push({
-        volume: Math.random() * 10000,
-        low: Math.random() * 100000,
+        volume: 10000,
+        low: 100000,
         deltaOpen: 6000,
         deltaHigh: 10000,
         deltaClose: 400,
