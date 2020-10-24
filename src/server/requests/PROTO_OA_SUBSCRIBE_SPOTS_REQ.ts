@@ -19,33 +19,34 @@ export function request(socket: SpotwareSocket) {
       const { clientMsgId } = message;
       const { ctidTraderAccountId, symbolId: symbolIds } = message.payload;
       const entry = STORE[ctidTraderAccountId];
-      if (entry) {
-        const alreadySubscribed = symbolIds
-          .map((id) => !!entry.subscriptions[id])
-          .find((p) => p);
-        if (alreadySubscribed) {
-          error(
-            socket,
-            { errorCode: "E6 - only one subscription per symbol allowed" },
-            clientMsgId
-          );
-          return;
-        }
-        response(socket, { ctidTraderAccountId }, clientMsgId);
-
-        for (const symbolId of symbolIds) {
-          const timer = setInterval(() => {
-            socket.write(
-              FACTORY.PROTO_OA_SPOT_EVENT(
-                { ctidTraderAccountId, symbolId, trendbar: [] },
-                clientMsgId
-              )
-            );
-          }, 1000);
-          entry.subscriptions[symbolId] = timer;
-        }
-      } else {
+      if (!entry) {
         error(socket, { errorCode: "E6" }, clientMsgId);
+        return;
+      }
+
+      const alreadySubscribed = symbolIds
+        .map((id) => !!entry.subscriptions[id])
+        .find((p) => p);
+      if (alreadySubscribed) {
+        error(
+          socket,
+          { errorCode: "E6 - only one subscription per symbol allowed" },
+          clientMsgId
+        );
+        return;
+      }
+      response(socket, { ctidTraderAccountId }, clientMsgId);
+
+      for (const symbolId of symbolIds) {
+        const timer = setInterval(() => {
+          socket.write(
+            FACTORY.PROTO_OA_SPOT_EVENT(
+              { ctidTraderAccountId, symbolId, trendbar: [] },
+              clientMsgId
+            )
+          );
+        }, 1000);
+        entry.subscriptions[symbolId] = timer;
       }
     }
   };

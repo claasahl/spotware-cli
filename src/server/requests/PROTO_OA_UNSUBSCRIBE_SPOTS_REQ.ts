@@ -19,22 +19,23 @@ export function request(socket: SpotwareSocket) {
       const { clientMsgId } = message;
       const { ctidTraderAccountId, symbolId: symbolIds } = message.payload;
       const entry = STORE[ctidTraderAccountId];
-      if (entry) {
-        const alreadyUnsubscribed = symbolIds
-          .map((id) => !entry.subscriptions[id])
-          .find((p) => p);
-        if (alreadyUnsubscribed) {
-          error(socket, { errorCode: "E7 - no subscription" }, clientMsgId);
-          return;
-        }
-        response(socket, { ctidTraderAccountId }, clientMsgId);
-
-        for (const symbolId of symbolIds) {
-          clearInterval(entry.subscriptions[symbolId]);
-          delete entry.subscriptions[symbolId];
-        }
-      } else {
+      if (!entry) {
         error(socket, { errorCode: "E7" }, clientMsgId);
+        return;
+      }
+
+      const alreadyUnsubscribed = symbolIds
+        .map((id) => !entry.subscriptions[id])
+        .find((p) => p);
+      if (alreadyUnsubscribed) {
+        error(socket, { errorCode: "E7 - no subscription" }, clientMsgId);
+        return;
+      }
+      response(socket, { ctidTraderAccountId }, clientMsgId);
+
+      for (const symbolId of symbolIds) {
+        clearInterval(entry.subscriptions[symbolId]);
+        delete entry.subscriptions[symbolId];
       }
     }
   };

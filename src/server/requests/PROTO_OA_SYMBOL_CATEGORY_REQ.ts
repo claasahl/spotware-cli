@@ -19,15 +19,16 @@ export function request(socket: SpotwareSocket) {
       const { clientMsgId } = message;
       const { ctidTraderAccountId } = message.payload;
       const entry = STORE[ctidTraderAccountId];
-      if (entry) {
-        response(
-          socket,
-          { ctidTraderAccountId, symbolCategory: entry.categories },
-          clientMsgId
-        );
-      } else {
+      if (!entry) {
         error(socket, { errorCode: "E4" }, clientMsgId);
+        return;
       }
+
+      response(
+        socket,
+        { ctidTraderAccountId, symbolCategory: entry.categories },
+        clientMsgId
+      );
     }
   };
 }

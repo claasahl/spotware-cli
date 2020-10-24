@@ -17,15 +17,16 @@ export function request(socket: SpotwareSocket) {
       const { clientMsgId } = message;
       const { ctidTraderAccountId } = message.payload;
       const entry = STORE[ctidTraderAccountId];
-      if (entry) {
-        response(
-          socket,
-          { ctidTraderAccountId, trader: entry.trader },
-          clientMsgId
-        );
-      } else {
+      if (!entry) {
         error(socket, { errorCode: "E2" }, clientMsgId);
+        return;
       }
+
+      response(
+        socket,
+        { ctidTraderAccountId, trader: entry.trader },
+        clientMsgId
+      );
     }
   };
 }

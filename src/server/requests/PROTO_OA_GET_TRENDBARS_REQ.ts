@@ -22,6 +22,7 @@ export function request(socket: SpotwareSocket) {
         error(socket, { errorCode: "???" }, clientMsgId);
         return;
       }
+
       const timestamp = 1603144800000;
       const trendbar: ProtoOATrendbar[] = [
         {

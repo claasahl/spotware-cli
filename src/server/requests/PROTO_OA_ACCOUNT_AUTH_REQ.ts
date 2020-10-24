@@ -17,11 +17,16 @@ export function request(socket: SpotwareSocket) {
       const { clientMsgId } = message;
       const { ctidTraderAccountId, accessToken } = message.payload;
       const entry = STORE[ctidTraderAccountId];
-      if (entry && entry.accessTokens.includes(accessToken)) {
-        response(socket, { ctidTraderAccountId }, clientMsgId);
-      } else {
+      if (!entry) {
         error(socket, { errorCode: "E1" }, clientMsgId);
+        return;
       }
+
+      if (entry.accessTokens.includes(accessToken)) {
+        error(socket, { errorCode: "E???1" }, clientMsgId);
+        return;
+      }
+      response(socket, { ctidTraderAccountId }, clientMsgId);
     }
   };
 }
