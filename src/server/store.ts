@@ -10,6 +10,8 @@ import {
   ProtoOASymbol,
   ProtoOASymbolCategory,
   ProtoOATrader,
+  ProtoOATrendbar,
+  ProtoOATrendbarPeriod,
   SpotwareSocket,
 } from "@claasahl/spotware-adapter";
 
@@ -24,6 +26,21 @@ export interface Account {
   hasSubscription(socket: SpotwareSocket, symbolId: number): boolean;
   subscribe(socket: SpotwareSocket, symbolId: number): void;
   unsubscribe(socket: SpotwareSocket, symbolId: number): void;
+  hasTrendbarSubscription(
+    socket: SpotwareSocket,
+    symbolId: number,
+    period: ProtoOATrendbarPeriod
+  ): boolean;
+  subscribeTrendbars(
+    socket: SpotwareSocket,
+    symbolId: number,
+    period: ProtoOATrendbarPeriod
+  ): void;
+  unsubscribeTrendbars(
+    socket: SpotwareSocket,
+    symbolId: number,
+    period: ProtoOATrendbarPeriod
+  ): void;
   ticks(req: ProtoOAGetTickDataReq): ProtoOAGetTickDataRes;
   trendbars(req: ProtoOAGetTrendbarsReq): ProtoOAGetTrendbarsRes;
 }
@@ -31,6 +48,8 @@ function account(ctidTraderAccountId: number): Account {
   const subscriptions: {
     [symbolId: number]: NodeJS.Timeout;
   } = {};
+  const trendbarSubscriptions = new Map<number, ProtoOATrendbarPeriod[]>();
+
   return {
     accessTokens: [],
     account: {
@@ -128,11 +147,25 @@ function account(ctidTraderAccountId: number): Account {
     hasSubscription: (_socket, symbolId) => !!subscriptions[symbolId],
     subscribe: (socket, symbolId) => {
       const timer = setInterval(() => {
+        const trendbar: ProtoOATrendbar[] = [];
+        const periods = trendbarSubscriptions.get(symbolId);
+        if (periods) {
+          for (const period of periods) {
+            trendbar.push({
+              volume: 0,
+              period,
+              low: 0,
+              deltaOpen: 1,
+              deltaHigh: 2,
+              utcTimestampInMinutes: 0,
+            });
+          }
+        }
         socket.write(
           FACTORY.PROTO_OA_SPOT_EVENT({
             ctidTraderAccountId,
             symbolId,
-            trendbar: [],
+            trendbar,
           })
         );
       }, 1000);
@@ -141,6 +174,29 @@ function account(ctidTraderAccountId: number): Account {
     unsubscribe: (_socket, symbolId) => {
       clearInterval(subscriptions[symbolId]);
       delete subscriptions[symbolId];
+    },
+    hasTrendbarSubscription: (_socket, symbolId, period) => {
+      const periods = trendbarSubscriptions.get(symbolId);
+      if (!periods) {
+        return false;
+      }
+      return periods.includes(period);
+    },
+    subscribeTrendbars: (_socket, symbolId, period) => {
+      const periods = trendbarSubscriptions.get(symbolId);
+      if (periods && !periods.includes(period)) {
+        trendbarSubscriptions.set(symbolId, [...periods, period]);
+      }
+      trendbarSubscriptions.set(symbolId, [...(periods || []), period]);
+    },
+    unsubscribeTrendbars: (_socket, symbolId, period) => {
+      const periods = trendbarSubscriptions.get(symbolId);
+      if (periods && periods.includes(period)) {
+        trendbarSubscriptions.set(symbolId, [
+          ...periods.filter((p) => p !== period),
+        ]);
+      }
+      trendbarSubscriptions.set(symbolId, periods || []);
     },
     ticks: (_req) => ({ ctidTraderAccountId, hasMore: false, tickData: [] }),
     trendbars: ({ period, symbolId }) => ({
