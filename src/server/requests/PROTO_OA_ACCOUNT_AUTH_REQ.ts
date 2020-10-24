@@ -18,7 +18,7 @@ export function request(socket: SpotwareSocket) {
       const { ctidTraderAccountId, accessToken } = message.payload;
       const entry = STORE[ctidTraderAccountId];
       if (!entry) {
-        error(socket, { errorCode: "E1" }, clientMsgId);
+        U.NOT_AUTHORIZED(socket, ctidTraderAccountId, clientMsgId);
         return;
       }
 

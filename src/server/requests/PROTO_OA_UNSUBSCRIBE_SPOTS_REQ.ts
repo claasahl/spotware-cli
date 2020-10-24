@@ -20,7 +20,7 @@ export function request(socket: SpotwareSocket) {
       const { ctidTraderAccountId, symbolId: symbolIds } = message.payload;
       const entry = STORE[ctidTraderAccountId];
       if (!entry) {
-        error(socket, { errorCode: "E7" }, clientMsgId);
+        U.NOT_AUTHORIZED(socket, ctidTraderAccountId, clientMsgId);
         return;
       }
 
