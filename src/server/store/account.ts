@@ -11,6 +11,7 @@ import {
   SpotwareSocket,
 } from "@claasahl/spotware-adapter";
 
+import { period } from "../../utils";
 import assetClasses from "./assetClasses";
 import categories from "./categories";
 import symbols from "./symbols";
@@ -129,16 +130,28 @@ export class Account {
     };
   }
 
-  trendbars({
-    period,
-    symbolId,
-  }: ProtoOAGetTrendbarsReq): ProtoOAGetTrendbarsRes {
+  trendbars(req: ProtoOAGetTrendbarsReq): ProtoOAGetTrendbarsRes {
+    const trendbar: ProtoOATrendbar[] = [];
+    const MILLIS = period(req.period);
+    const timestamp = Math.round(req.fromTimestamp / MILLIS) * MILLIS;
+    let a = timestamp;
+    while (a < req.toTimestamp) {
+      trendbar.push({
+        volume: Math.random() * 10000,
+        low: Math.random() * 100000,
+        deltaOpen: 6000,
+        deltaHigh: 10000,
+        deltaClose: 400,
+        utcTimestampInMinutes: Math.round(a / 60000),
+      });
+      a += MILLIS;
+    }
     return {
       ctidTraderAccountId: this.ctidTraderAccountId,
-      period,
-      symbolId,
-      timestamp: 0,
-      trendbar: [],
+      period: req.period,
+      symbolId: req.symbolId,
+      timestamp,
+      trendbar,
     };
   }
 }
