@@ -5,6 +5,7 @@ import { request as PROTO_OA_APPLICATION_AUTH_REQ } from "./PROTO_OA_APPLICATION
 import { request as PROTO_OA_ASSET_CLASS_LIST_REQ } from "./PROTO_OA_ASSET_CLASS_LIST_REQ";
 import { request as PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ } from "./PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ";
 import { request as PROTO_OA_GET_TICKDATA_REQ } from "./PROTO_OA_GET_TICKDATA_REQ";
+import { request as PROTO_OA_GET_TRENDBARS_REQ } from "./PROTO_OA_GET_TRENDBARS_REQ";
 import { request as PROTO_OA_SUBSCRIBE_SPOTS_REQ } from "./PROTO_OA_SUBSCRIBE_SPOTS_REQ";
 import { request as PROTO_OA_SYMBOLS_LIST_REQ } from "./PROTO_OA_SYMBOLS_LIST_REQ";
 import { request as PROTO_OA_SYMBOL_BY_ID_REQ } from "./PROTO_OA_SYMBOL_BY_ID_REQ";
@@ -20,6 +21,7 @@ export function requests(socket: SpotwareSocket) {
     PROTO_OA_ASSET_CLASS_LIST_REQ(socket),
     PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ(socket),
     PROTO_OA_GET_TICKDATA_REQ(socket),
+    PROTO_OA_GET_TRENDBARS_REQ(socket),
     PROTO_OA_SUBSCRIBE_SPOTS_REQ(socket),
     PROTO_OA_SYMBOLS_LIST_REQ(socket),
     PROTO_OA_SYMBOL_BY_ID_REQ(socket),
