@@ -6,6 +6,7 @@
   "scripts": {
     "prepare": "tsc",
     "build": "tsc",
+    "test": "",
     "prestart": "npm run build",
     "inspect": "node --inspect -r dotenv/config build/client/index.js > client.log 2>&1",
     "start": "node -r dotenv/config build/client/index.js 2>&1 | multilog s16777215 n100 dir ./logs",
