@@ -8,6 +8,7 @@ import {
 } from "@claasahl/spotware-adapter";
 
 import { STORE } from "./store";
+import { requests } from "./requests";
 
 const log = debug("custom-server");
 
@@ -18,18 +19,15 @@ server.listen(port, () => log(`listening on port ${port}`));
 function serve(socket: Socket): void {
   log("new connection");
   const s = new SpotwareSocket(socket);
+  const dealWithIt = requests(s);
   s.on("error", log);
+  s.on("data", dealWithIt);
   s.on("data", (message) => {
     const { clientMsgId } = message;
     switch (message.payloadType) {
       case ProtoOAPayloadType.PROTO_OA_VERSION_REQ:
         {
           s.write(FACTORY.PROTO_OA_VERSION_RES({ version: "00" }, clientMsgId));
-        }
-        break;
-      case ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_REQ:
-        {
-          s.write(FACTORY.PROTO_OA_APPLICATION_AUTH_RES({}, clientMsgId));
         }
         break;
       case ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ:
