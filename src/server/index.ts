@@ -16,7 +16,7 @@ import {
 
 const log = debug("custom-server");
 
-const port = Number(process.env.SPOTWARE__PORT);
+const port = Number(process.env.port);
 const server = new Server(serve);
 server.listen(port, () => log(`listening on port ${port}`));
 
