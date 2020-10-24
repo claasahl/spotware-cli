@@ -7,6 +7,7 @@ import {
   ProtoOATrader,
 } from "@claasahl/spotware-adapter";
 
+export const VERSION = "00";
 export interface Account {
   accessTokens: string[];
   account: ProtoOACtidTraderAccount;
