@@ -7,6 +7,9 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
-    network_mode: "host"
     ports:
       - 9229:9229
+    command:
+      - node
+      - --inspect=0.0.0.0
+      - build/client/index.js

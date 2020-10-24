@@ -11,5 +11,4 @@ RUN npm run build -if-present
 RUN npm run test
 # RUN npm ci --only=production
 
-EXPOSE 9229
 CMD npm run inspect
