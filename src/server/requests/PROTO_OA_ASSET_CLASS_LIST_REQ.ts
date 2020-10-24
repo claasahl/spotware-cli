@@ -11,10 +11,8 @@ export function request(socket: SpotwareSocket) {
     if (
       message.payloadType === ProtoOAPayloadType.PROTO_OA_ASSET_CLASS_LIST_REQ
     ) {
-      const {
-        clientMsgId,
-        payload: { ctidTraderAccountId },
-      } = message;
+      const { clientMsgId } = message;
+      const { ctidTraderAccountId } = message.payload;
       const entry = STORE[ctidTraderAccountId];
       if (entry) {
         socket.write(

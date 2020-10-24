@@ -9,10 +9,8 @@ import { STORE } from "../store";
 export function request(socket: SpotwareSocket) {
   return (message: Messages) => {
     if (message.payloadType === ProtoOAPayloadType.PROTO_OA_SYMBOL_BY_ID_REQ) {
-      const {
-        clientMsgId,
-        payload: { ctidTraderAccountId },
-      } = message;
+      const { clientMsgId } = message;
+      const { ctidTraderAccountId } = message.payload;
       const entry = STORE[ctidTraderAccountId];
       if (entry) {
         socket.write(

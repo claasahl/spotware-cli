@@ -10,9 +10,8 @@ export function request(socket: SpotwareSocket) {
     if (
       message.payloadType === ProtoOAPayloadType.PROTO_OA_APPLICATION_AUTH_REQ
     ) {
-      socket.write(
-        FACTORY.PROTO_OA_APPLICATION_AUTH_RES({}, message.clientMsgId)
-      );
+      const { clientMsgId } = message;
+      socket.write(FACTORY.PROTO_OA_APPLICATION_AUTH_RES({}, clientMsgId));
     }
   };
 }

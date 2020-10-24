@@ -10,10 +10,8 @@ import { STORE } from "../store";
 export function request(socket: SpotwareSocket) {
   return (message: Messages) => {
     if (message.payloadType === ProtoOAPayloadType.PROTO_OA_ACCOUNT_AUTH_REQ) {
-      const {
-        clientMsgId,
-        payload: { ctidTraderAccountId, accessToken },
-      } = message;
+      const { clientMsgId } = message;
+      const { ctidTraderAccountId, accessToken } = message.payload;
       const entry = STORE[ctidTraderAccountId];
       if (entry && entry.accessTokens.includes(accessToken)) {
         socket.write(

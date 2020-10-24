@@ -11,10 +11,8 @@ export function request(socket: SpotwareSocket) {
     if (
       message.payloadType === ProtoOAPayloadType.PROTO_OA_SUBSCRIBE_SPOTS_REQ
     ) {
-      const {
-        clientMsgId,
-        payload: { ctidTraderAccountId, symbolId: symbolIds },
-      } = message;
+      const { clientMsgId } = message;
+      const { ctidTraderAccountId, symbolId: symbolIds } = message.payload;
       const entry = STORE[ctidTraderAccountId];
       if (entry) {
         const alreadySubscribed = symbolIds

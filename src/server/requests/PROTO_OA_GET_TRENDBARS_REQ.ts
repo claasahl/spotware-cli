@@ -9,10 +9,8 @@ import {
 export function request(socket: SpotwareSocket) {
   return (message: Messages) => {
     if (message.payloadType === ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_REQ) {
-      const {
-        clientMsgId,
-        payload: { ctidTraderAccountId, symbolId, period },
-      } = message;
+      const { clientMsgId } = message;
+      const { ctidTraderAccountId, symbolId, period } = message.payload;
       const timestamp = 1603144800000;
       const trendbar: ProtoOATrendbar[] = [
         {

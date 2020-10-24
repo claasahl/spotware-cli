@@ -14,10 +14,8 @@ export function request(socket: SpotwareSocket) {
       message.payloadType ===
       ProtoOAPayloadType.PROTO_OA_GET_ACCOUNTS_BY_ACCESS_TOKEN_REQ
     ) {
-      const {
-        clientMsgId,
-        payload: { accessToken },
-      } = message;
+      const { clientMsgId } = message;
+      const { accessToken } = message.payload;
       const ctidTraderAccount: ProtoOACtidTraderAccount[] = [];
       for (const key in STORE) {
         const entry = STORE[key];
