@@ -3,25 +3,30 @@ import * as d3 from "d3";
 import fs from "fs";
 
 import { Trendbar } from "../utils";
+import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
+
+const BAR_WIDTH_FULL = 20;
+const BAR_WIDTH_HALF = 10;
 
 function bar(
   svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
-  trendbar?: Trendbar
+  trendbar: Trendbar
 ) {
   const color = "rgb(117, 227, 66)";
+  const x = 110;
   svg
     .append("rect")
-    .attr("x", 100)
-    .attr("y", 10)
-    .attr("width", 20)
-    .attr("height", 80)
+    .attr("x", x - BAR_WIDTH_HALF)
+    .attr("y", trendbar.open)
+    .attr("width", BAR_WIDTH_FULL)
+    .attr("height", trendbar.close)
     .attr("style", `fill: ${color}`);
   svg
     .append("line")
-    .attr("x1", 110)
-    .attr("y1", 5)
-    .attr("x2", 110)
-    .attr("y2", 95)
+    .attr("x1", x)
+    .attr("y1", trendbar.high)
+    .attr("x2", x)
+    .attr("y2", trendbar.low)
     .attr("style", `stroke: ${color}; stroke-width: 2`);
 }
 
@@ -41,6 +46,15 @@ svg
   .attr("height", 80)
   .style("fill", "orange");
 
-bar(svg);
+const trendbar: Trendbar = {
+  open: 10,
+  high: 40,
+  low: 5,
+  close: 22,
+  volume: 1,
+  period: ProtoOATrendbarPeriod.D1,
+  timestamp: Date.now(),
+};
+bar(svg, trendbar);
 
 fs.writeFileSync("out.svg", body.html());
