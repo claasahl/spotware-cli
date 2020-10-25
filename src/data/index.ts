@@ -44,4 +44,5 @@ socket.once(event, async () => {
       });
     }
   }
+  socket.end();
 });

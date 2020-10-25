@@ -65,11 +65,17 @@ export async function downloadTrendbars(
   socket: SpotwareClientSocket,
   options: Options
 ) {
+  try {
+    await fs.promises.stat(`./data/${options.symbolId}/`);
+  } catch {
+    await fs.promises.mkdir(`./data/${options.symbolId}/`);
+  }
+
   for (const period of options.periods) {
     const trendbars = await download(socket, options, period);
     await fs.promises.writeFile(
-      `trendbars-${ProtoOATrendbarPeriod[period]}.json`,
-      JSON.stringify(trendbars, null, 2)
+      `./data/${options.symbolId}/trendbars-${ProtoOATrendbarPeriod[period]}.json`,
+      JSON.stringify(trendbars)
     );
   }
 }
