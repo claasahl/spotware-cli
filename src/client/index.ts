@@ -68,21 +68,8 @@ events.on("symbol", async (symbol) => {
   });
 });
 
-// "break out" separate stream that focuses on (highlevel) application (ideally both read and write)
-// "break out" separate streams that focus on individual accounts (ideally both read and write)
-// "break out" separate streams that focus on spot prices for a symbol (ideally both read and write)
-
-// was not able to use Duplex streams for spot prices stream.
-// -- calls to socket.read() would "eat" data away from other consumers
-// -- only flowing mode would be doable, but then backpressure would not be supported (other than forcefully pausing the stream -- which might be exactlz how nodejs implements it)
-
-// -----
-
-// prepare list of relevant messages for each of the above streams
-// ... alternatively, consider wrapping spotware stream in another Duplex stream which transforms spotware events into a more digestable format
-// ... or a Transform stream which transforms live trendbars into sensible trendbars
-
 // rule of thumb:
 // - we want all custom events to be emitted on the same stream (i.e. global ordering / no stream merging)
 // - keep prices in integer format for as long as possible, otherwise one will most likely accumulate rounding errors over time
 // - only produce outputs for SMA (and similar) when enough data has been buffered (i.e. all required candles / trendbars)
+// - stick original spotware messages and use utility functions to convert and accumulate high-level information
