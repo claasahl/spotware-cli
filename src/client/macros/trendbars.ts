@@ -24,20 +24,6 @@ function intervals(from: number, to: number): Interval[] {
   return chunks;
 }
 
-function inflate(tickData: ProtoOATickData[]): ProtoOATickData[] {
-  const acc: ProtoOATickData = { timestamp: 0, tick: 0 };
-  const spots: ProtoOATickData[] = [];
-  for (const t of tickData) {
-    acc.timestamp += t.timestamp;
-    acc.tick += t.tick;
-    spots.push({
-      timestamp: acc.timestamp,
-      tick: acc.tick / FACTOR,
-    });
-  }
-  return spots.reverse();
-}
-
 export interface Options {
   ctidTraderAccountId: number;
   symbolId: number;
