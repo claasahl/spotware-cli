@@ -1,6 +1,7 @@
 import { JSDOM } from "jsdom";
 import * as d3 from "d3";
 import fs from "fs";
+import { bullish } from "indicators";
 
 import { Trendbar } from "../utils";
 import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
@@ -8,11 +9,14 @@ import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
 const BAR_WIDTH_FULL = 20;
 const BAR_WIDTH_HALF = 10;
 
+const BULLISH_COLOR = "rgb(117, 227, 66)";
+const BEARISH_COLOR = "rgb(255, 0, 66)";
+
 function bar(
   svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
   trendbar: Trendbar
 ) {
-  const color = "rgb(117, 227, 66)";
+  const color = bullish(trendbar) ? BULLISH_COLOR : BEARISH_COLOR;
   const x = 110;
   svg
     .append("rect")
@@ -50,7 +54,7 @@ const trendbar: Trendbar = {
   open: 10,
   high: 40,
   low: 5,
-  close: 22,
+  close: 9,
   volume: 1,
   period: ProtoOATrendbarPeriod.D1,
   timestamp: Date.now(),
