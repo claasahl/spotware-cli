@@ -39,6 +39,30 @@ function bar(
     .attr("x2", x)
     .attr("y2", price(trendbar.low) || -100)
     .attr("style", `stroke: ${color}; stroke-width: 2`);
+
+  const xScale = 200;
+  const [min, max] = price.domain();
+  svg
+    .append("line")
+    .attr("x1", xScale)
+    .attr("y1", price(min) || -100)
+    .attr("x2", xScale)
+    .attr("y2", price(max) || -100)
+    .attr("style", `stroke: rgb(0,0,0); stroke-width: 2`);
+  svg
+    .append("line")
+    .attr("x1", xScale - BAR_WIDTH_HALF)
+    .attr("y1", price(min) || -100)
+    .attr("x2", xScale)
+    .attr("y2", price(min) || -100)
+    .attr("style", `stroke: rgb(0,0,0); stroke-width: 2`);
+  svg
+    .append("line")
+    .attr("x1", xScale - BAR_WIDTH_HALF)
+    .attr("y1", price(max) || -100)
+    .attr("x2", xScale)
+    .attr("y2", price(max) || -100)
+    .attr("style", `stroke: rgb(0,0,0); stroke-width: 2`);
 }
 
 const dom = new JSDOM(`<!DOCTYPE html><body></body>`);
