@@ -38,7 +38,7 @@ socket.once(event, async () => {
       await downloadTrendbars(s, {
         ctidTraderAccountId: trader.ctidTraderAccountId,
         symbolId: symbol.symbolId,
-        periods: [ProtoOATrendbarPeriod.D1],
+        periods: [ProtoOATrendbarPeriod.D1, ProtoOATrendbarPeriod.H1],
         fromDate,
         toDate,
       });
