@@ -1,11 +1,11 @@
 import {
-  ProtoOATrendbar,
+  ProtoOAPayloadType,
   ProtoOATrendbarPeriod,
   SpotwareClientSocket,
 } from "@claasahl/spotware-adapter";
-import fs from "fs";
 
 import * as R from "../client/requests";
+import * as U from "../utils";
 
 function interval(period: ProtoOATrendbarPeriod): number {
   switch (period) {
@@ -37,8 +37,8 @@ async function download(
   socket: SpotwareClientSocket,
   options: Omit<Options, "periods">,
   period: ProtoOATrendbarPeriod
-): Promise<ProtoOATrendbar[]> {
-  const trendbars: ProtoOATrendbar[] = [];
+): Promise<U.Trendbar[]> {
+  const trendbars: U.Trendbar[] = [];
   const { ctidTraderAccountId, symbolId } = options;
   const tmp = boundaries(options, period);
   for (let i = 1; i < tmp.length; i++) {
@@ -51,7 +51,12 @@ async function download(
       fromTimestamp,
       toTimestamp,
     });
-    trendbars.push(...result.trendbar);
+    trendbars.push(
+      ...U.trendbars({
+        payloadType: ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES,
+        payload: result,
+      })
+    );
   }
   return trendbars;
 }
@@ -67,17 +72,7 @@ export async function downloadTrendbars(
   socket: SpotwareClientSocket,
   options: Options
 ) {
-  try {
-    await fs.promises.stat(`./data/${options.symbolId}/`);
-  } catch {
-    await fs.promises.mkdir(`./data/${options.symbolId}/`);
-  }
-
   for (const period of options.periods) {
     const trendbars = await download(socket, options, period);
-    await fs.promises.writeFile(
-      `./data/${options.symbolId}/trendbars-${ProtoOATrendbarPeriod[period]}.json`,
-      JSON.stringify(trendbars)
-    );
   }
 }
