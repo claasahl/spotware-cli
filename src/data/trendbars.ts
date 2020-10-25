@@ -3,9 +3,13 @@ import {
   ProtoOATrendbarPeriod,
   SpotwareClientSocket,
 } from "@claasahl/spotware-adapter";
+import { bullish, bearish, range } from "indicators";
+import debug from "debug";
 
 import * as R from "../client/requests";
 import * as U from "../utils";
+
+const log = debug("custom-client");
 
 function interval(period: ProtoOATrendbarPeriod): number {
   switch (period) {
@@ -73,6 +77,21 @@ export async function downloadTrendbars(
   options: Options
 ) {
   for (const period of options.periods) {
-    const trendbars = await download(socket, options, period);
+    const bars = await download(socket, options, period);
+    for (let i = 1; i < bars.length; i++) {
+      const first = bars[i - 1];
+      const second = bars[i];
+      const r = range(first);
+      if (
+        (bullish(first) && U.engulfed(first, second)) ||
+        (bearish(first) && U.engulfed(first, second))
+      ) {
+        log(
+          "inside-bar-pattern %s %s",
+          ProtoOATrendbarPeriod[period],
+          new Date(first.timestamp)
+        );
+      }
+    }
   }
 }

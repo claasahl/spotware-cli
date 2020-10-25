@@ -6,7 +6,7 @@ import {
 import { bullish, bearish, range } from "indicators";
 import { bufferedTrendbars, Trendbar } from "./trendbar";
 
-function engulfed(candleA: Trendbar, candleB: Trendbar): boolean {
+export function engulfed(candleA: Trendbar, candleB: Trendbar): boolean {
   const upperA = candleA.high;
   const lowerA = candleA.low;
   const upperB = candleB.high;

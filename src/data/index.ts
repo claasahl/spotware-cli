@@ -39,9 +39,9 @@ socket.once(event, async () => {
         ctidTraderAccountId: trader.ctidTraderAccountId,
         symbolId: symbol.symbolId,
         periods: [
-          ProtoOATrendbarPeriod.D1,
+          // ProtoOATrendbarPeriod.D1,
           ProtoOATrendbarPeriod.H1,
-          ProtoOATrendbarPeriod.M5,
+          // ProtoOATrendbarPeriod.M5,
         ],
         fromDate,
         toDate,
