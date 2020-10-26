@@ -49,13 +49,16 @@ export interface Options {
   symbol: string;
   period: ProtoOATrendbarPeriod;
   strategy: (options: StrategyOptions) => (message: Messages) => void;
+  done: () => void;
 }
 
 export async function backtest(options: Options) {
   const socket = await connect(options.connection);
   log("connected to %j", options.connection);
+
   const traders = await authenticate(socket, options.authentication);
   log("authenticated", { noOfTraders: traders.length });
+
   for (const trader of traders) {
     const { ctidTraderAccountId } = trader;
     const { symbol: symbols } = await R.PROTO_OA_SYMBOLS_LIST_REQ(socket, {
@@ -89,4 +92,5 @@ export async function backtest(options: Options) {
   }
   log("done");
   socket.end();
+  options.done();
 }

@@ -1,4 +1,6 @@
 import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
+import { format } from "@fast-csv/format";
+import { createWriteStream } from "fs";
 
 import { backtest } from "./backtest";
 import { insideBarMomentum } from "./insideBarMomentum";
@@ -6,6 +8,9 @@ import { insideBarMomentum } from "./insideBarMomentum";
 const host = process.env.host || "live.ctraderapi.com";
 const port = Number(process.env.port) || 5035;
 const useTLS = process.env.useTLS === "true";
+const stream = format();
+const output = createWriteStream("./data.csv");
+stream.pipe(output);
 
 backtest({
   connection: {
@@ -23,5 +28,24 @@ backtest({
   toDate: new Date("2020-10-25T00:00:00.000Z"),
   symbol: "EURUSD",
   period: ProtoOATrendbarPeriod.H1,
-  strategy: insideBarMomentum,
+  strategy: (options) => {
+    const strategy = insideBarMomentum(options);
+    return (message) => {
+      const result = strategy(message);
+      stream.write([
+        1,
+        result?.price,
+        result?.SMA50,
+        result?.SMA200,
+        result?.WPR,
+        result?.bearish,
+        result?.bullish,
+        result?.ISM.enter,
+        result?.ISM.stopLoss,
+        result?.ISM.takeProfit,
+        result?.ISM.tradeSide,
+      ]);
+    };
+  },
+  done: () => stream.end(),
 });
