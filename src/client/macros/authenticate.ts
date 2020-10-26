@@ -15,8 +15,6 @@ function dotenv(env: object): string {
     .join("\n");
 }
 
-function authenticateAccounts() {}
-
 export interface Options {
   clientId: string;
   clientSecret: string;
