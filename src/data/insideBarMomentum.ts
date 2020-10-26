@@ -13,7 +13,7 @@ interface Options {
   longTermSmaPeriods?: number;
   williamsPercentRangePeriods?: number;
 }
-export async function insideBarMomentum(options: Options) {
+export function insideBarMomentum(options: Options) {
   const enterOffset = 0.1;
   const stopLossOffset = 0.4;
   const takeProfitOffset = 0.8;

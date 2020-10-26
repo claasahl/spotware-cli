@@ -1,15 +1,13 @@
 import {
+  Messages,
   ProtoOAPayloadType,
+  ProtoOATrendbar,
   ProtoOATrendbarPeriod,
+  PROTO_OA_SPOT_EVENT,
   SpotwareClientSocket,
 } from "@claasahl/spotware-adapter";
-import { bullish, bearish, range } from "indicators";
-import debug from "debug";
 
 import * as R from "../client/requests";
-import * as U from "../utils";
-
-const log = debug("custom-client");
 
 function interval(period: ProtoOATrendbarPeriod): number {
   switch (period) {
@@ -23,13 +21,12 @@ function interval(period: ProtoOATrendbarPeriod): number {
 }
 
 function boundaries(
-  options: Pick<Options, "fromDate" | "toDate">,
-  period: ProtoOATrendbarPeriod
+  options: Pick<Options, "fromDate" | "toDate" | "period">
 ): number[] {
   const fromTimestamp = options.fromDate.getTime();
   const toTimestamp = options.toDate.getTime();
   const boundaries: number[] = [fromTimestamp];
-  const step = interval(period);
+  const step = interval(options.period);
   while (boundaries[boundaries.length - 1] + step < toTimestamp) {
     boundaries.push(boundaries[boundaries.length - 1] + step);
   }
@@ -37,14 +34,9 @@ function boundaries(
   return boundaries;
 }
 
-async function download(
-  socket: SpotwareClientSocket,
-  options: Omit<Options, "periods">,
-  period: ProtoOATrendbarPeriod
-): Promise<U.Trendbar[]> {
-  const trendbars: U.Trendbar[] = [];
-  const { ctidTraderAccountId, symbolId } = options;
-  const tmp = boundaries(options, period);
+async function* chunks(socket: SpotwareClientSocket, options: Options) {
+  const { ctidTraderAccountId, symbolId, period } = options;
+  const tmp = boundaries(options);
   for (let i = 1; i < tmp.length; i++) {
     const fromTimestamp = tmp[i - 1];
     const toTimestamp = tmp[i];
@@ -55,43 +47,46 @@ async function download(
       fromTimestamp,
       toTimestamp,
     });
-    trendbars.push(
-      ...U.trendbars({
-        payloadType: ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES,
-        payload: result,
-      })
-    );
+    yield result;
   }
-  return trendbars;
+}
+
+function toSpotEvent(
+  options: Pick<Options, "ctidTraderAccountId" | "symbolId" | "period">,
+  trendbar: ProtoOATrendbar
+): PROTO_OA_SPOT_EVENT {
+  const { ctidTraderAccountId, symbolId, period } = options;
+  const {
+    volume,
+    low = 0,
+    deltaOpen,
+    deltaHigh,
+    deltaClose = 0,
+    utcTimestampInMinutes,
+  } = trendbar;
+  return {
+    payloadType: ProtoOAPayloadType.PROTO_OA_SPOT_EVENT,
+    payload: {
+      ctidTraderAccountId,
+      symbolId,
+      trendbar: [
+        { volume, period, low, deltaOpen, deltaHigh, utcTimestampInMinutes },
+      ],
+      bid: low + deltaClose,
+    },
+  };
 }
 
 interface Options {
   ctidTraderAccountId: number;
   symbolId: number;
-  periods: ProtoOATrendbarPeriod[];
+  period: ProtoOATrendbarPeriod;
   fromDate: Date;
   toDate: Date;
+  cb: (msg: Messages) => void;
 }
-export async function downloadTrendbars(
-  socket: SpotwareClientSocket,
-  options: Options
-) {
-  for (const period of options.periods) {
-    const bars = await download(socket, options, period);
-    for (let i = 1; i < bars.length; i++) {
-      const first = bars[i - 1];
-      const second = bars[i];
-      const r = range(first);
-      if (
-        (bullish(first) && U.engulfed(first, second)) ||
-        (bearish(first) && U.engulfed(first, second))
-      ) {
-        log(
-          "inside-bar-pattern %s %s",
-          ProtoOATrendbarPeriod[period],
-          new Date(first.timestamp)
-        );
-      }
-    }
+export async function download(socket: SpotwareClientSocket, options: Options) {
+  for await (const chunk of chunks(socket, options)) {
+    chunk.trendbar.map((t) => toSpotEvent(options, t)).forEach(options.cb);
   }
 }
