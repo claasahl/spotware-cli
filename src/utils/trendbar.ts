@@ -6,7 +6,6 @@ import {
   PROTO_OA_GET_TRENDBARS_RES,
   PROTO_OA_SPOT_EVENT,
 } from "@claasahl/spotware-adapter";
-import { period } from "./period";
 
 export interface Trendbar {
   timestamp: number;
@@ -18,7 +17,7 @@ export interface Trendbar {
   volume: number;
 }
 
-function isLiveTrendbar(
+export function isLiveTrendbar(
   bar: ProtoOATrendbar
 ): bar is Required<Omit<ProtoOATrendbar, "deltaClose">> {
   return (
@@ -29,7 +28,9 @@ function isLiveTrendbar(
     typeof bar.utcTimestampInMinutes === "number"
   );
 }
-function isTrendbar(bar: ProtoOATrendbar): bar is Required<ProtoOATrendbar> {
+export function isTrendbar(
+  bar: ProtoOATrendbar
+): bar is Required<ProtoOATrendbar> {
   return (
     typeof bar.deltaHigh === "number" &&
     typeof bar.deltaOpen === "number" &&
@@ -38,15 +39,15 @@ function isTrendbar(bar: ProtoOATrendbar): bar is Required<ProtoOATrendbar> {
     typeof bar.utcTimestampInMinutes === "number"
   );
 }
-function toTrendbar(
+export function toTrendbar(
   bar: Required<Omit<ProtoOATrendbar, "period">>,
   period: ProtoOATrendbarPeriod
 ): Trendbar;
-function toTrendbar(
+export function toTrendbar(
   bar: Required<Omit<ProtoOATrendbar, "deltaClose">>,
   close: number
 ): Trendbar;
-function toTrendbar(
+export function toTrendbar(
   bar:
     | Required<Omit<ProtoOATrendbar, "deltaClose">>
     | Required<Omit<ProtoOATrendbar, "period">>,
