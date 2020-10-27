@@ -9,7 +9,28 @@ import { toLiveTrendbar } from "./utils";
 const host = process.env.host || "live.ctraderapi.com";
 const port = Number(process.env.port) || 5035;
 const useTLS = process.env.useTLS === "true";
-const stream = format();
+const stream = format({
+  headers: [
+    "volume",
+    "open",
+    "high",
+    "low",
+    "close",
+    "period",
+    "timestamp",
+    "date",
+    "price",
+    "SMA50",
+    "SMA200",
+    "WPR",
+    "bearish",
+    "bullish",
+    "enter",
+    "stopLoss",
+    "takeProfit",
+    "tradeSide",
+  ],
+});
 const output = createWriteStream("./data.csv");
 stream.pipe(output);
 
