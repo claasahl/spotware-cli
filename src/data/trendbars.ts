@@ -1,13 +1,10 @@
 import {
-  Messages,
-  ProtoOAPayloadType,
-  ProtoOATrendbar,
   ProtoOATrendbarPeriod,
-  PROTO_OA_SPOT_EVENT,
   SpotwareClientSocket,
 } from "@claasahl/spotware-adapter";
 
 import * as R from "../client/requests";
+import { Trendbar, toTrendbar, isTrendbar } from "../utils";
 
 function interval(period: ProtoOATrendbarPeriod): number {
   switch (period) {
@@ -51,42 +48,16 @@ async function* chunks(socket: SpotwareClientSocket, options: Options) {
   }
 }
 
-function toSpotEvent(
-  options: Pick<Options, "ctidTraderAccountId" | "symbolId" | "period">,
-  trendbar: ProtoOATrendbar
-): PROTO_OA_SPOT_EVENT {
-  const { ctidTraderAccountId, symbolId, period } = options;
-  const {
-    volume,
-    low = 0,
-    deltaOpen,
-    deltaHigh,
-    deltaClose = 0,
-    utcTimestampInMinutes,
-  } = trendbar;
-  return {
-    payloadType: ProtoOAPayloadType.PROTO_OA_SPOT_EVENT,
-    payload: {
-      ctidTraderAccountId,
-      symbolId,
-      trendbar: [
-        { volume, period, low, deltaOpen, deltaHigh, utcTimestampInMinutes },
-      ],
-      bid: low + deltaClose,
-    },
-  };
-}
-
 interface Options {
   ctidTraderAccountId: number;
   symbolId: number;
   period: ProtoOATrendbarPeriod;
   fromDate: Date;
   toDate: Date;
-  cb: (msg: Messages) => void;
+  cb: (trendbar: Trendbar) => void;
 }
 export async function download(socket: SpotwareClientSocket, options: Options) {
   for await (const chunk of chunks(socket, options)) {
-    chunk.trendbar.map((t) => toSpotEvent(options, t)).forEach(options.cb);
+    chunk.trendbar.filter(isTrendbar).map(toTrendbar).forEach(options.cb);
   }
 }

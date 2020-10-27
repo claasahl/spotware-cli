@@ -4,6 +4,7 @@ import { createWriteStream } from "fs";
 
 import { backtest } from "./backtest";
 import { insideBarMomentum } from "./insideBarMomentum";
+import { toLiveTrendbar } from "./utils";
 
 const host = process.env.host || "live.ctraderapi.com";
 const port = Number(process.env.port) || 5035;
@@ -30,10 +31,18 @@ backtest({
   period: ProtoOATrendbarPeriod.H1,
   strategy: (options) => {
     const strategy = insideBarMomentum(options);
-    return (message) => {
+    return (trendbar) => {
+      const message = toLiveTrendbar(options, trendbar);
       const result = strategy(message);
       stream.write([
-        1,
+        trendbar.volume,
+        trendbar.open,
+        trendbar.high,
+        trendbar.low,
+        trendbar.close,
+        trendbar.period,
+        trendbar.timestamp,
+        new Date(trendbar.timestamp).toISOString(),
         result?.price,
         result?.SMA50,
         result?.SMA200,

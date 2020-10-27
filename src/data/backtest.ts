@@ -1,9 +1,6 @@
 import {
-  Messages,
-  ProtoOALightSymbol,
   ProtoOATrendbarPeriod,
   SpotwareClientSocket,
-  SpotwareSocket,
 } from "@claasahl/spotware-adapter";
 import { connect as tlsConnect } from "tls";
 import { connect as netConnect } from "net";
@@ -15,6 +12,7 @@ import {
 } from "../client/macros/authenticate";
 import { download } from "./trendbars";
 import * as R from "../client/requests";
+import { Trendbar } from "../utils";
 
 const log = debug("backtest");
 
@@ -48,7 +46,7 @@ export interface Options {
   toDate: Date;
   symbol: string;
   period: ProtoOATrendbarPeriod;
-  strategy: (options: StrategyOptions) => (message: Messages) => void;
+  strategy: (options: StrategyOptions) => (trendbar: Trendbar) => void;
   done: () => void;
 }
 
