@@ -49,10 +49,10 @@ backtest({
         result?.WPR,
         result?.bearish,
         result?.bullish,
-        result?.ISM.enter,
-        result?.ISM.stopLoss,
-        result?.ISM.takeProfit,
-        result?.ISM.tradeSide,
+        result?.ISM?.enter,
+        result?.ISM?.stopLoss,
+        result?.ISM?.takeProfit,
+        result?.ISM?.tradeSide,
       ]);
     };
   },

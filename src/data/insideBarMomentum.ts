@@ -66,22 +66,21 @@ export function insideBarMomentum(options: Options) {
     }
 
     const bid = msg.payload.bid;
-    if (!SMA50 || !SMA200 || !WPR || !ISM || !bid) {
-      return;
-    }
-    const bullish = bid > SMA50 && bid > SMA200 && SMA50 > SMA200 && WPR >= -20;
-    const bearish = bid < SMA50 && bid < SMA200 && SMA50 < SMA200 && WPR <= -80;
-    return {
+    const data = {
       symbolId,
       price: bid,
       SMA50,
       SMA200,
-      bullish,
-      bearish,
       WPR,
-      topRange: WPR >= -20,
-      bottomRange: WPR <= -80,
       ISM,
+      bullish: undefined,
+      bearish: undefined,
     };
+    if (!SMA50 || !SMA200 || !WPR || !ISM || !bid) {
+      return data;
+    }
+    const bullish = bid > SMA50 && bid > SMA200 && SMA50 > SMA200 && WPR >= -20;
+    const bearish = bid < SMA50 && bid < SMA200 && SMA50 < SMA200 && WPR <= -80;
+    return { ...data, bullish, bearish };
   };
 }
