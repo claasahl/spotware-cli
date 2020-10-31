@@ -25,13 +25,14 @@ const stream = format({
     "WPR",
     "bearish",
     "bullish",
+    "patternMatched",
     "enter",
     "stopLoss",
     "takeProfit",
     "tradeSide",
   ],
 });
-const output = createWriteStream("./data.csv");
+const output = createWriteStream("./data-h1.csv");
 stream.pipe(output);
 
 backtest({
@@ -70,6 +71,7 @@ backtest({
         result?.WPR,
         result?.bearish,
         result?.bullish,
+        !!result?.ISM,
         result?.ISM?.enter,
         result?.ISM?.stopLoss,
         result?.ISM?.takeProfit,
