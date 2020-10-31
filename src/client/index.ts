@@ -37,7 +37,12 @@ events.on("account", async (account) => {
   }
   const { ctidTraderAccountId } = account;
   const result = await M.symbols(s, { ctidTraderAccountId });
-  await M.emitSymbols({ ...result, events, ctidTraderAccountId });
+  const symbols = result.symbols.filter(
+    (s) =>
+      s.baseAssetId === account.depositAssetId ||
+      s.quoteAssetId === account.depositAssetId
+  );
+  await M.emitSymbols({ ...result, symbols, events, ctidTraderAccountId });
 });
 
 const ASSET_CLASSES = ["Forex", "Metals", "Crypto Currency"];
