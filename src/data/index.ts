@@ -6,6 +6,11 @@ import { backtest } from "./backtest";
 import { insideBarMomentum } from "./insideBarMomentum";
 import { toLiveTrendbar } from "./utils";
 
+const symbol = "GBPJPY";
+const period = ProtoOATrendbarPeriod.H4;
+const fromDate = new Date("2020-01-01T00:00:00.000Z");
+const toDate = new Date("2020-10-25T00:00:00.000Z");
+
 const host = process.env.host || "live.ctraderapi.com";
 const port = Number(process.env.port) || 5035;
 const useTLS = process.env.useTLS === "true";
@@ -32,7 +37,9 @@ const stream = format({
     "tradeSide",
   ],
 });
-const output = createWriteStream("./data-h1.csv");
+const output = createWriteStream(
+  `./data-${symbol}-${ProtoOATrendbarPeriod[period]}.csv`
+);
 stream.pipe(output);
 
 backtest({
@@ -47,10 +54,10 @@ backtest({
     accessToken: process.env.accessToken || "",
     refreshToken: process.env.refreshToken || "",
   },
-  fromDate: new Date("2020-01-01T00:00:00.000Z"),
-  toDate: new Date("2020-10-25T00:00:00.000Z"),
-  symbol: "EURUSD",
-  period: ProtoOATrendbarPeriod.H1,
+  fromDate,
+  toDate,
+  symbol,
+  period,
   strategy: (options) => {
     const strategy = insideBarMomentum(options);
     return (trendbar) => {
