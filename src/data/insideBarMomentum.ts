@@ -1,9 +1,11 @@
 import {
   Messages,
   ProtoOAPayloadType,
+  ProtoOATradeSide,
   ProtoOATrendbarPeriod,
 } from "@claasahl/spotware-adapter";
 import * as utils from "../utils";
+import { Trendbar } from "../utils";
 
 interface Options {
   ctidTraderAccountId: number;
@@ -12,6 +14,22 @@ interface Options {
   shortTermSmaPeriods?: number;
   longTermSmaPeriods?: number;
   williamsPercentRangePeriods?: number;
+}
+
+interface Result {
+  symbolId: number;
+  price?: number;
+  SMA50?: number;
+  SMA200?: number;
+  WPR?: number;
+  ISM?: {
+    enter: number;
+    stopLoss: number;
+    takeProfit: number;
+    tradeSide: ProtoOATradeSide;
+  };
+  bullish?: boolean;
+  bearish?: boolean;
 }
 export function insideBarMomentum(options: Options) {
   const enterOffset = 0.1;
@@ -51,7 +69,7 @@ export function insideBarMomentum(options: Options) {
     stopLossOffset,
     takeProfitOffset,
   });
-  return (msg: Messages) => {
+  return (msg: Messages): Result | undefined => {
     const SMA50 = sma50(msg);
     const SMA200 = sma200(msg);
     const WPR = wpr(msg);
@@ -84,3 +102,47 @@ export function insideBarMomentum(options: Options) {
     return { ...data, bullish, bearish };
   };
 }
+
+export const csvHeaders = [
+  "volume",
+  "open",
+  "high",
+  "low",
+  "close",
+  "period",
+  "timestamp",
+  "date",
+  "price",
+  "SMA50",
+  "SMA200",
+  "WPR",
+  "bearish",
+  "bullish",
+  "patternMatched",
+  "enter",
+  "stopLoss",
+  "takeProfit",
+  "tradeSide",
+];
+
+export const csvData = (trendbar: Trendbar, result?: Result) => [
+  trendbar.volume,
+  trendbar.open,
+  trendbar.high,
+  trendbar.low,
+  trendbar.close,
+  trendbar.period,
+  trendbar.timestamp,
+  new Date(trendbar.timestamp).toISOString(),
+  result?.price,
+  result?.SMA50,
+  result?.SMA200,
+  result?.WPR,
+  result?.bearish,
+  result?.bullish,
+  !!result?.ISM,
+  result?.ISM?.enter,
+  result?.ISM?.stopLoss,
+  result?.ISM?.takeProfit,
+  result?.ISM?.tradeSide,
+];
