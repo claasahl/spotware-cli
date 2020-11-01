@@ -31,7 +31,13 @@ function boundaries(
   return boundaries;
 }
 
-async function* chunks(socket: SpotwareClientSocket, options: Options) {
+async function* chunks(
+  socket: SpotwareClientSocket,
+  options: Pick<
+    Options,
+    "ctidTraderAccountId" | "symbolId" | "period" | "fromDate" | "toDate"
+  >
+) {
   const { ctidTraderAccountId, symbolId, period } = options;
   const tmp = boundaries(options);
   for (let i = 1; i < tmp.length; i++) {
