@@ -6,6 +6,7 @@ import {
 } from "@claasahl/spotware-adapter";
 import * as utils from "../utils";
 import { Trendbar } from "../utils";
+import { Order } from "./orders";
 
 interface Options {
   ctidTraderAccountId: number;
@@ -30,6 +31,7 @@ interface Result {
   };
   bullish?: boolean;
   bearish?: boolean;
+  pl?: number;
 }
 export function insideBarMomentum(options: Options) {
   const enterOffset = 0.1;
@@ -69,7 +71,10 @@ export function insideBarMomentum(options: Options) {
     stopLossOffset,
     takeProfitOffset,
   });
-  return (msg: Messages): Result | undefined => {
+  return (
+    msg: Messages,
+    order: (order: Order) => number | undefined
+  ): Result | undefined => {
     const SMA50 = sma50(msg);
     const SMA200 = sma200(msg);
     const WPR = wpr(msg);
@@ -99,7 +104,8 @@ export function insideBarMomentum(options: Options) {
     }
     const bullish = bid > SMA50 && bid > SMA200 && SMA50 > SMA200 && WPR >= -20;
     const bearish = bid < SMA50 && bid < SMA200 && SMA50 < SMA200 && WPR <= -80;
-    return { ...data, bullish, bearish };
+    const pl = order(ISM);
+    return { ...data, bullish, bearish, pl };
   };
 }
 
@@ -123,6 +129,7 @@ export const csvHeaders = [
   "stopLoss",
   "takeProfit",
   "tradeSide",
+  "profitLoss",
 ];
 
 export const csvData = (trendbar: Trendbar, result?: Result) => [
@@ -145,4 +152,5 @@ export const csvData = (trendbar: Trendbar, result?: Result) => [
   result?.ISM?.stopLoss,
   result?.ISM?.takeProfit,
   result?.ISM?.tradeSide,
+  result?.pl,
 ];

@@ -46,7 +46,10 @@ export interface Options {
   toDate: Date;
   symbol: string;
   period: ProtoOATrendbarPeriod;
-  strategy: (options: StrategyOptions) => (trendbar: Trendbar) => void;
+  forsight: number;
+  strategy: (
+    options: StrategyOptions
+  ) => (trendbar: Trendbar, future: Trendbar[]) => void;
   done: () => void;
 }
 
@@ -77,15 +80,39 @@ export async function backtest(options: Options) {
         symbolId,
       });
 
-      // "feed" trendbars to strategy
+      // ...
+      const offset = options.forsight;
+      const trenbarsM1: Trendbar[] = [];
+      await download(socket, {
+        ctidTraderAccountId,
+        symbolId: symbol.symbolId,
+        period: ProtoOATrendbarPeriod.M1,
+        fromDate: options.fromDate,
+        toDate: new Date(options.toDate.getTime() + offset),
+        cb: (bar) => trenbarsM1.push(bar),
+      });
+      const future = (bar: Trendbar): Trendbar[] => {
+        const timestamp = bar.timestamp;
+        return trenbarsM1.filter(
+          (b) => b.timestamp >= timestamp && b.timestamp <= timestamp + offset
+        );
+      };
+
+      // ...
+      const trenbars: Trendbar[] = [];
       await download(socket, {
         ctidTraderAccountId,
         symbolId: symbol.symbolId,
         period: options.period,
         fromDate: options.fromDate,
         toDate: options.toDate,
-        cb: strategy,
+        cb: (bar) => trenbars.push(bar),
       });
+
+      // "feed" trendbars to strategy
+      for (const bar of trenbars) {
+        strategy(bar, future(bar));
+      }
     }
   }
   log("done");
