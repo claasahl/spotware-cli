@@ -11,6 +11,7 @@ function interval(period: ProtoOATrendbarPeriod): number {
     case ProtoOATrendbarPeriod.H1:
       return 21168000000;
     case ProtoOATrendbarPeriod.M5:
+    case ProtoOATrendbarPeriod.M1:
       return 3024000000;
     default:
       return 99999999999;
