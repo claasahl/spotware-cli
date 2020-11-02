@@ -27,6 +27,10 @@ export function forsight(future: Trendbar[], order: Order): number | undefined {
     }
   }
 
+  if (!entered) {
+    return 0;
+  }
+
   const lastBar = future[future.length - 1];
   if (lastBar && order.tradeSide === ProtoOATradeSide.BUY) {
     return lastBar.close - order.enter;
