@@ -88,6 +88,7 @@ export function insideBarMomentum(options: Options) {
       return;
     }
 
+    const pl = ISM ? order(ISM) : undefined;
     const bid = msg.payload.bid;
     const data = {
       symbolId,
@@ -98,14 +99,14 @@ export function insideBarMomentum(options: Options) {
       ISM,
       bullish: undefined,
       bearish: undefined,
+      pl,
     };
     if (!SMA50 || !SMA200 || !WPR || !ISM || !bid) {
       return data;
     }
     const bullish = bid > SMA50 && bid > SMA200 && SMA50 > SMA200 && WPR >= -20;
     const bearish = bid < SMA50 && bid < SMA200 && SMA50 < SMA200 && WPR <= -80;
-    const pl = order(ISM);
-    return { ...data, bullish, bearish, pl };
+    return { ...data, bullish, bearish };
   };
 }
 
