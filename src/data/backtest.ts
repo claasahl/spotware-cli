@@ -10,7 +10,7 @@ import {
   Options as AuthenticateOptions,
   macro as authenticate,
 } from "../client/macros/authenticate";
-import { download } from "./trendbars";
+import { dualDownload } from "./trendbars";
 import * as R from "../client/requests";
 import { Trendbar } from "../utils";
 
@@ -81,38 +81,18 @@ export async function backtest(options: Options) {
       });
 
       // ...
-      const offset = options.forsight;
-      const trenbarsM1: Trendbar[] = [];
-      await download(socket, {
-        ctidTraderAccountId,
-        symbolId: symbol.symbolId,
-        period: ProtoOATrendbarPeriod.M1,
-        fromDate: options.fromDate,
-        toDate: new Date(options.toDate.getTime() + offset),
-        cb: (bar) => trenbarsM1.push(bar),
-      });
-      const future = (bar: Trendbar): Trendbar[] => {
-        const timestamp = bar.timestamp;
-        return trenbarsM1.filter(
-          (b) => b.timestamp >= timestamp && b.timestamp <= timestamp + offset
-        );
-      };
-
-      // ...
-      const trenbars: Trendbar[] = [];
-      await download(socket, {
+      await dualDownload(socket, {
         ctidTraderAccountId,
         symbolId: symbol.symbolId,
         period: options.period,
         fromDate: options.fromDate,
         toDate: options.toDate,
-        cb: (bar) => trenbars.push(bar),
+        foresight: {
+          offset: options.forsight,
+          period: ProtoOATrendbarPeriod.M1,
+        },
+        cb: strategy,
       });
-
-      // "feed" trendbars to strategy
-      for (const bar of trenbars) {
-        strategy(bar, future(bar));
-      }
     }
   }
   log("done");
