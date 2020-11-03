@@ -8,7 +8,7 @@ import { insideBarMomentum, csvHeaders, csvData } from "./insideBarMomentum";
 import { toLiveTrendbar } from "./utils";
 import { Order, forsight } from "./orders";
 
-const symbol = "GBPJPY";
+const symbol = "BTC/USD";
 const period = ProtoOATrendbarPeriod.H1;
 const fromDate = new Date("2020-01-01T00:00:00.000Z");
 const toDate = new Date("2020-10-25T00:00:00.000Z");
@@ -18,7 +18,7 @@ const port = Number(process.env.port) || 5035;
 const useTLS = process.env.useTLS === "true";
 const stream = format({ headers: csvHeaders });
 const output = createWriteStream(
-  `./data-${symbol}-${ProtoOATrendbarPeriod[period]}.csv`
+  `./data-${symbol.replace("/", "")}-${ProtoOATrendbarPeriod[period]}.csv`
 );
 stream.pipe(output);
 
@@ -44,7 +44,7 @@ backtest({
     return (trendbar, future) => {
       const order = (o: Order): number | undefined => forsight(future, o);
       const message = toLiveTrendbar(options, trendbar);
-      const result = strategy(message, order);
+      const result = strategy(trendbar.timestamp, message, order);
       stream.write(csvData(trendbar, result));
     };
   },

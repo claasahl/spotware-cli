@@ -12,6 +12,7 @@ interface Options {
   ctidTraderAccountId: number;
   symbolId: number;
   period: ProtoOATrendbarPeriod;
+  expirationOffset?: number;
   shortTermSmaPeriods?: number;
   longTermSmaPeriods?: number;
   williamsPercentRangePeriods?: number;
@@ -41,6 +42,7 @@ export function insideBarMomentum(options: Options) {
     ctidTraderAccountId,
     symbolId,
     period,
+    expirationOffset,
     shortTermSmaPeriods = 50,
     longTermSmaPeriods = 200,
     williamsPercentRangePeriods = 30,
@@ -72,6 +74,7 @@ export function insideBarMomentum(options: Options) {
     takeProfitOffset,
   });
   return (
+    timestamp: number,
     msg: Messages,
     order: (order: Order) => number | undefined
   ): Result | undefined => {
@@ -88,7 +91,10 @@ export function insideBarMomentum(options: Options) {
       return;
     }
 
-    const pl = ISM ? order(ISM) : undefined;
+    const expirationTimestamp = expirationOffset
+      ? timestamp + expirationOffset
+      : undefined;
+    const pl = ISM ? order({ ...ISM, expirationTimestamp }) : undefined;
     const bid = msg.payload.bid;
     const data = {
       symbolId,

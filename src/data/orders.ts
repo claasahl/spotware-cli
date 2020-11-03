@@ -6,13 +6,19 @@ export interface Order {
   takeProfit: number;
   stopLoss: number;
   tradeSide: ProtoOATradeSide;
+  expirationTimestamp?: number;
 }
 export function forsight(future: Trendbar[], order: Order): number | undefined {
   let entered = false;
   let profited = false;
   let lost = false;
+  const { expirationTimestamp = Number.MAX_VALUE } = order;
   for (const b of future) {
     if (!entered) {
+      const expired = b.timestamp >= expirationTimestamp;
+      if (expired) {
+        return 0;
+      }
       entered = b.high >= order.enter && order.enter >= b.low;
     }
     if (entered) {
