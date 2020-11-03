@@ -20,7 +20,6 @@ const events = new Events();
 const socket = useTLS ? tlsConnect(port, host) : netConnect(port, host);
 const event = useTLS ? "secureConnect" : "connect";
 const s = new SpotwareClientSocket(socket);
-s.resume(); // enter flowing mode
 socket.once(event, async () => R.PROTO_OA_VERSION_REQ(s, {}));
 socket.once(event, async () => {
   const traders = await M.authenticate(s, {
