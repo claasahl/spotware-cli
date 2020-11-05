@@ -39,7 +39,7 @@ export async function insideBarMomentum(options: Options) {
     enterOffset = 0.1,
     stopLossOffset = 0.4,
     takeProfitOffset = 0.8,
-    expirationOffset = ms("1h"),
+    expirationOffset,
     tradeVolumeInLots = 0.1,
   } = options;
   const sma50 = utils.sma({
@@ -119,7 +119,9 @@ export async function insideBarMomentum(options: Options) {
         stopPrice: utils.price(ISM.enter, digits),
         stopLoss: utils.price(ISM.stopLoss, digits),
         takeProfit: utils.price(ISM.takeProfit, digits),
-        expirationTimestamp: Date.now() + expirationOffset,
+        expirationTimestamp: expirationOffset
+          ? Date.now() + expirationOffset
+          : undefined,
       });
     }
   };
