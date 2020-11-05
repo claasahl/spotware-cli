@@ -5,6 +5,7 @@ import {
   ProtoOATrendbarPeriod,
   SpotwareClientSocket,
 } from "@claasahl/spotware-adapter";
+import ms from "ms";
 
 import * as R from "./requests";
 import * as M from "./macros";
@@ -63,6 +64,7 @@ events.on("symbol", async (symbol) => {
       ctidTraderAccountId: symbol.ctidTraderAccountId,
       symbolId: symbol.symbolId,
       period,
+      expirationOffset: ms("24h"),
     })
   );
   await M.trendbars(s, {
