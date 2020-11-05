@@ -2,6 +2,8 @@ import { connect as tlsConnect } from "tls";
 import { connect as netConnect } from "net";
 import debug from "debug";
 import {
+  ProtoOAExecutionType,
+  ProtoOAPayloadType,
   ProtoOATrendbarPeriod,
   SpotwareClientSocket,
 } from "@claasahl/spotware-adapter";
@@ -11,6 +13,7 @@ import * as R from "./requests";
 import * as M from "./macros";
 import * as S from "./strategies";
 import { Events } from "./events";
+import { Order } from "../data/orders";
 
 const log = debug("custom-client");
 const host = process.env.host || "live.ctraderapi.com";
@@ -73,6 +76,38 @@ events.on("symbol", async (symbol) => {
     symbolId: symbol.symbolId,
     period,
   });
+});
+
+const orders = new Map<string, Partial<Order>>();
+s.on("data", (msg) => {
+  if (
+    msg.payloadType === ProtoOAPayloadType.PROTO_OA_EXECUTION_EVENT &&
+    msg.clientMsgId
+  ) {
+    const accepted =
+      msg.payload.executionType === ProtoOAExecutionType.ORDER_ACCEPTED;
+    const filled =
+      msg.payload.executionType === ProtoOAExecutionType.ORDER_FILLED;
+    const closingOrder = !!msg.payload.order?.closingOrder;
+
+    const { order } = msg.payload;
+    if (order && filled && !closingOrder) {
+      // here we still have all the good stuff
+      orders.set(msg.clientMsgId, {
+        enter: order.stopPrice,
+        takeProfit: order.takeProfit, // limitPrice?
+        stopLoss: order.stopLoss,
+        tradeSide: order.tradeData.tradeSide,
+      });
+    } else if (order && accepted && closingOrder) {
+      const expected = orders.get(msg.clientMsgId);
+      orders.delete(msg.clientMsgId);
+      // here should still have all the good stuff, but probably don't :(
+
+      // compare
+      // and fix
+    }
+  }
 });
 
 // rule of thumb:
