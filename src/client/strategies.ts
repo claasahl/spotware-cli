@@ -5,8 +5,9 @@ import {
   ProtoOATrendbarPeriod,
   SpotwareClientSocket,
 } from "@claasahl/spotware-adapter";
-import ms from "ms";
 import debug from "debug";
+import git from "isomorphic-git";
+import fs from "fs";
 
 import * as utils from "../utils";
 import * as R from "./requests";
@@ -73,6 +74,7 @@ export async function insideBarMomentum(options: Options) {
     symbolId: [symbolId],
   });
   const { digits, lotSize = 1 } = details.symbol[0];
+  const [{ oid }] = await git.log({ fs, depth: 1, ref: "HEAD", dir: "." });
   return (msg: Messages) => {
     const SMA50 = sma50(msg);
     const SMA200 = sma200(msg);
@@ -122,6 +124,8 @@ export async function insideBarMomentum(options: Options) {
         expirationTimestamp: expirationOffset
           ? Date.now() + expirationOffset
           : undefined,
+        comment: oid,
+        label: oid,
       });
     }
   };
