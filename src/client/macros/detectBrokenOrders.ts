@@ -6,6 +6,7 @@ import {
   ProtoOAPayloadType,
   ProtoOAOrderType,
   ProtoOATradeSide,
+  PROTO_OA_SPOT_EVENT,
 } from "@claasahl/spotware-adapter";
 import debug from "debug";
 
@@ -102,6 +103,76 @@ function cleanupOrders(
   }
 }
 
+async function fixOrder(
+  socket: SpotwareClientSocket,
+  ctidTraderAccountId: number,
+  order: ProtoOAOrder
+): Promise<boolean> {
+  const { positionId } = order;
+  if (!positionId) {
+    return false;
+  }
+  try {
+    await R.PROTO_OA_AMEND_POSITION_SLTP_REQ(socket, {
+      ctidTraderAccountId,
+      positionId,
+      stopLoss: order.stopLoss,
+      takeProfit: order.takeProfit,
+    });
+    return true;
+  } catch (err) {
+    log("failed to fix order: %j", order);
+    log("error while fixing order: %s", err);
+    return false;
+  }
+}
+
+async function fixOrders(
+  msg: PROTO_OA_SPOT_EVENT,
+  socket: SpotwareClientSocket,
+  brokenOrders: Map<string, ProtoOAOrder>
+): Promise<void> {
+  const { ctidTraderAccountId, bid, ask, symbolId } = msg.payload;
+  if (!ctidTraderAccountId) {
+    return;
+  }
+  const fixedOrders: string[] = [];
+  for (const [clientMsgId, order] of brokenOrders) {
+    if (order.tradeData.symbolId !== symbolId) {
+      continue;
+    }
+
+    if (order.tradeData.tradeSide === ProtoOATradeSide.BUY && bid) {
+      const {
+        stopLoss = Number.MAX_VALUE,
+        takeProfit = Number.MIN_VALUE,
+      } = order;
+      if (bid > stopLoss && bid < takeProfit) {
+        log("attempting to fix order: %j", order);
+        const fixed = await fixOrder(socket, ctidTraderAccountId, order);
+        if (fixed) {
+          fixedOrders.push(clientMsgId);
+        }
+      }
+    } else if (order.tradeData.tradeSide === ProtoOATradeSide.SELL && ask) {
+      const {
+        stopLoss = Number.MIN_VALUE,
+        takeProfit = Number.MAX_VALUE,
+      } = order;
+      if (ask < stopLoss && ask > takeProfit) {
+        log("attempting to fix order: %j", order);
+        const fixed = await fixOrder(socket, ctidTraderAccountId, order);
+        if (fixed) {
+          fixedOrders.push(clientMsgId);
+        }
+      }
+    }
+  }
+
+  log("managed to fix %s order(s)", fixOrders.length);
+  fixedOrders.forEach((msgId) => brokenOrders.delete(msgId));
+}
+
 export async function macro(socket: SpotwareClientSocket): Promise<void> {
   const openingOrders = new Map<string, ProtoOAOrder>();
   const brokenOrders = new Map<string, ProtoOAOrder>();
@@ -115,22 +186,8 @@ export async function macro(socket: SpotwareClientSocket): Promise<void> {
         openingOrders: openingOrders.size,
         brokenOrders: brokenOrders.size,
       });
+    } else if (msg.payloadType === ProtoOAPayloadType.PROTO_OA_SPOT_EVENT) {
+      setImmediate(() => fixOrders(msg, socket, brokenOrders));
     }
   });
-
-  // if (result.fixStopLoss || result.fixTakeProfit) {
-  //   bla("attempting to fix")
-  //   setImmediate(async () => {
-  //     try {
-  //       await R.PROTO_OA_AMEND_POSITION_SLTP_REQ(s, {
-  //         ctidTraderAccountId,
-  //         positionId,
-  //         stopLoss: result.fixStopLoss ? openingOrder.stopLoss : undefined,
-  //         takeProfit: result.fixTakeProfit ? openingOrder.takeProfit : undefined
-  //       })
-  //     } catch (err) {
-  //       bla("error while fixing")
-  //     }
-  //   })
-  // }
 }
