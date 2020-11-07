@@ -3,6 +3,8 @@ import { connect as netConnect } from "net";
 import debug from "debug";
 import {
   ProtoOAExecutionType,
+  ProtoOAOrder,
+  ProtoOAOrderType,
   ProtoOAPayloadType,
   ProtoOATrendbarPeriod,
   SpotwareClientSocket,
@@ -13,7 +15,6 @@ import * as R from "./requests";
 import * as M from "./macros";
 import * as S from "./strategies";
 import { Events } from "./events";
-import { Order } from "../data/orders";
 
 const log = debug("custom-client");
 const host = process.env.host || "live.ctraderapi.com";
@@ -78,34 +79,85 @@ events.on("symbol", async (symbol) => {
   });
 });
 
-const orders = new Map<string, Partial<Order>>();
+const bla = log.extend("TESTING");
+function compare(openingOrder: ProtoOAOrder, closingOrder: ProtoOAOrder) {
+  bla("comparing opening and closing orders. %j", {
+    openingOrder,
+    closingOrder,
+  });
+  if (closingOrder.orderType !== ProtoOAOrderType.STOP_LOSS_TAKE_PROFIT) {
+    bla("closing order of unexpected type. %j", { openingOrder, closingOrder });
+    return;
+  }
+  if (closingOrder.tradeData.tradeSide === closingOrder.tradeData.tradeSide) {
+    bla("trade sides (of opening and closing orders) are identical. %j", {
+      openingOrder,
+      closingOrder,
+    });
+    return;
+  }
+  if (closingOrder.tradeData.symbolId !== closingOrder.tradeData.symbolId) {
+    bla("symbols (of opening and closing orders) mismatch. %j", {
+      openingOrder,
+      closingOrder,
+    });
+    return;
+  }
+
+  const fixTakeProfit = openingOrder.takeProfit !== closingOrder.limitPrice;
+  const fixStopLoss = openingOrder.stopLoss !== closingOrder.stopLoss;
+  return {
+    fixTakeProfit,
+    fixStopLoss,
+  };
+}
+const openingOrders = new Map<string, ProtoOAOrder>();
 s.on("data", (msg) => {
   if (
     msg.payloadType === ProtoOAPayloadType.PROTO_OA_EXECUTION_EVENT &&
     msg.clientMsgId
   ) {
-    const accepted =
-      msg.payload.executionType === ProtoOAExecutionType.ORDER_ACCEPTED;
-    const filled =
-      msg.payload.executionType === ProtoOAExecutionType.ORDER_FILLED;
-    const closingOrder = !!msg.payload.order?.closingOrder;
+    const { executionType, order, ctidTraderAccountId } = msg.payload;
+    const accepted = executionType === ProtoOAExecutionType.ORDER_ACCEPTED;
+    const filled = executionType === ProtoOAExecutionType.ORDER_FILLED;
+    const isClosingOrder = !!order?.closingOrder;
 
-    const { order } = msg.payload;
-    if (order && filled && !closingOrder) {
+    if (!order) {
+      return;
+    }
+
+    if (filled && !isClosingOrder) {
       // here we still have all the good stuff
-      orders.set(msg.clientMsgId, {
-        enter: order.stopPrice,
-        takeProfit: order.takeProfit, // limitPrice?
-        stopLoss: order.stopLoss,
-        tradeSide: order.tradeData.tradeSide,
-      });
-    } else if (order && accepted && closingOrder) {
-      const expected = orders.get(msg.clientMsgId);
-      orders.delete(msg.clientMsgId);
-      // here should still have all the good stuff, but probably don't :(
+      openingOrders.set(msg.clientMsgId, order);
+    } else if (accepted && isClosingOrder) {
+      const openingOrder = openingOrders.get(msg.clientMsgId);
+      const closingOrder = order;
+      if (!openingOrder) {
+        return;
+      }
 
-      // compare
-      // and fix
+      const result = compare(openingOrder, closingOrder);
+      bla("compared opening and closing orders. %j", { result });
+      const { positionId } = closingOrder;
+      if (!result || !positionId) {
+        return;
+      }
+
+      // if (result.fixStopLoss || result.fixTakeProfit) {
+      //   bla("attempting to fix")
+      //   setImmediate(async () => {
+      //     try {
+      //       await R.PROTO_OA_AMEND_POSITION_SLTP_REQ(s, {
+      //         ctidTraderAccountId,
+      //         positionId,
+      //         stopLoss: result.fixStopLoss ? openingOrder.stopLoss : undefined,
+      //         takeProfit: result.fixTakeProfit ? openingOrder.takeProfit : undefined
+      //       })
+      //     } catch (err) {
+      //       bla("error while fixing")
+      //     }
+      //   })
+      // }
     }
   }
 });
