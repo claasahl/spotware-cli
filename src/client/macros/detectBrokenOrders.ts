@@ -169,8 +169,10 @@ async function fixOrders(
     }
   }
 
-  log("managed to fix %s order(s)", fixedOrders.length);
-  fixedOrders.forEach((msgId) => brokenOrders.delete(msgId));
+  if (fixedOrders.length > 0) {
+    log("managed to fix %s order(s)", fixedOrders.length);
+    fixedOrders.forEach((msgId) => brokenOrders.delete(msgId));
+  }
 }
 
 export async function macro(socket: SpotwareClientSocket): Promise<void> {
