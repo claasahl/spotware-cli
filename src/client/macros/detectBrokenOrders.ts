@@ -169,7 +169,7 @@ async function fixOrders(
     }
   }
 
-  log("managed to fix %s order(s)", fixOrders.length);
+  log("managed to fix %s order(s)", fixedOrders.length);
   fixedOrders.forEach((msgId) => brokenOrders.delete(msgId));
 }
 
