@@ -9,8 +9,8 @@ import debug from "debug";
 import git from "isomorphic-git";
 import fs from "fs";
 
-import * as utils from "../utils";
-import * as R from "./requests";
+import * as utils from "../../utils";
+import * as R from "../requests";
 
 const log = debug("inside-bar-momentum");
 
@@ -28,7 +28,7 @@ interface Options {
   expirationOffset?: number;
   tradeVolumeInLots?: number;
 }
-export async function insideBarMomentum(options: Options) {
+export default async function insideBarMomentum(options: Options) {
   const {
     socket,
     ctidTraderAccountId,
