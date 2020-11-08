@@ -129,6 +129,7 @@ async function fixOrder(
   ctidTraderAccountId: number,
   order: ProtoOAOrder
 ): Promise<boolean> {
+  log("attempting to fix order: %j", order);
   const { positionId } = order;
   if (!positionId) {
     return false;
@@ -144,6 +145,30 @@ async function fixOrder(
   } catch (err) {
     log("failed to fix order: %j", order);
     log("error while fixing order: %s", err);
+    return false;
+  }
+}
+
+async function closeOrder(
+  socket: SpotwareClientSocket,
+  ctidTraderAccountId: number,
+  order: ProtoOAOrder
+): Promise<boolean> {
+  log("attempting to close order: %j", order);
+  const { positionId } = order;
+  if (!positionId) {
+    return false;
+  }
+  try {
+    await R.PROTO_OA_CLOSE_POSITION_REQ(socket, {
+      ctidTraderAccountId,
+      positionId,
+      volume: order.tradeData.volume,
+    });
+    return true;
+  } catch (err) {
+    log("failed to close order: %j", order);
+    log("error while closing order: %s", err);
     return false;
   }
 }
@@ -168,24 +193,24 @@ async function fixOrders(
         stopLoss = Number.MAX_VALUE,
         takeProfit = Number.MIN_VALUE,
       } = order;
-      if (bid > stopLoss && bid < takeProfit) {
-        log("attempting to fix order: %j", order);
-        const fixed = await fixOrder(socket, ctidTraderAccountId, order);
-        if (fixed) {
-          fixedOrders.push(clientMsgId);
-        }
+      const fixable = bid > stopLoss && bid < takeProfit;
+      const fixed = await (fixable
+        ? fixOrder(socket, ctidTraderAccountId, order)
+        : closeOrder(socket, ctidTraderAccountId, order));
+      if (fixed) {
+        fixedOrders.push(clientMsgId);
       }
     } else if (order.tradeData.tradeSide === ProtoOATradeSide.SELL && ask) {
       const {
         stopLoss = Number.MIN_VALUE,
         takeProfit = Number.MAX_VALUE,
       } = order;
-      if (ask < stopLoss && ask > takeProfit) {
-        log("attempting to fix order: %j", order);
-        const fixed = await fixOrder(socket, ctidTraderAccountId, order);
-        if (fixed) {
-          fixedOrders.push(clientMsgId);
-        }
+      const fixable = ask < stopLoss && ask > takeProfit;
+      const fixed = await (fixable
+        ? fixOrder(socket, ctidTraderAccountId, order)
+        : closeOrder(socket, ctidTraderAccountId, order));
+      if (fixed) {
+        fixedOrders.push(clientMsgId);
       }
     }
   }
