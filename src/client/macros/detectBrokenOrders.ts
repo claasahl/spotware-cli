@@ -94,11 +94,32 @@ function cleanupOrders(
 ): void {
   const { clientMsgId } = msg;
   const { executionType, order } = msg.payload;
-  const isFilled = executionType === ProtoOAExecutionType.ORDER_FILLED;
   const isClosingOrder = !!order?.closingOrder;
 
-  if (order && isFilled && isClosingOrder && clientMsgId) {
-    log("removing order from list: %j", order);
+  if (!clientMsgId || !order) {
+    return;
+  }
+
+  if (executionType === ProtoOAExecutionType.ORDER_FILLED && isClosingOrder) {
+    log("removing order from list (filled): %j", order);
+    orders.delete(clientMsgId);
+  } else if (
+    executionType === ProtoOAExecutionType.ORDER_CANCELLED &&
+    !isClosingOrder
+  ) {
+    log("removing order from list (cancelled): %j", order);
+    orders.delete(clientMsgId);
+  } else if (
+    executionType === ProtoOAExecutionType.ORDER_REJECTED &&
+    !isClosingOrder
+  ) {
+    log("removing order from list (rejected): %j", order);
+    orders.delete(clientMsgId);
+  } else if (
+    executionType === ProtoOAExecutionType.ORDER_EXPIRED &&
+    !isClosingOrder
+  ) {
+    log("removing order from list (expired): %j", order);
     orders.delete(clientMsgId);
   }
 }
