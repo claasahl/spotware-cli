@@ -78,7 +78,7 @@ function collectBrokenOrders(
   }
 
   const fixTakeProfit = openingOrder.takeProfit !== closingOrder.limitPrice;
-  const fixStopLoss = openingOrder.stopLoss !== closingOrder.stopLoss;
+  const fixStopLoss = openingOrder.stopLoss !== closingOrder.stopPrice;
   if (fixStopLoss || fixTakeProfit) {
     log("adding 'broken' order to list: %j %j", openingOrder, {
       fixStopLoss,
