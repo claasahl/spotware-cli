@@ -14,6 +14,13 @@ import * as R from "../requests";
 
 const log = debug("inside-bar-momentum");
 
+function volume(price1: number, price2: number, risk: number, step = 1000) {
+  const entry = Math.max(price1, price2);
+  const close = Math.min(price1, price2);
+  const volume = (risk * close) / (entry - close);
+  return Math.round(volume / step) * step;
+}
+
 interface Options {
   socket: SpotwareClientSocket;
   ctidTraderAccountId: number;
@@ -23,7 +30,6 @@ interface Options {
   stopLossOffset?: number;
   takeProfitOffset?: number;
   expirationOffset?: number;
-  tradeVolumeInLots?: number;
 }
 export default async function insideBarMomentum(options: Options) {
   const {
@@ -35,7 +41,6 @@ export default async function insideBarMomentum(options: Options) {
     stopLossOffset = 0.4,
     takeProfitOffset = 0.8,
     expirationOffset,
-    tradeVolumeInLots = 0.1,
   } = options;
   const ism = utils.insideBarMomentum({
     ctidTraderAccountId,
@@ -49,7 +54,7 @@ export default async function insideBarMomentum(options: Options) {
     ctidTraderAccountId,
     symbolId: [symbolId],
   });
-  const { digits, lotSize = 1 } = details.symbol[0];
+  const { digits, stepVolume = 100000 } = details.symbol[0];
   const [{ oid }] = await git.log({ fs, depth: 1, ref: "HEAD", dir: "." });
   return (msg: Messages) => {
     const ISM = ism(msg);
@@ -72,7 +77,7 @@ export default async function insideBarMomentum(options: Options) {
       symbolId,
       orderType: ProtoOAOrderType.STOP,
       tradeSide: ISM.tradeSide,
-      volume: tradeVolumeInLots * lotSize,
+      volume: volume(ISM.enter, ISM.stopLoss, 20, stepVolume / 100),
       stopPrice: utils.price(ISM.enter, digits),
       stopLoss: utils.price(ISM.stopLoss, digits),
       takeProfit: utils.price(ISM.takeProfit, digits),
