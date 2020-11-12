@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "prepare": "tsc",
-    "build": "tsc",
+    "build": "rimraf ./build && tsc",
     "test": "",
     "prestart": "npm run build",
     "start": "node -r dotenv/config build/client/index.js 2>&1 | multilog s16777215 n100 dir ./logs",
@@ -40,6 +40,7 @@
     "nodemon": "^2.0.6",
     "prettier": "^2.1.2",
     "pretty-quick": "^3.1.0",
+    "rimraf": "^3.0.2",
     "ts-node": "^9.0.0",
     "typescript": "^4.0.3"
   },
