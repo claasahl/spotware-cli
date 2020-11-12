@@ -14,10 +14,17 @@ import * as R from "../requests";
 
 const log = debug("inside-bar-momentum");
 
-function volume(price1: number, price2: number, risk: number, step = 1000) {
+function volume(
+  price1: number,
+  price2: number,
+  risk: number,
+  step = 1000,
+  convert = false
+) {
   const entry = Math.max(price1, price2);
   const close = Math.min(price1, price2);
-  const volume = (risk * close) / (entry - close);
+  const riskInCorrectCurrency = risk / (convert ? entry : 1);
+  const volume = (riskInCorrectCurrency * close) / (entry - close);
   return Math.round(volume / step) * step;
 }
 
@@ -30,6 +37,8 @@ interface Options {
   stopLossOffset?: number;
   takeProfitOffset?: number;
   expirationOffset?: number;
+  riskInEur?: number;
+  convert?: boolean;
 }
 export default async function insideBarMomentum(options: Options) {
   const {
@@ -41,6 +50,8 @@ export default async function insideBarMomentum(options: Options) {
     stopLossOffset = 0.4,
     takeProfitOffset = 0.8,
     expirationOffset,
+    riskInEur = 20,
+    convert,
   } = options;
   const ism = utils.insideBarMomentum({
     ctidTraderAccountId,
@@ -77,7 +88,13 @@ export default async function insideBarMomentum(options: Options) {
       symbolId,
       orderType: ProtoOAOrderType.STOP,
       tradeSide: ISM.tradeSide,
-      volume: volume(ISM.enter, ISM.stopLoss, 20, stepVolume / 100),
+      volume: volume(
+        ISM.enter,
+        ISM.stopLoss,
+        riskInEur,
+        stepVolume / 100,
+        convert
+      ),
       stopPrice: utils.price(ISM.enter, digits),
       stopLoss: utils.price(ISM.stopLoss, digits),
       takeProfit: utils.price(ISM.takeProfit, digits),

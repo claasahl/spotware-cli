@@ -66,6 +66,8 @@ events.on("symbol", async (symbol) => {
       symbolId: symbol.symbolId,
       period,
       expirationOffset: ms("24h"),
+      riskInEur: 20,
+      convert: symbol.symbolName.endsWith("EUR"),
     })
   );
   await M.trendbars(s, {
