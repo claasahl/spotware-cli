@@ -71,6 +71,7 @@ const csvHeaders = [
   "SMALow",
   "SMAHigh",
   "range",
+  "rangeInPips",
 ];
 
 const csvData = (trendbar: utils.Trendbar, result?: Result) => [
@@ -86,6 +87,9 @@ const csvData = (trendbar: utils.Trendbar, result?: Result) => [
   result?.SMAHigh,
   result?.SMALow && result?.SMAHigh
     ? result.SMAHigh - result.SMALow
+    : undefined,
+  result?.SMALow && result?.SMAHigh
+    ? (result.SMAHigh - result.SMALow) / Math.pow(10, 5 - 4) //digits - pip position
     : undefined,
 ];
 
