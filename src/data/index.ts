@@ -34,4 +34,5 @@ const bt = (options: Pick<BacktestOptions, "strategy" | "done">) =>
     forsight: ms("12h"),
   });
 
-E.insideBarMomentum({ symbol, period }, bt);
+// E.insideBarMomentum({ symbol, period }, bt);
+E.priceRange({ symbol, period }, bt);
