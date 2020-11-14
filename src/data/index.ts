@@ -5,9 +5,9 @@ import { backtest, Options as BacktestOptions } from "./backtest";
 import * as E from "./experiments";
 
 const symbol = "EURGBP";
-const period = ProtoOATrendbarPeriod.M30;
-const fromDate = new Date("2020-01-01T00:00:00.000Z");
-const toDate = new Date("2020-01-25T00:00:00.000Z");
+const period = ProtoOATrendbarPeriod.M15;
+const fromDate = new Date("2019-11-01T00:00:00.000Z");
+const toDate = new Date("2020-11-01T00:00:00.000Z");
 
 const host = process.env.host || "live.ctraderapi.com";
 const port = Number(process.env.port) || 5035;

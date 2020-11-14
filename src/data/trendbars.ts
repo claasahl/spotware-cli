@@ -9,6 +9,8 @@ import { Trendbar, toTrendbar, isTrendbar } from "../utils";
 function interval(period: ProtoOATrendbarPeriod): number {
   switch (period) {
     case ProtoOATrendbarPeriod.H1:
+    case ProtoOATrendbarPeriod.M30:
+    case ProtoOATrendbarPeriod.M15:
       return 21168000000;
     case ProtoOATrendbarPeriod.M5:
       return 3024000000;
