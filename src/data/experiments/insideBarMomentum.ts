@@ -4,9 +4,13 @@ import {
   ProtoOATradeSide,
   ProtoOATrendbarPeriod,
 } from "@claasahl/spotware-adapter";
-import * as utils from "../utils";
-import { Trendbar } from "../utils";
-import { Order } from "./orders";
+import { format } from "@fast-csv/format";
+import { createWriteStream } from "fs";
+
+import * as utils from "../../utils";
+import { forsight, Order } from "../orders";
+import { toLiveTrendbar } from "../utils";
+import { Experiment } from "./types";
 
 interface Options {
   ctidTraderAccountId: number;
@@ -116,7 +120,7 @@ export function insideBarMomentum(options: Options) {
   };
 }
 
-export const csvHeaders = [
+const csvHeaders = [
   "volume",
   "open",
   "high",
@@ -139,7 +143,7 @@ export const csvHeaders = [
   "profitLoss",
 ];
 
-export const csvData = (trendbar: Trendbar, result?: Result) => [
+const csvData = (trendbar: utils.Trendbar, result?: Result) => [
   trendbar.volume,
   trendbar.open,
   trendbar.high,
@@ -161,3 +165,27 @@ export const csvData = (trendbar: Trendbar, result?: Result) => [
   result?.ISM?.tradeSide,
   result?.pl,
 ];
+
+export const run: Experiment = (options, backtest) => {
+  // prepare CSV file
+  const { symbol, period } = options;
+  const stream = format({ headers: csvHeaders });
+  const output = createWriteStream(
+    `./data-${symbol.replace("/", "")}-${ProtoOATrendbarPeriod[period]}.csv`
+  );
+  stream.pipe(output);
+
+  // run strategy / analysis
+  return backtest({
+    strategy: (options) => {
+      const strategy = insideBarMomentum(options);
+      return (trendbar, future) => {
+        const order = (o: Order): number | undefined => forsight(future, o);
+        const message = toLiveTrendbar(options, trendbar);
+        const result = strategy(trendbar.timestamp, message, order);
+        stream.write(csvData(trendbar, result));
+      };
+    },
+    done: () => stream.end(),
+  });
+};
