@@ -83,15 +83,19 @@ export default async function insideBarMomentum(options: Options) {
     if (!ISM || !bid) {
       return;
     }
+
+    const stopPrice = utils.price(ISM.enter, digits);
+    const stopLoss = utils.price(ISM.stopLoss, digits);
+    const takeProfit = utils.price(ISM.takeProfit, digits);
     R.PROTO_OA_NEW_ORDER_REQ(socket, {
       ctidTraderAccountId,
       symbolId,
       orderType: ProtoOAOrderType.STOP,
       tradeSide: ISM.tradeSide,
-      volume: volume(ISM.enter, ISM.stopLoss, riskInEur, stepVolume, convert),
-      stopPrice: utils.price(ISM.enter, digits),
-      stopLoss: utils.price(ISM.stopLoss, digits),
-      takeProfit: utils.price(ISM.takeProfit, digits),
+      volume: volume(stopPrice, stopLoss, riskInEur, stepVolume, convert),
+      stopPrice,
+      stopLoss,
+      takeProfit,
       expirationTimestamp: expirationOffset
         ? Date.now() + expirationOffset
         : undefined,
