@@ -6,6 +6,7 @@ export interface Order {
   takeProfit: number;
   stopLoss: number;
   tradeSide: ProtoOATradeSide;
+  volume?: number;
   expirationTimestamp?: number;
 }
 export function forsight(future: Trendbar[], order: Order): number | undefined {

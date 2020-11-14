@@ -8,10 +8,10 @@ import { insideBarMomentum, csvHeaders, csvData } from "./insideBarMomentum";
 import { toLiveTrendbar } from "./utils";
 import { Order, forsight } from "./orders";
 
-const symbol = "BTC/USD";
+const symbol = "EURGBP";
 const period = ProtoOATrendbarPeriod.H1;
 const fromDate = new Date("2020-01-01T00:00:00.000Z");
-const toDate = new Date("2020-10-25T00:00:00.000Z");
+const toDate = new Date("2020-01-25T00:00:00.000Z");
 
 const host = process.env.host || "live.ctraderapi.com";
 const port = Number(process.env.port) || 5035;
