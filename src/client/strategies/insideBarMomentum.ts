@@ -18,14 +18,14 @@ function volume(
   price1: number,
   price2: number,
   risk: number,
-  step = 1000,
+  step = 100000,
   convert = false
 ) {
   const entry = Math.max(price1, price2);
   const close = Math.min(price1, price2);
   const riskInCorrectCurrency = risk / (convert ? entry : 1);
   const volume = (riskInCorrectCurrency * close) / (entry - close);
-  return Math.round(volume / step) * step;
+  return Math.round((volume * 100) / step) * step;
 }
 
 interface Options {
@@ -88,13 +88,7 @@ export default async function insideBarMomentum(options: Options) {
       symbolId,
       orderType: ProtoOAOrderType.STOP,
       tradeSide: ISM.tradeSide,
-      volume: volume(
-        ISM.enter,
-        ISM.stopLoss,
-        riskInEur,
-        stepVolume / 100,
-        convert
-      ),
+      volume: volume(ISM.enter, ISM.stopLoss, riskInEur, stepVolume, convert),
       stopPrice: utils.price(ISM.enter, digits),
       stopLoss: utils.price(ISM.stopLoss, digits),
       takeProfit: utils.price(ISM.takeProfit, digits),
