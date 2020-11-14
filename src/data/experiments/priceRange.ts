@@ -4,7 +4,8 @@ import {
   ProtoOATrendbarPeriod,
 } from "@claasahl/spotware-adapter";
 import { format } from "@fast-csv/format";
-import { createWriteStream } from "fs";
+import fs from "fs";
+import git from "isomorphic-git";
 
 import * as utils from "../../utils";
 import { toLiveTrendbar } from "../utils";
@@ -93,14 +94,15 @@ const csvData = (trendbar: utils.Trendbar, result?: Result) => [
     : undefined,
 ];
 
-export const run: Experiment = (options, backtest) => {
+export const run: Experiment = async (options, backtest) => {
   // prepare CSV file
   const { symbol, period } = options;
+  const [{ oid }] = await git.log({ fs, depth: 1, ref: "HEAD", dir: "." });
   const stream = format({ headers: csvHeaders });
-  const output = createWriteStream(
+  const output = fs.createWriteStream(
     `./price-range-${symbol.replace("/", "")}-${
       ProtoOATrendbarPeriod[period]
-    }.csv`
+    }-${oid}.csv`
   );
   stream.pipe(output);
 
