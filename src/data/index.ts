@@ -5,7 +5,7 @@ import { backtest, Options as BacktestOptions } from "./backtest";
 import * as E from "./experiments";
 
 const symbol = "EURGBP";
-const period = ProtoOATrendbarPeriod.H1;
+const period = ProtoOATrendbarPeriod.M5;
 const fromDate = new Date("2019-11-01T00:00:00.000Z");
 const toDate = new Date("2020-11-01T00:00:00.000Z");
 
