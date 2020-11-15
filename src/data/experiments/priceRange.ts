@@ -20,28 +20,28 @@ interface Options {
 
 interface Result {
   symbolId: number;
-  SMAHigh?: number;
-  SMALow?: number;
+  SMARange?: number;
+  SMABody?: number;
 }
 export function priceRange(options: Options) {
   const { ctidTraderAccountId, symbolId, period, smaPeriods = 200 } = options;
-  const smaHigh = utils.sma({
+  const smaRange = utils.sma({
     ctidTraderAccountId,
     symbolId,
     period,
     periods: smaPeriods,
-    property: "high",
+    property: (b) => b.high - b.low,
   });
-  const smaLow = utils.sma({
+  const smaBody = utils.sma({
     ctidTraderAccountId,
     symbolId,
     period,
     periods: smaPeriods,
-    property: "low",
+    property: (b) => Math.abs(b.open - b.close),
   });
   return (_timestamp: number, msg: Messages): Result | undefined => {
-    const SMAHigh = smaHigh(msg);
-    const SMALow = smaLow(msg);
+    const SMARange = smaRange(msg);
+    const SMABody = smaBody(msg);
 
     if (msg.payloadType !== ProtoOAPayloadType.PROTO_OA_SPOT_EVENT) {
       return;
@@ -53,8 +53,8 @@ export function priceRange(options: Options) {
 
     const data = {
       symbolId,
-      SMAHigh,
-      SMALow,
+      SMARange,
+      SMABody,
     };
     return data;
   };
@@ -69,10 +69,8 @@ const csvHeaders = [
   "period",
   "timestamp",
   "date",
-  "SMALow",
-  "SMAHigh",
-  "range",
-  "rangeInPips",
+  "SMARange",
+  "SMABody",
 ];
 
 const csvData = (trendbar: utils.Trendbar, result?: Result) => [
@@ -84,14 +82,8 @@ const csvData = (trendbar: utils.Trendbar, result?: Result) => [
   trendbar.period,
   trendbar.timestamp,
   new Date(trendbar.timestamp).toISOString(),
-  result?.SMALow,
-  result?.SMAHigh,
-  result?.SMALow && result?.SMAHigh
-    ? result.SMAHigh - result.SMALow
-    : undefined,
-  result?.SMALow && result?.SMAHigh
-    ? (result.SMAHigh - result.SMALow) / Math.pow(10, 5 - 4) //digits - pip position
-    : undefined,
+  result?.SMARange,
+  result?.SMABody,
 ];
 
 export const run: Experiment = async (options, backtest) => {
