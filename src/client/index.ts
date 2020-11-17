@@ -65,7 +65,7 @@ events.on("symbol", async (symbol) => {
       ctidTraderAccountId: symbol.ctidTraderAccountId,
       symbolId: symbol.symbolId,
       period,
-      expirationOffset: ms("24h"),
+      expirationOffset: ms("6h"),
       riskInEur: 20,
       convert: symbol.symbolName.endsWith("EUR"),
     })
