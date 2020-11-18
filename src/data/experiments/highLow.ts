@@ -1,8 +1,4 @@
-import {
-  Messages,
-  ProtoOAPayloadType,
-  ProtoOATrendbarPeriod,
-} from "@claasahl/spotware-adapter";
+import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
 import { format } from "@fast-csv/format";
 import fs from "fs";
 import git from "isomorphic-git";
@@ -12,14 +8,6 @@ import { Trendbar } from "../../utils";
 import { Experiment } from "./types";
 
 function findHighsAndLows(bars: Trendbar[]) {
-  console.log(bars.length);
-  if (bars.length > 1) {
-    console.log(
-      new Date(bars[0].timestamp),
-      new Date(bars[bars.length - 1].timestamp)
-    );
-  }
-
   const lows: Trendbar[] = [];
   const highs: Trendbar[] = [];
   for (const bar of bars) {
@@ -45,12 +33,34 @@ const csvHeaders = [
   "period",
   "timestamp",
   "date",
-  "highAt-",
-  "highAt",
-  "lowAt-",
-  "lowAt",
+  "highPrice1",
+  "highPrice1Timestamp",
+  "highPrice1At",
+  "lowPrice1",
+  "lowPrice1Timestamp",
+  "lowPrice1At",
+  "highPrice2",
+  "highPrice2Timestamp",
+  "highPrice2At",
+  "lowPrice2",
+  "lowPrice2Timestamp",
+  "lowPrice2At",
 ];
 
+function high(bar?: Trendbar) {
+  if (!bar) {
+    return [undefined, undefined, undefined];
+  }
+  const d = new Date(bar.timestamp);
+  return [bar.high, bar.timestamp, d.getUTCHours() * 60 + d.getUTCMinutes()];
+}
+function low(bar?: Trendbar) {
+  if (!bar) {
+    return [undefined, undefined, undefined];
+  }
+  const d = new Date(bar.timestamp);
+  return [bar.low, bar.timestamp, d.getUTCHours() * 60 + d.getUTCMinutes()];
+}
 const csvData = (
   trendbar: utils.Trendbar,
   highs: Trendbar[],
@@ -64,10 +74,10 @@ const csvData = (
   trendbar.period,
   trendbar.timestamp,
   new Date(trendbar.timestamp).toISOString(),
-  highs[0]?.high,
-  highs[0]?.timestamp,
-  lows[0]?.low,
-  lows[0]?.timestamp,
+  ...high(highs[0]),
+  ...low(lows[0]),
+  ...high(highs[1]),
+  ...low(lows[1]),
 ];
 
 export const run: Experiment = async (options, backtest) => {
