@@ -118,7 +118,7 @@ export async function dualDownload(
       const end = foresight
         .slice(start)
         .findIndex((f) => f.timestamp > futureTimestamp);
-      const future = foresight.slice(start, end);
+      const future = foresight.slice(start, start + end);
       options.cb(bar, future);
 
       // get rid of "used" data
