@@ -181,6 +181,7 @@ export const run: Experiment = async (options, backtest) => {
 
   // run strategy / analysis
   return backtest({
+    ...options,
     strategy: (options) => {
       const strategy = insideBarMomentum(options);
       return (trendbar, future) => {
