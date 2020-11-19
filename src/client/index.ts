@@ -31,6 +31,7 @@ socket.once(event, async () => {
   });
   await M.emitAccounts({ events, traders });
   await M.detectBrokenOrders(s);
+  M.exitOnDisconnect(s);
 });
 
 events.on("account", async (account) => {
