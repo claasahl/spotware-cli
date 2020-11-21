@@ -57,31 +57,25 @@ const csvHeaders = [
   "date",
   "highPrice1",
   "highPrice1Timestamp",
-  "highPrice1At",
   "lowPrice1",
   "lowPrice1Timestamp",
-  "lowPrice1At",
   "highPrice2",
   "highPrice2Timestamp",
-  "highPrice2At",
   "lowPrice2",
   "lowPrice2Timestamp",
-  "lowPrice2At",
 ];
 
 function high(bar?: Trendbar) {
   if (!bar) {
-    return [undefined, undefined, undefined];
+    return [undefined, undefined];
   }
-  const d = new Date(bar.timestamp);
-  return [bar.high, bar.timestamp, d.getUTCHours() * 60 + d.getUTCMinutes()];
+  return [bar.high, bar.timestamp];
 }
 function low(bar?: Trendbar) {
   if (!bar) {
-    return [undefined, undefined, undefined];
+    return [undefined, undefined];
   }
-  const d = new Date(bar.timestamp);
-  return [bar.low, bar.timestamp, d.getUTCHours() * 60 + d.getUTCMinutes()];
+  return [bar.low, bar.timestamp];
 }
 const csvData = (
   trendbar: utils.Trendbar,
