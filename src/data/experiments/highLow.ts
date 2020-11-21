@@ -43,7 +43,7 @@ function findHighsAndLows(bars: Trendbar[]) {
       trimmedHighs.push(curr);
     }
   });
-  return { lows, highs, merged, trimmedLows, trimmedHighs };
+  return { lows: trimmedLows, highs: trimmedHighs };
 }
 
 const csvHeaders = [
@@ -119,30 +119,7 @@ export const run: Experiment = async (options, backtest) => {
     ...options,
     strategy: () => {
       return (trendbar, future) => {
-        const { highs, lows, merged } = findHighsAndLows(future);
-        const data = findHighsAndLows(future);
-        data.lows = data.lows.map((d) => ({
-          date: new Date(d.timestamp),
-          ...d,
-        }));
-        data.highs = data.highs.map((d) => ({
-          date: new Date(d.timestamp),
-          ...d,
-        }));
-        data.merged = data.merged.map((d) => ({
-          date: new Date(d.timestamp),
-          ...d,
-        }));
-        data.trimmedLows = data.trimmedLows.map((d) => ({
-          date: new Date(d.timestamp),
-          ...d,
-        }));
-        data.trimmedHighs = data.trimmedHighs.map((d) => ({
-          date: new Date(d.timestamp),
-          ...d,
-        }));
-        console.log(JSON.stringify(data, null, 2));
-        process.exit(0);
+        const { highs, lows } = findHighsAndLows(future);
         stream.write(csvData(trendbar, highs.reverse(), lows.reverse()));
       };
     },
