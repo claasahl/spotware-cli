@@ -21,7 +21,29 @@ function findHighsAndLows(bars: Trendbar[]) {
       highs.push(bar);
     }
   }
-  return { lows, highs };
+  const merged = [
+    ...lows.map((l) => ({ ...l, type: "low" })),
+    ...highs.map((l) => ({ ...l, type: "high" })),
+  ].sort((a, b) => a.timestamp - b.timestamp);
+  const trimmedLows: Trendbar[] = [];
+  const trimmedHighs: Trendbar[] = [];
+  merged.forEach((curr, index, arr) => {
+    if (index === 0) {
+      return;
+    }
+    const prev = arr[index - 1];
+    if (prev.type !== curr.type && prev.type === "low") {
+      trimmedLows.push(prev);
+    } else if (prev.type !== curr.type && prev.type === "high") {
+      trimmedHighs.push(prev);
+    }
+    if (index === arr.length - 1 && curr.type === "low") {
+      trimmedLows.push(curr);
+    } else if (index === arr.length - 1 && curr.type === "high") {
+      trimmedHighs.push(curr);
+    }
+  });
+  return { lows, highs, merged, trimmedLows, trimmedHighs };
 }
 
 const csvHeaders = [
@@ -97,7 +119,30 @@ export const run: Experiment = async (options, backtest) => {
     ...options,
     strategy: () => {
       return (trendbar, future) => {
-        const { highs, lows } = findHighsAndLows(future);
+        const { highs, lows, merged } = findHighsAndLows(future);
+        const data = findHighsAndLows(future);
+        data.lows = data.lows.map((d) => ({
+          date: new Date(d.timestamp),
+          ...d,
+        }));
+        data.highs = data.highs.map((d) => ({
+          date: new Date(d.timestamp),
+          ...d,
+        }));
+        data.merged = data.merged.map((d) => ({
+          date: new Date(d.timestamp),
+          ...d,
+        }));
+        data.trimmedLows = data.trimmedLows.map((d) => ({
+          date: new Date(d.timestamp),
+          ...d,
+        }));
+        data.trimmedHighs = data.trimmedHighs.map((d) => ({
+          date: new Date(d.timestamp),
+          ...d,
+        }));
+        console.log(JSON.stringify(data, null, 2));
+        process.exit(0);
         stream.write(csvData(trendbar, highs.reverse(), lows.reverse()));
       };
     },
