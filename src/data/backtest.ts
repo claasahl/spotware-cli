@@ -46,7 +46,10 @@ export interface Options {
   toDate: Date;
   symbol: string;
   period: ProtoOATrendbarPeriod;
-  forsight: number;
+  forsight: {
+    offset: number;
+    period: ProtoOATrendbarPeriod;
+  };
   strategy: (
     options: StrategyOptions
   ) => (trendbar: Trendbar, future: Trendbar[]) => void;
@@ -87,10 +90,7 @@ export async function backtest(options: Options) {
         period: options.period,
         fromDate: options.fromDate,
         toDate: options.toDate,
-        foresight: {
-          offset: options.forsight,
-          period: ProtoOATrendbarPeriod.M1,
-        },
+        foresight: options.forsight,
         cb: strategy,
       });
     }

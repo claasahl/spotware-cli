@@ -33,6 +33,13 @@ const toDate = new Date("2020-11-01T00:00:00.000Z");
 // E.insideBarMomentum({ symbol, period: ProtoOATrendbarPeriod.M5, forsight: ms("12h") }, bt);
 // E.priceRange({ symbol, period: ProtoOATrendbarPeriod.M5, forsight: ms("12h") }, bt);
 E.highLow(
-  { symbol, period: ProtoOATrendbarPeriod.D1, forsight: ms("24h") },
+  {
+    symbol,
+    period: ProtoOATrendbarPeriod.D1,
+    forsight: {
+      offset: ms("24h"),
+      period: ProtoOATrendbarPeriod.M5,
+    },
+  },
   bt
 );
