@@ -1,12 +1,8 @@
-import {
-  Messages,
-  ProtoOAPayloadType,
-  ProtoOATrendbarPeriod,
-} from "@claasahl/spotware-adapter";
+import { Messages, ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
 
-import { bufferedTrendbars, Trendbar } from "./trendbar";
+import { Trendbar, bufferedTrendbars } from "./trendbar";
 
-function findHighsAndLows(bars: Trendbar[]) {
+export function findHighsAndLows(bars: Trendbar[]) {
   const lows: Trendbar[] = [];
   const highs: Trendbar[] = [];
   for (const bar of bars) {
@@ -49,27 +45,17 @@ export interface HighLowOptions {
   ctidTraderAccountId: number;
   symbolId: number;
   period: ProtoOATrendbarPeriod;
+  periods: number;
 }
 export interface HighLowResults {
   lows: Trendbar[];
   highs: Trendbar[];
-  newLow: boolean;
-  newHigh: boolean;
-  msSinceLastReset: number;
-  msUntilNextReset: number;
-  msBetweenResets: number;
 }
 export function highLow(options: HighLowOptions) {
-  const lows: Trendbar[] = [];
-  const highs: Trendbar[] = [];
-  return (message: Messages): HighLowResults | undefined => {
-    switch (message.payloadType) {
-      case ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES:
-        return proto_oa_get_trendbars_res(message);
-      case ProtoOAPayloadType.PROTO_OA_SPOT_EVENT:
-        return proto_oa_spot_event(message);
-      default:
-        return value();
-    }
+  const buffer = bufferedTrendbars(options);
+  return (msg: Messages): HighLowResults | undefined => {
+    const buffered = buffer(msg);
+    const bars = buffered.bars.filter((b) => b);
+    return findHighsAndLows(bars);
   };
 }

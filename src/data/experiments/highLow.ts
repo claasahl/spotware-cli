@@ -7,45 +7,6 @@ import * as utils from "../../utils";
 import { Trendbar } from "../../utils";
 import { Experiment } from "./types";
 
-function findHighsAndLows(bars: Trendbar[]) {
-  const lows: Trendbar[] = [];
-  const highs: Trendbar[] = [];
-  for (const bar of bars) {
-    const low = lows[lows.length - 1];
-    if (!low || bar.low < low.low) {
-      lows.push(bar);
-    }
-
-    const high = highs[highs.length - 1];
-    if (!high || bar.high > high.high) {
-      highs.push(bar);
-    }
-  }
-  const merged = [
-    ...lows.map((l) => ({ ...l, type: "low" })),
-    ...highs.map((l) => ({ ...l, type: "high" })),
-  ].sort((a, b) => a.timestamp - b.timestamp);
-  const trimmedLows: Trendbar[] = [];
-  const trimmedHighs: Trendbar[] = [];
-  merged.forEach((curr, index, arr) => {
-    if (index === 0) {
-      return;
-    }
-    const prev = arr[index - 1];
-    if (prev.type !== curr.type && prev.type === "low") {
-      trimmedLows.push(prev);
-    } else if (prev.type !== curr.type && prev.type === "high") {
-      trimmedHighs.push(prev);
-    }
-    if (index === arr.length - 1 && curr.type === "low") {
-      trimmedLows.push(curr);
-    } else if (index === arr.length - 1 && curr.type === "high") {
-      trimmedHighs.push(curr);
-    }
-  });
-  return { lows: trimmedLows, highs: trimmedHighs };
-}
-
 const csvHeaders = [
   "volume",
   "open",
@@ -113,7 +74,7 @@ export const run: Experiment = async (options, backtest) => {
     ...options,
     strategy: () => {
       return (trendbar, future) => {
-        const { highs, lows } = findHighsAndLows(future);
+        const { highs, lows } = utils.findHighsAndLows(future);
         stream.write(csvData(trendbar, highs.reverse(), lows.reverse()));
       };
     },
