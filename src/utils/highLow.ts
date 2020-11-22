@@ -45,27 +45,24 @@ function findHighsAndLows(bars: Trendbar[]) {
   return { lows: trimmedLows, highs: trimmedHighs };
 }
 
-interface SmaOptions {
+export interface HighLowOptions {
   ctidTraderAccountId: number;
   symbolId: number;
   period: ProtoOATrendbarPeriod;
 }
-export function highLow(options: SmaOptions) {
+export interface HighLowResults {
+  lows: Trendbar[];
+  highs: Trendbar[];
+  newLow: boolean;
+  newHigh: boolean;
+  msSinceLastReset: number;
+  msUntilNextReset: number;
+  msBetweenResets: number;
+}
+export function highLow(options: HighLowOptions) {
   const lows: Trendbar[] = [];
   const highs: Trendbar[] = [];
-  return (
-    message: Messages
-  ):
-    | {
-        lows: Trendbar[];
-        highs: Trendbar[];
-        newLow: boolean;
-        newHigh: boolean;
-        msSinceLastReset: number;
-        msUntilNextReset: number;
-        msBetweenResets: number;
-      }
-    | undefined => {
+  return (message: Messages): HighLowResults | undefined => {
     switch (message.payloadType) {
       case ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES:
         return proto_oa_get_trendbars_res(message);
