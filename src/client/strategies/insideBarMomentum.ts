@@ -14,20 +14,6 @@ import * as R from "../requests";
 
 const log = debug("inside-bar-momentum");
 
-function volume(
-  price1: number,
-  price2: number,
-  risk: number,
-  step = 100000,
-  convert = false
-) {
-  const entry = Math.max(price1, price2);
-  const close = Math.min(price1, price2);
-  const riskInCorrectCurrency = risk / (convert ? entry : 1);
-  const volume = (riskInCorrectCurrency * close) / (entry - close);
-  return Math.round((volume * 100) / step) * step;
-}
-
 interface Options {
   socket: SpotwareClientSocket;
   ctidTraderAccountId: number;
@@ -92,7 +78,7 @@ export default async function insideBarMomentum(options: Options) {
       symbolId,
       orderType: ProtoOAOrderType.STOP,
       tradeSide: ISM.tradeSide,
-      volume: volume(stopPrice, stopLoss, riskInEur, stepVolume, convert),
+      volume: utils.volume(stopPrice, stopLoss, riskInEur, stepVolume, convert),
       stopPrice,
       stopLoss,
       takeProfit,
