@@ -6,7 +6,6 @@ import {
   ProtoOATrendbarPeriod,
   SpotwareClientSocket,
 } from "@claasahl/spotware-adapter";
-import debug from "debug";
 import git from "isomorphic-git";
 import fs from "fs";
 
@@ -14,16 +13,14 @@ import * as utils from "../../utils";
 import * as R from "../requests";
 import ms from "ms";
 
-const log = debug("high-low");
-
 interface Options {
   socket: SpotwareClientSocket;
   ctidTraderAccountId: number;
   symbolId: number;
   period: ProtoOATrendbarPeriod;
+  periods: number;
   stopLossOffset: number;
-  riskInEur?: number;
-  convert?: boolean;
+  volumeInLots: number;
 }
 export default async function strategy(options: Options) {
   const {
@@ -31,20 +28,21 @@ export default async function strategy(options: Options) {
     ctidTraderAccountId,
     symbolId,
     period,
+    periods,
     stopLossOffset,
-    riskInEur = 20,
-    convert,
+    volumeInLots,
   } = options;
   const HighLow = utils.highLow({
     ctidTraderAccountId,
     symbolId,
     period,
+    periods,
   });
   const details = await R.PROTO_OA_SYMBOL_BY_ID_REQ(socket, {
     ctidTraderAccountId,
     symbolId: [symbolId],
   });
-  const { stepVolume = 100000 } = details.symbol[0];
+  const { lotSize = 1 } = details.symbol[0];
   const [{ oid }] = await git.log({ fs, depth: 1, ref: "HEAD", dir: "." });
   return (msg: Messages) => {
     const hl = HighLow(msg);
@@ -57,29 +55,73 @@ export default async function strategy(options: Options) {
       return;
     }
 
-    // new D1 bar?
-    // new M5 bar?
-    // crossed 11am threshold?
+    if (!hl) {
+      return;
+    }
 
-    if (hl && hl.msSinceLastReset === 0 && hl.lows.length > 0) {
-      const expirationOffset = hl.msUntilNextReset - ms("1min");
+    const expirationOffset = ms("12h");
+    if (hl.lows.length > 0) {
       const stopPrice = hl.lows[0].low;
-      const stopLoss = stopPrice - stopLossOffset;
+      const stopLoss = stopPrice + stopLossOffset;
       R.PROTO_OA_NEW_ORDER_REQ(socket, {
         ctidTraderAccountId,
         symbolId,
         orderType: ProtoOAOrderType.STOP,
         tradeSide: ProtoOATradeSide.SELL,
-        volume: utils.volume(
-          stopPrice,
-          stopLoss,
-          riskInEur,
-          stepVolume,
-          convert
-        ),
+        volume: lotSize * volumeInLots,
         stopPrice,
         stopLoss,
         trailingStopLoss: true,
+        expirationTimestamp: Date.now() + expirationOffset,
+        comment: oid,
+        label: oid,
+      });
+    }
+    if (hl.highs.length > 0) {
+      const stopPrice = hl.highs[0].high;
+      const stopLoss = stopPrice - stopLossOffset;
+      R.PROTO_OA_NEW_ORDER_REQ(socket, {
+        ctidTraderAccountId,
+        symbolId,
+        orderType: ProtoOAOrderType.STOP,
+        tradeSide: ProtoOATradeSide.BUY,
+        volume: lotSize * volumeInLots,
+        stopPrice,
+        stopLoss,
+        trailingStopLoss: true,
+        expirationTimestamp: Date.now() + expirationOffset,
+        comment: oid,
+        label: oid,
+      });
+    }
+
+    if (hl.lows.length > 0 && hl.highs.length > 0) {
+      const limitPrice = hl.lows[0].low;
+      const takeProfit = hl.highs[0].high - stopLossOffset;
+      R.PROTO_OA_NEW_ORDER_REQ(socket, {
+        ctidTraderAccountId,
+        symbolId,
+        orderType: ProtoOAOrderType.LIMIT,
+        tradeSide: ProtoOATradeSide.BUY,
+        volume: lotSize * volumeInLots,
+        limitPrice,
+        takeProfit,
+        expirationTimestamp: Date.now() + expirationOffset,
+        comment: oid,
+        label: oid,
+      });
+    }
+    if (hl.lows.length > 0 && hl.highs.length > 0) {
+      const limitPrice = hl.highs[0].high;
+      const takeProfit = hl.lows[0].low + stopLossOffset;
+      R.PROTO_OA_NEW_ORDER_REQ(socket, {
+        ctidTraderAccountId,
+        symbolId,
+        orderType: ProtoOAOrderType.LIMIT,
+        tradeSide: ProtoOATradeSide.SELL,
+        volume: lotSize * volumeInLots,
+        limitPrice,
+        takeProfit,
         expirationTimestamp: Date.now() + expirationOffset,
         comment: oid,
         label: oid,
