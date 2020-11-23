@@ -1,6 +1,10 @@
-import { Messages, ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
+import {
+  Messages,
+  ProtoOAPayloadType,
+  ProtoOATrendbarPeriod,
+} from "@claasahl/spotware-adapter";
 
-import { Trendbar, bufferedTrendbars } from "./trendbar";
+import { Trendbar, trendbars } from "./trendbar";
 
 export function findHighsAndLows(bars: Trendbar[]) {
   const lows: Trendbar[] = [];
@@ -45,17 +49,47 @@ export interface HighLowOptions {
   ctidTraderAccountId: number;
   symbolId: number;
   period: ProtoOATrendbarPeriod;
-  periods: number;
 }
 export interface HighLowResults {
-  lows: Trendbar[];
-  highs: Trendbar[];
+  low: number;
+  high: number;
+  newHigh: boolean;
+  newLow: boolean;
 }
 export function highLow(options: HighLowOptions) {
-  const buffer = bufferedTrendbars(options);
+  const result = {
+    timestamp: 0,
+    high: Number.MIN_VALUE,
+    low: Number.MAX_VALUE,
+  };
   return (msg: Messages): HighLowResults | undefined => {
-    const buffered = buffer(msg);
-    const bars = buffered.bars.filter((b) => b);
-    return findHighsAndLows(bars);
+    const preliminaryResult =
+      result.timestamp === 0
+        ? undefined
+        : { ...result, newHigh: false, newLow: false };
+    if (msg.payloadType !== ProtoOAPayloadType.PROTO_OA_SPOT_EVENT) {
+      return preliminaryResult;
+    } else if (
+      msg.payload.ctidTraderAccountId !== options.ctidTraderAccountId
+    ) {
+      return preliminaryResult;
+    } else if (msg.payload.symbolId !== options.symbolId) {
+      return preliminaryResult;
+    }
+
+    const bars = trendbars(msg).filter((bar) => bar.period === options.period);
+    if (bars.length === 0) {
+      return preliminaryResult;
+    } else if (bars.length !== 1) {
+      throw new Error("how could I have not seen this coming?");
+    }
+
+    const { timestamp, high, low } = bars[0];
+    const newTimestamp = result.timestamp !== timestamp;
+    const newHigh = newTimestamp || result.high < high;
+    const newLow = newTimestamp || result.low > low;
+    result.high = high;
+    result.low = low;
+    return { ...result, newHigh, newLow };
   };
 }

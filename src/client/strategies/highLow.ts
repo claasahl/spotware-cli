@@ -18,7 +18,6 @@ interface Options {
   ctidTraderAccountId: number;
   symbolId: number;
   period: ProtoOATrendbarPeriod;
-  periods: number;
   stopLossOffset: number;
   volumeInLots: number;
 }
@@ -28,7 +27,6 @@ export default async function strategy(options: Options) {
     ctidTraderAccountId,
     symbolId,
     period,
-    periods,
     stopLossOffset,
     volumeInLots,
   } = options;
@@ -36,7 +34,6 @@ export default async function strategy(options: Options) {
     ctidTraderAccountId,
     symbolId,
     period,
-    periods,
   });
   const details = await R.PROTO_OA_SYMBOL_BY_ID_REQ(socket, {
     ctidTraderAccountId,
@@ -60,8 +57,8 @@ export default async function strategy(options: Options) {
     }
 
     const expirationOffset = ms("12h");
-    if (hl.lows.length > 0) {
-      const stopPrice = hl.lows[0].low;
+    {
+      const stopPrice = hl.low;
       const stopLoss = stopPrice + stopLossOffset;
       R.PROTO_OA_NEW_ORDER_REQ(socket, {
         ctidTraderAccountId,
@@ -77,8 +74,8 @@ export default async function strategy(options: Options) {
         label: oid,
       });
     }
-    if (hl.highs.length > 0) {
-      const stopPrice = hl.highs[0].high;
+    {
+      const stopPrice = hl.high;
       const stopLoss = stopPrice - stopLossOffset;
       R.PROTO_OA_NEW_ORDER_REQ(socket, {
         ctidTraderAccountId,
@@ -95,9 +92,9 @@ export default async function strategy(options: Options) {
       });
     }
 
-    if (hl.lows.length > 0 && hl.highs.length > 0) {
-      const limitPrice = hl.lows[0].low;
-      const takeProfit = hl.highs[0].high - stopLossOffset;
+    {
+      const limitPrice = hl.low;
+      const takeProfit = hl.high - stopLossOffset;
       R.PROTO_OA_NEW_ORDER_REQ(socket, {
         ctidTraderAccountId,
         symbolId,
@@ -111,9 +108,9 @@ export default async function strategy(options: Options) {
         label: oid,
       });
     }
-    if (hl.lows.length > 0 && hl.highs.length > 0) {
-      const limitPrice = hl.highs[0].high;
-      const takeProfit = hl.lows[0].low + stopLossOffset;
+    {
+      const limitPrice = hl.high;
+      const takeProfit = hl.low + stopLossOffset;
       R.PROTO_OA_NEW_ORDER_REQ(socket, {
         ctidTraderAccountId,
         symbolId,
