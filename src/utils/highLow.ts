@@ -51,16 +51,21 @@ export interface HighLowOptions {
   period: ProtoOATrendbarPeriod;
 }
 export interface HighLowResults {
-  low: number;
   high: number;
+  highTimestamp: number;
   newHigh: boolean;
+
+  low: number;
+  lowTimestamp: number;
   newLow: boolean;
 }
 export function highLow(options: HighLowOptions) {
   const result = {
     timestamp: 0,
     high: Number.MIN_VALUE,
+    highTimestamp: 0,
     low: Number.MAX_VALUE,
+    lowTimestamp: 0,
   };
   return (msg: Messages): HighLowResults | undefined => {
     const preliminaryResult =
@@ -88,8 +93,11 @@ export function highLow(options: HighLowOptions) {
     const newTimestamp = result.timestamp !== timestamp;
     const newHigh = newTimestamp || result.high < high;
     const newLow = newTimestamp || result.low > low;
-    result.high = high;
-    result.low = low;
+    result.timestamp = timestamp;
+    result.high = newHigh ? high : result.high;
+    result.highTimestamp = newHigh ? timestamp : result.highTimestamp;
+    result.low = newLow ? low : result.low;
+    result.lowTimestamp = newLow ? timestamp : result.lowTimestamp;
     return { ...result, newHigh, newLow };
   };
 }
