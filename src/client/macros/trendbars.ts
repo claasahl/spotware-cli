@@ -16,6 +16,9 @@ interface Interval {
 }
 
 function intervals(from: number, to: number): Interval[] {
+  if (from === to) {
+    return [];
+  }
   const chunks: Interval[] = [{ from, to: Math.min(to, from + INTERVAL) }];
   while (chunks[chunks.length - 1].to < to) {
     const last = chunks[chunks.length - 1];
