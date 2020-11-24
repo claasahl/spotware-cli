@@ -45,10 +45,10 @@ const toDate = new Date("2020-11-01T00:00:00.000Z");
 E.highLow(
   {
     symbol,
-    period: ProtoOATrendbarPeriod.D1,
+    period: ProtoOATrendbarPeriod.H1,
     forsight: {
-      offset: ms("24h"),
-      period: ProtoOATrendbarPeriod.M5,
+      offset: ms("1h"),
+      period: ProtoOATrendbarPeriod.M1,
     },
   },
   bt
