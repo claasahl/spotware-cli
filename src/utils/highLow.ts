@@ -51,6 +51,8 @@ export interface HighLowOptions {
   period: ProtoOATrendbarPeriod;
 }
 export interface HighLowResults {
+  timestamp: number;
+
   high: number;
   highTimestamp: number;
   newHigh: boolean;

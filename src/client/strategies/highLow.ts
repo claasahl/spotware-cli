@@ -56,73 +56,7 @@ export default async function strategy(options: Options) {
       return;
     }
 
-    const expirationOffset = ms("12h");
-    {
-      const stopPrice = hl.low;
-      const stopLoss = stopPrice + stopLossOffset;
-      R.PROTO_OA_NEW_ORDER_REQ(socket, {
-        ctidTraderAccountId,
-        symbolId,
-        orderType: ProtoOAOrderType.STOP,
-        tradeSide: ProtoOATradeSide.SELL,
-        volume: lotSize * volumeInLots,
-        stopPrice,
-        stopLoss,
-        trailingStopLoss: true,
-        expirationTimestamp: Date.now() + expirationOffset,
-        comment: oid,
-        label: oid,
-      });
-    }
-    {
-      const stopPrice = hl.high;
-      const stopLoss = stopPrice - stopLossOffset;
-      R.PROTO_OA_NEW_ORDER_REQ(socket, {
-        ctidTraderAccountId,
-        symbolId,
-        orderType: ProtoOAOrderType.STOP,
-        tradeSide: ProtoOATradeSide.BUY,
-        volume: lotSize * volumeInLots,
-        stopPrice,
-        stopLoss,
-        trailingStopLoss: true,
-        expirationTimestamp: Date.now() + expirationOffset,
-        comment: oid,
-        label: oid,
-      });
-    }
-
-    {
-      const limitPrice = hl.low;
-      const takeProfit = hl.high - stopLossOffset;
-      R.PROTO_OA_NEW_ORDER_REQ(socket, {
-        ctidTraderAccountId,
-        symbolId,
-        orderType: ProtoOAOrderType.LIMIT,
-        tradeSide: ProtoOATradeSide.BUY,
-        volume: lotSize * volumeInLots,
-        limitPrice,
-        takeProfit,
-        expirationTimestamp: Date.now() + expirationOffset,
-        comment: oid,
-        label: oid,
-      });
-    }
-    {
-      const limitPrice = hl.high;
-      const takeProfit = hl.low + stopLossOffset;
-      R.PROTO_OA_NEW_ORDER_REQ(socket, {
-        ctidTraderAccountId,
-        symbolId,
-        orderType: ProtoOAOrderType.LIMIT,
-        tradeSide: ProtoOATradeSide.SELL,
-        volume: lotSize * volumeInLots,
-        limitPrice,
-        takeProfit,
-        expirationTimestamp: Date.now() + expirationOffset,
-        comment: oid,
-        label: oid,
-      });
-    }
+    const offset = Date.now() - hl.timestamp;
+    console.log("----", ms(offset), offset, JSON.stringify(hl));
   };
 }

@@ -54,22 +54,30 @@ events.on("symbol", async (symbol) => {
     return;
   }
   log("%j", symbol);
-  // if (symbol.symbolName !== "BTC/EUR") {
-  //   return;
-  // }
+  if (symbol.symbolName !== "BTC/EUR") {
+    return;
+  }
   const period = ProtoOATrendbarPeriod.H1;
-  const loadThisMuchHistoricalData = "15d";
+  const loadThisMuchHistoricalData = "0d";
   s.on(
     "data",
-    await S.insideBarMomentum({
+    await S.highLow({
       socket: s,
       ctidTraderAccountId: symbol.ctidTraderAccountId,
       symbolId: symbol.symbolId,
       period,
-      expirationOffset: ms("6h"),
-      riskInEur: 20,
-      convert: symbol.symbolName.endsWith("EUR"),
+      stopLossOffset: 1,
+      volumeInLots: 0.1,
     })
+    // await S.insideBarMomentum({
+    //   socket: s,
+    //   ctidTraderAccountId: symbol.ctidTraderAccountId,
+    //   symbolId: symbol.symbolId,
+    //   period,
+    //   expirationOffset: ms("6h"),
+    //   riskInEur: 20,
+    //   convert: symbol.symbolName.endsWith("EUR"),
+    // })
   );
   await M.trendbars(s, {
     ctidTraderAccountId: symbol.ctidTraderAccountId,
