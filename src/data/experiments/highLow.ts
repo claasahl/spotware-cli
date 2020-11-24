@@ -4,7 +4,6 @@ import fs from "fs";
 import git from "isomorphic-git";
 
 import * as utils from "../../utils";
-import { toLiveTrendbar } from "../utils";
 import { Experiment } from "./types";
 
 const csvHeaders = [
@@ -26,22 +25,22 @@ const csvHeaders = [
   "lowPrice2Timestamp",
 ];
 
-function high(bar?: Pick<utils.HighLowResults, "high" | "highTimestamp">) {
+function high(bar?: utils.Trendbar) {
   if (!bar) {
     return [undefined, undefined];
   }
-  return [bar.high, bar.highTimestamp];
+  return [bar.high, bar.timestamp];
 }
-function low(bar?: Pick<utils.HighLowResults, "low" | "lowTimestamp">) {
+function low(bar?: utils.Trendbar) {
   if (!bar) {
     return [undefined, undefined];
   }
-  return [bar.low, bar.lowTimestamp];
+  return [bar.low, bar.timestamp];
 }
 const csvData = (
   trendbar: utils.Trendbar,
-  highs: Pick<utils.HighLowResults, "high" | "highTimestamp">[],
-  lows: Pick<utils.HighLowResults, "low" | "lowTimestamp">[]
+  highs: utils.Trendbar[],
+  lows: utils.Trendbar[]
 ) => [
   trendbar.volume,
   trendbar.open,
@@ -74,21 +73,8 @@ export const run: Experiment = async (options, backtest) => {
     ...options,
     strategy: () => {
       return (trendbar, future) => {
-        const random = {
-          ctidTraderAccountId: 0,
-          period: ProtoOATrendbarPeriod.M1,
-          symbolId: 0,
-        };
-        const highLow = utils.highLow(random);
-        const data = future
-          .map((bar) =>
-            toLiveTrendbar(random, { ...bar, timestamp: trendbar.timestamp })
-          )
-          .map(highLow);
-        const TMP = data[data.length - 1];
-        const highs = TMP ? [TMP] : [];
-        const lows = TMP ? [TMP] : [];
-        stream.write(csvData(trendbar, highs, lows));
+        const { highs, lows } = utils.findHighsAndLows(future);
+        stream.write(csvData(trendbar, highs.reverse(), lows.reverse()));
       };
     },
     done: () => stream.end(),
