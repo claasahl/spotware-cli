@@ -23,15 +23,20 @@ const event = useTLS ? "secureConnect" : "connect";
 const s = new SpotwareClientSocket(socket);
 socket.once(event, async () => R.PROTO_OA_VERSION_REQ(s, {}));
 socket.once(event, async () => {
-  const traders = await M.authenticate(s, {
-    clientId: process.env.clientId || "",
-    clientSecret: process.env.clientSecret || "",
-    accessToken: process.env.accessToken || "",
-    refreshToken: process.env.refreshToken || "",
-  });
-  await M.emitAccounts({ events, traders });
-  await M.detectBrokenOrders(s);
-  M.exitOnDisconnect(s);
+  try {
+    const traders = await M.authenticate(s, {
+      clientId: process.env.clientId || "",
+      clientSecret: process.env.clientSecret || "",
+      accessToken: process.env.accessToken || "",
+      refreshToken: process.env.refreshToken || "",
+    });
+    await M.emitAccounts({ events, traders });
+    await M.detectBrokenOrders(s);
+    M.exitOnDisconnect(s);
+  } catch (err) {
+    log("%j", err);
+    process.exit(1);
+  }
 });
 
 events.on("account", async (account) => {
