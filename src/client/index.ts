@@ -5,7 +5,6 @@ import {
   ProtoOATrendbarPeriod,
   SpotwareClientSocket,
 } from "@claasahl/spotware-adapter";
-import ms from "ms";
 
 import * as R from "./requests";
 import * as M from "./macros";
