@@ -10,6 +10,7 @@ import * as R from "./requests";
 import * as M from "./macros";
 import * as S from "./strategies";
 import { Events } from "./events";
+import ms from "ms";
 
 const log = debug("custom-client");
 const host = process.env.host || "live.ctraderapi.com";
@@ -61,7 +62,7 @@ events.on("symbol", async (symbol) => {
   if (symbol.symbolName !== "BTC/EUR") {
     return;
   }
-  const period = ProtoOATrendbarPeriod.H1;
+  const period = ProtoOATrendbarPeriod.M1;
   const loadThisMuchHistoricalData = "0d";
   s.on(
     "data",
@@ -70,8 +71,11 @@ events.on("symbol", async (symbol) => {
       ctidTraderAccountId: symbol.ctidTraderAccountId,
       symbolId: symbol.symbolId,
       period,
-      stopLossOffset: 1,
+      stopLossOffset: 10,
       volumeInLots: 0.1,
+      // threshold: ms("27min")
+      threshold: ms("27s"),
+      expirationOffset: ms("60s"),
     })
     // await S.insideBarMomentum({
     //   socket: s,
