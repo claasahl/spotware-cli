@@ -70,30 +70,33 @@ export default async function strategy(options: Options) {
     const crossedThreshold = offset >= threshold;
     if (!bla.crossedThreshold && crossedThreshold) {
       log("%j", bla);
+      const orderType = ProtoOAOrderType.LIMIT;
+      const comment = `${ProtoOAOrderType[orderType]}-${oid}`;
+      const label = `${ProtoOAOrderType[orderType]}-${oid}`;
       R.PROTO_OA_NEW_ORDER_REQ(socket, {
         ctidTraderAccountId,
         symbolId,
-        orderType: ProtoOAOrderType.LIMIT,
+        orderType,
         tradeSide: ProtoOATradeSide.SELL,
         volume: volumeInLots * lotSize,
         limitPrice: utils.price(hl.low, digits),
         stopLoss: utils.price(hl.low + stopLossOffset * 100000, digits),
         trailingStopLoss: true,
-        comment: oid,
-        label: oid,
+        comment,
+        label,
         expirationTimestamp: Date.now() + expirationOffset,
       });
       R.PROTO_OA_NEW_ORDER_REQ(socket, {
         ctidTraderAccountId,
         symbolId,
-        orderType: ProtoOAOrderType.LIMIT,
+        orderType,
         tradeSide: ProtoOATradeSide.BUY,
         volume: volumeInLots * lotSize,
         limitPrice: utils.price(hl.high, digits),
         stopLoss: utils.price(hl.high - stopLossOffset * 100000, digits),
         trailingStopLoss: true,
-        comment: oid,
-        label: oid,
+        comment,
+        label,
         expirationTimestamp: Date.now() + expirationOffset,
       });
     }
