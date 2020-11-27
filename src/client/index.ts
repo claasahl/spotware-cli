@@ -54,14 +54,15 @@ events.on("account", async (account) => {
 });
 
 const ASSET_CLASSES = ["Forex", "Metals", "Crypto Currency"];
+const SYMBOLS = ["EURGBP", "BTC/EUR"];
 events.on("symbol", async (symbol) => {
   if (!ASSET_CLASSES.includes(symbol.assetClass)) {
     return;
   }
   log("%j", symbol);
-  // if (symbol.symbolName !== "BTC/EUR") {
-  //   return;
-  // }
+  if (!SYMBOLS.includes(symbol.symbolName)) {
+    return;
+  }
   const period = ProtoOATrendbarPeriod.D1;
   const loadThisMuchHistoricalData = "0d";
   s.on(
