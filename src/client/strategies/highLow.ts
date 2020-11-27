@@ -2,6 +2,7 @@ import {
   Messages,
   ProtoOAOrderType,
   ProtoOAPayloadType,
+  ProtoOASymbol,
   ProtoOATradeSide,
   ProtoOATrendbarPeriod,
   SpotwareClientSocket,
@@ -16,27 +17,109 @@ import ms from "ms";
 
 const log = debug("spotware").extend("strategies").extend("high-low");
 
+function limitOrder(
+  options: Options,
+  hl: utils.HighLowResults,
+  oid: string,
+  symbol: ProtoOASymbol,
+  tradeSide: ProtoOATradeSide
+) {
+  const {
+    socket,
+    ctidTraderAccountId,
+    symbolId,
+    expirationOffset,
+    riskInEur,
+    convert,
+  } = options;
+  const { digits, stepVolume = 100000 } = symbol;
+  const orderType = ProtoOAOrderType.LIMIT;
+  const comment = `${ProtoOAOrderType[orderType]}-${oid}`;
+  const label = `${ProtoOAOrderType[orderType]}-${oid}`;
+
+  const range = hl.high - hl.low;
+  const limitPrice = utils.price(
+    tradeSide === ProtoOATradeSide.SELL ? hl.low : hl.high,
+    digits
+  );
+  const stopLoss = utils.price(
+    tradeSide === ProtoOATradeSide.SELL
+      ? hl.low + range / 2
+      : hl.high - range / 2,
+    digits
+  );
+  R.PROTO_OA_NEW_ORDER_REQ(socket, {
+    ctidTraderAccountId,
+    symbolId,
+    orderType,
+    tradeSide,
+    volume: utils.volume(limitPrice, stopLoss, riskInEur, stepVolume, convert),
+    limitPrice,
+    stopLoss,
+    trailingStopLoss: true,
+    comment,
+    label,
+    expirationTimestamp: Date.now() + expirationOffset,
+  });
+}
+function stopOrder(
+  options: Options,
+  hl: utils.HighLowResults,
+  oid: string,
+  symbol: ProtoOASymbol,
+  tradeSide: ProtoOATradeSide
+) {
+  const {
+    socket,
+    ctidTraderAccountId,
+    symbolId,
+    expirationOffset,
+    riskInEur,
+    convert,
+  } = options;
+  const { digits, stepVolume = 100000 } = symbol;
+  const orderType = ProtoOAOrderType.STOP;
+  const comment = `${ProtoOAOrderType[orderType]}-${oid}`;
+  const label = `${ProtoOAOrderType[orderType]}-${oid}`;
+
+  const range = hl.high - hl.low;
+  const stopPrice = utils.price(
+    tradeSide === ProtoOATradeSide.BUY ? hl.low : hl.high,
+    digits
+  );
+  const stopLoss = utils.price(
+    tradeSide === ProtoOATradeSide.BUY
+      ? hl.low - range / 2
+      : hl.high + range / 2,
+    digits
+  );
+  R.PROTO_OA_NEW_ORDER_REQ(socket, {
+    ctidTraderAccountId,
+    symbolId,
+    orderType,
+    tradeSide,
+    volume: utils.volume(stopPrice, stopLoss, riskInEur, stepVolume, convert),
+    stopPrice,
+    stopLoss,
+    trailingStopLoss: true,
+    comment,
+    label,
+    expirationTimestamp: Date.now() + expirationOffset,
+  });
+}
+
 interface Options {
   socket: SpotwareClientSocket;
   ctidTraderAccountId: number;
   symbolId: number;
   period: ProtoOATrendbarPeriod;
-  stopLossOffset: number;
-  volumeInLots: number;
+  riskInEur: number;
+  convert?: boolean;
   threshold: number;
   expirationOffset: number;
 }
 export default async function strategy(options: Options) {
-  const {
-    socket,
-    ctidTraderAccountId,
-    symbolId,
-    period,
-    stopLossOffset,
-    volumeInLots,
-    threshold,
-    expirationOffset,
-  } = options;
+  const { socket, ctidTraderAccountId, symbolId, period, threshold } = options;
   const HighLow = utils.highLow({
     ctidTraderAccountId,
     symbolId,
@@ -46,7 +129,7 @@ export default async function strategy(options: Options) {
     ctidTraderAccountId,
     symbolId: [symbolId],
   });
-  const { lotSize = 1, digits } = details.symbol[0];
+  const symbol = details.symbol[0];
   const [{ oid }] = await git.log({ fs, depth: 1, ref: "HEAD", dir: "." });
   const bla = {
     crossedThreshold: false,
@@ -70,35 +153,10 @@ export default async function strategy(options: Options) {
     const crossedThreshold = offset >= threshold;
     if (!bla.crossedThreshold && crossedThreshold) {
       log("%j", bla);
-      const orderType = ProtoOAOrderType.LIMIT;
-      const comment = `${ProtoOAOrderType[orderType]}-${oid}`;
-      const label = `${ProtoOAOrderType[orderType]}-${oid}`;
-      R.PROTO_OA_NEW_ORDER_REQ(socket, {
-        ctidTraderAccountId,
-        symbolId,
-        orderType,
-        tradeSide: ProtoOATradeSide.SELL,
-        volume: volumeInLots * lotSize,
-        limitPrice: utils.price(hl.low, digits),
-        stopLoss: utils.price(hl.low + stopLossOffset * 100000, digits),
-        trailingStopLoss: true,
-        comment,
-        label,
-        expirationTimestamp: Date.now() + expirationOffset,
-      });
-      R.PROTO_OA_NEW_ORDER_REQ(socket, {
-        ctidTraderAccountId,
-        symbolId,
-        orderType,
-        tradeSide: ProtoOATradeSide.BUY,
-        volume: volumeInLots * lotSize,
-        limitPrice: utils.price(hl.high, digits),
-        stopLoss: utils.price(hl.high - stopLossOffset * 100000, digits),
-        trailingStopLoss: true,
-        comment,
-        label,
-        expirationTimestamp: Date.now() + expirationOffset,
-      });
+      limitOrder(options, hl, oid, symbol, ProtoOATradeSide.SELL);
+      limitOrder(options, hl, oid, symbol, ProtoOATradeSide.BUY);
+      stopOrder(options, hl, oid, symbol, ProtoOATradeSide.SELL);
+      stopOrder(options, hl, oid, symbol, ProtoOATradeSide.BUY);
     }
     bla.crossedThreshold = crossedThreshold;
     log("%j", { offset, offsetHuma: ms(offset), hl, ...bla });

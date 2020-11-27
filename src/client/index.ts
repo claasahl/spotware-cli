@@ -59,10 +59,10 @@ events.on("symbol", async (symbol) => {
     return;
   }
   log("%j", symbol);
-  if (symbol.symbolName !== "BTC/EUR") {
-    return;
-  }
-  const period = ProtoOATrendbarPeriod.M1;
+  // if (symbol.symbolName !== "BTC/EUR") {
+  //   return;
+  // }
+  const period = ProtoOATrendbarPeriod.D1;
   const loadThisMuchHistoricalData = "0d";
   s.on(
     "data",
@@ -71,11 +71,10 @@ events.on("symbol", async (symbol) => {
       ctidTraderAccountId: symbol.ctidTraderAccountId,
       symbolId: symbol.symbolId,
       period,
-      stopLossOffset: 10,
-      volumeInLots: 0.1,
-      // threshold: ms("27min")
-      threshold: ms("27s"),
-      expirationOffset: ms("60s"),
+      riskInEur: 20,
+      convert: symbol.symbolName.endsWith("EUR"),
+      threshold: ms("11h"),
+      expirationOffset: ms("24h"),
     })
     // await S.insideBarMomentum({
     //   socket: s,
