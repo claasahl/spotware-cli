@@ -74,7 +74,8 @@ events.on("symbol", async (symbol) => {
       period,
       riskInEur: 20,
       convert: symbol.symbolName.endsWith("EUR"),
-      threshold: ms("11h"),
+      lowerThreshold: ms("11h"),
+      upperThreshold: ms("13h"),
       expirationOffset: ms("24h"),
     })
     // await S.insideBarMomentum({

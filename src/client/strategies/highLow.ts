@@ -115,11 +115,19 @@ interface Options {
   period: ProtoOATrendbarPeriod;
   riskInEur: number;
   convert?: boolean;
-  threshold: number;
+  lowerThreshold: number;
+  upperThreshold: number;
   expirationOffset: number;
 }
 export default async function strategy(options: Options) {
-  const { socket, ctidTraderAccountId, symbolId, period, threshold } = options;
+  const {
+    socket,
+    ctidTraderAccountId,
+    symbolId,
+    period,
+    lowerThreshold,
+    upperThreshold,
+  } = options;
   const HighLow = utils.highLow({
     ctidTraderAccountId,
     symbolId,
@@ -150,7 +158,8 @@ export default async function strategy(options: Options) {
     }
 
     const offset = Date.now() - hl.timestamp;
-    const crossedThreshold = offset >= threshold;
+    const crossedThreshold =
+      offset >= lowerThreshold && offset <= upperThreshold;
     if (!bla.crossedThreshold && crossedThreshold) {
       log("%j", bla);
       limitOrder(options, hl, oid, symbol, ProtoOATradeSide.SELL);
