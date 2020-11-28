@@ -17,51 +17,6 @@ import ms from "ms";
 
 const log = debug("spotware").extend("strategies").extend("high-low");
 
-function limitOrder(
-  options: Options,
-  hl: utils.HighLowResults,
-  oid: string,
-  symbol: ProtoOASymbol,
-  tradeSide: ProtoOATradeSide
-) {
-  const {
-    socket,
-    ctidTraderAccountId,
-    symbolId,
-    expirationOffset,
-    riskInEur,
-    convert,
-  } = options;
-  const { digits, stepVolume = 100000 } = symbol;
-  const orderType = ProtoOAOrderType.LIMIT;
-  const comment = `${ProtoOAOrderType[orderType]}-${oid}`;
-  const label = `${ProtoOAOrderType[orderType]}-${oid}`;
-
-  const range = hl.high - hl.low;
-  const limitPrice = utils.price(
-    tradeSide === ProtoOATradeSide.SELL ? hl.low : hl.high,
-    digits
-  );
-  const stopLoss = utils.price(
-    tradeSide === ProtoOATradeSide.SELL
-      ? hl.low + range / 2
-      : hl.high - range / 2,
-    digits
-  );
-  R.PROTO_OA_NEW_ORDER_REQ(socket, {
-    ctidTraderAccountId,
-    symbolId,
-    orderType,
-    tradeSide,
-    volume: utils.volume(limitPrice, stopLoss, riskInEur, stepVolume, convert),
-    limitPrice,
-    stopLoss,
-    trailingStopLoss: true,
-    comment,
-    label,
-    expirationTimestamp: Date.now() + expirationOffset,
-  });
-}
 function stopOrder(
   options: Options,
   hl: utils.HighLowResults,
@@ -84,6 +39,51 @@ function stopOrder(
 
   const range = hl.high - hl.low;
   const stopPrice = utils.price(
+    tradeSide === ProtoOATradeSide.SELL ? hl.low : hl.high,
+    digits
+  );
+  const stopLoss = utils.price(
+    tradeSide === ProtoOATradeSide.SELL
+      ? hl.low + range / 2
+      : hl.high - range / 2,
+    digits
+  );
+  R.PROTO_OA_NEW_ORDER_REQ(socket, {
+    ctidTraderAccountId,
+    symbolId,
+    orderType,
+    tradeSide,
+    volume: utils.volume(stopPrice, stopLoss, riskInEur, stepVolume, convert),
+    stopPrice,
+    stopLoss,
+    trailingStopLoss: true,
+    comment,
+    label,
+    expirationTimestamp: Date.now() + expirationOffset,
+  });
+}
+function limitOrder(
+  options: Options,
+  hl: utils.HighLowResults,
+  oid: string,
+  symbol: ProtoOASymbol,
+  tradeSide: ProtoOATradeSide
+) {
+  const {
+    socket,
+    ctidTraderAccountId,
+    symbolId,
+    expirationOffset,
+    riskInEur,
+    convert,
+  } = options;
+  const { digits, stepVolume = 100000 } = symbol;
+  const orderType = ProtoOAOrderType.STOP;
+  const comment = `${ProtoOAOrderType[orderType]}-${oid}`;
+  const label = `${ProtoOAOrderType[orderType]}-${oid}`;
+
+  const range = hl.high - hl.low;
+  const limitPrice = utils.price(
     tradeSide === ProtoOATradeSide.BUY ? hl.low : hl.high,
     digits
   );
@@ -98,8 +98,8 @@ function stopOrder(
     symbolId,
     orderType,
     tradeSide,
-    volume: utils.volume(stopPrice, stopLoss, riskInEur, stepVolume, convert),
-    stopPrice,
+    volume: utils.volume(limitPrice, stopLoss, riskInEur, stepVolume, convert),
+    limitPrice,
     stopLoss,
     trailingStopLoss: true,
     comment,
