@@ -78,7 +78,7 @@ function limitOrder(
     convert,
   } = options;
   const { digits, stepVolume = 100000 } = symbol;
-  const orderType = ProtoOAOrderType.STOP;
+  const orderType = ProtoOAOrderType.LIMIT;
   const comment = `${ProtoOAOrderType[orderType]}-${oid}`;
   const label = `${ProtoOAOrderType[orderType]}-${oid}`;
 
