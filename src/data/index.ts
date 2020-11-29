@@ -26,7 +26,8 @@ const bt = (options: E.ExperimentBacktestOptions) =>
     toDate,
   });
 
-const symbol = "EURGBP";
+// const symbol = "EURGBP";
+const symbol = "BTC/EUR";
 const fromDate = new Date("2019-11-01T00:00:00.000Z");
 const toDate = new Date("2020-11-01T00:00:00.000Z");
 
@@ -45,10 +46,10 @@ const toDate = new Date("2020-11-01T00:00:00.000Z");
 E.highLow(
   {
     symbol,
-    period: ProtoOATrendbarPeriod.H1,
+    period: ProtoOATrendbarPeriod.D1,
     forsight: {
-      offset: ms("1h"),
-      period: ProtoOATrendbarPeriod.M1,
+      offset: ms("24h"),
+      period: ProtoOATrendbarPeriod.M5,
     },
   },
   bt
