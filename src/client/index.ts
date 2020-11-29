@@ -9,7 +9,8 @@ import {
 import * as R from "./requests";
 import * as M from "./macros";
 import * as S from "./strategies";
-import { Events } from "./events";
+import * as U from "../utils";
+import { Events, Symbol } from "./events";
 import ms from "ms";
 
 const log = debug("custom-client");
@@ -53,47 +54,86 @@ events.on("account", async (account) => {
   await M.emitSymbols({ ...result, symbols, events, ctidTraderAccountId });
 });
 
+async function eurgbp({ ctidTraderAccountId, symbolId, symbolName }: Symbol) {
+  if (symbolName === "EURGBP") {
+    const period = ProtoOATrendbarPeriod.D1;
+    const loadThisMuchHistoricalData = "0d";
+    s.on(
+      "data",
+      await S.highLow({
+        socket: s,
+        ctidTraderAccountId,
+        symbolId,
+        period,
+        riskInEur: 20,
+        convert: symbolName.endsWith("EUR"),
+        lowerThreshold: ms("11h"),
+        upperThreshold: ms("13h"),
+        expirationOffset: U.period(period),
+      })
+      // await S.insideBarMomentum({
+      //   socket: s,
+      //   ctidTraderAccountId: symbol.ctidTraderAccountId,
+      //   symbolId: symbol.symbolId,
+      //   period,
+      //   expirationOffset: ms("6h"),
+      //   riskInEur: 20,
+      //   convert: symbol.symbolName.endsWith("EUR"),
+      // })
+    );
+    await M.trendbars(s, {
+      ctidTraderAccountId,
+      loadThisMuchHistoricalData,
+      symbolId,
+      period,
+    });
+  }
+}
+
+async function btceur({ ctidTraderAccountId, symbolId, symbolName }: Symbol) {
+  if (symbolName === "BTC/EUR") {
+    const period = ProtoOATrendbarPeriod.D1;
+    const loadThisMuchHistoricalData = "0d";
+    s.on(
+      "data",
+      await S.highLow({
+        socket: s,
+        ctidTraderAccountId,
+        symbolId,
+        period,
+        riskInEur: 20,
+        convert: symbolName.endsWith("EUR"),
+        lowerThreshold: ms("5h"),
+        upperThreshold: ms("7h"),
+        expirationOffset: U.period(period),
+      })
+      // await S.insideBarMomentum({
+      //   socket: s,
+      //   ctidTraderAccountId: symbol.ctidTraderAccountId,
+      //   symbolId: symbol.symbolId,
+      //   period,
+      //   expirationOffset: ms("6h"),
+      //   riskInEur: 20,
+      //   convert: symbol.symbolName.endsWith("EUR"),
+      // })
+    );
+    await M.trendbars(s, {
+      ctidTraderAccountId,
+      loadThisMuchHistoricalData,
+      symbolId,
+      period,
+    });
+  }
+}
+
 const ASSET_CLASSES = ["Forex", "Metals", "Crypto Currency"];
-const SYMBOLS = ["EURGBP", "BTC/EUR"];
 events.on("symbol", async (symbol) => {
   if (!ASSET_CLASSES.includes(symbol.assetClass)) {
     return;
   }
   log("%j", symbol);
-  if (!SYMBOLS.includes(symbol.symbolName)) {
-    return;
-  }
-  const period = ProtoOATrendbarPeriod.D1;
-  const loadThisMuchHistoricalData = "0d";
-  s.on(
-    "data",
-    await S.highLow({
-      socket: s,
-      ctidTraderAccountId: symbol.ctidTraderAccountId,
-      symbolId: symbol.symbolId,
-      period,
-      riskInEur: 20,
-      convert: symbol.symbolName.endsWith("EUR"),
-      lowerThreshold: ms("11h"),
-      upperThreshold: ms("13h"),
-      expirationOffset: ms("24h"),
-    })
-    // await S.insideBarMomentum({
-    //   socket: s,
-    //   ctidTraderAccountId: symbol.ctidTraderAccountId,
-    //   symbolId: symbol.symbolId,
-    //   period,
-    //   expirationOffset: ms("6h"),
-    //   riskInEur: 20,
-    //   convert: symbol.symbolName.endsWith("EUR"),
-    // })
-  );
-  await M.trendbars(s, {
-    ctidTraderAccountId: symbol.ctidTraderAccountId,
-    loadThisMuchHistoricalData,
-    symbolId: symbol.symbolId,
-    period,
-  });
+  await eurgbp(symbol);
+  await btceur(symbol);
 });
 
 // rule of thumb:
