@@ -69,7 +69,7 @@ async function eurgbp({ ctidTraderAccountId, symbolId, symbolName }: Symbol) {
         convert: symbolName.endsWith("EUR"),
         lowerThreshold: ms("11h"),
         upperThreshold: ms("13h"),
-        expirationOffset: U.period(period),
+        expirationOffset: U.period(period) - ms("13h"),
       })
       // await S.insideBarMomentum({
       //   socket: s,
@@ -105,7 +105,7 @@ async function btceur({ ctidTraderAccountId, symbolId, symbolName }: Symbol) {
         convert: symbolName.endsWith("EUR"),
         lowerThreshold: ms("5h"),
         upperThreshold: ms("7h"),
-        expirationOffset: U.period(period),
+        expirationOffset: U.period(period) - ms("7h"),
       })
       // await S.insideBarMomentum({
       //   socket: s,
