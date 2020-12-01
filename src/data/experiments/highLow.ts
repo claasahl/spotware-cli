@@ -23,6 +23,7 @@ const csvHeaders = [
   "highPrice2Timestamp",
   "lowPrice2",
   "lowPrice2Timestamp",
+  "json",
 ];
 
 function high(bar?: utils.Trendbar) {
@@ -40,7 +41,8 @@ function low(bar?: utils.Trendbar) {
 const csvData = (
   trendbar: utils.Trendbar,
   highs: utils.Trendbar[],
-  lows: utils.Trendbar[]
+  lows: utils.Trendbar[],
+  merged: utils.Trendbar[]
 ) => [
   trendbar.volume,
   trendbar.open,
@@ -54,6 +56,7 @@ const csvData = (
   ...low(lows[0]),
   ...high(highs[1]),
   ...low(lows[1]),
+  JSON.stringify(merged),
 ];
 
 export const run: Experiment = async (options, backtest) => {
@@ -73,8 +76,10 @@ export const run: Experiment = async (options, backtest) => {
     ...options,
     strategy: () => {
       return (trendbar, future) => {
-        const { highs, lows } = utils.findHighsAndLows(future);
-        stream.write(csvData(trendbar, highs.reverse(), lows.reverse()));
+        const { highs, lows, merged } = utils.findHighsAndLows(future);
+        stream.write(
+          csvData(trendbar, highs.reverse(), lows.reverse(), merged.reverse())
+        );
       };
     },
     done: () => stream.end(),

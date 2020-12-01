@@ -26,6 +26,7 @@ export function findHighsAndLows(bars: Trendbar[]) {
   ].sort((a, b) => a.timestamp - b.timestamp);
   const trimmedLows: Trendbar[] = [];
   const trimmedHighs: Trendbar[] = [];
+  const trimmed: Trendbar[] = [];
   merged.forEach((curr, index, arr) => {
     if (index === 0) {
       return;
@@ -33,16 +34,20 @@ export function findHighsAndLows(bars: Trendbar[]) {
     const prev = arr[index - 1];
     if (prev.type !== curr.type && prev.type === "low") {
       trimmedLows.push(prev);
+      trimmed.push(prev);
     } else if (prev.type !== curr.type && prev.type === "high") {
       trimmedHighs.push(prev);
+      trimmed.push(prev);
     }
     if (index === arr.length - 1 && curr.type === "low") {
       trimmedLows.push(curr);
+      trimmed.push(curr);
     } else if (index === arr.length - 1 && curr.type === "high") {
       trimmedHighs.push(curr);
+      trimmed.push(curr);
     }
   });
-  return { lows: trimmedLows, highs: trimmedHighs };
+  return { lows: trimmedLows, highs: trimmedHighs, merged: trimmed };
 }
 
 export interface HighLowOptions {
