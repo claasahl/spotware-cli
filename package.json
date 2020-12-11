@@ -6,6 +6,7 @@
   "scripts": {
     "prepare": "tsc",
     "build": "rimraf ./build && tsc",
+    "pretest": "npm run build",
     "test": "jest",
     "prestart": "npm run build",
     "start": "node -r dotenv/config build/client/index.js 2>&1 | multilog s16777215 n100 dir ./logs",

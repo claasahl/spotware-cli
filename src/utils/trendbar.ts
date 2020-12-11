@@ -88,7 +88,9 @@ export function trendbars(
   } else if (
     message.payloadType === ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES
   ) {
-    return message.payload.trendbar.filter(isTrendbar).map(toTrendbar);
+    return message.payload.trendbar
+      .filter(isTrendbar)
+      .map((bar) => toTrendbar(bar, message.payload.period));
   }
   return [];
 }
