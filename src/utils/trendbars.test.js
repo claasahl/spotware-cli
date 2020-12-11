@@ -454,7 +454,199 @@ describe("bufferedTrendbars", () => {
       ],
     });
   });
-  // ignore other symbols
-  // ignore other periods
-  // ignore other accounts
+  test("ignore live trendbars from other symbols", () => {
+    const buffer = T.bufferedTrendbars({
+      ctidTraderAccountId: 17403192,
+      symbolId: 22396,
+      period: 1,
+      periods: 2,
+    });
+    const result = buffer({
+      payloadType: ProtoOAPayloadType.PROTO_OA_SPOT_EVENT,
+      payload: {
+        ctidTraderAccountId: 17403192,
+        symbolId: 99999,
+        trendbar: [
+          {
+            volume: 10,
+            period: 1,
+            low: 976891000,
+            deltaOpen: 0,
+            deltaHigh: 18000,
+            utcTimestampInMinutes: 26717051,
+          },
+        ],
+        bid: 976909000,
+        ask: 977498000,
+        sessionClose: 971247000,
+      },
+    });
+    expect(result).toStrictEqual({
+      added: [],
+      removed: [],
+      bars: [],
+    });
+  });
+  test("ignore live trendbars from other accounts", () => {
+    const buffer = T.bufferedTrendbars({
+      ctidTraderAccountId: 17403192,
+      symbolId: 22396,
+      period: 1,
+      periods: 2,
+    });
+    const result = buffer({
+      payloadType: ProtoOAPayloadType.PROTO_OA_SPOT_EVENT,
+      payload: {
+        ctidTraderAccountId: 99999999,
+        symbolId: 22396,
+        trendbar: [
+          {
+            volume: 10,
+            period: 1,
+            low: 976891000,
+            deltaOpen: 0,
+            deltaHigh: 18000,
+            utcTimestampInMinutes: 26717051,
+          },
+        ],
+        bid: 976909000,
+        ask: 977498000,
+        sessionClose: 971247000,
+      },
+    });
+    expect(result).toStrictEqual({
+      added: [],
+      removed: [],
+      bars: [],
+    });
+  });
+  test("ignore live trendbars with other periods", () => {
+    const buffer = T.bufferedTrendbars({
+      ctidTraderAccountId: 17403192,
+      symbolId: 22396,
+      period: 1,
+      periods: 2,
+    });
+    const result = buffer({
+      payloadType: ProtoOAPayloadType.PROTO_OA_SPOT_EVENT,
+      payload: {
+        ctidTraderAccountId: 17403192,
+        symbolId: 22396,
+        trendbar: [
+          {
+            volume: 10,
+            period: 999,
+            low: 976891000,
+            deltaOpen: 0,
+            deltaHigh: 18000,
+            utcTimestampInMinutes: 26717051,
+          },
+        ],
+        bid: 976909000,
+        ask: 977498000,
+        sessionClose: 971247000,
+      },
+    });
+    expect(result).toStrictEqual({
+      added: [],
+      removed: [],
+      bars: [],
+    });
+  });
+  test("ignore historical trendbars from other symbols", () => {
+    const buffer = T.bufferedTrendbars({
+      ctidTraderAccountId: 17403192,
+      symbolId: 22396,
+      period: 1,
+      periods: 2,
+    });
+    const result = buffer({
+      payloadType: ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES,
+      payload: {
+        ctidTraderAccountId: 17403192,
+        period: 1,
+        timestamp: 1603023000000,
+        trendbar: [
+          {
+            volume: 8,
+            low: 976306000,
+            deltaOpen: 727000,
+            deltaClose: 176000,
+            deltaHigh: 971000,
+            utcTimestampInMinutes: 26716810,
+          },
+        ],
+        symbolId: 99999,
+      },
+    });
+    expect(result).toStrictEqual({
+      added: [],
+      removed: [],
+      bars: [],
+    });
+  });
+  test("ignore historical trendbars from other accounts", () => {
+    const buffer = T.bufferedTrendbars({
+      ctidTraderAccountId: 17403192,
+      symbolId: 22396,
+      period: 1,
+      periods: 2,
+    });
+    const result = buffer({
+      payloadType: ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES,
+      payload: {
+        ctidTraderAccountId: 9999999,
+        period: 1,
+        timestamp: 1603023000000,
+        trendbar: [
+          {
+            volume: 8,
+            low: 976306000,
+            deltaOpen: 727000,
+            deltaClose: 176000,
+            deltaHigh: 971000,
+            utcTimestampInMinutes: 26716810,
+          },
+        ],
+        symbolId: 22396,
+      },
+    });
+    expect(result).toStrictEqual({
+      added: [],
+      removed: [],
+      bars: [],
+    });
+  });
+  test("ignore historical trendbars with other periods", () => {
+    const buffer = T.bufferedTrendbars({
+      ctidTraderAccountId: 17403192,
+      symbolId: 22396,
+      period: 1,
+      periods: 2,
+    });
+    const result = buffer({
+      payloadType: ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES,
+      payload: {
+        ctidTraderAccountId: 17403192,
+        period: 999,
+        timestamp: 1603023000000,
+        trendbar: [
+          {
+            volume: 8,
+            low: 976306000,
+            deltaOpen: 727000,
+            deltaClose: 176000,
+            deltaHigh: 971000,
+            utcTimestampInMinutes: 26716810,
+          },
+        ],
+        symbolId: 22396,
+      },
+    });
+    expect(result).toStrictEqual({
+      added: [],
+      removed: [],
+      bars: [],
+    });
+  });
 });
