@@ -2,16 +2,18 @@ import {
   Messages,
   ProtoOAOrderType,
   ProtoOAPayloadType,
+  ProtoOATradeSide,
   ProtoOATrendbarPeriod,
   SpotwareClientSocket,
 } from "@claasahl/spotware-adapter";
-import ms from "ms";
 import debug from "debug";
+import git from "isomorphic-git";
+import fs from "fs";
 
-import * as utils from "../utils";
-import * as R from "./requests";
+import * as utils from "../../utils";
+import * as R from "../requests";
 
-const log = debug("inside-bar-momentum");
+const log = debug("buy-the-dip");
 
 interface Options {
   socket: SpotwareClientSocket;
@@ -21,13 +23,11 @@ interface Options {
   shortTermSmaPeriods?: number;
   longTermSmaPeriods?: number;
   williamsPercentRangePeriods?: number;
-  enterOffset?: number;
-  stopLossOffset?: number;
-  takeProfitOffset?: number;
+  stopLossOffset: number;
   expirationOffset?: number;
   tradeVolumeInLots?: number;
 }
-export async function insideBarMomentum(options: Options) {
+export default async function buyTheDip(options: Options) {
   const {
     socket,
     ctidTraderAccountId,
@@ -36,10 +36,8 @@ export async function insideBarMomentum(options: Options) {
     shortTermSmaPeriods = 50,
     longTermSmaPeriods = 200,
     williamsPercentRangePeriods = 30,
-    enterOffset = 0.1,
-    stopLossOffset = 0.4,
-    takeProfitOffset = 0.8,
-    expirationOffset = ms("1h"),
+    stopLossOffset,
+    expirationOffset,
     tradeVolumeInLots = 0.1,
   } = options;
   const sma50 = utils.sma({
@@ -60,24 +58,16 @@ export async function insideBarMomentum(options: Options) {
     period,
     periods: williamsPercentRangePeriods,
   });
-  const ism = utils.insideBarMomentum({
-    ctidTraderAccountId,
-    symbolId,
-    period,
-    enterOffset,
-    stopLossOffset,
-    takeProfitOffset,
-  });
   const details = await R.PROTO_OA_SYMBOL_BY_ID_REQ(socket, {
     ctidTraderAccountId,
     symbolId: [symbolId],
   });
   const { digits, lotSize = 1 } = details.symbol[0];
+  const [{ oid }] = await git.log({ fs, depth: 1, ref: "HEAD", dir: "." });
   return (msg: Messages) => {
     const SMA50 = sma50(msg);
     const SMA200 = sma200(msg);
     const WPR = wpr(msg);
-    const ISM = ism(msg);
 
     if (msg.payloadType !== ProtoOAPayloadType.PROTO_OA_SPOT_EVENT) {
       return;
@@ -88,8 +78,8 @@ export async function insideBarMomentum(options: Options) {
     }
 
     const bid = msg.payload.bid;
-    log("%j", { symbolId, SMA50, SMA200, WPR, ISM, price: bid });
-    if (!SMA50 || !SMA200 || !WPR || !ISM || !bid) {
+    log("%j", { symbolId, SMA50, SMA200, WPR, price: bid });
+    if (!SMA50 || !SMA200 || !WPR || !bid) {
       return;
     }
     const bullish = bid > SMA50 && bid > SMA200 && SMA50 > SMA200 && WPR >= -20;
@@ -107,19 +97,25 @@ export async function insideBarMomentum(options: Options) {
       SMA50,
       SMA200,
       WPR,
-      ISM,
     });
     if (bullish || bearish) {
+      const entryPrice = 0;
+      const stopLoss = entryPrice + (bullish ? -1 : 1) * stopLossOffset;
+      const tradeSide = bullish ? ProtoOATradeSide.BUY : ProtoOATradeSide.SELL;
       R.PROTO_OA_NEW_ORDER_REQ(socket, {
         ctidTraderAccountId,
         symbolId,
         orderType: ProtoOAOrderType.STOP,
-        tradeSide: ISM.tradeSide,
+        tradeSide,
         volume: tradeVolumeInLots * lotSize,
-        stopPrice: utils.price(ISM.enter, digits),
-        stopLoss: utils.price(ISM.stopLoss, digits),
-        takeProfit: utils.price(ISM.takeProfit, digits),
-        expirationTimestamp: Date.now() + expirationOffset,
+        stopPrice: utils.price(entryPrice, digits),
+        stopLoss: utils.price(stopLoss, digits),
+        trailingStopLoss: true,
+        expirationTimestamp: expirationOffset
+          ? Date.now() + expirationOffset
+          : undefined,
+        comment: oid,
+        label: oid,
       });
     }
   };

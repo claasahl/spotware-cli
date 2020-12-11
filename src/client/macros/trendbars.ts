@@ -16,26 +16,15 @@ interface Interval {
 }
 
 function intervals(from: number, to: number): Interval[] {
+  if (from === to) {
+    return [];
+  }
   const chunks: Interval[] = [{ from, to: Math.min(to, from + INTERVAL) }];
   while (chunks[chunks.length - 1].to < to) {
     const last = chunks[chunks.length - 1];
     chunks.push({ from: last.to, to: Math.min(to, last.to + INTERVAL) });
   }
   return chunks;
-}
-
-function inflate(tickData: ProtoOATickData[]): ProtoOATickData[] {
-  const acc: ProtoOATickData = { timestamp: 0, tick: 0 };
-  const spots: ProtoOATickData[] = [];
-  for (const t of tickData) {
-    acc.timestamp += t.timestamp;
-    acc.tick += t.tick;
-    spots.push({
-      timestamp: acc.timestamp,
-      tick: acc.tick / FACTOR,
-    });
-  }
-  return spots.reverse();
 }
 
 export interface Options {
