@@ -48,11 +48,11 @@ export function vwap(options: VwapOptions) {
       (prev, curr) => prev + curr.volume,
       0
     );
-    data.accumulatedPriceVolume += removed.reduce(
+    data.accumulatedPriceVolume -= removed.reduce(
       (prev, curr) => prev + prop(curr) * curr.volume,
       0
     );
-    data.accumulatedVolume += removed.reduce(
+    data.accumulatedVolume -= removed.reduce(
       (prev, curr) => prev + curr.volume,
       0
     );

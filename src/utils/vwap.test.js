@@ -113,6 +113,25 @@ describe("(Estimated) Volume Weighted Average Price", () => {
       payloadType: ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES,
       payload: {
         ctidTraderAccountId: 17403192,
+        period: ProtoOATrendbarPeriod.M1,
+        timestamp: 1603023000000,
+        trendbar: [
+          {
+            volume: 8,
+            low: 976306000,
+            deltaOpen: 727000,
+            deltaClose: 176000,
+            deltaHigh: 971000,
+            utcTimestampInMinutes: 26716810,
+          },
+        ],
+        symbolId: 22396,
+      },
+    });
+    VWAP({
+      payloadType: ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES,
+      payload: {
+        ctidTraderAccountId: 17403192,
         period: ProtoOATrendbarPeriod.D1,
         timestamp: 1603023000000,
         trendbar: [
@@ -122,7 +141,7 @@ describe("(Estimated) Volume Weighted Average Price", () => {
             deltaOpen: 727000,
             deltaClose: 176000,
             deltaHigh: 971000,
-            utcTimestampInMinutes: 26716900,
+            utcTimestampInMinutes: 26716812,
           },
         ],
         symbolId: 22396,
@@ -135,14 +154,6 @@ describe("(Estimated) Volume Weighted Average Price", () => {
         period: ProtoOATrendbarPeriod.M1,
         timestamp: 1603023000000,
         trendbar: [
-          {
-            volume: 8,
-            low: 976306000,
-            deltaOpen: 727000,
-            deltaClose: 176000,
-            deltaHigh: 971000,
-            utcTimestampInMinutes: 26716810,
-          },
           {
             volume: 26,
             low: 976602000,
@@ -163,6 +174,6 @@ describe("(Estimated) Volume Weighted Average Price", () => {
         symbolId: 22396,
       },
     });
-    expect(result).toBeUndefined();
+    expect(result).toBe(976779000 + 1000);
   });
 });
