@@ -95,17 +95,36 @@ export function trendbars(
   return [];
 }
 
+function removeIsNewField(bar: Trendbar & { isNew?: boolean }): Trendbar {
+  const { isNew, ...rest } = bar;
+  return rest;
+}
+
 interface Options {
   ctidTraderAccountId: number;
   symbolId: number;
   period: ProtoOATrendbarPeriod;
-  periods: number;
+  periods:
+    | number
+    | ((bar: Trendbar, index: number, bars: Trendbar[]) => boolean);
+}
+interface Result {
+  bars: Trendbar[];
+  added: Trendbar[];
+  removed: Trendbar[];
 }
 export function bufferedTrendbars(options: Options) {
-  const data: Trendbar[] = [];
-  function value(added: Trendbar[] = [], removed: Trendbar[] = []) {
+  const data: (Trendbar & { isNew?: boolean })[] = [];
+  function value(added: Trendbar[] = [], removed: Trendbar[] = []): Result {
     return { bars: data, added, removed };
   }
+  const keptTheseBars =
+    typeof options.periods === "number"
+      ? (_: Trendbar, index: number, bars: Trendbar[]) =>
+          bars.length - index - 1 < options.periods
+      : options.periods;
+  const removedTheseBars = (bar: Trendbar, index: number, bars: Trendbar[]) =>
+    !keptTheseBars(bar, index, bars);
   function proto_oa_get_trendbars_res(msg: PROTO_OA_GET_TRENDBARS_RES) {
     if (msg.payload.ctidTraderAccountId !== options.ctidTraderAccountId) {
       return value();
@@ -115,16 +134,15 @@ export function bufferedTrendbars(options: Options) {
       return value();
     }
 
-    const removed = [...data];
-    const bars = trendbars(msg);
-    const tmp = [...bars, ...data].sort((a, b) => a.timestamp - b.timestamp);
-    if (tmp.length > options.periods) {
-      tmp.splice(0, tmp.length - options.periods);
-    }
+    const bars = trendbars(msg).map((b) => ({ ...b, isNew: true }));
+    const sorted = [...bars, ...data].sort((a, b) => a.timestamp - b.timestamp);
+    const allBars = sorted.filter(keptTheseBars);
+    const removed = sorted.filter(removedTheseBars).filter((b) => !b.isNew);
+    const added = allBars.filter((b) => b.isNew).map(removeIsNewField);
 
     data.splice(0);
-    data.push(...tmp);
-    return value(tmp, removed);
+    data.push(...allBars.map(removeIsNewField));
+    return value(added, removed);
   }
   function proto_oa_spot_event(msg: PROTO_OA_SPOT_EVENT) {
     if (msg.payload.ctidTraderAccountId !== options.ctidTraderAccountId) {
@@ -152,11 +170,12 @@ export function bufferedTrendbars(options: Options) {
     added.push(bars[0]);
     data.push(bars[0]);
 
-    if (data.length > options.periods) {
-      const bars = data.splice(0, data.length - options.periods);
-      removed.push(...bars);
-    }
-    return value(added, removed);
+    const allBars = data.filter(keptTheseBars).map(removeIsNewField);
+    const alsoRemoved = data.filter(removedTheseBars).filter((b) => !b.isNew);
+
+    data.splice(0);
+    data.push(...allBars);
+    return value(added, [...alsoRemoved, ...removed]);
   }
   return (message: Messages) => {
     switch (message.payloadType) {
