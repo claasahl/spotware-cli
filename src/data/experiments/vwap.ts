@@ -6,6 +6,7 @@ import {
 import { format } from "@fast-csv/format";
 import fs from "fs";
 import git from "isomorphic-git";
+import ms from "ms";
 
 import * as utils from "../../utils";
 import { toLiveTrendbar } from "../utils";
@@ -22,7 +23,27 @@ interface Result {
 }
 export function vwap(options: Options) {
   const VWAP = utils.vwap(options);
-  return (_timestamp: number, msg: Messages): Result | undefined => {
+  return (timestamp: number, msg: Messages): Result | undefined => {
+    const utcTimestampInMinutes =
+      (timestamp - (timestamp % ms("1d"))) / ms("1m");
+    VWAP({
+      // FIXME backtesting should probably support subscriptions with multiple periods (i.e. not just exactly one period)
+      payloadType: ProtoOAPayloadType.PROTO_OA_SPOT_EVENT,
+      payload: {
+        ...options,
+        trendbar: [
+          {
+            volume: 1,
+            period: ProtoOATrendbarPeriod.D1,
+            low: 1,
+            deltaOpen: 1,
+            deltaHigh: 1,
+            utcTimestampInMinutes,
+          },
+        ],
+        bid: 1,
+      },
+    });
     const data = VWAP(msg);
     return {
       symbolId: options.symbolId,
