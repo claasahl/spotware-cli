@@ -5,7 +5,7 @@ const {
 } = require("@claasahl/spotware-adapter");
 
 describe("(Estimated) Volume Weighted Average Price", () => {
-  test("accumulate all bars", () => {
+  test("accumulate all bars as long as we don#t have a reference point (i.e. start of current D1 bar)", () => {
     const VWAP = vwap({ ctidTraderAccountId: 17403192, symbolId: 22396 });
     const result = VWAP({
       payloadType: ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES,
@@ -47,7 +47,7 @@ describe("(Estimated) Volume Weighted Average Price", () => {
     const c = (976779000 + 1000) * 9;
     expect(result).toBe(Math.round((a + b + c) / (8 + 26 + 9)));
   });
-  test("accumulate today's bars", () => {
+  test("accumulate intra-day bars once we have a reference point (i.e. start of current D1 bar)", () => {
     const VWAP = vwap({ ctidTraderAccountId: 17403192, symbolId: 22396 });
     VWAP({
       payloadType: ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES,
@@ -107,7 +107,7 @@ describe("(Estimated) Volume Weighted Average Price", () => {
     const c = (976779000 + 1000) * 9;
     expect(result).toBe(Math.round((b + c) / (26 + 9)));
   });
-  test("accumulate today's bars555555555555", () => {
+  test("reset bars on every new D1 bar", () => {
     const VWAP = vwap({ ctidTraderAccountId: 17403192, symbolId: 22396 });
     VWAP({
       payloadType: ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_RES,
