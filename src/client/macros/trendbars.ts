@@ -1,13 +1,11 @@
 import {
   SpotwareClientSocket,
-  ProtoOATickData,
   ProtoOATrendbarPeriod,
 } from "@claasahl/spotware-adapter";
 import ms from "ms";
 
 import * as R from "../requests";
 
-const FACTOR = Math.pow(10, 5);
 const INTERVAL = ms("35d");
 
 interface Interval {
