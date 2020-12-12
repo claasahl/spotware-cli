@@ -20,7 +20,7 @@ describe("(Estimated) Volume Weighted Average Price", () => {
             deltaOpen: 727000,
             deltaClose: 176000,
             deltaHigh: 971000,
-            utcTimestampInMinutes: 0,
+            utcTimestampInMinutes: 26716810,
           },
           {
             volume: 26,
@@ -62,7 +62,7 @@ describe("(Estimated) Volume Weighted Average Price", () => {
             deltaOpen: 727000,
             deltaClose: 176000,
             deltaHigh: 971000,
-            utcTimestampInMinutes: 26716800,
+            utcTimestampInMinutes: 26716811,
           },
         ],
         symbolId: 22396,
@@ -81,7 +81,7 @@ describe("(Estimated) Volume Weighted Average Price", () => {
             deltaOpen: 727000,
             deltaClose: 176000,
             deltaHigh: 971000,
-            utcTimestampInMinutes: 0,
+            utcTimestampInMinutes: 26716810,
           },
           {
             volume: 26,
@@ -141,7 +141,7 @@ describe("(Estimated) Volume Weighted Average Price", () => {
             deltaOpen: 727000,
             deltaClose: 176000,
             deltaHigh: 971000,
-            utcTimestampInMinutes: 0,
+            utcTimestampInMinutes: 26716810,
           },
           {
             volume: 26,
