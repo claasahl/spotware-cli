@@ -23,7 +23,8 @@ export function vwap(options: VwapOptions) {
     period: intraDayPeriod,
     periods: (bar) =>
       data.referenceTimestamp === 0 ||
-      data.referenceTimestamp - bar.timestamp <= threshold,
+      (data.referenceTimestamp - bar.timestamp <= threshold &&
+        data.referenceTimestamp < bar.timestamp),
   });
   const prop = options.property || ((bar: Trendbar) => bar.close);
   const data = {
