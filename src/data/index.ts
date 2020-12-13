@@ -31,10 +31,10 @@ const symbol = "BTC/EUR";
 const fromDate = new Date("2020-10-30T00:00:00.000Z");
 const toDate = new Date("2020-11-01T00:00:00.000Z");
 
-E.vwap(
+E.metrics(
   {
     symbol,
-    period: ProtoOATrendbarPeriod.M1,
+    period: ProtoOATrendbarPeriod.M5,
     forsight: {
       offset: ms("0h"),
       period: ProtoOATrendbarPeriod.M1,
@@ -42,6 +42,17 @@ E.vwap(
   },
   bt
 );
+// E.vwap(
+//   {
+//     symbol,
+//     period: ProtoOATrendbarPeriod.M1,
+//     forsight: {
+//       offset: ms("0h"),
+//       period: ProtoOATrendbarPeriod.M1,
+//     },
+//   },
+//   bt
+// );
 // E.insideBarMomentum(
 //   {
 //     symbol,
