@@ -34,7 +34,7 @@ const toDate = new Date("2020-11-01T00:00:00.000Z");
 E.metrics(
   {
     symbol,
-    period: ProtoOATrendbarPeriod.H1,
+    period: ProtoOATrendbarPeriod.M5,
     forsight: {
       offset: ms("0h"),
       period: ProtoOATrendbarPeriod.M1,
