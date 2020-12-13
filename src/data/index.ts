@@ -28,20 +28,42 @@ const bt = (options: E.ExperimentBacktestOptions) =>
 
 // const symbol = "EURGBP";
 const symbol = "BTC/EUR";
-const fromDate = new Date("2019-11-01T00:00:00.000Z");
+const fromDate = new Date("2020-10-30T00:00:00.000Z");
 const toDate = new Date("2020-11-01T00:00:00.000Z");
 
-E.insideBarMomentum(
+E.metrics(
   {
     symbol,
-    period: ProtoOATrendbarPeriod.H1,
+    period: ProtoOATrendbarPeriod.M5,
     forsight: {
-      offset: ms("12h"),
+      offset: ms("0h"),
       period: ProtoOATrendbarPeriod.M1,
     },
   },
   bt
 );
+// E.vwap(
+//   {
+//     symbol,
+//     period: ProtoOATrendbarPeriod.M1,
+//     forsight: {
+//       offset: ms("0h"),
+//       period: ProtoOATrendbarPeriod.M1,
+//     },
+//   },
+//   bt
+// );
+// E.insideBarMomentum(
+//   {
+//     symbol,
+//     period: ProtoOATrendbarPeriod.H1,
+//     forsight: {
+//       offset: ms("12h"),
+//       period: ProtoOATrendbarPeriod.M1,
+//     },
+//   },
+//   bt
+// );
 // E.priceRange({ symbol, period: ProtoOATrendbarPeriod.M5, forsight: ms("12h") }, bt);
 // E.highLow(
 //   {

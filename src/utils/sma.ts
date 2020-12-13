@@ -1,6 +1,6 @@
 import { Messages, ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
 
-import { bufferedTrendbars, Trendbar, trendbars } from "./trendbar";
+import { bufferedTrendbars, Trendbar } from "./trendbar";
 
 interface SmaOptions {
   ctidTraderAccountId: number;
