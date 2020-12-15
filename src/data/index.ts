@@ -26,8 +26,8 @@ const bt = (options: E.ExperimentBacktestOptions) =>
     toDate,
   });
 
-// const symbol = "EURGBP";
-const symbol = "BTC/EUR";
+const symbol = "EURGBP";
+// const symbol = "BTC/EUR";
 const fromDate = new Date("2020-10-01T00:00:00.000Z");
 const toDate = new Date("2020-11-01T00:00:00.000Z");
 
