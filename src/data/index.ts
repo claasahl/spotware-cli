@@ -31,21 +31,10 @@ const symbol = "EURGBP";
 const fromDate = new Date("2020-10-01T00:00:00.000Z");
 const toDate = new Date("2020-11-01T00:00:00.000Z");
 
-E.metrics(
-  {
-    symbol,
-    period: ProtoOATrendbarPeriod.H1,
-    forsight: {
-      offset: ms("0h"),
-      period: ProtoOATrendbarPeriod.M1,
-    },
-  },
-  bt
-);
-// E.vwap(
+// E.metrics(
 //   {
 //     symbol,
-//     period: ProtoOATrendbarPeriod.M1,
+//     period: ProtoOATrendbarPeriod.H1,
 //     forsight: {
 //       offset: ms("0h"),
 //       period: ProtoOATrendbarPeriod.M1,
@@ -53,6 +42,17 @@ E.metrics(
 //   },
 //   bt
 // );
+E.vwap(
+  {
+    symbol,
+    period: ProtoOATrendbarPeriod.M1,
+    forsight: {
+      offset: ms("0h"),
+      period: ProtoOATrendbarPeriod.M1,
+    },
+  },
+  bt
+);
 // E.insideBarMomentum(
 //   {
 //     symbol,
