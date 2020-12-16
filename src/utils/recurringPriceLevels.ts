@@ -8,7 +8,7 @@ function increment(
   price: number,
   resolution: number
 ): void {
-  const priceLevel = Math.floor(price / resolution);
+  const priceLevel = resolution * Math.floor(price / resolution);
   const count = priceLevels.get(priceLevel) || 0;
   priceLevels.set(priceLevel, count + 1);
 }
@@ -18,7 +18,7 @@ function decrement(
   price: number,
   resolution: number
 ): void {
-  const priceLevel = Math.floor(price / resolution);
+  const priceLevel = resolution * Math.floor(price / resolution);
   const count = priceLevels.get(priceLevel) || 0;
   assert.ok(count, `negative count for price level ${priceLevel}. why??????`);
   if (count === 1) {
