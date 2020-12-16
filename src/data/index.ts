@@ -42,17 +42,17 @@ const toDate = new Date("2020-11-01T00:00:00.000Z");
 //   },
 //   bt
 // );
-E.vwap(
-  {
-    symbol,
-    period: ProtoOATrendbarPeriod.M1,
-    forsight: {
-      offset: ms("0h"),
-      period: ProtoOATrendbarPeriod.M1,
-    },
-  },
-  bt
-);
+// E.vwap(
+//   {
+//     symbol,
+//     period: ProtoOATrendbarPeriod.M1,
+//     forsight: {
+//       offset: ms("0h"),
+//       period: ProtoOATrendbarPeriod.M1,
+//     },
+//   },
+//   bt
+// );
 // E.insideBarMomentum(
 //   {
 //     symbol,
@@ -76,3 +76,14 @@ E.vwap(
 //   },
 //   bt
 // );
+E.recurringPriceLevels(
+  {
+    symbol,
+    period: ProtoOATrendbarPeriod.M1,
+    forsight: {
+      offset: ms("0h"),
+      period: ProtoOATrendbarPeriod.M1,
+    },
+  },
+  bt
+);
