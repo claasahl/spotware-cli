@@ -62,6 +62,64 @@ function connect({
   });
 }
 
+async function fetchAssetClasses(
+  socket: SpotwareClientSocket,
+  trader: ProtoOATrader
+) {
+  const { assetClass } = await R.PROTO_OA_ASSET_CLASS_LIST_REQ(socket, {
+    ctidTraderAccountId: trader.ctidTraderAccountId,
+  });
+  const assetClasses = new Map<number, ProtoOAAssetClass>();
+  assetClass.forEach((assetClass) => {
+    if (assetClass.id) {
+      assetClasses.set(assetClass.id, assetClass);
+    }
+  });
+  return assetClasses;
+}
+
+async function fetchAssets(
+  socket: SpotwareClientSocket,
+  trader: ProtoOATrader
+) {
+  const { asset } = await R.PROTO_OA_ASSET_LIST_REQ(socket, {
+    ctidTraderAccountId: trader.ctidTraderAccountId,
+  });
+  const assets = new Map<number, ProtoOAAsset>();
+  asset.forEach((asset) => {
+    assets.set(asset.assetId, asset);
+  });
+  return assets;
+}
+
+async function fetchSymbolCategories(
+  socket: SpotwareClientSocket,
+  trader: ProtoOATrader
+) {
+  const { symbolCategory } = await R.PROTO_OA_SYMBOL_CATEGORY_REQ(socket, {
+    ctidTraderAccountId: trader.ctidTraderAccountId,
+  });
+  const symbolCategories = new Map<number, ProtoOASymbolCategory>();
+  symbolCategory.forEach((symbolCategory) => {
+    symbolCategories.set(symbolCategory.id, symbolCategory);
+  });
+  return symbolCategories;
+}
+
+async function fetchSymbols(
+  socket: SpotwareClientSocket,
+  trader: ProtoOATrader
+) {
+  const { symbol } = await R.PROTO_OA_SYMBOLS_LIST_REQ(socket, {
+    ctidTraderAccountId: trader.ctidTraderAccountId,
+  });
+  const symbols = new Map<number, ProtoOALightSymbol>();
+  symbol.forEach((symbol) => {
+    symbols.set(symbol.symbolId, symbol);
+  });
+  return symbols;
+}
+
 interface SymbolData {
   trader: ProtoOATrader;
   depositAsset: ProtoOAAsset;
@@ -105,38 +163,13 @@ export async function main(options: Options) {
   const trackedSymbols: SymbolData[] = [];
   for (const trader of traders) {
     const { ctidTraderAccountId } = trader;
+    const assetClasses = await fetchAssetClasses(socket, trader);
+    const assets = await fetchAssets(socket, trader);
+    const symbolCategories = await fetchSymbolCategories(socket, trader);
+    const symbols = await fetchSymbols(socket, trader);
 
-    const { assetClass } = await R.PROTO_OA_ASSET_CLASS_LIST_REQ(socket, {
-      ctidTraderAccountId,
-    });
-    const assetClasses = new Map<number, ProtoOAAssetClass>();
-    assetClass.forEach((assetClass) => {
-      if (assetClass.id) {
-        assetClasses.set(assetClass.id, assetClass);
-      }
-    });
-
-    const { asset } = await R.PROTO_OA_ASSET_LIST_REQ(socket, {
-      ctidTraderAccountId,
-    });
-    const assets = new Map<number, ProtoOAAsset>();
-    asset.forEach((asset) => {
-      assets.set(asset.assetId, asset);
-    });
-
-    const { symbolCategory } = await R.PROTO_OA_SYMBOL_CATEGORY_REQ(socket, {
-      ctidTraderAccountId,
-    });
-    const symbolCategories = new Map<number, ProtoOASymbolCategory>();
-    symbolCategory.forEach((symbolCategory) => {
-      symbolCategories.set(symbolCategory.id, symbolCategory);
-    });
-
-    const { symbol: symbols } = await R.PROTO_OA_SYMBOLS_LIST_REQ(socket, {
-      ctidTraderAccountId,
-    });
     const numberOfTrackedSymbols = trackedSymbols.length;
-    for (const symbol of symbols) {
+    for (const [_, symbol] of symbols) {
       if (
         !symbol.baseAssetId ||
         !symbol.quoteAssetId ||
