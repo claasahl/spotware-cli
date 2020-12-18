@@ -1,6 +1,7 @@
 export * from "./highLow";
 export * from "./insideBarMomentum";
 export * from "./period";
+export * from "./recurringPriceLevels";
 export * from "./sma";
 export * from "./trendbar";
 export * from "./volume";
