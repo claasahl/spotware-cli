@@ -2,6 +2,7 @@ import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
 import ms from "ms";
 
 import { backtest } from "./backtest";
+import { main, sample } from "./universe";
 import * as E from "./experiments";
 
 const host = process.env.host || "live.ctraderapi.com";
@@ -76,14 +77,16 @@ const toDate = new Date("2020-11-01T00:00:00.000Z");
 //   },
 //   bt
 // );
-E.recurringPriceLevels(
-  {
-    symbol,
-    period: ProtoOATrendbarPeriod.M1,
-    forsight: {
-      offset: ms("0h"),
-      period: ProtoOATrendbarPeriod.M1,
-    },
-  },
-  bt
-);
+// E.recurringPriceLevels(
+//   {
+//     symbol,
+//     period: ProtoOATrendbarPeriod.M1,
+//     forsight: {
+//       offset: ms("0h"),
+//       period: ProtoOATrendbarPeriod.M1,
+//     },
+//   },
+//   bt
+// );
+
+main({ process: sample });

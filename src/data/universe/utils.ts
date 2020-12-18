@@ -2,7 +2,6 @@ import {
   ProtoOAAsset,
   ProtoOAAssetClass,
   ProtoOALightSymbol,
-  ProtoOASymbol,
   ProtoOASymbolCategory,
   ProtoOATrader,
   SpotwareClientSocket,

@@ -1,4 +1,5 @@
-import { SpotwareClientSocket } from "@claasahl/spotware-adapter";
+export { default as sample } from "./sample";
+
 import debug from "debug";
 import fs from "fs";
 import { format } from "@fast-csv/format";
