@@ -15,6 +15,7 @@ interface Options {
   ctidTraderAccountId: number;
   symbolId: number;
   period: ProtoOATrendbarPeriod;
+  periodsVolume?: number;
   periodsRange?: number;
   periodsBody?: number;
   periodsShortTerm?: number;
@@ -24,6 +25,7 @@ interface Options {
 
 interface Result {
   symbolId: number;
+  smaVolume?: number;
   smaRange?: number;
   smaBody?: number;
   smaShortTerm?: number;
@@ -32,6 +34,13 @@ interface Result {
 }
 export function metrics(options: Options) {
   const { ctidTraderAccountId, symbolId, period } = options;
+  const volumeSma = utils.sma({
+    ctidTraderAccountId,
+    symbolId,
+    period,
+    periods: options.periodsVolume || 30,
+    property: (b) => b.high - b.low,
+  });
   const rangeSma = utils.sma({
     ctidTraderAccountId,
     symbolId,
@@ -65,6 +74,7 @@ export function metrics(options: Options) {
     periods: options.periodsWPR || 20,
   });
   return (_timestamp: number, msg: Messages): Result | undefined => {
+    const smaVolume = volumeSma(msg);
     const smaRange = rangeSma(msg);
     const smaBody = bodySma(msg);
     const smaShortTerm = shortTermSma(msg);
@@ -81,6 +91,7 @@ export function metrics(options: Options) {
 
     const data = {
       symbolId,
+      smaVolume,
       smaRange,
       smaBody,
       smaShortTerm,
@@ -100,6 +111,7 @@ const csvHeaders = [
   "period",
   "timestamp",
   "date",
+  "smaVolume",
   "smaRange",
   "smaBody",
   "smaShortTerm",
@@ -116,6 +128,7 @@ const csvData = (trendbar: utils.Trendbar, result?: Result) => [
   trendbar.period,
   trendbar.timestamp,
   new Date(trendbar.timestamp).toISOString(),
+  result?.smaVolume,
   result?.smaRange,
   result?.smaBody,
   result?.smaShortTerm,
