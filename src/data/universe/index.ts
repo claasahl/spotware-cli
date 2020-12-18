@@ -10,11 +10,40 @@ import {
 import { connect as tlsConnect } from "tls";
 import { connect as netConnect } from "net";
 import debug from "debug";
+import fs from "fs";
+import { format } from "@fast-csv/format";
+import git from "isomorphic-git";
 
 import { macro as authenticate } from "../../client/macros/authenticate";
 import * as R from "../../client/requests";
 
 const log = debug("universe");
+
+const csvHeaders = [
+  "ctidTraderAccountId",
+  "depositAsset",
+  "broker",
+  "assetClass",
+  "symbol",
+  "enabled",
+  "description",
+  "baseAsset",
+  "quoteAsset",
+  "tracked",
+];
+
+const csvData = (data: SymbolData, tracked: boolean) => [
+  data.trader.ctidTraderAccountId,
+  data.depositAsset.name,
+  data.trader.brokerName,
+  data.assetClass.name,
+  data.symbol.symbolName,
+  data.symbol.enabled,
+  data.symbol.description,
+  data.baseAsset.name,
+  data.quoteAsset.name,
+  tracked,
+];
 
 interface ConnectOptions {
   port: number;
@@ -35,6 +64,7 @@ function connect({
 
 interface SymbolData {
   trader: ProtoOATrader;
+  depositAsset: ProtoOAAsset;
   symbol: ProtoOALightSymbol;
   category: ProtoOASymbolCategory;
   assetClass: ProtoOAAssetClass;
@@ -49,6 +79,13 @@ export interface Options {
   trackSymbol: (data: SymbolData) => boolean;
 }
 export async function main(options: Options) {
+  const [{ oid }] = await git.log({ fs, depth: 1, ref: "HEAD", dir: "." });
+  const filename = `./overview-${oid}.csv`;
+  const stream = format({ headers: csvHeaders });
+  const output = fs.createWriteStream(filename);
+  stream.pipe(output);
+  log("writing summary to %s", filename);
+
   const connection = {
     host: process.env.host || "live.ctraderapi.com",
     port: Number(process.env.port) || 5035,
@@ -115,7 +152,8 @@ export async function main(options: Options) {
       const category = symbolCategories.get(symbol.symbolCategoryId);
       const baseAsset = assets.get(symbol.baseAssetId);
       const quoteAsset = assets.get(symbol.quoteAssetId);
-      if (!category || !baseAsset || !quoteAsset) {
+      const depositAsset = assets.get(trader.depositAssetId);
+      if (!category || !baseAsset || !quoteAsset || !depositAsset) {
         log(
           "skipping symbol %s (%s) due to missing dependencies (#)",
           symbol.symbolName,
@@ -135,13 +173,16 @@ export async function main(options: Options) {
       }
       const data: SymbolData = {
         trader,
+        depositAsset,
         symbol,
         category,
         assetClass,
         baseAsset,
         quoteAsset,
       };
-      if (options.trackSymbol(data)) {
+      const tracked = options.trackSymbol(data);
+      stream.write(csvData(data, tracked));
+      if (tracked) {
         trackedSymbols.push(data);
       }
     }
@@ -152,9 +193,14 @@ export async function main(options: Options) {
     );
   }
   log("tracking %s symbols", trackedSymbols.length);
+  stream.end();
+  log("wrote summary to %s", filename);
   log("done");
   socket.end();
 }
 main({
-  trackSymbol: () => true,
+  trackSymbol: (data) =>
+    (data.assetClass.name === "Forex" &&
+      data.symbol.symbolName?.includes(data.depositAsset.name)) ||
+    false,
 });
