@@ -2,9 +2,9 @@ import {
   ProtoOAAsset,
   ProtoOAAssetClass,
   ProtoOALightSymbol,
-  ProtoOASymbol,
   ProtoOASymbolCategory,
   ProtoOATrader,
+  SpotwareClientSocket,
 } from "@claasahl/spotware-adapter";
 import debug from "debug";
 import fs from "fs";
@@ -35,10 +35,10 @@ const csvHeaders = [
   "description",
   "baseAsset",
   "quoteAsset",
-  "tracked",
+  "millis",
 ];
 
-const csvData = (data: SymbolData, tracked: boolean) => [
+const csvData = (data: SymbolData, millis: number) => [
   data.trader.ctidTraderAccountId,
   data.depositAsset.name,
   data.trader.brokerName,
@@ -48,7 +48,7 @@ const csvData = (data: SymbolData, tracked: boolean) => [
   data.symbol.description,
   data.baseAsset.name,
   data.quoteAsset.name,
-  tracked,
+  millis,
 ];
 
 interface SymbolData {
@@ -60,12 +60,9 @@ interface SymbolData {
   baseAsset: ProtoOAAsset;
   quoteAsset: ProtoOAAsset;
 }
-type ExtendedSymbolData = SymbolData & {
-  details: ProtoOASymbol;
-};
 
 export interface Options {
-  trackSymbol: (data: SymbolData) => boolean;
+  process: (socket: SpotwareClientSocket, data: SymbolData) => Promise<void>;
 }
 export async function main(options: Options) {
   const [{ oid }] = await git.log({ fs, depth: 1, ref: "HEAD", dir: "." });
@@ -91,15 +88,12 @@ export async function main(options: Options) {
   });
   log("authenticated", { noOfTraders: traders.length });
 
-  const trackedSymbols: SymbolData[] = [];
   for (const trader of traders) {
-    const { ctidTraderAccountId } = trader;
     const assetClasses = await fetchAssetClasses(socket, trader);
     const assets = await fetchAssets(socket, trader);
     const symbolCategories = await fetchSymbolCategories(socket, trader);
     const symbols = await fetchSymbols(socket, trader);
 
-    const numberOfTrackedSymbols = trackedSymbols.length;
     for (const [_, symbol] of symbols) {
       const category = fetchSymbolCategory(
         symbolCategories,
@@ -119,28 +113,14 @@ export async function main(options: Options) {
         baseAsset,
         quoteAsset,
       };
-      const tracked = options.trackSymbol(data);
-      stream.write(csvData(data, tracked));
-      if (tracked) {
-        trackedSymbols.push(data);
-      }
+      const timeStart = Date.now();
+      await options.process(socket, data);
+      const timeEnd = Date.now();
+      stream.write(csvData(data, timeEnd - timeStart));
     }
-    log(
-      "tracking %s symbols for ctidTraderAccountId %s",
-      trackedSymbols.length - numberOfTrackedSymbols,
-      ctidTraderAccountId
-    );
   }
-  log("tracking %s symbols", trackedSymbols.length);
   stream.end();
   log("wrote summary to %s", filename);
   log("done");
   socket.end();
 }
-
-main({
-  trackSymbol: (data) =>
-    (data.assetClass.name === "Forex" &&
-      data.symbol.symbolName?.includes(data.depositAsset.name)) ||
-    false,
-});
