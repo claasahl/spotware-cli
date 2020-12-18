@@ -45,6 +45,20 @@ export async function fetchAssetClasses(
   return assetClasses;
 }
 
+export function fetchAssetClass(
+  assetClasses: Map<number, ProtoOAAssetClass>,
+  id?: number
+) {
+  if (!id) {
+    throw new Error("missing asset class id");
+  }
+  const assetClass = assetClasses.get(id);
+  if (assetClass) {
+    return assetClass;
+  }
+  throw new Error("missing asset class");
+}
+
 export async function fetchAssets(
   socket: SpotwareClientSocket,
   trader: ProtoOATrader
@@ -59,6 +73,17 @@ export async function fetchAssets(
   return assets;
 }
 
+export function fetchAsset(assets: Map<number, ProtoOAAsset>, id?: number) {
+  if (!id) {
+    throw new Error("missing asset id");
+  }
+  const asset = assets.get(id);
+  if (asset) {
+    return asset;
+  }
+  throw new Error("missing asset");
+}
+
 export async function fetchSymbolCategories(
   socket: SpotwareClientSocket,
   trader: ProtoOATrader
@@ -71,6 +96,20 @@ export async function fetchSymbolCategories(
     symbolCategories.set(symbolCategory.id, symbolCategory);
   });
   return symbolCategories;
+}
+
+export function fetchSymbolCategory(
+  symbolCategories: Map<number, ProtoOASymbolCategory>,
+  id?: number
+) {
+  if (!id) {
+    throw new Error("missing symbol category id");
+  }
+  const symbolCategory = symbolCategories.get(id);
+  if (symbolCategory) {
+    return symbolCategory;
+  }
+  throw new Error("missing symbol category");
 }
 
 export async function fetchSymbols(

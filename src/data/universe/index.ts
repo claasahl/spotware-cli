@@ -18,6 +18,9 @@ import {
   fetchAssets,
   fetchSymbolCategories,
   fetchSymbols,
+  fetchAsset,
+  fetchAssetClass,
+  fetchSymbolCategory,
 } from "./utils";
 
 const log = debug("universe");
@@ -98,40 +101,15 @@ export async function main(options: Options) {
 
     const numberOfTrackedSymbols = trackedSymbols.length;
     for (const [_, symbol] of symbols) {
-      if (
-        !symbol.baseAssetId ||
-        !symbol.quoteAssetId ||
-        !symbol.symbolCategoryId
-      ) {
-        log(
-          "skipping symbol %s (%s) due to missing data",
-          symbol.symbolName,
-          symbol.symbolId
-        );
-        continue;
-      }
-      const category = symbolCategories.get(symbol.symbolCategoryId);
-      const baseAsset = assets.get(symbol.baseAssetId);
-      const quoteAsset = assets.get(symbol.quoteAssetId);
-      const depositAsset = assets.get(trader.depositAssetId);
-      if (!category || !baseAsset || !quoteAsset || !depositAsset) {
-        log(
-          "skipping symbol %s (%s) due to missing dependencies (#)",
-          symbol.symbolName,
-          symbol.symbolId
-        );
-        continue;
-      }
+      const category = fetchSymbolCategory(
+        symbolCategories,
+        symbol.symbolCategoryId
+      );
+      const baseAsset = fetchAsset(assets, symbol.baseAssetId);
+      const quoteAsset = fetchAsset(assets, symbol.quoteAssetId);
+      const depositAsset = fetchAsset(assets, trader.depositAssetId);
+      const assetClass = fetchAssetClass(assetClasses, category.assetClassId);
 
-      const assetClass = assetClasses.get(category.assetClassId);
-      if (!assetClass) {
-        log(
-          "skipping symbol %s (%s) due to missing dependencies (+)",
-          symbol.symbolName,
-          symbol.symbolId
-        );
-        continue;
-      }
       const data: SymbolData = {
         trader,
         depositAsset,
@@ -159,6 +137,7 @@ export async function main(options: Options) {
   log("done");
   socket.end();
 }
+
 main({
   trackSymbol: (data) =>
     (data.assetClass.name === "Forex" &&
