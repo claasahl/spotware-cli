@@ -11,10 +11,7 @@ import { connect as tlsConnect } from "tls";
 import { connect as netConnect } from "net";
 import debug from "debug";
 
-import {
-  Options as AuthenticateOptions,
-  macro as authenticate,
-} from "../../client/macros/authenticate";
+import { macro as authenticate } from "../../client/macros/authenticate";
 import * as R from "../../client/requests";
 
 const log = debug("universe");
