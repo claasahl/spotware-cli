@@ -14,7 +14,8 @@
     "client": "ts-node -r dotenv/config src/client/index.ts",
     "server": "ts-node -r dotenv/config src/server/index.ts",
     "server-dev": "nodemon --ext ts,json --exec \"ts-node -r dotenv/config src/server/index.ts\"",
-    "data": "ts-node -r dotenv/config src/data/index.ts"
+    "data": "ts-node -r dotenv/config src/data/index.ts",
+    "data-universe": "ts-node -r dotenv/config src/data/universe/index.ts"
   },
   "repository": {
     "type": "git",
