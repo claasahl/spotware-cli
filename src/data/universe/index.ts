@@ -5,17 +5,20 @@ import {
   ProtoOASymbol,
   ProtoOASymbolCategory,
   ProtoOATrader,
-  SpotwareClientSocket,
 } from "@claasahl/spotware-adapter";
-import { connect as tlsConnect } from "tls";
-import { connect as netConnect } from "net";
 import debug from "debug";
 import fs from "fs";
 import { format } from "@fast-csv/format";
 import git from "isomorphic-git";
 
 import { macro as authenticate } from "../../client/macros/authenticate";
-import * as R from "../../client/requests";
+import {
+  connect,
+  fetchAssetClasses,
+  fetchAssets,
+  fetchSymbolCategories,
+  fetchSymbols,
+} from "./utils";
 
 const log = debug("universe");
 
@@ -44,81 +47,6 @@ const csvData = (data: SymbolData, tracked: boolean) => [
   data.quoteAsset.name,
   tracked,
 ];
-
-interface ConnectOptions {
-  port: number;
-  host: string;
-  useTLS: boolean;
-}
-function connect({
-  port,
-  host,
-  useTLS,
-}: ConnectOptions): Promise<SpotwareClientSocket> {
-  return new Promise((resolve) => {
-    const socket = useTLS ? tlsConnect(port, host) : netConnect(port, host);
-    const event = useTLS ? "secureConnect" : "connect";
-    socket.once(event, () => resolve(new SpotwareClientSocket(socket)));
-  });
-}
-
-async function fetchAssetClasses(
-  socket: SpotwareClientSocket,
-  trader: ProtoOATrader
-) {
-  const { assetClass } = await R.PROTO_OA_ASSET_CLASS_LIST_REQ(socket, {
-    ctidTraderAccountId: trader.ctidTraderAccountId,
-  });
-  const assetClasses = new Map<number, ProtoOAAssetClass>();
-  assetClass.forEach((assetClass) => {
-    if (assetClass.id) {
-      assetClasses.set(assetClass.id, assetClass);
-    }
-  });
-  return assetClasses;
-}
-
-async function fetchAssets(
-  socket: SpotwareClientSocket,
-  trader: ProtoOATrader
-) {
-  const { asset } = await R.PROTO_OA_ASSET_LIST_REQ(socket, {
-    ctidTraderAccountId: trader.ctidTraderAccountId,
-  });
-  const assets = new Map<number, ProtoOAAsset>();
-  asset.forEach((asset) => {
-    assets.set(asset.assetId, asset);
-  });
-  return assets;
-}
-
-async function fetchSymbolCategories(
-  socket: SpotwareClientSocket,
-  trader: ProtoOATrader
-) {
-  const { symbolCategory } = await R.PROTO_OA_SYMBOL_CATEGORY_REQ(socket, {
-    ctidTraderAccountId: trader.ctidTraderAccountId,
-  });
-  const symbolCategories = new Map<number, ProtoOASymbolCategory>();
-  symbolCategory.forEach((symbolCategory) => {
-    symbolCategories.set(symbolCategory.id, symbolCategory);
-  });
-  return symbolCategories;
-}
-
-async function fetchSymbols(
-  socket: SpotwareClientSocket,
-  trader: ProtoOATrader
-) {
-  const { symbol } = await R.PROTO_OA_SYMBOLS_LIST_REQ(socket, {
-    ctidTraderAccountId: trader.ctidTraderAccountId,
-  });
-  const symbols = new Map<number, ProtoOALightSymbol>();
-  symbol.forEach((symbol) => {
-    symbols.set(symbol.symbolId, symbol);
-  });
-  return symbols;
-}
 
 interface SymbolData {
   trader: ProtoOATrader;
