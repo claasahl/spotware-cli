@@ -1,11 +1,4 @@
-import {
-  ProtoOAAsset,
-  ProtoOAAssetClass,
-  ProtoOALightSymbol,
-  ProtoOASymbolCategory,
-  ProtoOATrader,
-  SpotwareClientSocket,
-} from "@claasahl/spotware-adapter";
+import { SpotwareClientSocket } from "@claasahl/spotware-adapter";
 import debug from "debug";
 import fs from "fs";
 import { format } from "@fast-csv/format";
@@ -22,6 +15,7 @@ import {
   fetchAssetClass,
   fetchSymbolCategory,
 } from "./utils";
+import { SymbolData, SymbolDataProcessor } from "./types";
 
 const log = debug("universe");
 
@@ -51,18 +45,8 @@ const csvData = (data: SymbolData, millis: number) => [
   millis,
 ];
 
-interface SymbolData {
-  trader: ProtoOATrader;
-  depositAsset: ProtoOAAsset;
-  symbol: ProtoOALightSymbol;
-  category: ProtoOASymbolCategory;
-  assetClass: ProtoOAAssetClass;
-  baseAsset: ProtoOAAsset;
-  quoteAsset: ProtoOAAsset;
-}
-
 export interface Options {
-  process: (socket: SpotwareClientSocket, data: SymbolData) => Promise<void>;
+  process: SymbolDataProcessor;
 }
 export async function main(options: Options) {
   const [{ oid }] = await git.log({ fs, depth: 1, ref: "HEAD", dir: "." });
