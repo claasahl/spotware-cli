@@ -56,8 +56,12 @@ interface Options {
   toDate: Date;
 }
 function processor(options: Options): SymbolDataProcessor {
+  const classes = ["Forex", "Crypto Currencies"];
   return async (socket, data) => {
-    if (data.symbol.symbolName !== "BTC/EUR") {
+    if (!classes.includes(data.assetClass.name || "")) {
+      return;
+    }
+    if (!data.symbol.symbolName?.includes(data.depositAsset.name)) {
       return;
     }
     const deals = await fetchDeals(socket, data, options);
