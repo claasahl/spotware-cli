@@ -2,7 +2,7 @@ import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
 import ms from "ms";
 
 import { backtest } from "./backtest";
-import { main, sample } from "./universe";
+import { main, sample, deals } from "./universe";
 import * as E from "./experiments";
 
 const host = process.env.host || "live.ctraderapi.com";
@@ -89,4 +89,9 @@ const toDate = new Date("2020-11-01T00:00:00.000Z");
 //   bt
 // );
 
-main({ process: sample });
+main({
+  process: deals({
+    fromDate: new Date("2020-12-01T00:00:00.000Z"),
+    toDate: new Date(),
+  }),
+});
