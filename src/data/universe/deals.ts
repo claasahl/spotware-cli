@@ -43,7 +43,9 @@ async function fetchDeals(
       );
     }
     deals.push(
-      ...result.deal.filter((d) => d.symbolId === data.symbol.symbolId)
+      ...result.deal
+        .filter((d) => d.symbolId === data.symbol.symbolId)
+        .filter((d) => d.closePositionDetail)
     );
   }
   return deals;
