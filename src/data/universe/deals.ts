@@ -56,7 +56,7 @@ interface Options {
   toDate: Date;
 }
 function processor(options: Options): SymbolDataProcessor {
-  const classes = ["Forex", "Crypto Currencies"];
+  const classes = ["Forex", "Crypto Currency"];
   return async (socket, data) => {
     if (!classes.includes(data.assetClass.name || "")) {
       return;
