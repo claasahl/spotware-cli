@@ -5,6 +5,7 @@ import { SymbolData, SymbolDataProcessor } from "./types";
 import * as R from "../../client/requests";
 import {
   ProtoOADeal,
+  ProtoOADealStatus,
   ProtoOATradeSide,
   SpotwareClientSocket,
 } from "@claasahl/spotware-adapter";
@@ -82,7 +83,7 @@ function processor(options: Options): SymbolDataProcessor {
             utcLastUpdateTimestamp:
               d.utcLastUpdateTimestamp && new Date(d.utcLastUpdateTimestamp),
             tradeSide: ProtoOATradeSide[d.tradeSide],
-            dealStatus: ProtoOATradeSide[d.dealStatus],
+            dealStatus: ProtoOADealStatus[d.dealStatus],
           })),
         },
         null,
