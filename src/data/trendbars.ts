@@ -54,7 +54,9 @@ async function* chunks(
       fromTimestamp,
       toTimestamp,
     });
-    yield result.trendbar.filter(isTrendbar).map(toTrendbar);
+    yield result.trendbar
+      .filter(isTrendbar)
+      .map((bar) => toTrendbar(bar, period));
   }
 }
 
@@ -130,13 +132,33 @@ export async function dualDownload(
   }
 }
 
+export function overlap(bars: Trendbar[]) {
+  for (let index = 0; index < bars.length - 1; index++) {
+    const open = bars[index].timestamp;
+    const close = bars[index].timestamp + period(bars[index].period);
+    for (let offset = index + 1; offset < bars.length; offset++) {
+      const refOpen = bars[offset].timestamp;
+      const refClose = bars[offset].timestamp + period(bars[offset].period);
+      if (open <= refOpen && refClose <= close) {
+        // ok
+        continue;
+      } else if (refOpen <= open && close <= refClose) {
+        // ok
+        continue;
+      }
+      return false;
+    }
+  }
+  return true;
+}
+
 interface MultiPeriodOptions {
   ctidTraderAccountId: number;
   symbolId: number;
   periods: ProtoOATrendbarPeriod[];
   fromDate: Date;
   toDate: Date;
-  cb: (...trendbar: Trendbar[]) => void;
+  cb: (trendbar: Trendbar[]) => void;
 }
 export async function multiPeriodDownload(
   socket: SpotwareClientSocket,
@@ -144,6 +166,29 @@ export async function multiPeriodDownload(
 ): Promise<void> {
   const periods = options.periods
     .map((p, index) => ({ period: p, millis: period(p), index }))
-    .sort((a, b) => b.millis - a.millis);
+    .sort((a, b) => a.millis - b.millis);
   console.log(periods);
+  const data = await Promise.all(
+    periods.map(async (p) => {
+      const iterator = chunks(socket, { ...options, period: p.period });
+      return { ...p, iterator, result: await iterator.next() };
+    })
+  );
+  while (periods.length > 0) {
+    const bars = data.map((d) => (d.result.value || [])[0]);
+    if (overlap(bars)) {
+      console.log(bars);
+    }
+  }
+  // const result = await iterators[0].next();
+  // if (result.value) {
+  //   const tmp: Trendbar[] = [];
+  //   result.value.forEach(v => {
+  //     tmp[periods[0].index] = v;
+  //     options.cb(tmp);
+  //   })
+  // }
+  // if(result.done) {
+
+  // }
 }
