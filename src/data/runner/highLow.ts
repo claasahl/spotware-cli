@@ -4,7 +4,14 @@ import git from "isomorphic-git";
 import { SymbolData, SymbolDataProcessor } from "./types";
 import { multiPeriodDownload } from "../trendbars";
 import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
+import { Trendbar } from "../../utils";
 
+interface Extremes {
+  bar: Trendbar;
+  extremes: Trendbar[];
+  low: number;
+  high: number;
+}
 interface Options {
   processSymbol: (data: SymbolData) => boolean;
   fromDate: Date;
@@ -15,23 +22,37 @@ function processor(options: Options): SymbolDataProcessor {
     if (!options.processSymbol(data)) {
       return;
     }
+    const results: { data: SymbolData; extremes: Extremes[] } = {
+      data,
+      extremes: [],
+    };
     await multiPeriodDownload(socket, {
       ctidTraderAccountId: data.trader.ctidTraderAccountId,
       fromDate: options.fromDate,
       toDate: options.toDate,
-      periods: [
-        ProtoOATrendbarPeriod.D1,
-        ProtoOATrendbarPeriod.M1,
-        ProtoOATrendbarPeriod.M5,
-      ],
+      periods: [ProtoOATrendbarPeriod.D1, ProtoOATrendbarPeriod.M1],
       symbolId: data.symbol.symbolId,
       cb: async (bars) => {
-        console.log(JSON.stringify(bars.map((b) => new Date(b.timestamp))));
+        const d1 = bars[1];
+        const m1 = bars[0];
+        const latest = results.extremes[results.extremes.length - 1];
+        if (!latest || latest.bar.timestamp !== d1.timestamp) {
+          const extreme: Extremes = {
+            bar: d1,
+            extremes: [m1],
+            low: m1.low,
+            high: m1.high,
+          };
+          results.extremes.push(extreme);
+          return;
+        }
+        if (latest.high < m1.high || m1.low < latest.low) {
+          latest.extremes.push(m1);
+          latest.high = Math.max(latest.high, m1.high);
+          latest.low = Math.min(latest.low, m1.low);
+        }
       },
     });
-    const results = {
-      data,
-    };
 
     // write JSON file
     const [{ oid }] = await git.log({ fs, depth: 1, ref: "HEAD", dir: "." });
