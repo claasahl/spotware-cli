@@ -1,4 +1,5 @@
 export { default as deals } from "./deals";
+export { default as highLow } from "./highLow";
 export { default as sample } from "./sample";
 
 import debug from "debug";

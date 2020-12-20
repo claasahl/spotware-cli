@@ -4,7 +4,7 @@ import {
 } from "@claasahl/spotware-adapter";
 
 import * as R from "../client/requests";
-import { Trendbar, toTrendbar, isTrendbar } from "../utils";
+import { Trendbar, toTrendbar, isTrendbar, period } from "../utils";
 
 function interval(period: ProtoOATrendbarPeriod): number {
   switch (period) {
@@ -128,4 +128,22 @@ export async function dualDownload(
       }
     }
   }
+}
+
+interface MultiPeriodOptions {
+  ctidTraderAccountId: number;
+  symbolId: number;
+  periods: ProtoOATrendbarPeriod[];
+  fromDate: Date;
+  toDate: Date;
+  cb: (...trendbar: Trendbar[]) => void;
+}
+export async function multiPeriodDownload(
+  socket: SpotwareClientSocket,
+  options: MultiPeriodOptions
+): Promise<void> {
+  const periods = options.periods
+    .map((p, index) => ({ period: p, millis: period(p), index }))
+    .sort((a, b) => b.millis - a.millis);
+  console.log(periods);
 }
