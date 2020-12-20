@@ -6,12 +6,16 @@ import { multiPeriodDownload } from "../trendbars";
 import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
 import { Trendbar } from "../../utils";
 
+interface Extreme {
+  timestamp: number;
+  offset: number;
+  volume: number;
+  value: number;
+  type: "high" | "low";
+}
 interface Extremes {
   bar: Trendbar;
-  extremes: (Pick<Trendbar, "timestamp" | "volume"> & {
-    value: number;
-    type: "high" | "low";
-  })[];
+  extremes: Extreme[];
   low: number;
   high: number;
 }
@@ -56,6 +60,7 @@ function processor(options: Options): SymbolDataProcessor {
         if (latest.high < m1.high) {
           latest.extremes.push({
             timestamp: m1.timestamp,
+            offset: m1.timestamp - latest.bar.timestamp,
             volume: m1.volume,
             value: m1.high,
             type: "high",
@@ -65,6 +70,7 @@ function processor(options: Options): SymbolDataProcessor {
         if (m1.low < latest.low) {
           latest.extremes.push({
             timestamp: m1.timestamp,
+            offset: m1.timestamp - latest.bar.timestamp,
             volume: m1.volume,
             value: m1.low,
             type: "low",
