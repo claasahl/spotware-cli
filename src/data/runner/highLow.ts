@@ -8,7 +8,7 @@ import { Trendbar } from "../../utils";
 
 interface Extremes {
   bar: Trendbar;
-  extremes: Trendbar[];
+  extremes: (Trendbar & { value: number })[];
   low: number;
   high: number;
 }
@@ -39,17 +39,20 @@ function processor(options: Options): SymbolDataProcessor {
         if (!latest || latest.bar.timestamp !== d1.timestamp) {
           const extreme: Extremes = {
             bar: d1,
-            extremes: [m1],
+            extremes: [{ ...m1, value: m1.open }],
             low: m1.low,
             high: m1.high,
           };
           results.extremes.push(extreme);
           return;
         }
-        if (latest.high < m1.high || m1.low < latest.low) {
-          latest.extremes.push(m1);
-          latest.high = Math.max(latest.high, m1.high);
-          latest.low = Math.min(latest.low, m1.low);
+        if (latest.high < m1.high) {
+          latest.extremes.push({ ...m1, value: m1.high });
+          latest.high = m1.high;
+        }
+        if (m1.low < latest.low) {
+          latest.extremes.push({ ...m1, value: m1.low });
+          latest.low = m1.low;
         }
       },
     });
