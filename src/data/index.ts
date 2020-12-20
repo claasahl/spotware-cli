@@ -2,7 +2,7 @@ import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
 import ms from "ms";
 
 import { backtest } from "./backtest";
-import { main, sample, deals } from "./universe";
+import { main, sample, deals } from "./runner";
 import * as E from "./experiments";
 
 const host = process.env.host || "live.ctraderapi.com";
