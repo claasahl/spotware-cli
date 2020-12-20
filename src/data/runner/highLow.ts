@@ -57,6 +57,12 @@ function processor(options: Options): SymbolDataProcessor {
           results.extremes.push(latest);
         }
         if (latest.high < m1.high) {
+          if (
+            latest.extremes.length > 0 &&
+            latest.extremes[latest.extremes.length - 1].type === "high"
+          ) {
+            latest.extremes.pop();
+          }
           latest.extremes.push({
             offset: m1.timestamp - latest.bar.timestamp,
             volume: m1.volume,
@@ -66,6 +72,12 @@ function processor(options: Options): SymbolDataProcessor {
           latest.high = m1.high;
         }
         if (m1.low < latest.low) {
+          if (
+            latest.extremes.length > 0 &&
+            latest.extremes[latest.extremes.length - 1].type === "low"
+          ) {
+            latest.extremes.pop();
+          }
           latest.extremes.push({
             offset: m1.timestamp - latest.bar.timestamp,
             volume: m1.volume,
