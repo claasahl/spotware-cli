@@ -19,9 +19,15 @@ function processor(options: Options): SymbolDataProcessor {
       ctidTraderAccountId: data.trader.ctidTraderAccountId,
       fromDate: options.fromDate,
       toDate: options.toDate,
-      periods: [ProtoOATrendbarPeriod.D1, ProtoOATrendbarPeriod.M1],
+      periods: [
+        ProtoOATrendbarPeriod.D1,
+        ProtoOATrendbarPeriod.M1,
+        ProtoOATrendbarPeriod.M5,
+      ],
       symbolId: data.symbol.symbolId,
-      cb: () => {},
+      cb: async (bars) => {
+        console.log(JSON.stringify(bars.map((b) => new Date(b.timestamp))));
+      },
     });
     const results = {
       data,

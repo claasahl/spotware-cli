@@ -158,7 +158,7 @@ interface MultiPeriodOptions {
   periods: ProtoOATrendbarPeriod[];
   fromDate: Date;
   toDate: Date;
-  cb: (trendbar: Trendbar[]) => void;
+  cb: (trendbar: Trendbar[]) => Promise<void>;
 }
 export async function multiPeriodDownload(
   socket: SpotwareClientSocket,
@@ -174,10 +174,42 @@ export async function multiPeriodDownload(
       return { ...p, iterator, result: await iterator.next() };
     })
   );
-  while (periods.length > 0) {
-    const bars = data.map((d) => (d.result.value || [])[0]);
+  const refresh = async (index: number) => {
+    const d = data[index];
+    if (d.result.value && d.result.value.length === 0 && !d.result.done) {
+      d.result = await d.iterator.next();
+    }
+  };
+  const cleanup = async () => {
+    // always remove the highest-period bar (i.e. M1)
+    if (data[0].result.value) {
+      data[0].result.value.splice(0, 1);
+      await refresh(0);
+    }
+    if (!data[0].result.value) {
+      // probably no more data ...
+      return;
+    }
+
+    // remove lower-period bars, if necessary
+    for (let index = 0; index + 1 < data.length; index++) {
+      while (
+        !overlap([
+          (data[index].result.value || [])[0],
+          (data[index + 1].result.value || [])[0],
+        ])
+      ) {
+        (data[index + 1].result.value || []).splice(0, 1);
+        await refresh(index + 1);
+      }
+    }
+  };
+  while (data[0].result.value) {
+    const values = data.map((d) => d.result.value || []);
+    const bars = values.map((v) => v[0]);
     if (overlap(bars)) {
-      console.log(bars);
+      await options.cb(bars);
+      await cleanup();
     }
   }
   // const result = await iterators[0].next();
