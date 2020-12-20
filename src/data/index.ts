@@ -4,6 +4,7 @@ import ms from "ms";
 import { backtest } from "./backtest";
 import { main, sample, deals } from "./runner";
 import * as E from "./experiments";
+import { SymbolData } from "./runner/types";
 
 const host = process.env.host || "live.ctraderapi.com";
 const port = Number(process.env.port) || 5035;
@@ -88,6 +89,21 @@ const toDate = new Date("2020-11-01T00:00:00.000Z");
 //   },
 //   bt
 // );
+
+const classes = ["Forex", "Crypto Currency"];
+function accountCurrencies(data: SymbolData): boolean {
+  if (!classes.includes(data.assetClass.name || "")) {
+    return false;
+  }
+  if (!data.symbol.symbolName?.includes(data.depositAsset.name)) {
+    return false;
+  }
+  return true;
+}
+
+function currencies(names: string[]): (data: SymbolData) => boolean {
+  return (data) => names.includes(data.symbol.symbolName || "");
+}
 
 main({
   process: deals({

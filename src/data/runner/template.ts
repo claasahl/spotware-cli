@@ -1,11 +1,16 @@
 import fs from "fs";
 import git from "isomorphic-git";
 
-import { SymbolDataProcessor } from "./types";
+import { SymbolData, SymbolDataProcessor } from "./types";
 
-interface Options {}
+interface Options {
+  processSymbol: (data: SymbolData) => boolean;
+}
 function processor(options: Options): SymbolDataProcessor {
   return async (socket, data) => {
+    if (!options.processSymbol(data)) {
+      return;
+    }
     const results = {
       data,
     };
