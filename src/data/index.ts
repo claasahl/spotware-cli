@@ -2,7 +2,7 @@ import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
 import ms from "ms";
 
 import { backtest } from "./backtest";
-import { main, sample, deals, highLow } from "./runner";
+import * as R from "./runner";
 import * as E from "./experiments";
 import { SymbolData } from "./runner/types";
 
@@ -105,10 +105,16 @@ function currencies(...names: string[]): (data: SymbolData) => boolean {
   return (data) => names.includes(data.symbol.symbolName || "");
 }
 
-main({
-  process: highLow({
+R.main({
+  // process: R.highLow({
+  //   processSymbol: currencies("EURGBP"),
+  //   fromDate: new Date("2019-12-01T00:00:00.000Z"),
+  //   toDate: new Date("2020-12-01T00:00:00.000Z"),
+  // }),
+  process: R.metrics({
     processSymbol: currencies("EURGBP"),
     fromDate: new Date("2019-12-01T00:00:00.000Z"),
     toDate: new Date("2020-12-01T00:00:00.000Z"),
+    period: ProtoOATrendbarPeriod.M5,
   }),
 });
