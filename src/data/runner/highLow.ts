@@ -15,7 +15,6 @@ interface Extreme {
 interface Extremes {
   bar: Trendbar;
   extremes: Extreme[];
-  intraday: Trendbar[];
   low: number;
   high: number;
 }
@@ -42,28 +41,21 @@ function processor(options: Options): SymbolDataProcessor {
       ctidTraderAccountId: data.trader.ctidTraderAccountId,
       fromDate: options.fromDate,
       toDate: options.toDate,
-      periods: [
-        ProtoOATrendbarPeriod.D1,
-        ProtoOATrendbarPeriod.M5,
-        ProtoOATrendbarPeriod.M1,
-      ],
+      periods: [ProtoOATrendbarPeriod.D1, ProtoOATrendbarPeriod.M1],
       symbolId: data.symbol.symbolId,
       cb: async (bars) => {
-        const d1 = bars[2];
-        const m5 = bars[1];
+        const d1 = bars[1];
         const m1 = bars[0];
         let latest = results.extremes[results.extremes.length - 1];
         if (!latest || latest.bar.timestamp !== d1.timestamp) {
           latest = {
             bar: d1,
-            intraday: [],
             extremes: [],
             low: m1.low,
             high: m1.high,
           };
           results.extremes.push(latest);
         }
-        latest.intraday.push(m5);
         if (latest.high < m1.high) {
           if (
             latest.extremes.length > 0 &&
