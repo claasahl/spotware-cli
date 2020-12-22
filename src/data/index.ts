@@ -106,15 +106,15 @@ function currencies(...names: string[]): (data: SymbolData) => boolean {
 }
 
 R.main({
-  // process: R.highLow({
-  //   processSymbol: currencies("EURGBP"),
-  //   fromDate: new Date("2019-12-01T00:00:00.000Z"),
-  //   toDate: new Date("2020-12-01T00:00:00.000Z"),
-  // }),
-  process: R.metrics({
+  process: R.highLow({
     processSymbol: currencies("EURGBP"),
     fromDate: new Date("2019-12-01T00:00:00.000Z"),
     toDate: new Date("2020-12-01T00:00:00.000Z"),
-    period: ProtoOATrendbarPeriod.M5,
   }),
+  // process: R.metrics({
+  //   processSymbol: currencies("EURGBP"),
+  //   fromDate: new Date("2019-12-01T00:00:00.000Z"),
+  //   toDate: new Date("2020-12-01T00:00:00.000Z"),
+  //   period: ProtoOATrendbarPeriod.M5,
+  // }),
 });
