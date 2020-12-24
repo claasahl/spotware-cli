@@ -46,8 +46,8 @@ function stopOrder(
   );
   const stopLoss = utils.price(
     tradeSide === ProtoOATradeSide.SELL
-      ? hl.low + range * 0.43
-      : hl.high - range * 0.43,
+      ? hl.low + range * 1.1
+      : hl.high - range * 1.1,
     digits
   );
   R.PROTO_OA_NEW_ORDER_REQ(socket, {
@@ -93,8 +93,8 @@ function limitOrder(
   );
   const stopLoss = utils.price(
     tradeSide === ProtoOATradeSide.BUY
-      ? hl.low - range * 1.44
-      : hl.high + range * 1.44,
+      ? hl.low - range * 2.1
+      : hl.high + range * 2.1,
     digits
   );
   R.PROTO_OA_NEW_ORDER_REQ(socket, {
