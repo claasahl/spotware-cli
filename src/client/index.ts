@@ -126,7 +126,14 @@ async function btceur({ ctidTraderAccountId, symbolId, symbolName }: Symbol) {
   }
 }
 
-const ASSET_CLASSES = ["Forex", "Metals", "Crypto Currency"];
+const ASSET_CLASSES = [
+  "Forex",
+  "Metals",
+  "Crypto Currency", // spotware (demo)
+  "Forex (Spot)",
+  "Metals (Spot)",
+  "Crypto Currency (Spot)", // pepperstone (demo)
+];
 events.on("symbol", async (symbol) => {
   if (!ASSET_CLASSES.includes(symbol.assetClass)) {
     return;
