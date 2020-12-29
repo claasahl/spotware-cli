@@ -50,6 +50,45 @@ async function fetchDeals(
   return deals;
 }
 
+interface GroupedDeal {
+  open: ProtoOADeal;
+  close: ProtoOADeal;
+}
+function groupDealsByPosition(deals: ProtoOADeal[]): GroupedDeal[] {
+  const grouped = new Map<number, Partial<GroupedDeal>>();
+  for (const deal of deals) {
+    const { positionId } = deal;
+    if (!grouped.has(positionId)) {
+      grouped.set(positionId, {});
+    }
+
+    const groupedDeal = grouped.get(positionId);
+    if (!groupedDeal) {
+      continue;
+    }
+    if (deal.closePositionDetail) {
+      groupedDeal.close = deal;
+    } else {
+      groupedDeal.open = deal;
+    }
+  }
+  return Array.from(grouped.values()).filter(
+    (g): g is GroupedDeal => !!g.close && !!g.open
+  );
+}
+
+function makeMoreReadable(deal: ProtoOADeal) {
+  return {
+    ...deal,
+    createTimestamp: new Date(deal.createTimestamp),
+    executionTimestamp: new Date(deal.executionTimestamp),
+    utcLastUpdateTimestamp:
+      deal.utcLastUpdateTimestamp && new Date(deal.utcLastUpdateTimestamp),
+    tradeSide: ProtoOATradeSide[deal.tradeSide],
+    dealStatus: ProtoOADealStatus[deal.dealStatus],
+  };
+}
+
 interface Options {
   processSymbol: (data: SymbolData) => boolean;
   fromDate: Date;
@@ -61,6 +100,7 @@ function processor(options: Options): SymbolDataProcessor {
       return;
     }
     const deals = await fetchDeals(socket, data, options);
+    const groupedDeals = groupDealsByPosition(deals);
 
     // write JSON file
     const [{ oid }] = await git.log({ fs, depth: 1, ref: "HEAD", dir: "." });
@@ -71,14 +111,9 @@ function processor(options: Options): SymbolDataProcessor {
       JSON.stringify(
         {
           data,
-          deals: deals.map((d) => ({
-            ...d,
-            createTimestamp: new Date(d.createTimestamp),
-            executionTimestamp: new Date(d.executionTimestamp),
-            utcLastUpdateTimestamp:
-              d.utcLastUpdateTimestamp && new Date(d.utcLastUpdateTimestamp),
-            tradeSide: ProtoOATradeSide[d.tradeSide],
-            dealStatus: ProtoOADealStatus[d.dealStatus],
+          deals: groupedDeals.map((g) => ({
+            open: makeMoreReadable(g.open),
+            close: makeMoreReadable(g.close),
           })),
         },
         null,
