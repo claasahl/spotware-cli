@@ -51,6 +51,20 @@ async function fetchDeals(
 }
 
 interface GroupedDeal {
+  tradeSide: string;
+  volume: number;
+  profit: number;
+
+  entryPrice: number;
+  entryTimestamp: number;
+  entryDate: Date;
+  entryDealStatus: string;
+
+  closePrice: number;
+  closeTimestamp: number;
+  closedDate: Date;
+  closeDealStatus: string;
+
   open: ProtoOADeal;
   close: ProtoOADeal;
 }
@@ -72,21 +86,26 @@ function groupDealsByPosition(deals: ProtoOADeal[]): GroupedDeal[] {
       groupedDeal.open = deal;
     }
   }
-  return Array.from(grouped.values()).filter(
-    (g): g is GroupedDeal => !!g.close && !!g.open
-  );
-}
+  return Array.from(grouped.values())
+    .filter(
+      (g): g is Pick<GroupedDeal, "close" | "open"> => !!g.close && !!g.open
+    )
+    .map((g) => ({
+      ...g,
+      tradeSide: ProtoOATradeSide[g.open.tradeSide],
+      volume: g.open.volume,
+      profit: g.close.closePositionDetail?.grossProfit || 0,
 
-function makeMoreReadable(deal: ProtoOADeal) {
-  return {
-    ...deal,
-    createTimestamp: new Date(deal.createTimestamp),
-    executionTimestamp: new Date(deal.executionTimestamp),
-    utcLastUpdateTimestamp:
-      deal.utcLastUpdateTimestamp && new Date(deal.utcLastUpdateTimestamp),
-    tradeSide: ProtoOATradeSide[deal.tradeSide],
-    dealStatus: ProtoOADealStatus[deal.dealStatus],
-  };
+      entryPrice: 100000 * (g.open.executionPrice || 0),
+      entryTimestamp: g.open.executionTimestamp,
+      entryDate: new Date(g.open.executionTimestamp),
+      entryDealStatus: ProtoOADealStatus[g.open.dealStatus],
+
+      closePrice: 100000 * (g.close.executionPrice || 0),
+      closeTimestamp: g.close.executionTimestamp,
+      closedDate: new Date(g.close.executionTimestamp),
+      closeDealStatus: ProtoOADealStatus[g.close.dealStatus],
+    }));
 }
 
 interface Options {
@@ -111,10 +130,7 @@ function processor(options: Options): SymbolDataProcessor {
       JSON.stringify(
         {
           data,
-          deals: groupedDeals.map((g) => ({
-            open: makeMoreReadable(g.open),
-            close: makeMoreReadable(g.close),
-          })),
+          deals: groupedDeals,
         },
         null,
         2
