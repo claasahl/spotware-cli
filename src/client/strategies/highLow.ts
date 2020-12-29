@@ -40,14 +40,14 @@ function stopOrder(
   const range = hl.high - hl.low;
   const stopPrice = utils.price(
     tradeSide === ProtoOATradeSide.SELL
-      ? hl.low + range * 0.1
-      : hl.high - range * 0.1,
+      ? hl.low - range * 0.1
+      : hl.high + range * 0.1,
     digits
   );
   const stopLoss = utils.price(
     tradeSide === ProtoOATradeSide.SELL
-      ? hl.low + range * 1.1
-      : hl.high - range * 1.1,
+      ? hl.low - range * 1.1
+      : hl.high + range * 1.1,
     digits
   );
   R.PROTO_OA_NEW_ORDER_REQ(socket, {
