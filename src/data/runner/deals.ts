@@ -44,25 +44,20 @@ async function fetchDeals(
       );
     }
     deals.push(
-      ...result.deal
-        .filter((d) => d.symbolId === data.symbol.symbolId)
-        .filter((d) => d.closePositionDetail)
+      ...result.deal.filter((d) => d.symbolId === data.symbol.symbolId)
     );
   }
   return deals;
 }
 
 interface Options {
+  processSymbol: (data: SymbolData) => boolean;
   fromDate: Date;
   toDate: Date;
 }
 function processor(options: Options): SymbolDataProcessor {
-  const classes = ["Forex", "Crypto Currency"];
   return async (socket, data) => {
-    if (!classes.includes(data.assetClass.name || "")) {
-      return;
-    }
-    if (!data.symbol.symbolName?.includes(data.depositAsset.name)) {
+    if (!options.processSymbol(data)) {
       return;
     }
     const deals = await fetchDeals(socket, data, options);
