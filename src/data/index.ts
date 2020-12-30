@@ -105,21 +105,20 @@ function currencies(...names: string[]): (data: SymbolData) => boolean {
   return (data) => names.includes(data.symbol.symbolName || "");
 }
 
-R.main({
-  process: R.highLow({
-    processSymbol: currencies("EURGBP"),
-    fromDate: new Date("2020-12-01T00:00:00.000Z"),
-    toDate: new Date("2020-12-30T00:00:00.000Z"),
-  }),
-  // process: R.metrics({
-  //   processSymbol: currencies("EURGBP"),
-  //   fromDate: new Date("2020-12-01T00:00:00.000Z"),
-  //   toDate: new Date("2020-12-30T00:00:00.000Z"),
-  //   period: ProtoOATrendbarPeriod.M5,
-  // }),
-  // process: R.deals({
-  //   processSymbol: currencies("EURGBP"),
-  //   fromDate: new Date("2020-12-01T00:00:00.000Z"),
-  //   toDate: new Date("2020-12-30T00:00:00.000Z"),
-  // }),
-});
+async function main() {
+  const processSymbol = currencies("EURGBP");
+  const fromDate = new Date("2020-12-01T00:00:00.000Z");
+  const toDate = new Date("2020-12-29T22:00:00.000Z");
+
+  await R.main({ process: R.highLow({ processSymbol, fromDate, toDate }) });
+  await R.main({
+    process: R.metrics({
+      processSymbol,
+      fromDate,
+      toDate,
+      period: ProtoOATrendbarPeriod.M5,
+    }),
+  });
+  await R.main({ process: R.deals({ processSymbol, fromDate, toDate }) });
+}
+main();
