@@ -111,15 +111,15 @@ R.main({
   //   fromDate: new Date("2019-12-01T00:00:00.000Z"),
   //   toDate: new Date("2020-12-01T00:00:00.000Z"),
   // }),
-  // process: R.metrics({
-  //   processSymbol: currencies("EURGBP"),
-  //   fromDate: new Date("2019-12-01T00:00:00.000Z"),
-  //   toDate: new Date("2020-12-01T00:00:00.000Z"),
-  //   period: ProtoOATrendbarPeriod.M5,
-  // }),
-  process: R.deals({
+  process: R.metrics({
     processSymbol: currencies("EURGBP"),
     fromDate: new Date("2020-12-01T00:00:00.000Z"),
     toDate: new Date("2020-12-30T00:00:00.000Z"),
+    period: ProtoOATrendbarPeriod.M5,
   }),
+  // process: R.deals({
+  //   processSymbol: currencies("EURGBP"),
+  //   fromDate: new Date("2020-12-01T00:00:00.000Z"),
+  //   toDate: new Date("2020-12-30T00:00:00.000Z"),
+  // }),
 });
