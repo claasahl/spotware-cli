@@ -118,6 +118,10 @@ function processor(options: Options): SymbolDataProcessor {
     if (!options.processSymbol(data)) {
       return;
     }
+    const symbolDetails = await R.PROTO_OA_SYMBOL_BY_ID_REQ(socket, {
+      ctidTraderAccountId: data.trader.ctidTraderAccountId,
+      symbolId: [data.symbol.symbolId],
+    });
     const deals = await fetchDeals(socket, data, options);
     const groupedDeals = groupDealsByPosition(deals);
 
@@ -129,7 +133,7 @@ function processor(options: Options): SymbolDataProcessor {
       filename,
       JSON.stringify(
         {
-          data,
+          data: { ...data, symbolDetails },
           deals: groupedDeals,
         },
         null,
