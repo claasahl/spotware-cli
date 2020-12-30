@@ -119,7 +119,7 @@ R.main({
   // }),
   process: R.deals({
     processSymbol: currencies("EURGBP"),
-    fromDate: new Date("2020-11-01T00:00:00.000Z"),
-    toDate: new Date("2020-12-28T00:00:00.000Z"),
+    fromDate: new Date("2020-12-01T00:00:00.000Z"),
+    toDate: new Date("2020-12-30T00:00:00.000Z"),
   }),
 });
