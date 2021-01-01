@@ -10,29 +10,24 @@ interface Options {
 }
 export function atr(options: Options) {
   const buffer = bufferedTrendbars(options);
-  const prop = (curr: Trendbar, prev?: Trendbar) => {
-    const range = curr.high - curr.low;
-    if (prev) {
-      const highGap = Math.abs(curr.high - prev.close);
-      const lowGap = Math.abs(curr.low - prev.close);
-      return Math.max(range, highGap, lowGap);
-    }
-    return range;
-  };
-  let sum = 0;
   return (msg: Messages): number | undefined => {
-    const { bars, added, removed } = buffer(msg);
-    sum += added.reduce(
-      (prev, curr, index, array) => prev + prop(curr, array[index - 1]),
-      0
-    );
-    sum -= removed.reduce(
-      (prev, curr, index, array) => prev + prop(curr, array[index - 1]),
-      0
-    );
+    const { bars } = buffer(msg);
     if (bars.length !== options.periods) {
       return undefined;
     }
+    const sum = bars.reduce((prev, curr, index, array) => {
+      if (index === 0) {
+        return 0;
+      }
+      const prevBar = array[index - 1];
+      if (prevBar) {
+        const range = curr.high - curr.low;
+        const highGap = Math.abs(curr.high - prevBar.close);
+        const lowGap = Math.abs(curr.low - prevBar.close);
+        return prev + Math.max(range, highGap, lowGap);
+      }
+      return prev + curr.high - curr.low;
+    }, 0);
     return Math.round(sum / options.periods);
   };
 }
