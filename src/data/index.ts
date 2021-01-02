@@ -113,7 +113,8 @@ async function main() {
     "EURNZD",
     "EURJPY",
     "EURCHF",
-    "EURCAD"
+    "EURCAD",
+    "BTC/EUR"
   );
   const fromDate = new Date("2019-12-01T00:00:00.000Z");
   const toDate = new Date("2020-12-01T00:00:00.000Z");
