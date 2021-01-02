@@ -21,6 +21,7 @@ interface Options {
   periodsShortTerm?: number;
   periodsLongTerm?: number;
   periodsWPR?: number;
+  periodsATR?: number;
 }
 
 interface Result {
@@ -31,6 +32,7 @@ interface Result {
   smaShortTerm?: number;
   smaLongTerm?: number;
   wpr?: number;
+  atr?: number;
 }
 export function metrics(options: Options) {
   const { ctidTraderAccountId, symbolId, period } = options;
@@ -73,6 +75,12 @@ export function metrics(options: Options) {
     period,
     periods: options.periodsWPR || 20,
   });
+  const averageTrueRange = utils.atr({
+    ctidTraderAccountId,
+    symbolId,
+    period,
+    periods: options.periodsATR || 20,
+  });
   return (_timestamp: number, msg: Messages): Result | undefined => {
     const smaVolume = volumeSma(msg);
     const smaRange = rangeSma(msg);
@@ -80,6 +88,7 @@ export function metrics(options: Options) {
     const smaShortTerm = shortTermSma(msg);
     const smaLongTerm = longTermSma(msg);
     const wpr = williamsPercentRange(msg);
+    const atr = averageTrueRange(msg);
 
     if (msg.payloadType !== ProtoOAPayloadType.PROTO_OA_SPOT_EVENT) {
       return;
@@ -97,6 +106,7 @@ export function metrics(options: Options) {
       smaShortTerm,
       smaLongTerm,
       wpr,
+      atr,
     };
     return data;
   };
@@ -117,6 +127,7 @@ const csvHeaders = [
   "smaShortTerm",
   "smaLongTerm",
   "wpr",
+  "atr",
 ];
 
 const csvData = (trendbar: utils.Trendbar, result?: Result) => [
@@ -134,6 +145,7 @@ const csvData = (trendbar: utils.Trendbar, result?: Result) => [
   result?.smaShortTerm,
   result?.smaLongTerm,
   result?.wpr,
+  result?.atr,
 ];
 
 export const run: Experiment = async (options, backtest) => {
