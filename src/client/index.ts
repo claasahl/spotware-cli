@@ -100,6 +100,18 @@ events.on("symbol", async (symbol) => {
 
   if (symbol.symbolName === "EURGBP") {
     await highLow(symbol, 20, ms("11h"), ms("12h"));
+  } else if (symbol.symbolName === "EURUSD") {
+    await highLow(symbol, 20, ms("12h"), ms("13h"));
+  } else if (symbol.symbolName === "EURNZD") {
+    await highLow(symbol, 20, ms("17h"), ms("18h"));
+  } else if (symbol.symbolName === "EURCAD") {
+    await highLow(symbol, 20, ms("15h"), ms("16h"));
+  } else if (symbol.symbolName === "EURAUD") {
+    await highLow(symbol, 20, ms("15h"), ms("16h"));
+  } else if (symbol.symbolName === "EURCHF") {
+    await highLow(symbol, 20, ms("14h"), ms("15h"));
+  } else if (symbol.symbolName === "EURJPY") {
+    await highLow(symbol, 20, ms("14h"), ms("15h"));
   } else if (symbol.symbolName === "BTC/EUR") {
     await highLow(symbol, 20, ms("5h"), ms("6h"));
   }
