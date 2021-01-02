@@ -106,9 +106,17 @@ function currencies(...names: string[]): (data: SymbolData) => boolean {
 }
 
 async function main() {
-  const processSymbol = currencies("EURGBP");
-  const fromDate = new Date("2020-12-01T00:00:00.000Z");
-  const toDate = new Date("2020-12-29T22:00:00.000Z");
+  const processSymbol = currencies(
+    "EURGBP",
+    "EURUSD",
+    "EURAUD",
+    "EURNZD",
+    "EURJPY",
+    "EURCHF",
+    "EURCAD"
+  );
+  const fromDate = new Date("2019-12-01T00:00:00.000Z");
+  const toDate = new Date("2020-12-01T00:00:00.000Z");
 
   await R.main({ process: R.highLow({ processSymbol, fromDate, toDate }) });
   await R.main({
