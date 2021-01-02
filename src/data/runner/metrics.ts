@@ -14,6 +14,7 @@ type Metric = utils.Trendbar & {
   smaShortTerm?: number;
   smaLongTerm?: number;
   wpr?: number;
+  atr?: number;
 };
 interface Options {
   processSymbol: (data: SymbolData) => boolean;
@@ -26,6 +27,7 @@ interface Options {
   periodsShortTerm?: number;
   periodsLongTerm?: number;
   periodsWPR?: number;
+  periodsATR?: number;
 }
 function processor(options: Options): SymbolDataProcessor {
   return async (socket, data) => {
@@ -79,6 +81,12 @@ function processor(options: Options): SymbolDataProcessor {
       period,
       periods: options.periodsWPR || 20,
     });
+    const averageTrueRange = utils.atr({
+      ctidTraderAccountId,
+      symbolId,
+      period,
+      periods: options.periodsATR || 20,
+    });
     await multiPeriodDownload(socket, {
       ctidTraderAccountId,
       fromDate: options.fromDate,
@@ -99,6 +107,7 @@ function processor(options: Options): SymbolDataProcessor {
           smaShortTerm: shortTermSma(msg),
           smaLongTerm: longTermSma(msg),
           wpr: williamsPercentRange(msg),
+          atr: averageTrueRange(msg),
         });
       },
     });
