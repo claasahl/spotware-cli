@@ -2,7 +2,7 @@ import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
 import fs from "fs";
 import git from "isomorphic-git";
 
-import { SymbolData, SymbolDataProcessor } from "./types";
+import { SymbolData, SymbolDataProcessor } from "../runner/types";
 import { multiPeriodDownload } from "../trendbars";
 import * as utils from "../../utils";
 import { toLiveTrendbar } from "../utils";

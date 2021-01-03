@@ -1,7 +1,7 @@
 import fs from "fs";
 import git from "isomorphic-git";
 
-import { SymbolData, SymbolDataProcessor } from "./types";
+import { SymbolData, SymbolDataProcessor } from "../runner/types";
 
 interface Options {
   processSymbol: (data: SymbolData) => boolean;

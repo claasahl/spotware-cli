@@ -1,7 +1,7 @@
 import fs from "fs";
 import git from "isomorphic-git";
 
-import { SymbolData, SymbolDataProcessor } from "./types";
+import { SymbolData, SymbolDataProcessor } from "../runner/types";
 import * as R from "../../client/requests";
 import {
   ProtoOADeal,

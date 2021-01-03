@@ -1,6 +1,6 @@
 import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
 
-import { SymbolDataProcessor } from "./types";
+import { SymbolDataProcessor } from "../runner/types";
 import { download } from "../trendbars";
 import * as utils from "../../utils";
 
