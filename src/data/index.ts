@@ -3,17 +3,6 @@ import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
 import { main as run, SymbolData } from "./runner";
 import * as E from "./experiments";
 
-const classes = ["Forex", "Crypto Currency"];
-function accountCurrencies(data: SymbolData): boolean {
-  if (!classes.includes(data.assetClass.name || "")) {
-    return false;
-  }
-  if (!data.symbol.symbolName?.includes(data.depositAsset.name)) {
-    return false;
-  }
-  return true;
-}
-
 function currencies(...names: string[]): (data: SymbolData) => boolean {
   return (data) => names.includes(data.symbol.symbolName || "");
 }
