@@ -1,3 +1,5 @@
+export * from "./types";
+
 import debug from "debug";
 import fs from "fs";
 import { format } from "@fast-csv/format";

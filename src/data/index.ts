@@ -1,7 +1,7 @@
 import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
 
-import * as R from "./runner";
-import { SymbolData } from "./runner/types";
+import { main as run, SymbolData } from "./runner";
+import * as E from "./experiments";
 
 const classes = ["Forex", "Crypto Currency"];
 function accountCurrencies(data: SymbolData): boolean {
@@ -31,15 +31,15 @@ async function main() {
   const fromDate = new Date("2019-12-01T00:00:00.000Z");
   const toDate = new Date("2020-12-01T00:00:00.000Z");
 
-  await R.main({ process: R.highLow({ processSymbol, fromDate, toDate }) });
-  await R.main({
-    process: R.metrics({
+  await run({ process: E.highLow({ processSymbol, fromDate, toDate }) });
+  await run({
+    process: E.metrics({
       processSymbol,
       fromDate,
       toDate,
       period: ProtoOATrendbarPeriod.M5,
     }),
   });
-  await R.main({ process: R.deals({ processSymbol, fromDate, toDate }) });
+  await run({ process: E.deals({ processSymbol, fromDate, toDate }) });
 }
 main();
