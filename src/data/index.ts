@@ -9,16 +9,16 @@ function currencies(...names: string[]): (data: SymbolData) => boolean {
 
 async function main() {
   const processSymbol = currencies(
-    "EURGBP",
-    "EURUSD",
-    "EURAUD",
-    "EURNZD",
-    "EURJPY",
-    "EURCHF",
-    "EURCAD"
+    "EURGBP"
+    // "EURUSD",
+    // "EURAUD",
+    // "EURNZD",
+    // "EURJPY",
+    // "EURCHF",
+    // "EURCAD"
   );
   const fromDate = new Date("2019-12-01T00:00:00.000Z");
-  const toDate = new Date("2020-12-01T00:00:00.000Z");
+  const toDate = new Date("2021-01-16T00:00:00.000Z");
 
   await run({ process: E.highLow({ processSymbol, fromDate, toDate }) });
   await run({
