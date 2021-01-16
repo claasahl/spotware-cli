@@ -31,6 +31,10 @@ function stopOrder(
     expirationOffset,
     riskInEur,
     convert,
+    entry: E = 0.1,
+    takeProfit: TP = 1.5,
+    stopLoss: SL = 1.0,
+    trailingStopLoss,
   } = options;
   const { digits, stepVolume = 100000 } = symbol;
   const orderType = ProtoOAOrderType.STOP;
@@ -38,16 +42,21 @@ function stopOrder(
   const label = `${ProtoOAOrderType[orderType]}-${oid}`;
 
   const range = hl.high - hl.low;
-  const stopPrice = utils.price(
+  const entry =
     tradeSide === ProtoOATradeSide.SELL
-      ? hl.low - range * 0.1
-      : hl.high + range * 0.1,
+      ? hl.low - range * E
+      : hl.high + range * E;
+  const stopPrice = utils.price(entry, digits);
+  const takeProfit = utils.price(
+    tradeSide === ProtoOATradeSide.SELL
+      ? entry - range * TP
+      : entry + range * TP,
     digits
   );
   const stopLoss = utils.price(
     tradeSide === ProtoOATradeSide.SELL
-      ? hl.low + range * 0.9
-      : hl.high - range * 0.9,
+      ? entry + range * SL
+      : entry - range * SL,
     digits
   );
   R.PROTO_OA_NEW_ORDER_REQ(socket, {
@@ -58,54 +67,8 @@ function stopOrder(
     volume: utils.volume(stopPrice, stopLoss, riskInEur, stepVolume, convert),
     stopPrice,
     stopLoss,
-    trailingStopLoss: true,
-    comment,
-    label,
-    expirationTimestamp: Date.now() + expirationOffset,
-  });
-}
-function limitOrder(
-  options: Options,
-  hl: utils.HighLowResults,
-  oid: string,
-  symbol: ProtoOASymbol,
-  tradeSide: ProtoOATradeSide
-) {
-  const {
-    socket,
-    ctidTraderAccountId,
-    symbolId,
-    expirationOffset,
-    riskInEur,
-    convert,
-  } = options;
-  const { digits, stepVolume = 100000 } = symbol;
-  const orderType = ProtoOAOrderType.LIMIT;
-  const comment = `${ProtoOAOrderType[orderType]}-${oid}`;
-  const label = `${ProtoOAOrderType[orderType]}-${oid}`;
-
-  const range = hl.high - hl.low;
-  const limitPrice = utils.price(
-    tradeSide === ProtoOATradeSide.BUY
-      ? hl.low - range * 1.1
-      : hl.high + range * 1.1,
-    digits
-  );
-  const stopLoss = utils.price(
-    tradeSide === ProtoOATradeSide.BUY
-      ? hl.low - range * 2.1
-      : hl.high + range * 2.1,
-    digits
-  );
-  R.PROTO_OA_NEW_ORDER_REQ(socket, {
-    ctidTraderAccountId,
-    symbolId,
-    orderType,
-    tradeSide,
-    volume: utils.volume(limitPrice, stopLoss, riskInEur, stepVolume, convert),
-    limitPrice,
-    stopLoss,
-    trailingStopLoss: true,
+    takeProfit,
+    trailingStopLoss,
     comment,
     label,
     expirationTimestamp: Date.now() + expirationOffset,
@@ -121,6 +84,10 @@ interface Options {
   convert?: boolean;
   lowerThreshold: number;
   upperThreshold: number;
+  entry?: number;
+  takeProfit?: number;
+  stopLoss?: number;
+  trailingStopLoss?: boolean;
   expirationOffset: number;
 }
 export default async function strategy(options: Options) {
@@ -166,8 +133,6 @@ export default async function strategy(options: Options) {
       offset >= lowerThreshold && offset <= upperThreshold;
     if (!bla.crossedThreshold && crossedThreshold) {
       log("%j", bla);
-      limitOrder(options, hl, oid, symbol, ProtoOATradeSide.SELL);
-      limitOrder(options, hl, oid, symbol, ProtoOATradeSide.BUY);
       stopOrder(options, hl, oid, symbol, ProtoOATradeSide.SELL);
       stopOrder(options, hl, oid, symbol, ProtoOATradeSide.BUY);
     }
