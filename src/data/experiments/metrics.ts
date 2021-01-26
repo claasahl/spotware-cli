@@ -116,7 +116,9 @@ function processor(options: Options): SymbolDataProcessor {
     const [{ oid }] = await git.log({ fs, depth: 1, ref: "HEAD", dir: "." });
     const symbol = data.symbol.symbolName?.replace("/", "");
     const ctid = data.trader.ctidTraderAccountId;
-    const filename = `./metrics-${symbol}-${ctid}-${oid}.json`;
+    const filename = `./metrics-${symbol}-${
+      ProtoOATrendbarPeriod[options.period]
+    }-${ctid}-${oid}.json`;
     await fs.promises.writeFile(filename, JSON.stringify(results));
   };
 }
