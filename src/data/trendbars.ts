@@ -8,8 +8,10 @@ import { Trendbar, toTrendbar, isTrendbar, period } from "../utils";
 
 function interval(period: ProtoOATrendbarPeriod): number {
   switch (period) {
+    case ProtoOATrendbarPeriod.W1:
     case ProtoOATrendbarPeriod.D1:
       return 31622400000;
+    case ProtoOATrendbarPeriod.H4:
     case ProtoOATrendbarPeriod.H1:
     case ProtoOATrendbarPeriod.M30:
     case ProtoOATrendbarPeriod.M15:
