@@ -18,14 +18,30 @@ async function main() {
     // "EURCAD"
   );
   const fromDate = new Date("2019-12-01T00:00:00.000Z");
-  const toDate = new Date("2021-01-26T00:00:00.000Z");
+  const toDate = new Date("2021-01-28T00:00:00.000Z");
 
   await run({
     process: E.metrics({
       processSymbol,
       fromDate,
       toDate,
+      period: ProtoOATrendbarPeriod.W1,
+    }),
+  });
+  await run({
+    process: E.metrics({
+      processSymbol,
+      fromDate,
+      toDate,
       period: ProtoOATrendbarPeriod.D1,
+    }),
+  });
+  await run({
+    process: E.metrics({
+      processSymbol,
+      fromDate,
+      toDate,
+      period: ProtoOATrendbarPeriod.H4,
     }),
   });
   await run({
