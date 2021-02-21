@@ -9,7 +9,7 @@ function currencies(...names: string[]): (data: SymbolData) => boolean {
 
 async function main() {
   const processSymbol = currencies(
-    // "EURGBP",
+    "EURGBP",
     "EURUSD"
     // "EURAUD",
     // "EURNZD",
@@ -18,7 +18,7 @@ async function main() {
     // "EURCAD"
   );
   const fromDate = new Date("2019-12-01T00:00:00.000Z");
-  const toDate = new Date("2021-02-15T00:00:00.000Z");
+  const toDate = new Date("2021-02-21T00:00:00.000Z");
 
   await run({
     process: E.deals({
@@ -40,6 +40,38 @@ async function main() {
       fromDate,
       toDate,
       period: ProtoOATrendbarPeriod.M1,
+    }),
+  });
+  await run({
+    process: E.metrics({
+      processSymbol,
+      fromDate,
+      toDate,
+      period: ProtoOATrendbarPeriod.M5,
+    }),
+  });
+  await run({
+    process: E.metrics({
+      processSymbol,
+      fromDate,
+      toDate,
+      period: ProtoOATrendbarPeriod.H1,
+    }),
+  });
+  await run({
+    process: E.metrics({
+      processSymbol,
+      fromDate,
+      toDate,
+      period: ProtoOATrendbarPeriod.H4,
+    }),
+  });
+  await run({
+    process: E.metrics({
+      processSymbol,
+      fromDate,
+      toDate,
+      period: ProtoOATrendbarPeriod.D1,
     }),
   });
 }
