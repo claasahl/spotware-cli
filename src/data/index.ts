@@ -1,89 +1,78 @@
 import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
-import ms from "ms";
 
-import { backtest } from "./backtest";
+import { main as run, SymbolData } from "./runner";
 import * as E from "./experiments";
 
-const host = process.env.host || "live.ctraderapi.com";
-const port = Number(process.env.port) || 5035;
-const useTLS = process.env.useTLS === "true";
+function currencies(...names: string[]): (data: SymbolData) => boolean {
+  return (data) => names.includes(data.symbol.symbolName || "");
+}
 
-const bt = (options: E.ExperimentBacktestOptions) =>
-  backtest({
-    ...options,
-    connection: {
-      port,
-      host,
-      useTLS,
-    },
-    authentication: {
-      clientId: process.env.clientId || "",
-      clientSecret: process.env.clientSecret || "",
-      accessToken: process.env.accessToken || "",
-      refreshToken: process.env.refreshToken || "",
-    },
-    fromDate,
-    toDate,
+async function main() {
+  const processSymbol = currencies(
+    "EURGBP",
+    "EURUSD"
+    // "EURAUD",
+    // "EURNZD",
+    // "EURJPY",
+    // "EURCHF",
+    // "EURCAD"
+  );
+  const fromDate = new Date("2019-12-01T00:00:00.000Z");
+  const toDate = new Date("2021-02-21T00:00:00.000Z");
+
+  await run({
+    process: E.deals({
+      fromDate,
+      toDate,
+      processSymbol,
+    }),
   });
-
-const symbol = "EURGBP";
-// const symbol = "BTC/EUR";
-const fromDate = new Date("2020-10-01T00:00:00.000Z");
-const toDate = new Date("2020-11-01T00:00:00.000Z");
-
-// E.metrics(
-//   {
-//     symbol,
-//     period: ProtoOATrendbarPeriod.H1,
-//     forsight: {
-//       offset: ms("0h"),
-//       period: ProtoOATrendbarPeriod.M1,
-//     },
-//   },
-//   bt
-// );
-// E.vwap(
-//   {
-//     symbol,
-//     period: ProtoOATrendbarPeriod.M1,
-//     forsight: {
-//       offset: ms("0h"),
-//       period: ProtoOATrendbarPeriod.M1,
-//     },
-//   },
-//   bt
-// );
-// E.insideBarMomentum(
-//   {
-//     symbol,
-//     period: ProtoOATrendbarPeriod.H1,
-//     forsight: {
-//       offset: ms("12h"),
-//       period: ProtoOATrendbarPeriod.M1,
-//     },
-//   },
-//   bt
-// );
-// E.priceRange({ symbol, period: ProtoOATrendbarPeriod.M5, forsight: ms("12h") }, bt);
-// E.highLow(
-//   {
-//     symbol,
-//     period: ProtoOATrendbarPeriod.D1,
-//     forsight: {
-//       offset: ms("24h"),
-//       period: ProtoOATrendbarPeriod.M5,
-//     },
-//   },
-//   bt
-// );
-E.recurringPriceLevels(
-  {
-    symbol,
-    period: ProtoOATrendbarPeriod.M1,
-    forsight: {
-      offset: ms("0h"),
+  await run({
+    process: E.highLow({
+      fromDate,
+      toDate,
+      processSymbol,
+    }),
+  });
+  await run({
+    process: E.metrics({
+      processSymbol,
+      fromDate,
+      toDate,
       period: ProtoOATrendbarPeriod.M1,
-    },
-  },
-  bt
-);
+    }),
+  });
+  await run({
+    process: E.metrics({
+      processSymbol,
+      fromDate,
+      toDate,
+      period: ProtoOATrendbarPeriod.M5,
+    }),
+  });
+  await run({
+    process: E.metrics({
+      processSymbol,
+      fromDate,
+      toDate,
+      period: ProtoOATrendbarPeriod.H1,
+    }),
+  });
+  await run({
+    process: E.metrics({
+      processSymbol,
+      fromDate,
+      toDate,
+      period: ProtoOATrendbarPeriod.H4,
+    }),
+  });
+  await run({
+    process: E.metrics({
+      processSymbol,
+      fromDate,
+      toDate,
+      period: ProtoOATrendbarPeriod.D1,
+    }),
+  });
+}
+main();

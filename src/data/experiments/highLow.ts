@@ -1,88 +1,100 @@
-import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
-import { format } from "@fast-csv/format";
 import fs from "fs";
 import git from "isomorphic-git";
 
-import * as utils from "../../utils";
-import { Experiment } from "./types";
+import { SymbolData, SymbolDataProcessor } from "../runner/types";
+import { multiPeriodDownload } from "../trendbars";
+import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
+import { Trendbar } from "../../utils";
 
-const csvHeaders = [
-  "volume",
-  "open",
-  "high",
-  "low",
-  "close",
-  "period",
-  "timestamp",
-  "date",
-  "highPrice1",
-  "highPrice1Timestamp",
-  "lowPrice1",
-  "lowPrice1Timestamp",
-  "highPrice2",
-  "highPrice2Timestamp",
-  "lowPrice2",
-  "lowPrice2Timestamp",
-  "json",
-];
-
-function high(bar?: utils.Trendbar) {
-  if (!bar) {
-    return [undefined, undefined];
-  }
-  return [bar.high, bar.timestamp];
+interface Extreme {
+  offset: number;
+  volume: number;
+  value: number;
+  type: "high" | "low";
 }
-function low(bar?: utils.Trendbar) {
-  if (!bar) {
-    return [undefined, undefined];
-  }
-  return [bar.low, bar.timestamp];
+interface Extremes {
+  bar: Trendbar;
+  extremes: Extreme[];
+  low: number;
+  high: number;
 }
-const csvData = (
-  trendbar: utils.Trendbar,
-  highs: utils.Trendbar[],
-  lows: utils.Trendbar[],
-  merged: utils.Trendbar[]
-) => [
-  trendbar.volume,
-  trendbar.open,
-  trendbar.high,
-  trendbar.low,
-  trendbar.close,
-  trendbar.period,
-  trendbar.timestamp,
-  new Date(trendbar.timestamp).toISOString(),
-  ...high(highs[0]),
-  ...low(lows[0]),
-  ...high(highs[1]),
-  ...low(lows[1]),
-  JSON.stringify(merged),
-];
+interface Options {
+  processSymbol: (data: SymbolData) => boolean;
+  fromDate: Date;
+  toDate: Date;
+}
+function processor(options: Options): SymbolDataProcessor {
+  return async (socket, data) => {
+    if (!options.processSymbol(data)) {
+      return;
+    }
+    const results: {
+      data: SymbolData;
+      options: Options;
+      extremes: Extremes[];
+    } = {
+      data,
+      options,
+      extremes: [],
+    };
+    await multiPeriodDownload(socket, {
+      ctidTraderAccountId: data.trader.ctidTraderAccountId,
+      fromDate: options.fromDate,
+      toDate: options.toDate,
+      periods: [ProtoOATrendbarPeriod.D1, ProtoOATrendbarPeriod.M1],
+      symbolId: data.symbol.symbolId,
+      cb: async (bars) => {
+        const d1 = bars[1];
+        const m1 = bars[0];
+        let latest = results.extremes[results.extremes.length - 1];
+        if (!latest || latest.bar.timestamp !== d1.timestamp) {
+          latest = {
+            bar: d1,
+            extremes: [],
+            low: m1.low,
+            high: m1.high,
+          };
+          results.extremes.push(latest);
+        }
+        if (latest.high < m1.high) {
+          if (
+            latest.extremes.length > 0 &&
+            latest.extremes[latest.extremes.length - 1].type === "high"
+          ) {
+            latest.extremes.pop();
+          }
+          latest.extremes.push({
+            offset: m1.timestamp - latest.bar.timestamp,
+            volume: m1.volume,
+            value: m1.high,
+            type: "high",
+          });
+          latest.high = m1.high;
+        }
+        if (m1.low < latest.low) {
+          if (
+            latest.extremes.length > 0 &&
+            latest.extremes[latest.extremes.length - 1].type === "low"
+          ) {
+            latest.extremes.pop();
+          }
+          latest.extremes.push({
+            offset: m1.timestamp - latest.bar.timestamp,
+            volume: m1.volume,
+            value: m1.low,
+            type: "low",
+          });
+          latest.low = m1.low;
+        }
+      },
+    });
 
-export const run: Experiment = async (options, backtest) => {
-  // prepare CSV file
-  const { symbol, period } = options;
-  const [{ oid }] = await git.log({ fs, depth: 1, ref: "HEAD", dir: "." });
-  const stream = format({ headers: csvHeaders });
-  const output = fs.createWriteStream(
-    `./high-low-${symbol.replace("/", "")}-${
-      ProtoOATrendbarPeriod[period]
-    }-${oid}.csv`
-  );
-  stream.pipe(output);
-
-  // run strategy / analysis
-  return backtest({
-    ...options,
-    strategy: () => {
-      return (trendbar, future) => {
-        const { highs, lows, merged } = utils.findHighsAndLows(future);
-        stream.write(
-          csvData(trendbar, highs.reverse(), lows.reverse(), merged.reverse())
-        );
-      };
-    },
-    done: () => stream.end(),
-  });
-};
-export default run;
+    // write JSON file
+    const [{ oid }] = await git.log({ fs, depth: 1, ref: "HEAD", dir: "." });
+    const symbol = data.symbol.symbolName?.replace("/", "");
+    const ctid = data.trader.ctidTraderAccountId;
+    const filename = `./high-low-${symbol}-${ctid}-${oid}.json`;
+    await fs.promises.writeFile(filename, JSON.stringify(results, null, 2));
+  };
+}
+export default processor;

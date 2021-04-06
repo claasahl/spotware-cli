@@ -1,7 +1,3 @@
-export { run as highLow } from "./highLow";
-export { run as insideBarMomentum } from "./insideBarMomentum";
-export { run as metrics } from "./metrics";
-export { run as priceRange } from "./priceRange";
-export { run as recurringPriceLevels } from "./recurringPriceLevels";
-export * from "./types";
-export { run as vwap } from "./vwap";
+export { default as deals } from "./deals";
+export { default as highLow } from "./highLow";
+export { default as metrics } from "./metrics";
