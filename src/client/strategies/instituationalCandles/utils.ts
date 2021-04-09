@@ -1,4 +1,4 @@
-import { Trendbar } from "../../utils";
+import { Trendbar } from "../../../utils";
 
 /**
  * Tests whether the bar is bullish
