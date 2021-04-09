@@ -1,6 +1,24 @@
 import { Trendbar } from "../../utils";
 
 /**
+ * Tests whether the bar is bullish
+ * @param bar
+ * @returns `true`, if the var is bullish
+ */
+function isBullish(bar: Trendbar): boolean {
+  return bar.open < bar.close;
+}
+
+/**
+ * Tests whether the bar is bearish
+ * @param bar
+ * @returns `true`, if the var is bearish
+ */
+function isBearish(bar: Trendbar): boolean {
+  return bar.open > bar.close;
+}
+
+/**
  * Tests whether bars 1, 2 and 3 form a "/\"-pattern.
  *
  * @param bar1
@@ -9,7 +27,12 @@ import { Trendbar } from "../../utils";
  * @returns `true`, if `bar2` forms a top
  */
 function isTop(bar1: Trendbar, bar2: Trendbar, bar3: Trendbar): boolean {
-  return bar1.close <= bar2.close && bar2.close >= bar3.close;
+  return (
+    bar1.close <= bar2.close &&
+    bar2.close >= bar3.close &&
+    isBullish(bar2) &&
+    isBearish(bar3)
+  );
 }
 
 /**
@@ -21,7 +44,12 @@ function isTop(bar1: Trendbar, bar2: Trendbar, bar3: Trendbar): boolean {
  * @returns `true`, if `bar2` forms a bottom
  */
 function isBottom(bar1: Trendbar, bar2: Trendbar, bar3: Trendbar): boolean {
-  return bar1.close >= bar2.close && bar2.close <= bar3.close;
+  return (
+    bar1.close >= bar2.close &&
+    bar2.close <= bar3.close &&
+    isBearish(bar2) &&
+    isBullish(bar3)
+  );
 }
 
 /**
