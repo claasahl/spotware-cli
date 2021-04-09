@@ -4,6 +4,8 @@ const {
   isTop,
   isBottom,
   isBetween,
+  isTopIC,
+  isBottomIC,
 } = require("../../../../build/client/strategies/institutionalCandles/utils");
 
 describe("Institutional Candles - Utils", () => {
@@ -102,6 +104,76 @@ describe("Institutional Candles - Utils", () => {
     });
     test("13 is NOT between 7 and 13 (edge case)", () => {
       expect(isBetween(13, 7, 13, false)).toBe(false);
+    });
+  });
+
+  describe("isTopIC", () => {
+    test("should be top IC", () => {
+      const prev = { close: 35 };
+      const bar = { open: 35, close: 40 };
+      const next1 = { open: 40, close: 30 };
+      const next2 = { open: 30, close: 20 };
+      const next3 = { open: 20, close: 10 };
+      expect(isTopIC([prev, bar, next1, next2, next3])).toBe(true);
+    });
+    test("top IC requires a bullish thrust", () => {
+      const prev = { close: 40 };
+      const bar = { open: 40, close: 40 }; // needs to be a thrust
+      const next1 = { open: 40, close: 30 };
+      const next2 = { open: 30, close: 20 };
+      const next3 = { open: 20, close: 10 };
+      expect(isTopIC([prev, bar, next1, next2, next3])).toBe(false);
+    });
+    test("top IC requires a bearish thrust", () => {
+      const prev = { close: 30 };
+      const bar = { open: 30, close: 40 };
+      const next1 = { open: 40, close: 30 }; // needs to exceed previous thrust
+      const next2 = { open: 30, close: 20 };
+      const next3 = { open: 20, close: 10 };
+      expect(isTopIC([prev, bar, next1, next2, next3])).toBe(false);
+    });
+    test("top IC requires a bearish tail", () => {
+      const prev = { close: 35 };
+      const bar = { open: 35, close: 40 };
+      const next1 = { open: 40, close: 30 };
+      const next2 = { open: 30, close: 30 }; // needs to be bearish
+      const next3 = { open: 30, close: 35 }; // needs to be bearish
+      expect(isTopIC([prev, bar, next1, next2, next3])).toBe(false);
+    });
+  });
+
+  describe("isBottomIC", () => {
+    test("should be bottom IC", () => {
+      const prev = { close: 15 };
+      const bar = { open: 15, close: 10 };
+      const next1 = { open: 10, close: 20 };
+      const next2 = { open: 20, close: 30 };
+      const next3 = { open: 30, close: 40 };
+      expect(isBottomIC([prev, bar, next1, next2, next3])).toBe(true);
+    });
+    test("bottom IC requires a bearish thrust", () => {
+      const prev = { close: 10 };
+      const bar = { open: 10, close: 10 }; // needs to be a thrust
+      const next1 = { open: 10, close: 20 };
+      const next2 = { open: 20, close: 30 };
+      const next3 = { open: 30, close: 40 };
+      expect(isBottomIC([prev, bar, next1, next2, next3])).toBe(false);
+    });
+    test("bottom IC requires a bullish thrust", () => {
+      const prev = { close: 20 };
+      const bar = { open: 20, close: 10 };
+      const next1 = { open: 10, close: 20 }; // needs to exceed previous thrust
+      const next2 = { open: 20, close: 30 };
+      const next3 = { open: 30, close: 40 };
+      expect(isBottomIC([prev, bar, next1, next2, next3])).toBe(false);
+    });
+    test("bottom IC requires bullish tail", () => {
+      const prev = { close: 15 };
+      const bar = { open: 15, close: 10 };
+      const next1 = { open: 10, close: 20 };
+      const next2 = { open: 20, close: 20 }; // needs to be bearish
+      const next3 = { open: 20, close: 15 }; // needs to be bearish
+      expect(isBottomIC([prev, bar, next1, next2, next3])).toBe(false);
     });
   });
 });

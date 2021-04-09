@@ -77,7 +77,7 @@ export function isTopIC(bars: Trendbar[]): boolean {
   const next3 = bars[bars.length - 1];
 
   const isTopBar = isTop(prev, bar, next1) && prev.close > next1.close;
-  const bullishThrust = isBullish(prev);
+  const bullishThrust = isBullish(bar);
   const bearishTail = isBearish(next1) && isBearish(next2) && isBearish(next3);
   return isTopBar && bullishThrust && bearishTail;
 }
@@ -90,7 +90,7 @@ export function isBottomIC(bars: Trendbar[]): boolean {
   const next3 = bars[bars.length - 1];
 
   const isBottomBar = isBottom(prev, bar, next1) && prev.close < next1.close;
-  const bearishThrust = isBearish(prev);
+  const bearishThrust = isBearish(bar);
   const bullishTail = isBullish(next1) && isBullish(next2) && isBullish(next3);
   return isBottomBar && bearishThrust && bullishTail;
 }
