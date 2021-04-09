@@ -27,12 +27,7 @@ export function isBearish(bar: Trendbar): boolean {
  * @returns `true`, if `bar2` forms a top
  */
 export function isTop(bar1: Trendbar, bar2: Trendbar, bar3: Trendbar): boolean {
-  return (
-    bar1.close <= bar2.close &&
-    bar2.close >= bar3.close &&
-    isBullish(bar2) &&
-    isBearish(bar3)
-  );
+  return bar1.close <= bar2.close && bar2.close >= bar3.close;
 }
 
 /**
@@ -48,12 +43,7 @@ export function isBottom(
   bar2: Trendbar,
   bar3: Trendbar
 ): boolean {
-  return (
-    bar1.close >= bar2.close &&
-    bar2.close <= bar3.close &&
-    isBearish(bar2) &&
-    isBullish(bar3)
-  );
+  return bar1.close >= bar2.close && bar2.close <= bar3.close;
 }
 
 /**

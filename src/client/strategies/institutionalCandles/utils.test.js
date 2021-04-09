@@ -1,6 +1,8 @@
 const {
   isBearish,
   isBullish,
+  isTop,
+  isBottom,
   isBetween,
 } = require("../../../../build/client/strategies/institutionalCandles/utils");
 
@@ -32,6 +34,50 @@ describe("Institutional Candles - Utils", () => {
     test("bar should NOT be bullish (edge case)", () => {
       const bar = { open: 10, close: 10 };
       expect(isBullish(bar)).toBe(false);
+    });
+  });
+
+  describe("isTop", () => {
+    test("forms a '/'-pattern", () => {
+      const bar1 = { close: 10 };
+      const bar2 = { close: 12 };
+      const bar3 = { close: 11 };
+      expect(isTop(bar1, bar2, bar3)).toBe(true);
+      expect(isTop(bar3, bar2, bar1)).toBe(true);
+    });
+    test("forms an 'incline'-pattern", () => {
+      const bar1 = { close: 10 };
+      const bar2 = { close: 11 };
+      const bar3 = { close: 12 };
+      expect(isTop(bar1, bar2, bar3)).toBe(false);
+    });
+    test("forms a 'decline'-pattern", () => {
+      const bar1 = { close: 12 };
+      const bar2 = { close: 11 };
+      const bar3 = { close: 10 };
+      expect(isTop(bar1, bar2, bar3)).toBe(false);
+    });
+  });
+
+  describe("isBottom", () => {
+    test("forms a '/'-pattern", () => {
+      const bar1 = { close: 12 };
+      const bar2 = { close: 10 };
+      const bar3 = { close: 11 };
+      expect(isBottom(bar1, bar2, bar3)).toBe(true);
+      expect(isBottom(bar3, bar2, bar1)).toBe(true);
+    });
+    test("forms an 'incline'-pattern", () => {
+      const bar1 = { close: 10 };
+      const bar2 = { close: 11 };
+      const bar3 = { close: 12 };
+      expect(isBottom(bar1, bar2, bar3)).toBe(false);
+    });
+    test("forms a 'decline'-pattern", () => {
+      const bar1 = { close: 12 };
+      const bar2 = { close: 11 };
+      const bar3 = { close: 10 };
+      expect(isBottom(bar1, bar2, bar3)).toBe(false);
     });
   });
 
