@@ -68,3 +68,31 @@ export function isBetween(
   }
   return lower < value && value < upper;
 }
+
+export function isTopIC(
+  bar: Trendbar,
+  past: Trendbar[],
+  future: Trendbar[]
+): boolean {
+  const prev = past[past.length - 1];
+  const [next1, next2, next3] = future;
+
+  const isTopBar = isTop(prev, bar, next1) && prev.close > next1.close;
+  const bullishThrust = isBullish(prev);
+  const bearishTail = isBearish(next1) && isBearish(next2) && isBearish(next3);
+  return isTopBar && bullishThrust && bearishTail;
+}
+
+export function isBottomIC(
+  bar: Trendbar,
+  past: Trendbar[],
+  future: Trendbar[]
+): boolean {
+  const prev = past[past.length - 1];
+  const [next1, next2, next3] = future;
+
+  const isBottomBar = isBottom(prev, bar, next1) && prev.close < next1.close;
+  const bearishThrust = isBearish(prev);
+  const bullishTail = isBullish(next1) && isBullish(next2) && isBullish(next3);
+  return isBottomBar && bearishThrust && bullishTail;
+}
