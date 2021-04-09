@@ -5,7 +5,7 @@ import { Trendbar } from "../../../utils";
  * @param bar
  * @returns `true`, if the var is bullish
  */
-function isBullish(bar: Trendbar): boolean {
+export function isBullish(bar: Trendbar): boolean {
   return bar.open < bar.close;
 }
 
@@ -14,7 +14,7 @@ function isBullish(bar: Trendbar): boolean {
  * @param bar
  * @returns `true`, if the var is bearish
  */
-function isBearish(bar: Trendbar): boolean {
+export function isBearish(bar: Trendbar): boolean {
   return bar.open > bar.close;
 }
 
@@ -26,7 +26,7 @@ function isBearish(bar: Trendbar): boolean {
  * @param bar3
  * @returns `true`, if `bar2` forms a top
  */
-function isTop(bar1: Trendbar, bar2: Trendbar, bar3: Trendbar): boolean {
+export function isTop(bar1: Trendbar, bar2: Trendbar, bar3: Trendbar): boolean {
   return (
     bar1.close <= bar2.close &&
     bar2.close >= bar3.close &&
@@ -43,7 +43,11 @@ function isTop(bar1: Trendbar, bar2: Trendbar, bar3: Trendbar): boolean {
  * @param bar3
  * @returns `true`, if `bar2` forms a bottom
  */
-function isBottom(bar1: Trendbar, bar2: Trendbar, bar3: Trendbar): boolean {
+export function isBottom(
+  bar1: Trendbar,
+  bar2: Trendbar,
+  bar3: Trendbar
+): boolean {
   return (
     bar1.close >= bar2.close &&
     bar2.close <= bar3.close &&
@@ -61,7 +65,7 @@ function isBottom(bar1: Trendbar, bar2: Trendbar, bar3: Trendbar): boolean {
  * @param inclusive whether the `value` may also overlap with the thresholds
  * @returns `true`, if `value` is between the two thresholds
  */
-function isBetween(
+export function isBetween(
   value: number,
   threshold1: number,
   threshold2: number,
