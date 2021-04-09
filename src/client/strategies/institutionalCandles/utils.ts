@@ -69,13 +69,12 @@ export function isBetween(
   return lower < value && value < upper;
 }
 
-export function isTopIC(
-  bar: Trendbar,
-  past: Trendbar[],
-  future: Trendbar[]
-): boolean {
-  const prev = past[past.length - 1];
-  const [next1, next2, next3] = future;
+export function isTopIC(bars: Trendbar[]): boolean {
+  const prev = bars[bars.length - 5];
+  const bar = bars[bars.length - 4];
+  const next1 = bars[bars.length - 3];
+  const next2 = bars[bars.length - 2];
+  const next3 = bars[bars.length - 1];
 
   const isTopBar = isTop(prev, bar, next1) && prev.close > next1.close;
   const bullishThrust = isBullish(prev);
@@ -83,13 +82,12 @@ export function isTopIC(
   return isTopBar && bullishThrust && bearishTail;
 }
 
-export function isBottomIC(
-  bar: Trendbar,
-  past: Trendbar[],
-  future: Trendbar[]
-): boolean {
-  const prev = past[past.length - 1];
-  const [next1, next2, next3] = future;
+export function isBottomIC(bars: Trendbar[]): boolean {
+  const prev = bars[bars.length - 5];
+  const bar = bars[bars.length - 4];
+  const next1 = bars[bars.length - 3];
+  const next2 = bars[bars.length - 2];
+  const next3 = bars[bars.length - 1];
 
   const isBottomBar = isBottom(prev, bar, next1) && prev.close < next1.close;
   const bearishThrust = isBearish(prev);
