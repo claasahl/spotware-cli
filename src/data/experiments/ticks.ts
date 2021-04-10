@@ -102,7 +102,6 @@ function removeOverlaps(
     let index = 0;
     while (index < data.length) {
       const period = data[index];
-      console.log({ index, period, available });
       const tmp = removeOverlap(period, available);
 
       if (tmp.length === 1 && tmp[0] === period) {
@@ -172,30 +171,24 @@ function processor(options: Options): SymbolDataProcessor {
       return;
     }
 
-    const periods: Period[] = [
-      {
-        fromTimestamp: options.fromDate.getTime(),
-        toTimestamp: options.toDate.getTime(),
-        type: ProtoOAQuoteType.ASK,
-      },
-      {
-        fromTimestamp: options.fromDate.getTime(),
-        toTimestamp: options.toDate.getTime(),
-        type: ProtoOAQuoteType.BID,
-      },
-    ];
+    const a: Period = {
+      fromTimestamp: options.fromDate.getTime(),
+      toTimestamp: options.toDate.getTime(),
+      type: ProtoOAQuoteType.ASK,
+    };
+    const b: Period = {
+      fromTimestamp: options.fromDate.getTime(),
+      toTimestamp: options.toDate.getTime(),
+      type: ProtoOAQuoteType.BID,
+    };
 
     // prepare dir
     const symbolName = data.symbol.symbolName?.replace("/", "") || "";
     const dir = `${symbolName}.DB`;
     await mkdir(dir);
     const availablePeriods = await readPeriods(dir);
-
-    console.log({
-      availablePeriods,
-      periods,
-      tmp: removeOverlaps(periods, availablePeriods),
-    });
+    const periods = removeOverlaps([a, b], availablePeriods);
+    console.log([a, b], periods);
 
     // fetch data
     for (const period of periods) {
