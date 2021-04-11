@@ -1,11 +1,12 @@
 const fs = require("fs");
 const { ProtoOAQuoteType } = require("@claasahl/spotware-adapter");
 
-const { readPeriods } = require("../../build/database/read");
+const { readPeriods, read } = require("../../build/database/read");
 
 jest.mock("fs", () => ({
   promises: {
     readdir: jest.fn(),
+    readFile: jest.fn(),
   },
 }));
 
@@ -43,6 +44,37 @@ describe("Database", () => {
       ]);
       const periods = await readPeriods("./EURUSD.DB");
       expect(periods).toStrictEqual([a, c, b]);
+    });
+  });
+
+  describe("read", () => {
+    test("should read tick data from file", async () => {
+      const originalTickData = [
+        { timestamp: 100, tick: 3 },
+        { timestamp: 200, tick: 45 },
+      ];
+      fs.promises.readFile.mockResolvedValue(JSON.stringify(originalTickData));
+      const period = {
+        fromTimestamp: 100,
+        toTimestamp: 200,
+        type: ProtoOAQuoteType.ASK,
+      };
+      const tickData = await read("./EURUSD.DB", period);
+      expect(tickData).toStrictEqual(originalTickData);
+    });
+    test("should complain if file does not contain a JSON array", async (done) => {
+      fs.promises.readFile.mockResolvedValue("hello world");
+      const period = {
+        fromTimestamp: 100,
+        toTimestamp: 200,
+        type: ProtoOAQuoteType.ASK,
+      };
+      try {
+        await read("./EURUSD.DB", period);
+        done(new Error("should have failed"));
+      } catch {
+        done();
+      }
     });
   });
 });

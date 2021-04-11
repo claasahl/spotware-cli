@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { ProtoOATickData } from "@claasahl/spotware-protobuf";
 
 import { Period, isPeriod, comparePeriod } from "./types";
 
@@ -27,4 +28,20 @@ export async function readPeriods(dir: string): Promise<Period[]> {
     }
   }
   return data.sort(comparePeriod);
+}
+
+export async function read(
+  dir: string,
+  period: Period
+): Promise<ProtoOATickData[]> {
+  const name = JSON.stringify(period);
+  const file = Buffer.from(name).toString("base64") + ".json";
+  const buffer = await fs.promises.readFile(path.join(dir, file));
+  const tickData = JSON.parse(buffer.toString());
+  if (Array.isArray(tickData)) {
+    return tickData;
+  }
+  throw new Error(
+    `contents of '${file}' were supposed to be an array, but wasn't`
+  );
 }
