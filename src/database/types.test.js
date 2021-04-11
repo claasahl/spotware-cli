@@ -1,6 +1,6 @@
 const { ProtoOAQuoteType } = require("@claasahl/spotware-adapter");
 
-const { isPeriod } = require("../../build/database/types");
+const { isPeriod, comparePeriod } = require("../../build/database/types");
 
 describe("Database", () => {
   describe("isPeriod", () => {
@@ -38,6 +38,79 @@ describe("Database", () => {
       expect(isPeriod(undefined)).toBe(false);
       expect(isPeriod(42)).toBe(false);
       expect(isPeriod("hello world")).toBe(false);
+    });
+  });
+
+  describe("comparePeriod", () => {
+    test("periods without overlap", () => {
+      // a: --
+      // b:       ----
+
+      // a:       ----
+      // b: --
+      const a = {
+        fromTimestamp: 10,
+        toTimestamp: 20,
+        type: ProtoOAQuoteType.ASK,
+      };
+      const b = {
+        fromTimestamp: 100,
+        toTimestamp: 200,
+        type: ProtoOAQuoteType.ASK,
+      };
+      expect(comparePeriod(a, b) < 0).toBe(true);
+      expect(comparePeriod(b, a) > 0).toBe(true);
+    });
+    test("periods differ in fromTimestamp", () => {
+      const a = {
+        fromTimestamp: 10,
+        toTimestamp: 20,
+        type: ProtoOAQuoteType.ASK,
+      };
+      const b = {
+        fromTimestamp: 12,
+        toTimestamp: 20,
+        type: ProtoOAQuoteType.ASK,
+      };
+      expect(comparePeriod(a, b) < 0).toBe(true);
+      expect(comparePeriod(b, a) > 0).toBe(true);
+    });
+    test("periods differ in toTimestamp", () => {
+      const a = {
+        fromTimestamp: 10,
+        toTimestamp: 20,
+        type: ProtoOAQuoteType.ASK,
+      };
+      const b = {
+        fromTimestamp: 10,
+        toTimestamp: 22,
+        type: ProtoOAQuoteType.ASK,
+      };
+      expect(comparePeriod(a, b) < 0).toBe(true);
+      expect(comparePeriod(b, a) > 0).toBe(true);
+    });
+    test("periods differ in type", () => {
+      const a = {
+        fromTimestamp: 10,
+        toTimestamp: 20,
+        type: ProtoOAQuoteType.BID,
+      };
+      const b = {
+        fromTimestamp: 10,
+        toTimestamp: 20,
+        type: ProtoOAQuoteType.ASK,
+      };
+      expect(comparePeriod(a, b) < 0).toBe(true);
+      expect(comparePeriod(b, a) > 0).toBe(true);
+    });
+    test("identical periods", () => {
+      const a = {
+        fromTimestamp: 10,
+        toTimestamp: 20,
+        type: ProtoOAQuoteType.ASK,
+      };
+      const result = comparePeriod(a, a);
+      expect(result === 0).toBe(true);
     });
   });
 });

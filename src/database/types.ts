@@ -16,3 +16,14 @@ export function isPeriod(object: any): object is Period {
     typeof object.type === "number"
   );
 }
+
+export function comparePeriod(a: Period, b: Period): number {
+  return (
+    a.fromTimestamp -
+    b.fromTimestamp +
+    a.toTimestamp -
+    b.toTimestamp +
+    a.type -
+    b.type
+  );
+}
