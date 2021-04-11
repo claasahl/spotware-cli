@@ -1,10 +1,10 @@
 import fs from "fs";
-import path from "path";
+import { ProtoOAQuoteType } from "@claasahl/spotware-protobuf";
+import { SpotwareClientSocket } from "@claasahl/spotware-adapter";
 
 import { SymbolData, SymbolDataProcessor } from "../runner/types";
 import * as R from "../../client/requests";
-import { ProtoOAQuoteType } from "@claasahl/spotware-protobuf";
-import { SpotwareClientSocket } from "@claasahl/spotware-adapter";
+import * as DB from "../../database";
 
 type SaveTickDataOptions = {
   socket: SpotwareClientSocket;
@@ -15,14 +15,6 @@ type SaveTickDataOptions = {
   fromTimestamp: number;
   toTimestamp: number;
   path: string;
-};
-
-type Index = {
-  symbolId: number;
-  symbolName: string;
-  fromTimestamp: number;
-  toTimestamp: number;
-  type: ProtoOAQuoteType;
 };
 
 type Period = {
@@ -37,16 +29,6 @@ async function mkdir(dir: string): Promise<void> {
   } catch {
     // ignore... for now
   }
-}
-
-async function readPeriods(dir: string): Promise<Period[]> {
-  const data: Period[] = [];
-  const files = await fs.promises.readdir(dir);
-  for (const file of files) {
-    const text = Buffer.from(file, "base64").toString();
-    data.push(JSON.parse(text) as Index);
-  }
-  return data;
 }
 
 function removeOverlap(a: Period, b: Period): Period[] {
@@ -143,17 +125,7 @@ async function saveTickData(options: SaveTickDataOptions): Promise<void> {
         tickData[i].tick = tickData[i - 1].tick + tickData[i].tick;
       }
 
-      const data = JSON.stringify(tickData);
-      const index: Index = {
-        symbolId: options.symbolId,
-        symbolName: options.symbolName,
-        fromTimestamp: tickData[tickData.length - 1].timestamp,
-        toTimestamp: tickData[0].timestamp,
-        type: options.type,
-      };
-      const filename =
-        Buffer.from(JSON.stringify(index)).toString("base64") + ".json";
-      await fs.promises.writeFile(path.join(options.path, filename), data);
+      await DB.write(options.path, type, tickData);
     }
 
     hasMore = response.hasMore;
@@ -186,9 +158,9 @@ function processor(options: Options): SymbolDataProcessor {
     const symbolName = data.symbol.symbolName?.replace("/", "") || "";
     const dir = `${symbolName}.DB`;
     await mkdir(dir);
-    const availablePeriods = await readPeriods(dir);
+    const availablePeriods = await DB.readPeriods(dir);
     const periods = removeOverlaps([a, b], availablePeriods);
-    console.log([a, b], periods);
+    console.log([a, b], periods, availablePeriods);
 
     // fetch data
     for (const period of periods) {
