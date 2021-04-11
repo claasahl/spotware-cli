@@ -1,34 +1,5 @@
 import { Period } from "./types";
-
-function engulfs(a: Period, b: Period): boolean {
-  // a: --------------
-  // b:    --------
-
-  // a: --------
-  // b: --------
-  return (
-    a.type === b.type &&
-    a.fromTimestamp <= b.fromTimestamp &&
-    b.toTimestamp <= a.toTimestamp
-  );
-}
-
-function overlaps(a: Period, b: Period): boolean {
-  // a: --------
-  // b:     --------
-
-  // a: ------------
-  // b:     --------
-
-  // a: --------
-  // b:        --------
-  return (
-    a.type === b.type &&
-    a.fromTimestamp < b.fromTimestamp &&
-    a.toTimestamp <= b.toTimestamp &&
-    b.fromTimestamp <= a.toTimestamp
-  );
-}
+import { engulfs, overlaps } from "./utils";
 
 export function merge(a: Period, b: Period): Period[] {
   if (engulfs(a, b)) {
