@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-import { Period, isPeriod } from "./types";
+import { Period, isPeriod, comparePeriod } from "./types";
 
 async function mkdir(dir: string): Promise<void> {
   try {
@@ -26,5 +26,5 @@ export async function readPeriods(dir: string): Promise<Period[]> {
       // ignore. This file is most likely not part of our database
     }
   }
-  return data;
+  return data.sort(comparePeriod);
 }

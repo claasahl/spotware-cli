@@ -21,6 +21,11 @@ describe("Database", () => {
       toTimestamp: 800,
       type: ProtoOAQuoteType.ASK,
     };
+    const c = {
+      fromTimestamp: 380,
+      toTimestamp: 420,
+      type: ProtoOAQuoteType.BID,
+    };
     test("should extract periods from file names", async () => {
       fs.promises.readdir.mockResolvedValue([
         "some_random_file.json",
@@ -29,6 +34,15 @@ describe("Database", () => {
       ]);
       const periods = await readPeriods("./EURUSD.DB");
       expect(periods).toStrictEqual([a, b]);
+    });
+    test("should sort periods", async () => {
+      fs.promises.readdir.mockResolvedValue([
+        Buffer.from(JSON.stringify(c)).toString("base64") + ".json",
+        Buffer.from(JSON.stringify(b)).toString("base64") + ".json",
+        Buffer.from(JSON.stringify(a)).toString("base64") + ".json",
+      ]);
+      const periods = await readPeriods("./EURUSD.DB");
+      expect(periods).toStrictEqual([a, c, b]);
     });
   });
 });
