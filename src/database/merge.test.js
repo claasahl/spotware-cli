@@ -4,7 +4,7 @@ const { merge } = require("../../build/database/merge");
 
 describe("Database", () => {
   describe("merge", () => {
-    test("shoule merge identical periods", () => {
+    test("should merge identical periods", () => {
       const a = {
         fromTimestamp: 100,
         toTimestamp: 200,
