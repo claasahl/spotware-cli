@@ -61,7 +61,7 @@ export function overlaps(a: Period, b: Period): boolean {
 }
 
 export function overlap(a: Period, b: Period): Period | undefined {
-  if (engulfs(a, b) || overlap(a, b)) {
+  if (overlaps(a, b)) {
     const fromTimestamp = Math.max(a.fromTimestamp, b.fromTimestamp);
     const toTimestamp = Math.min(a.toTimestamp, b.toTimestamp);
     return {

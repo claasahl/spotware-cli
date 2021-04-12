@@ -1,6 +1,11 @@
 const { ProtoOAQuoteType } = require("@claasahl/spotware-adapter");
 
-const { isBetween, engulfs, overlaps } = require("../../build/database/utils");
+const {
+  isBetween,
+  engulfs,
+  overlaps,
+  overlap,
+} = require("../../build/database/utils");
 
 describe("Database", () => {
   describe("isBetween", () => {
@@ -146,6 +151,67 @@ describe("Database", () => {
       };
       expect(overlaps(a, b)).toBe(true);
       expect(overlaps(b, a)).toBe(true);
+    });
+  });
+
+  describe("overlap", () => {
+    test("period should overlap with itself", () => {
+      // a: -----
+      // b: -----
+      const a = {
+        fromTimestamp: 100,
+        toTimestamp: 200,
+        type: ProtoOAQuoteType.ASK,
+      };
+      expect(overlap(a, a)).toStrictEqual(a);
+    });
+    test("same fromTimestamp, different toTimestamp", () => {
+      // a: -----
+      // b: ---
+      const a = {
+        fromTimestamp: 100,
+        toTimestamp: 200,
+        type: ProtoOAQuoteType.ASK,
+      };
+      const b = {
+        fromTimestamp: 100,
+        toTimestamp: 150,
+        type: ProtoOAQuoteType.ASK,
+      };
+      expect(overlap(a, b)).toStrictEqual(b);
+      expect(overlap(b, a)).toStrictEqual(b);
+    });
+    test("same toTimestamp, different fromTimestamp", () => {
+      // a: -----
+      // b:    --
+      const a = {
+        fromTimestamp: 100,
+        toTimestamp: 200,
+        type: ProtoOAQuoteType.ASK,
+      };
+      const b = {
+        fromTimestamp: 150,
+        toTimestamp: 200,
+        type: ProtoOAQuoteType.ASK,
+      };
+      expect(overlap(a, b)).toStrictEqual(b);
+      expect(overlap(b, a)).toStrictEqual(b);
+    });
+    test("different toTimestamp, different fromTimestamp", () => {
+      // a: -----
+      // b:  --
+      const a = {
+        fromTimestamp: 100,
+        toTimestamp: 200,
+        type: ProtoOAQuoteType.ASK,
+      };
+      const b = {
+        fromTimestamp: 150,
+        toTimestamp: 175,
+        type: ProtoOAQuoteType.ASK,
+      };
+      expect(overlap(a, b)).toStrictEqual(b);
+      expect(overlap(b, a)).toStrictEqual(b);
     });
   });
 });
