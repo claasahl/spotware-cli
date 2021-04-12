@@ -3,8 +3,8 @@ const { ProtoOAQuoteType } = require("@claasahl/spotware-adapter");
 const {
   isBetween,
   engulfs,
-  overlaps,
-  overlap,
+  intersects,
+  intersection,
 } = require("../../build/database/utils");
 
 describe("Database", () => {
@@ -93,7 +93,7 @@ describe("Database", () => {
     });
   });
 
-  describe("overlaps", () => {
+  describe("intersects", () => {
     test("period should overlap with itself", () => {
       // a: -----
       // b: -----
@@ -102,7 +102,7 @@ describe("Database", () => {
         toTimestamp: 200,
         type: ProtoOAQuoteType.ASK,
       };
-      expect(overlaps(a, a)).toBe(true);
+      expect(intersects(a, a)).toBe(true);
     });
     test("same fromTimestamp, different toTimestamp", () => {
       // a: -----
@@ -117,8 +117,8 @@ describe("Database", () => {
         toTimestamp: 150,
         type: ProtoOAQuoteType.ASK,
       };
-      expect(overlaps(a, b)).toBe(true);
-      expect(overlaps(b, a)).toBe(true);
+      expect(intersects(a, b)).toBe(true);
+      expect(intersects(b, a)).toBe(true);
     });
     test("same toTimestamp, different fromTimestamp", () => {
       // a: -----
@@ -133,8 +133,8 @@ describe("Database", () => {
         toTimestamp: 200,
         type: ProtoOAQuoteType.ASK,
       };
-      expect(overlaps(a, b)).toBe(true);
-      expect(overlaps(b, a)).toBe(true);
+      expect(intersects(a, b)).toBe(true);
+      expect(intersects(b, a)).toBe(true);
     });
     test("different toTimestamp, different fromTimestamp", () => {
       // a: -----
@@ -149,12 +149,12 @@ describe("Database", () => {
         toTimestamp: 175,
         type: ProtoOAQuoteType.ASK,
       };
-      expect(overlaps(a, b)).toBe(true);
-      expect(overlaps(b, a)).toBe(true);
+      expect(intersects(a, b)).toBe(true);
+      expect(intersects(b, a)).toBe(true);
     });
   });
 
-  describe("overlap", () => {
+  describe("intersection", () => {
     test("period should overlap with itself", () => {
       // a: -----
       // b: -----
@@ -163,7 +163,7 @@ describe("Database", () => {
         toTimestamp: 200,
         type: ProtoOAQuoteType.ASK,
       };
-      expect(overlap(a, a)).toStrictEqual(a);
+      expect(intersection(a, a)).toStrictEqual(a);
     });
     test("same fromTimestamp, different toTimestamp", () => {
       // a: -----
@@ -178,8 +178,8 @@ describe("Database", () => {
         toTimestamp: 150,
         type: ProtoOAQuoteType.ASK,
       };
-      expect(overlap(a, b)).toStrictEqual(b);
-      expect(overlap(b, a)).toStrictEqual(b);
+      expect(intersection(a, b)).toStrictEqual(b);
+      expect(intersection(b, a)).toStrictEqual(b);
     });
     test("same toTimestamp, different fromTimestamp", () => {
       // a: -----
@@ -194,8 +194,8 @@ describe("Database", () => {
         toTimestamp: 200,
         type: ProtoOAQuoteType.ASK,
       };
-      expect(overlap(a, b)).toStrictEqual(b);
-      expect(overlap(b, a)).toStrictEqual(b);
+      expect(intersection(a, b)).toStrictEqual(b);
+      expect(intersection(b, a)).toStrictEqual(b);
     });
     test("different toTimestamp, different fromTimestamp", () => {
       // a: -----
@@ -210,8 +210,8 @@ describe("Database", () => {
         toTimestamp: 175,
         type: ProtoOAQuoteType.ASK,
       };
-      expect(overlap(a, b)).toStrictEqual(b);
-      expect(overlap(b, a)).toStrictEqual(b);
+      expect(intersection(a, b)).toStrictEqual(b);
+      expect(intersection(b, a)).toStrictEqual(b);
     });
   });
 });

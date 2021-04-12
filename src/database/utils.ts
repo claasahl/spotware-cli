@@ -36,7 +36,7 @@ export function engulfs(a: Period, b: Period): boolean {
   );
 }
 
-export function overlaps(a: Period, b: Period): boolean {
+export function intersects(a: Period, b: Period): boolean {
   // a: --------
   // b: --------
 
@@ -60,8 +60,8 @@ export function overlaps(a: Period, b: Period): boolean {
   );
 }
 
-export function overlap(a: Period, b: Period): Period | undefined {
-  if (overlaps(a, b)) {
+export function intersection(a: Period, b: Period): Period | undefined {
+  if (intersects(a, b)) {
     const fromTimestamp = Math.max(a.fromTimestamp, b.fromTimestamp);
     const toTimestamp = Math.min(a.toTimestamp, b.toTimestamp);
     return {

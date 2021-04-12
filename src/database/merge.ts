@@ -1,12 +1,12 @@
 import { Period } from "./types";
-import { engulfs, overlaps } from "./utils";
+import { engulfs, intersects } from "./utils";
 
 export function merge(a: Period, b: Period): Period[] {
   if (engulfs(a, b)) {
     return [a];
   } else if (engulfs(b, a)) {
     return [b];
-  } else if (overlaps(a, b) || overlaps(b, a)) {
+  } else if (intersects(a, b) || intersects(b, a)) {
     return [
       {
         type: a.type,
