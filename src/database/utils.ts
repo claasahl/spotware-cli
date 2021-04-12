@@ -72,3 +72,57 @@ export function intersection(a: Period, b: Period): Period | undefined {
   }
   return undefined;
 }
+
+export function disjunction(a: Period, b: Period): Period[] {
+  if (a.type !== b.type || !intersects(a, b)) {
+    return [a, b];
+  }
+
+  // a: --------
+  // b: --------
+
+  // a: ------------
+  // b:     --------
+
+  // a: ------------
+  // b: --------
+  if (a.fromTimestamp === b.fromTimestamp) {
+    return [
+      {
+        fromTimestamp: Math.min(a.toTimestamp, b.toTimestamp),
+        toTimestamp: Math.max(a.toTimestamp, b.toTimestamp),
+        type: a.type,
+      },
+    ];
+  }
+  if (a.toTimestamp === b.toTimestamp) {
+    return [
+      {
+        fromTimestamp: Math.min(a.fromTimestamp, b.fromTimestamp),
+        toTimestamp: Math.max(a.fromTimestamp, b.fromTimestamp),
+        type: a.type,
+      },
+    ];
+  }
+
+  // a: --------
+  // b:     --------
+
+  // a: --------
+  // b:        --------
+
+  // a: -------------
+  // b:    --------
+  return [
+    {
+      fromTimestamp: Math.min(a.fromTimestamp, b.fromTimestamp),
+      toTimestamp: Math.max(a.fromTimestamp, b.fromTimestamp),
+      type: a.type,
+    },
+    {
+      fromTimestamp: Math.min(a.toTimestamp, b.toTimestamp),
+      toTimestamp: Math.max(a.toTimestamp, b.toTimestamp),
+      type: a.type,
+    },
+  ];
+}
