@@ -53,9 +53,10 @@ export function overlaps(a: Period, b: Period): boolean {
   // b:    --------
   return (
     a.type === b.type &&
-    a.fromTimestamp <= b.fromTimestamp &&
-    a.toTimestamp <= b.toTimestamp &&
-    b.fromTimestamp <= a.toTimestamp
+    (isBetween(a.fromTimestamp, b.fromTimestamp, b.toTimestamp) ||
+      isBetween(a.toTimestamp, b.fromTimestamp, b.toTimestamp) ||
+      isBetween(b.fromTimestamp, a.fromTimestamp, a.toTimestamp) ||
+      isBetween(b.toTimestamp, a.fromTimestamp, a.toTimestamp))
   );
 }
 
