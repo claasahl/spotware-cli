@@ -1,5 +1,4 @@
 const fs = require("fs");
-const { ProtoOAQuoteType } = require("@claasahl/spotware-adapter");
 
 const { readPeriods, read } = require("../../build/database/read");
 
@@ -15,17 +14,14 @@ describe("Database", () => {
     const a = {
       fromTimestamp: 100,
       toTimestamp: 200,
-      type: ProtoOAQuoteType.BID,
     };
     const b = {
       fromTimestamp: 400,
       toTimestamp: 800,
-      type: ProtoOAQuoteType.ASK,
     };
     const c = {
       fromTimestamp: 380,
       toTimestamp: 420,
-      type: ProtoOAQuoteType.BID,
     };
     test("should extract periods from file names", async () => {
       fs.promises.readdir.mockResolvedValue([
@@ -57,7 +53,6 @@ describe("Database", () => {
       const period = {
         fromTimestamp: 100,
         toTimestamp: 200,
-        type: ProtoOAQuoteType.ASK,
       };
       const tickData = await read("./EURUSD.DB", period);
       expect(tickData).toStrictEqual(originalTickData);
@@ -67,7 +62,6 @@ describe("Database", () => {
       const period = {
         fromTimestamp: 100,
         toTimestamp: 200,
-        type: ProtoOAQuoteType.ASK,
       };
       try {
         await read("./EURUSD.DB", period);

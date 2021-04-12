@@ -9,7 +9,6 @@ export function merge(a: Period, b: Period): Period[] {
   } else if (intersects(a, b) || intersects(b, a)) {
     return [
       {
-        type: a.type,
         fromTimestamp: Math.min(a.fromTimestamp, b.fromTimestamp),
         toTimestamp: Math.max(a.toTimestamp, b.toTimestamp),
       },

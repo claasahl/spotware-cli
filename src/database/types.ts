@@ -1,9 +1,15 @@
 import { ProtoOAQuoteType } from "@claasahl/spotware-protobuf";
 
 export type Period = {
+  /**
+   * period starts with this timestamp (inculsive)
+   */
   fromTimestamp: number;
+
+  /**
+   * period ends with this timestamp (exvlusive)
+   */
   toTimestamp: number;
-  type: ProtoOAQuoteType;
 };
 
 export function isPeriod(object: any): object is Period {
@@ -12,18 +18,10 @@ export function isPeriod(object: any): object is Period {
   }
   return (
     typeof object.fromTimestamp === "number" &&
-    typeof object.toTimestamp === "number" &&
-    typeof object.type === "number"
+    typeof object.toTimestamp === "number"
   );
 }
 
 export function comparePeriod(a: Period, b: Period): number {
-  return (
-    a.fromTimestamp -
-    b.fromTimestamp +
-    a.toTimestamp -
-    b.toTimestamp +
-    a.type -
-    b.type
-  );
+  return a.fromTimestamp - b.fromTimestamp + a.toTimestamp - b.toTimestamp;
 }

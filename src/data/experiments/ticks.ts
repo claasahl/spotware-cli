@@ -17,12 +17,6 @@ type SaveTickDataOptions = {
   path: string;
 };
 
-type Period = {
-  fromTimestamp: number;
-  toTimestamp: number;
-  type: ProtoOAQuoteType;
-};
-
 async function mkdir(dir: string): Promise<void> {
   try {
     await fs.promises.mkdir(dir, { recursive: true });
@@ -31,20 +25,15 @@ async function mkdir(dir: string): Promise<void> {
   }
 }
 
-function removeOverlap(a: Period, b: Period): Period[] {
-  if (
-    a.type !== b.type ||
-    b.toTimestamp < a.fromTimestamp ||
-    a.toTimestamp < b.fromTimestamp
-  ) {
+function removeOverlap(a: DB.Period, b: DB.Period): DB.Period[] {
+  if (b.toTimestamp < a.fromTimestamp || a.toTimestamp < b.fromTimestamp) {
     return [a];
   }
-  const { type } = a;
   if (a.fromTimestamp <= b.fromTimestamp && b.toTimestamp <= a.toTimestamp) {
     // a completely engulfes b
     return [
-      { fromTimestamp: a.fromTimestamp, toTimestamp: b.fromTimestamp, type },
-      { fromTimestamp: b.toTimestamp, toTimestamp: a.toTimestamp, type },
+      { fromTimestamp: a.fromTimestamp, toTimestamp: b.fromTimestamp },
+      { fromTimestamp: b.toTimestamp, toTimestamp: a.toTimestamp },
     ];
   }
   if (b.fromTimestamp <= a.fromTimestamp && a.toTimestamp <= b.toTimestamp) {
@@ -57,9 +46,7 @@ function removeOverlap(a: Period, b: Period): Period[] {
     a.toTimestamp <= b.toTimestamp
   ) {
     // a reaches into b
-    return [
-      { fromTimestamp: a.fromTimestamp, toTimestamp: b.fromTimestamp, type },
-    ];
+    return [{ fromTimestamp: a.fromTimestamp, toTimestamp: b.fromTimestamp }];
   }
   if (
     b.fromTimestamp < a.fromTimestamp &&
@@ -67,18 +54,16 @@ function removeOverlap(a: Period, b: Period): Period[] {
     b.toTimestamp <= a.toTimestamp
   ) {
     // b reaches into a
-    return [
-      { fromTimestamp: a.fromTimestamp, toTimestamp: b.fromTimestamp, type },
-    ];
+    return [{ fromTimestamp: a.fromTimestamp, toTimestamp: b.fromTimestamp }];
   }
   return [a];
 }
 
 function removeOverlaps(
-  periods: Period[],
-  alreadyAvailable: Period[]
-): Period[] {
-  const data: Period[] = [...periods];
+  periods: DB.Period[],
+  alreadyAvailable: DB.Period[]
+): DB.Period[] {
+  const data: DB.Period[] = [...periods];
 
   for (const available of alreadyAvailable) {
     let index = 0;
@@ -125,7 +110,7 @@ async function saveTickData(options: SaveTickDataOptions): Promise<void> {
         tickData[i].tick = tickData[i - 1].tick + tickData[i].tick;
       }
 
-      await DB.write(options.path, type, tickData);
+      await DB.write(options.path, tickData);
     }
 
     hasMore = response.hasMore;
@@ -143,15 +128,10 @@ function processor(options: Options): SymbolDataProcessor {
       return;
     }
 
-    const a: Period = {
+    // FIXME need to do this for ASK and BID
+    const period: DB.Period = {
       fromTimestamp: options.fromDate.getTime(),
       toTimestamp: options.toDate.getTime(),
-      type: ProtoOAQuoteType.ASK,
-    };
-    const b: Period = {
-      fromTimestamp: options.fromDate.getTime(),
-      toTimestamp: options.toDate.getTime(),
-      type: ProtoOAQuoteType.BID,
     };
 
     // prepare dir
@@ -159,8 +139,8 @@ function processor(options: Options): SymbolDataProcessor {
     const dir = `${symbolName}.DB`;
     await mkdir(dir);
     const availablePeriods = await DB.readPeriods(dir);
-    const periods = removeOverlaps([a, b], availablePeriods);
-    console.log([a, b], periods, availablePeriods);
+    const periods = removeOverlaps([period], availablePeriods);
+    console.log([period], periods, availablePeriods);
 
     // fetch data
     for (const period of periods) {
@@ -170,6 +150,7 @@ function processor(options: Options): SymbolDataProcessor {
         symbolId: data.symbol.symbolId,
         symbolName,
         path: dir,
+        type: ProtoOAQuoteType.ASK,
         ...period,
       });
     }

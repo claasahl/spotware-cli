@@ -6,7 +6,6 @@ import { Period } from "./types";
 
 export async function write(
   dir: string,
-  type: ProtoOAQuoteType,
   tickData: ProtoOATickData[]
 ): Promise<Period> {
   const first = tickData[0].timestamp;
@@ -14,7 +13,6 @@ export async function write(
   const period: Period = {
     fromTimestamp: Math.min(first, last),
     toTimestamp: Math.max(first, last),
-    type,
   };
 
   const name = JSON.stringify(period);

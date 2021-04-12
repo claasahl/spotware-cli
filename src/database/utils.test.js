@@ -39,7 +39,6 @@ describe("Database", () => {
       const a = {
         fromTimestamp: 100,
         toTimestamp: 200,
-        type: ProtoOAQuoteType.ASK,
       };
       expect(engulfs(a, a)).toBe(true);
     });
@@ -49,12 +48,10 @@ describe("Database", () => {
       const a = {
         fromTimestamp: 100,
         toTimestamp: 200,
-        type: ProtoOAQuoteType.ASK,
       };
       const b = {
         fromTimestamp: 100,
         toTimestamp: 150,
-        type: ProtoOAQuoteType.ASK,
       };
       expect(engulfs(a, b)).toBe(true);
       expect(engulfs(b, a)).toBe(false); // needs to fully overlap
@@ -65,12 +62,10 @@ describe("Database", () => {
       const a = {
         fromTimestamp: 100,
         toTimestamp: 200,
-        type: ProtoOAQuoteType.ASK,
       };
       const b = {
         fromTimestamp: 150,
         toTimestamp: 200,
-        type: ProtoOAQuoteType.ASK,
       };
       expect(engulfs(a, b)).toBe(true);
       expect(engulfs(b, a)).toBe(false); // needs to fully overlap
@@ -81,12 +76,10 @@ describe("Database", () => {
       const a = {
         fromTimestamp: 100,
         toTimestamp: 200,
-        type: ProtoOAQuoteType.ASK,
       };
       const b = {
         fromTimestamp: 150,
         toTimestamp: 175,
-        type: ProtoOAQuoteType.ASK,
       };
       expect(engulfs(a, b)).toBe(true);
       expect(engulfs(b, a)).toBe(false); // needs to fully overlap
@@ -100,7 +93,6 @@ describe("Database", () => {
       const a = {
         fromTimestamp: 100,
         toTimestamp: 200,
-        type: ProtoOAQuoteType.ASK,
       };
       expect(intersects(a, a)).toBe(true);
     });
@@ -110,12 +102,10 @@ describe("Database", () => {
       const a = {
         fromTimestamp: 100,
         toTimestamp: 200,
-        type: ProtoOAQuoteType.ASK,
       };
       const b = {
         fromTimestamp: 100,
         toTimestamp: 150,
-        type: ProtoOAQuoteType.ASK,
       };
       expect(intersects(a, b)).toBe(true);
       expect(intersects(b, a)).toBe(true);
@@ -126,12 +116,10 @@ describe("Database", () => {
       const a = {
         fromTimestamp: 100,
         toTimestamp: 200,
-        type: ProtoOAQuoteType.ASK,
       };
       const b = {
         fromTimestamp: 150,
         toTimestamp: 200,
-        type: ProtoOAQuoteType.ASK,
       };
       expect(intersects(a, b)).toBe(true);
       expect(intersects(b, a)).toBe(true);
@@ -142,12 +130,10 @@ describe("Database", () => {
       const a = {
         fromTimestamp: 100,
         toTimestamp: 200,
-        type: ProtoOAQuoteType.ASK,
       };
       const b = {
         fromTimestamp: 150,
         toTimestamp: 175,
-        type: ProtoOAQuoteType.ASK,
       };
       expect(intersects(a, b)).toBe(true);
       expect(intersects(b, a)).toBe(true);
@@ -161,7 +147,6 @@ describe("Database", () => {
       const a = {
         fromTimestamp: 100,
         toTimestamp: 200,
-        type: ProtoOAQuoteType.ASK,
       };
       expect(intersection(a, a)).toStrictEqual(a);
     });
@@ -171,12 +156,10 @@ describe("Database", () => {
       const a = {
         fromTimestamp: 100,
         toTimestamp: 200,
-        type: ProtoOAQuoteType.ASK,
       };
       const b = {
         fromTimestamp: 100,
         toTimestamp: 150,
-        type: ProtoOAQuoteType.ASK,
       };
       expect(intersection(a, b)).toStrictEqual(b);
       expect(intersection(b, a)).toStrictEqual(b);
@@ -187,12 +170,10 @@ describe("Database", () => {
       const a = {
         fromTimestamp: 100,
         toTimestamp: 200,
-        type: ProtoOAQuoteType.ASK,
       };
       const b = {
         fromTimestamp: 150,
         toTimestamp: 200,
-        type: ProtoOAQuoteType.ASK,
       };
       expect(intersection(a, b)).toStrictEqual(b);
       expect(intersection(b, a)).toStrictEqual(b);
@@ -203,15 +184,14 @@ describe("Database", () => {
       const a = {
         fromTimestamp: 100,
         toTimestamp: 200,
-        type: ProtoOAQuoteType.ASK,
       };
       const b = {
         fromTimestamp: 150,
         toTimestamp: 175,
-        type: ProtoOAQuoteType.ASK,
       };
       expect(intersection(a, b)).toStrictEqual(b);
       expect(intersection(b, a)).toStrictEqual(b);
     });
   });
+
 });

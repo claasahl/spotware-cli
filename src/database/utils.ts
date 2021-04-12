@@ -29,11 +29,7 @@ export function engulfs(a: Period, b: Period): boolean {
 
   // a: --------
   // b: --------
-  return (
-    a.type === b.type &&
-    a.fromTimestamp <= b.fromTimestamp &&
-    b.toTimestamp <= a.toTimestamp
-  );
+  return a.fromTimestamp <= b.fromTimestamp && b.toTimestamp <= a.toTimestamp;
 }
 
 export function intersects(a: Period, b: Period): boolean {
@@ -52,11 +48,10 @@ export function intersects(a: Period, b: Period): boolean {
   // a: -------------
   // b:    --------
   return (
-    a.type === b.type &&
-    (isBetween(a.fromTimestamp, b.fromTimestamp, b.toTimestamp) ||
-      isBetween(a.toTimestamp, b.fromTimestamp, b.toTimestamp) ||
-      isBetween(b.fromTimestamp, a.fromTimestamp, a.toTimestamp) ||
-      isBetween(b.toTimestamp, a.fromTimestamp, a.toTimestamp))
+    isBetween(a.fromTimestamp, b.fromTimestamp, b.toTimestamp) ||
+    isBetween(a.toTimestamp, b.fromTimestamp, b.toTimestamp) ||
+    isBetween(b.fromTimestamp, a.fromTimestamp, a.toTimestamp) ||
+    isBetween(b.toTimestamp, a.fromTimestamp, a.toTimestamp)
   );
 }
 
@@ -67,14 +62,13 @@ export function intersection(a: Period, b: Period): Period | undefined {
     return {
       fromTimestamp,
       toTimestamp,
-      type: a.type,
     };
   }
   return undefined;
 }
 
 export function disjunction(a: Period, b: Period): Period[] {
-  if (a.type !== b.type || !intersects(a, b)) {
+  if (!intersects(a, b)) {
     return [a, b];
   }
 
@@ -91,7 +85,6 @@ export function disjunction(a: Period, b: Period): Period[] {
       {
         fromTimestamp: Math.min(a.toTimestamp, b.toTimestamp),
         toTimestamp: Math.max(a.toTimestamp, b.toTimestamp),
-        type: a.type,
       },
     ];
   }
@@ -100,7 +93,6 @@ export function disjunction(a: Period, b: Period): Period[] {
       {
         fromTimestamp: Math.min(a.fromTimestamp, b.fromTimestamp),
         toTimestamp: Math.max(a.fromTimestamp, b.fromTimestamp),
-        type: a.type,
       },
     ];
   }
@@ -117,12 +109,10 @@ export function disjunction(a: Period, b: Period): Period[] {
     {
       fromTimestamp: Math.min(a.fromTimestamp, b.fromTimestamp),
       toTimestamp: Math.max(a.fromTimestamp, b.fromTimestamp),
-      type: a.type,
     },
     {
       fromTimestamp: Math.min(a.toTimestamp, b.toTimestamp),
       toTimestamp: Math.max(a.toTimestamp, b.toTimestamp),
-      type: a.type,
     },
   ];
 }
