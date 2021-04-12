@@ -1,4 +1,4 @@
-import { Period } from "./types";
+import { comparePeriod, Period } from "./types";
 
 /**
  * Tests whether `value` is situated between the referenced thresholds.
@@ -70,6 +70,8 @@ export function intersection(a: Period, b: Period): Period | undefined {
 export function disjunction(a: Period, b: Period): Period[] {
   if (!intersects(a, b)) {
     return [a, b];
+  } else if (comparePeriod(a, b) === 0) {
+    return []; // periods are identical
   }
 
   // a: --------

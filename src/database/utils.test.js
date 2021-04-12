@@ -5,6 +5,7 @@ const {
   engulfs,
   intersects,
   intersection,
+  disjunction,
 } = require("../../build/database/utils");
 
 describe("Database", () => {
@@ -194,4 +195,79 @@ describe("Database", () => {
     });
   });
 
+  describe("disjunction", () => {
+    test("period is not disjoint with itself", () => {
+      // a: -----
+      // b: -----
+      const a = {
+        fromTimestamp: 100,
+        toTimestamp: 200,
+      };
+      expect(disjunction(a, a)).toStrictEqual([]);
+    });
+    test("same fromTimestamp, different toTimestamp", () => {
+      // a: -----
+      // b: ---
+      const a = {
+        fromTimestamp: 100,
+        toTimestamp: 200,
+      };
+      const b = {
+        fromTimestamp: 100,
+        toTimestamp: 150,
+      };
+      const expected = [
+        {
+          fromTimestamp: 150,
+          toTimestamp: 200,
+        },
+      ];
+      expect(disjunction(a, b)).toStrictEqual(expected);
+      expect(disjunction(b, a)).toStrictEqual(expected);
+    });
+    test("same toTimestamp, different fromTimestamp", () => {
+      // a: -----
+      // b:    --
+      const a = {
+        fromTimestamp: 100,
+        toTimestamp: 200,
+      };
+      const b = {
+        fromTimestamp: 150,
+        toTimestamp: 200,
+      };
+      const expected = [
+        {
+          fromTimestamp: 100,
+          toTimestamp: 150,
+        },
+      ];
+      expect(disjunction(a, b)).toStrictEqual(expected);
+      expect(disjunction(b, a)).toStrictEqual(expected);
+    });
+    test("different toTimestamp, different fromTimestamp", () => {
+      // a: -----
+      // b:  --
+      const a = {
+        fromTimestamp: 100,
+        toTimestamp: 200,
+      };
+      const b = {
+        fromTimestamp: 150,
+        toTimestamp: 175,
+      };
+      const expected = [
+        {
+          fromTimestamp: 100,
+          toTimestamp: 150,
+        },
+        {
+          fromTimestamp: 175,
+          toTimestamp: 200,
+        },
+      ];
+      expect(disjunction(a, b)).toStrictEqual(expected);
+      expect(disjunction(b, a)).toStrictEqual(expected);
+    });
+  });
 });
