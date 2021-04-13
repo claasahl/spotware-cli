@@ -1,23 +1,5 @@
 import { comparePeriod, Period } from "./types";
 
-/**
- * Tests whether `value` is situated between the referenced thresholds.
- *
- * @param value
- * @param threshold1 lower threshold (inclusive)
- * @param threshold2 upper threshold (exclusive)
- * @returns `true`, if `value` is between the two thresholds
- */
-export function isBetween(
-  value: number,
-  threshold1: number,
-  threshold2: number
-): boolean {
-  const upper = Math.max(threshold1, threshold2);
-  const lower = Math.min(threshold1, threshold2);
-  return lower <= value && value < upper;
-}
-
 export function engulfs(a: Period, b: Period): boolean {
   // a: --------------
   // b:    --------
@@ -43,10 +25,10 @@ export function intersects(a: Period, b: Period): boolean {
   // a: -------------
   // b:    --------
   return (
-    isBetween(a.fromTimestamp, b.fromTimestamp, b.toTimestamp) ||
-    isBetween(a.toTimestamp, b.fromTimestamp, b.toTimestamp) ||
-    isBetween(b.fromTimestamp, a.fromTimestamp, a.toTimestamp) ||
-    isBetween(b.toTimestamp, a.fromTimestamp, a.toTimestamp)
+    (b.fromTimestamp <= a.fromTimestamp && a.fromTimestamp < b.toTimestamp) ||
+    (b.fromTimestamp < a.toTimestamp && a.toTimestamp < b.toTimestamp) ||
+    (a.fromTimestamp <= b.fromTimestamp && b.fromTimestamp < a.toTimestamp) ||
+    (a.fromTimestamp < b.toTimestamp && b.toTimestamp < a.toTimestamp)
   );
 }
 
