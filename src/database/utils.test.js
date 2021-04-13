@@ -19,17 +19,11 @@ describe("Database", () => {
     test("7 is between 7 and 13 (edge case)", () => {
       expect(isBetween(7, 7, 13)).toBe(true);
     });
-    test("13 is between 7 and 13 (edge case)", () => {
-      expect(isBetween(13, 7, 13)).toBe(true);
+    test("13 is NOT between 7 and 13 (edge case)", () => {
+      expect(isBetween(13, 7, 13)).toBe(false);
     });
     test("5 is NOT between 7 and 13", () => {
       expect(isBetween(5, 7, 13)).toBe(false);
-    });
-    test("7 is NOT between 7 and 13 (edge case)", () => {
-      expect(isBetween(7, 7, 13, false)).toBe(false);
-    });
-    test("13 is NOT between 7 and 13 (edge case)", () => {
-      expect(isBetween(13, 7, 13, false)).toBe(false);
     });
   });
 

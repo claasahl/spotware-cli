@@ -4,23 +4,18 @@ import { comparePeriod, Period } from "./types";
  * Tests whether `value` is situated between the referenced thresholds.
  *
  * @param value
- * @param threshold1
- * @param threshold2
- * @param inclusive whether the `value` may also overlap with the thresholds
+ * @param threshold1 lower threshold (inclusive)
+ * @param threshold2 upper threshold (exclusive)
  * @returns `true`, if `value` is between the two thresholds
  */
 export function isBetween(
   value: number,
   threshold1: number,
-  threshold2: number,
-  inclusive = true
+  threshold2: number
 ): boolean {
   const upper = Math.max(threshold1, threshold2);
   const lower = Math.min(threshold1, threshold2);
-  if (inclusive) {
-    return lower <= value && value <= upper;
-  }
-  return lower < value && value < upper;
+  return lower <= value && value < upper;
 }
 
 export function engulfs(a: Period, b: Period): boolean {
