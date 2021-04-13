@@ -1,8 +1,8 @@
 const { ProtoOAQuoteType } = require("@claasahl/spotware-adapter");
 
 const {
-  isBetween,
   engulfs,
+  touches,
   intersects,
   intersection,
   disjunction,
@@ -60,6 +60,74 @@ describe("Database", () => {
       };
       expect(engulfs(a, b)).toBe(true);
       expect(engulfs(b, a)).toBe(false); // needs to fully overlap
+    });
+  });
+
+  describe("touches", () => {
+    test("period should cannot touch itself", () => {
+      // a: -----
+      // b: -----
+      const a = {
+        fromTimestamp: 100,
+        toTimestamp: 200,
+      };
+      expect(touches(a, a)).toBe(false);
+    });
+    test("same fromTimestamp, different toTimestamp", () => {
+      // a: -----
+      // b: ---
+      const a = {
+        fromTimestamp: 100,
+        toTimestamp: 200,
+      };
+      const b = {
+        fromTimestamp: 100,
+        toTimestamp: 150,
+      };
+      expect(touches(a, b)).toBe(false);
+      expect(touches(b, a)).toBe(false);
+    });
+    test("same toTimestamp, different fromTimestamp", () => {
+      // a: -----
+      // b:    --
+      const a = {
+        fromTimestamp: 100,
+        toTimestamp: 200,
+      };
+      const b = {
+        fromTimestamp: 150,
+        toTimestamp: 200,
+      };
+      expect(touches(a, b)).toBe(false);
+      expect(touches(b, a)).toBe(false);
+    });
+    test("different toTimestamp, different fromTimestamp", () => {
+      // a: -----
+      // b:  --
+      const a = {
+        fromTimestamp: 100,
+        toTimestamp: 200,
+      };
+      const b = {
+        fromTimestamp: 150,
+        toTimestamp: 175,
+      };
+      expect(touches(a, b)).toBe(false);
+      expect(touches(b, a)).toBe(false);
+    });
+    test("periods that touch", () => {
+      // a: --
+      // b:   --
+      const a = {
+        fromTimestamp: 100,
+        toTimestamp: 150,
+      };
+      const b = {
+        fromTimestamp: 150,
+        toTimestamp: 175,
+      };
+      expect(touches(a, b)).toBe(true);
+      expect(touches(b, a)).toBe(true);
     });
   });
 

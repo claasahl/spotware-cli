@@ -36,7 +36,7 @@ describe("Database", () => {
         },
       ]);
     });
-    test("should merge if periods meet", () => {
+    test("should merge if periods touch", () => {
       // a: -----
       // b:     -----
 

@@ -9,6 +9,10 @@ export function engulfs(a: Period, b: Period): boolean {
   return a.fromTimestamp <= b.fromTimestamp && b.toTimestamp <= a.toTimestamp;
 }
 
+export function touches(a: Period, b: Period): boolean {
+  return a.fromTimestamp === b.toTimestamp || a.toTimestamp === b.fromTimestamp;
+}
+
 export function intersects(a: Period, b: Period): boolean {
   // a: --------
   // b: --------
