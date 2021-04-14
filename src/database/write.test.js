@@ -11,25 +11,37 @@ jest.mock("fs", () => ({
 describe("Database", () => {
   describe("write", () => {
     test("should write tick data to file", async () => {
+      fs.promises.writeFile.mockResolvedValue();
       const tickData = [
-        { timestamp: 100 },
-        { timestamp: 50 },
-        { timestamp: 25 },
+        { timestamp: 100, tick: 3 },
+        { timestamp: 200, tick: 45 },
       ];
-      const period = await write("./EURUSD.DB", tickData);
-      expect(period).toStrictEqual({
-        fromTimestamp: 25,
-        toTimestamp: 100,
-      });
+      const period = {
+        fromTimestamp: 100,
+        toTimestamp: 200,
+      };
+      await write("./EURUSD.DB", period, tickData);
+      expect(fs.promises.writeFile).toHaveBeenCalledWith(
+        "EURUSD.DB\\" +
+          Buffer.from(JSON.stringify(period)).toString("base64") +
+          ".json",
+        JSON.stringify(tickData)
+      );
     });
-    test("will fail without tick data", async (done) => {
+    test("should write empty/no tick data to file", async () => {
+      fs.promises.writeFile.mockResolvedValue();
       const tickData = [];
-      try {
-        await write("./EURUSD.DB", tickData);
-        done(new Error("should have failed"));
-      } catch {
-        done();
-      }
+      const period = {
+        fromTimestamp: 100,
+        toTimestamp: 200,
+      };
+      await write("./EURUSD.DB", period, tickData);
+      expect(fs.promises.writeFile).toHaveBeenCalledWith(
+        "EURUSD.DB\\" +
+          Buffer.from(JSON.stringify(period)).toString("base64") +
+          ".json",
+        "[]"
+      );
     });
   });
 });
