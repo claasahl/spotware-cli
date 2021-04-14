@@ -1,5 +1,5 @@
-import { Period } from "./types";
-import { intersection, disjunction } from "./utils";
+import { comparePeriod, Period } from "./types";
+import { intersects, intersection, disjunction } from "./utils";
 
 export function retainAvailablePeriods(
   period: Period,
@@ -27,10 +27,20 @@ export function retainUnknownPeriods(
     return [period];
   }
 
-  const data: Period[] = [];
+  const data: Period[] = [period];
   for (const sample of available) {
-    const tmp = disjunction(period, sample);
-    data.push(...tmp);
+    // remove available period
+    // do the same for resulting output
+    for (let index = 0; index < data.length; index++) {
+      if (!intersects(data[index], sample)) {
+        continue;
+      }
+      const tmp = disjunction(data[index], sample).filter((p) =>
+        intersects(p, period)
+      );
+      console.log(index, data[index], sample, tmp);
+      data.splice(index, 1, ...tmp);
+    }
   }
   return data;
 }
