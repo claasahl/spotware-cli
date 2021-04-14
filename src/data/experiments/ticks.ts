@@ -25,63 +25,6 @@ async function mkdir(dir: string): Promise<void> {
   }
 }
 
-function removeOverlap(a: DB.Period, b: DB.Period): DB.Period[] {
-  if (b.toTimestamp < a.fromTimestamp || a.toTimestamp < b.fromTimestamp) {
-    return [a];
-  }
-  if (a.fromTimestamp <= b.fromTimestamp && b.toTimestamp <= a.toTimestamp) {
-    // a completely engulfes b
-    return [
-      { fromTimestamp: a.fromTimestamp, toTimestamp: b.fromTimestamp },
-      { fromTimestamp: b.toTimestamp, toTimestamp: a.toTimestamp },
-    ];
-  }
-  if (b.fromTimestamp <= a.fromTimestamp && a.toTimestamp <= b.toTimestamp) {
-    // b completely engulfes a
-    return [];
-  }
-  if (
-    a.fromTimestamp < b.fromTimestamp &&
-    b.fromTimestamp < a.toTimestamp &&
-    a.toTimestamp <= b.toTimestamp
-  ) {
-    // a reaches into b
-    return [{ fromTimestamp: a.fromTimestamp, toTimestamp: b.fromTimestamp }];
-  }
-  if (
-    b.fromTimestamp < a.fromTimestamp &&
-    a.fromTimestamp < b.toTimestamp &&
-    b.toTimestamp <= a.toTimestamp
-  ) {
-    // b reaches into a
-    return [{ fromTimestamp: a.fromTimestamp, toTimestamp: b.fromTimestamp }];
-  }
-  return [a];
-}
-
-function removeOverlaps(
-  periods: DB.Period[],
-  alreadyAvailable: DB.Period[]
-): DB.Period[] {
-  const data: DB.Period[] = [...periods];
-
-  for (const available of alreadyAvailable) {
-    let index = 0;
-    while (index < data.length) {
-      const period = data[index];
-      const tmp = removeOverlap(period, available);
-
-      if (tmp.length === 1 && tmp[0] === period) {
-        // no change
-        index++;
-      } else {
-        data.splice(index, 1, ...tmp);
-      }
-    }
-  }
-  return data;
-}
-
 async function saveTickData(options: SaveTickDataOptions): Promise<void> {
   const step = 604800000;
   const { ctidTraderAccountId, symbolId, type } = options;
@@ -101,20 +44,63 @@ async function saveTickData(options: SaveTickDataOptions): Promise<void> {
     });
 
     if (response.tickData.length > 0) {
-      toTimestamp = response.tickData[0].timestamp;
-
       const tickData = response.tickData;
       for (let i = 1; i < tickData.length; i++) {
         tickData[i].timestamp =
           tickData[i - 1].timestamp + tickData[i].timestamp;
         tickData[i].tick = tickData[i - 1].tick + tickData[i].tick;
       }
+      const period = {
+        fromTimestamp: tickData[tickData.length - 1].timestamp,
+        toTimestamp,
+      };
+      toTimestamp = period.fromTimestamp;
 
-      await DB.write(options.path, tickData);
+      await DB.write(options.path, period, tickData);
     }
 
     hasMore = response.hasMore;
   } while (hasMore);
+}
+
+function a(period: DB.Period) {
+  return {
+    fromTimestamp: new Date(period.fromTimestamp).toISOString(),
+    toTimestamp: new Date(period.toTimestamp).toISOString(),
+  };
+}
+
+type FetchTickDataOptions = {
+  socket: SpotwareClientSocket;
+  ctidTraderAccountId: number;
+  symbolId: number;
+  symbolName: string;
+  type: ProtoOAQuoteType;
+  fromTimestamp: number;
+  toTimestamp: number;
+};
+async function fetchTickData(options: FetchTickDataOptions) {
+  const period: DB.Period = {
+    fromTimestamp: options.fromTimestamp,
+    toTimestamp: options.toTimestamp,
+  };
+
+  // prepare dir
+  const dir = `${options.symbolName}.DB/${ProtoOAQuoteType[options.type]}`;
+  await mkdir(dir);
+  const available = await DB.readPeriods(dir);
+  console.log(available.map(a));
+  const periods = DB.retainUnknownPeriods(period, available);
+  console.log([period].map(a), periods.map(a));
+
+  // fetch data
+  for (const period of periods) {
+    await saveTickData({
+      ...options,
+      ...period,
+      path: dir,
+    });
+  }
 }
 
 interface Options {
@@ -128,32 +114,30 @@ function processor(options: Options): SymbolDataProcessor {
       return;
     }
 
-    // FIXME need to do this for ASK and BID
-    const period: DB.Period = {
-      fromTimestamp: options.fromDate.getTime(),
-      toTimestamp: options.toDate.getTime(),
-    };
-
-    // prepare dir
+    console.log("--------------------------------------");
+    const ctidTraderAccountId = data.trader.ctidTraderAccountId;
+    const fromTimestamp = options.fromDate.getTime();
+    const toTimestamp = options.toDate.getTime();
+    const symbolId = data.symbol.symbolId;
     const symbolName = data.symbol.symbolName?.replace("/", "") || "";
-    const dir = `${symbolName}.DB`;
-    await mkdir(dir);
-    const availablePeriods = await DB.readPeriods(dir);
-    const periods = removeOverlaps([period], availablePeriods);
-    console.log([period], periods, availablePeriods);
-
-    // fetch data
-    for (const period of periods) {
-      await saveTickData({
-        socket,
-        ctidTraderAccountId: data.trader.ctidTraderAccountId,
-        symbolId: data.symbol.symbolId,
-        symbolName,
-        path: dir,
-        type: ProtoOAQuoteType.ASK,
-        ...period,
-      });
-    }
+    await fetchTickData({
+      socket,
+      ctidTraderAccountId,
+      fromTimestamp,
+      toTimestamp,
+      symbolId,
+      symbolName,
+      type: ProtoOAQuoteType.ASK,
+    });
+    // await fetchTickData({
+    //   socket,
+    //   ctidTraderAccountId,
+    //   fromTimestamp,
+    //   toTimestamp,
+    //   symbolId,
+    //   symbolName,
+    //   type: ProtoOAQuoteType.BID
+    // })
   };
 }
 export default processor;
