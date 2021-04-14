@@ -29,8 +29,6 @@ export function retainUnknownPeriods(
 
   const data: Period[] = [period];
   for (const sample of available) {
-    // remove available period
-    // do the same for resulting output
     for (let index = 0; index < data.length; index++) {
       if (!intersects(data[index], sample)) {
         continue;
@@ -38,7 +36,6 @@ export function retainUnknownPeriods(
       const tmp = disjunction(data[index], sample).filter((p) =>
         intersects(p, period)
       );
-      console.log(index, data[index], sample, tmp);
       data.splice(index, 1, ...tmp);
     }
   }
