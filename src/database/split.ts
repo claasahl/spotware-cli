@@ -1,4 +1,4 @@
-import { comparePeriod, Period } from "./types";
+import { Period } from "./types";
 import { intersects, intersection, disjunction } from "./utils";
 
 export function retainAvailablePeriods(
