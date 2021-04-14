@@ -277,6 +277,19 @@ describe("Database", () => {
       };
       expect(disjunction(a, a)).toStrictEqual([]);
     });
+    test("fully disjointed", () => {
+      // a: ---
+      // b:     ---
+      const a = {
+        fromTimestamp: 100,
+        toTimestamp: 120,
+      };
+      const b = {
+        fromTimestamp: 200,
+        toTimestamp: 220,
+      };
+      expect(disjunction(a, b)).toStrictEqual([a, b]);
+    });
     test("same fromTimestamp, different toTimestamp", () => {
       // a: -----
       // b: ---
