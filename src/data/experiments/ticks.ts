@@ -31,10 +31,8 @@ async function saveTickData(options: SaveTickDataOptions): Promise<void> {
   let { toTimestamp } = options;
   let hasMore = true;
   do {
-    const fromTimestamp = Math.max(
-      options.toTimestamp - step,
-      options.fromTimestamp
-    );
+    const fromTimestamp = Math.max(toTimestamp - step, options.fromTimestamp);
+    console.log("fetching", [{ fromTimestamp, toTimestamp }].map(a));
     const response = await R.PROTO_OA_GET_TICKDATA_REQ(options.socket, {
       ctidTraderAccountId,
       symbolId,
@@ -57,6 +55,14 @@ async function saveTickData(options: SaveTickDataOptions): Promise<void> {
       toTimestamp = period.fromTimestamp;
 
       await DB.write(options.path, period, tickData);
+    } else if (response.tickData.length === 0) {
+      const period = {
+        fromTimestamp,
+        toTimestamp,
+      };
+      toTimestamp = fromTimestamp;
+
+      await DB.write(options.path, period, []);
     }
 
     hasMore = response.hasMore;
@@ -89,12 +95,14 @@ async function fetchTickData(options: FetchTickDataOptions) {
   const dir = `${options.symbolName}.DB/${ProtoOAQuoteType[options.type]}`;
   await mkdir(dir);
   const available = await DB.readPeriods(dir);
-  console.log(available.map(a));
+  console.log("available", available.map(a));
   const periods = DB.retainUnknownPeriods(period, available);
-  console.log([period].map(a), periods.map(a));
+  console.log("period", [period].map(a));
+  console.log("remaining", periods.map(a));
 
   // fetch data
   for (const period of periods) {
+    console.log("------------------");
     await saveTickData({
       ...options,
       ...period,
