@@ -1,6 +1,7 @@
 import { ProtoOALightSymbol, ProtoOASymbol } from "@claasahl/spotware-adapter";
 
 import * as ASSETS from "./assets";
+import * as CATEGORIES from "./categories";
 
 const symbols: (ProtoOALightSymbol & ProtoOASymbol)[] = [
   Object.freeze({
@@ -9,7 +10,7 @@ const symbols: (ProtoOALightSymbol & ProtoOASymbol)[] = [
     baseAssetId: ASSETS.BITCOIN.assetId,
     quoteAssetId: ASSETS.EUR.assetId,
     enabled: true,
-    symbolCategoryId: 1,
+    symbolCategoryId: CATEGORIES.CRYTOS.id,
     digits: 2,
     holiday: [],
     pipPosition: 5,
@@ -21,7 +22,7 @@ const symbols: (ProtoOALightSymbol & ProtoOASymbol)[] = [
     baseAssetId: ASSETS.EUR.assetId,
     quoteAssetId: ASSETS.USD.assetId,
     enabled: true,
-    symbolCategoryId: 2,
+    symbolCategoryId: CATEGORIES.FOREX.id,
     digits: 2,
     holiday: [],
     pipPosition: 5,
@@ -33,7 +34,7 @@ const symbols: (ProtoOALightSymbol & ProtoOASymbol)[] = [
     baseAssetId: ASSETS.EUR.assetId,
     quoteAssetId: ASSETS.GBP.assetId,
     enabled: false,
-    symbolCategoryId: 3,
+    symbolCategoryId: CATEGORIES.FOREX.id,
     digits: 2,
     holiday: [],
     pipPosition: 5,
@@ -45,7 +46,7 @@ const symbols: (ProtoOALightSymbol & ProtoOASymbol)[] = [
     baseAssetId: ASSETS.XAG.assetId,
     quoteAssetId: ASSETS.EUR.assetId,
     enabled: false,
-    symbolCategoryId: 4,
+    symbolCategoryId: CATEGORIES.METALS.id,
     digits: 2,
     holiday: [],
     pipPosition: 5,
