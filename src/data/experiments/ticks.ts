@@ -1,10 +1,13 @@
 import fs from "fs";
 import { ProtoOAQuoteType } from "@claasahl/spotware-protobuf";
 import { SpotwareClientSocket } from "@claasahl/spotware-adapter";
+import debug from "debug";
 
 import { SymbolData, SymbolDataProcessor } from "../runner/types";
 import * as R from "../../client/requests";
 import * as DB from "../../database";
+
+const log = debug("ticks");
 
 type SaveTickDataOptions = {
   socket: SpotwareClientSocket;
@@ -31,7 +34,11 @@ async function saveTickData(options: SaveTickDataOptions): Promise<void> {
   let { toTimestamp } = options;
   do {
     const fromTimestamp = Math.max(toTimestamp - step, options.fromTimestamp);
-    console.log("fetching", [{ fromTimestamp, toTimestamp }].map(a));
+    log("%j", {
+      period: a({ fromTimestamp, toTimestamp }),
+      msg: "fetching period",
+    });
+
     const response = await R.PROTO_OA_GET_TICKDATA_REQ(options.socket, {
       ctidTraderAccountId,
       symbolId,
@@ -93,8 +100,8 @@ async function fetchTickData(options: FetchTickDataOptions) {
   await mkdir(dir);
   const available = await DB.readPeriods(dir);
   const periods = DB.retainUnknownPeriods(period, available);
-  console.log("period", [period].map(a));
-  console.log("remaining", periods.map(a));
+  log("%j", { period: a(period), msg: "period" });
+  log("%j", { periods: periods.map(a), msg: "periods" });
 
   // fetch data
   for (const period of periods) {
