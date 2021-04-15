@@ -13,7 +13,7 @@ import {
 
 import * as U from "../../utils";
 import assetClasses from "./assetClasses";
-import assets from "./assets";
+import assets, { EUR } from "./assets";
 import categories from "./categories";
 import symbols from "./symbols";
 
@@ -46,7 +46,7 @@ export class Account {
     this.trader = {
       ctidTraderAccountId,
       balance: 1000,
-      depositAssetId: 23,
+      depositAssetId: EUR.assetId,
     };
   }
 
