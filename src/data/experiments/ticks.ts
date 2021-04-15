@@ -29,7 +29,6 @@ async function saveTickData(options: SaveTickDataOptions): Promise<void> {
   const step = 604800000;
   const { ctidTraderAccountId, symbolId, type } = options;
   let { toTimestamp } = options;
-  let hasMore = true;
   do {
     const fromTimestamp = Math.max(toTimestamp - step, options.fromTimestamp);
     console.log("fetching", [{ fromTimestamp, toTimestamp }].map(a));
@@ -64,9 +63,7 @@ async function saveTickData(options: SaveTickDataOptions): Promise<void> {
 
       await DB.write(options.path, period, []);
     }
-
-    hasMore = response.hasMore;
-  } while (hasMore);
+  } while (toTimestamp > options.fromTimestamp);
 }
 
 function a(period: DB.Period) {
