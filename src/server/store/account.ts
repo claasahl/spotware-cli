@@ -13,6 +13,7 @@ import {
 
 import * as U from "../../utils";
 import assetClasses from "./assetClasses";
+import assets from "./assets";
 import categories from "./categories";
 import symbols from "./symbols";
 
@@ -23,6 +24,7 @@ export class Account {
   } = {};
   private trendbarSubscriptions = new Map<number, ProtoOATrendbarPeriod[]>();
   readonly assetClasses;
+  readonly assets;
   readonly categories;
   readonly symbols;
   readonly accessTokens: string[];
@@ -32,6 +34,7 @@ export class Account {
   constructor(ctidTraderAccountId: number) {
     this.ctidTraderAccountId = ctidTraderAccountId;
     this.assetClasses = assetClasses;
+    this.assets = assets;
     this.categories = categories;
     this.symbols = symbols;
     this.accessTokens = [];
