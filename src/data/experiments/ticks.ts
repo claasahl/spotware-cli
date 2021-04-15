@@ -95,14 +95,12 @@ async function fetchTickData(options: FetchTickDataOptions) {
   const dir = `${options.symbolName}.DB/${ProtoOAQuoteType[options.type]}`;
   await mkdir(dir);
   const available = await DB.readPeriods(dir);
-  console.log("available", available.map(a));
   const periods = DB.retainUnknownPeriods(period, available);
   console.log("period", [period].map(a));
   console.log("remaining", periods.map(a));
 
   // fetch data
   for (const period of periods) {
-    console.log("------------------");
     await saveTickData({
       ...options,
       ...period,
@@ -122,7 +120,6 @@ function processor(options: Options): SymbolDataProcessor {
       return;
     }
 
-    console.log("--------------------------------------");
     const ctidTraderAccountId = data.trader.ctidTraderAccountId;
     const fromTimestamp = options.fromDate.getTime();
     const toTimestamp = options.toDate.getTime();
@@ -137,15 +134,15 @@ function processor(options: Options): SymbolDataProcessor {
       symbolName,
       type: ProtoOAQuoteType.ASK,
     });
-    // await fetchTickData({
-    //   socket,
-    //   ctidTraderAccountId,
-    //   fromTimestamp,
-    //   toTimestamp,
-    //   symbolId,
-    //   symbolName,
-    //   type: ProtoOAQuoteType.BID
-    // })
+    await fetchTickData({
+      socket,
+      ctidTraderAccountId,
+      fromTimestamp,
+      toTimestamp,
+      symbolId,
+      symbolName,
+      type: ProtoOAQuoteType.BID,
+    });
   };
 }
 export default processor;
