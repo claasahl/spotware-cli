@@ -5,12 +5,14 @@ import {
   ProtoOAGetTickDataRes,
   ProtoOAGetTrendbarsReq,
   ProtoOAGetTrendbarsRes,
+  ProtoOAQuoteType,
   ProtoOATrader,
   ProtoOATrendbar,
   ProtoOATrendbarPeriod,
   SpotwareSocket,
 } from "@claasahl/spotware-adapter";
 
+import * as DB from "../../database";
 import * as U from "../../utils";
 import assetClasses from "./assetClasses";
 import assets, { EUR } from "./assets";
@@ -127,7 +129,24 @@ export class Account {
     this.trendbarSubscriptions.set(symbolId, periods || []);
   }
 
-  ticks(_req: ProtoOAGetTickDataReq): ProtoOAGetTickDataRes {
+  async ticks(req: ProtoOAGetTickDataReq): Promise<ProtoOAGetTickDataRes> {
+    function a(a: DB.Period) {
+      return {
+        from: new Date(a.fromTimestamp).toISOString(),
+        to: new Date(a.toTimestamp).toISOString(),
+      };
+    }
+    const period: DB.Period = {
+      fromTimestamp: req.fromTimestamp,
+      toTimestamp: req.toTimestamp,
+    };
+    const dir = `./SERVER/EURUSD.DB/${ProtoOAQuoteType[req.type]}`;
+    const available = await DB.readPeriods(dir);
+    const periods = DB.retainAvailablePeriods(period, available).sort(
+      (a, b) => -DB.comparePeriod(a, b)
+    );
+    console.log(a(period), periods.map(a));
+
     return {
       ctidTraderAccountId: this.ctidTraderAccountId,
       hasMore: false,

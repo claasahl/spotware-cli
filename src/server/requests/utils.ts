@@ -4,8 +4,12 @@ import ms from "ms";
 export function response<T extends Messages["payload"]>(
   factory: (payload: T, clientMsgId?: string) => Messages
 ) {
-  return (socket: SpotwareSocket, payload: T, clientMsgId?: string) => {
-    socket.write(factory(payload, clientMsgId));
+  return async (
+    socket: SpotwareSocket,
+    payload: T | Promise<T>,
+    clientMsgId?: string
+  ) => {
+    socket.write(factory(await payload, clientMsgId));
   };
 }
 
