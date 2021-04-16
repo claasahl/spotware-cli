@@ -4,14 +4,6 @@ import { ProtoOATickData } from "@claasahl/spotware-protobuf";
 
 import { Period, isPeriod, comparePeriod } from "./types";
 
-async function mkdir(dir: string): Promise<void> {
-  try {
-    await fs.promises.mkdir(dir, { recursive: true });
-  } catch {
-    // ignore... for now
-  }
-}
-
 export async function readPeriods(dir: string): Promise<Period[]> {
   const data: Period[] = [];
   const files = await fs.promises.readdir(dir);
