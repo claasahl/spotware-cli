@@ -85,5 +85,7 @@ export function INCORRECT_BOUNDARIES(
     )
   );
 }
-// H1 - 21168000000
-// tickdata - 604800000
+export const MAX_PERIOD = {
+  h1: 21168000000,
+  tickData: 604800000,
+};
