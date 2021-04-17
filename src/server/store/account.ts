@@ -159,7 +159,11 @@ export class Account {
         throw new Error("ksdjhkjsd?????");
       }
 
-      const tickData = await DB.read(dir, tmp[0]);
+      const tickData = (await DB.read(dir, tmp[0])).filter(
+        (t) =>
+          period.fromTimestamp <= t.timestamp &&
+          t.timestamp < period.toTimestamp
+      );
       for (let index = tickData.length - 1; index > 0; index--) {
         const curr = tickData[index];
         const prev = tickData[index - 1];
