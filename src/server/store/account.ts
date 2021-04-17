@@ -6,6 +6,7 @@ import {
   ProtoOAGetTrendbarsReq,
   ProtoOAGetTrendbarsRes,
   ProtoOAQuoteType,
+  ProtoOATickData,
   ProtoOATrader,
   ProtoOATrendbar,
   ProtoOATrendbarPeriod,
@@ -17,7 +18,7 @@ import * as U from "../../utils";
 import assetClasses from "./assetClasses";
 import assets, { EUR } from "./assets";
 import categories from "./categories";
-import symbols from "./symbols";
+import symbols, { symbolById } from "./symbols";
 
 export class Account {
   private ctidTraderAccountId;
@@ -140,17 +141,44 @@ export class Account {
       fromTimestamp: req.fromTimestamp,
       toTimestamp: req.toTimestamp,
     };
-    const dir = `./SERVER/EURUSD.DB/${ProtoOAQuoteType[req.type]}`;
+    const symbol = symbolById.get(req.symbolId);
+    const dir = `./SERVER/${symbol?.symbolName}.DB/${
+      ProtoOAQuoteType[req.type]
+    }`;
     const available = await DB.readPeriods(dir);
     const periods = DB.retainAvailablePeriods(period, available).sort(
-      (a, b) => -DB.comparePeriod(a, b)
+      DB.comparePeriod
     );
     console.log(a(period), periods.map(a));
+
+    if (periods.length > 0) {
+      const tmp = available.filter((p) =>
+        DB.intersects(p, periods[periods.length - 1])
+      );
+      if (tmp.length !== 1) {
+        throw new Error("ksdjhkjsd?????");
+      }
+
+      const tickData = await DB.read(dir, tmp[0]);
+      for (let index = tickData.length - 1; index > 0; index--) {
+        const curr = tickData[index];
+        const prev = tickData[index - 1];
+        tickData[index] = {
+          tick: curr.tick - prev.tick,
+          timestamp: curr.timestamp - prev.timestamp,
+        };
+      }
+      return {
+        ctidTraderAccountId: this.ctidTraderAccountId,
+        hasMore: false,
+        tickData,
+      };
+    }
 
     return {
       ctidTraderAccountId: this.ctidTraderAccountId,
       hasMore: false,
-      tickData: [],
+      tickData: [], // read from SERVER_EURUSD.DB/**
     };
   }
 

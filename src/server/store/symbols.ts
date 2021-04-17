@@ -61,4 +61,8 @@ const symbols: (ProtoOALightSymbol & ProtoOASymbol)[] = [
   EURGBP,
   XAGEUR,
 ];
+
+export const symbolById = new Map<number, ProtoOALightSymbol & ProtoOASymbol>();
+symbols.forEach((symbol) => symbolById.set(symbol.symbolId, symbol));
+
 export default symbols;
