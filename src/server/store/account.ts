@@ -6,7 +6,6 @@ import {
   ProtoOAGetTrendbarsReq,
   ProtoOAGetTrendbarsRes,
   ProtoOAQuoteType,
-  ProtoOATickData,
   ProtoOATrader,
   ProtoOATrendbar,
   ProtoOATrendbarPeriod,
@@ -131,12 +130,6 @@ export class Account {
   }
 
   async ticks(req: ProtoOAGetTickDataReq): Promise<ProtoOAGetTickDataRes> {
-    function a(a: DB.Period) {
-      return {
-        from: new Date(a.fromTimestamp).toISOString(),
-        to: new Date(a.toTimestamp).toISOString(),
-      };
-    }
     const period: DB.Period = {
       fromTimestamp: req.fromTimestamp,
       toTimestamp: req.toTimestamp,
@@ -149,7 +142,6 @@ export class Account {
     const periods = DB.retainAvailablePeriods(period, available).sort(
       DB.comparePeriod
     );
-    console.log(a(period), periods.map(a));
 
     if (periods.length > 0) {
       const tmp = available.filter((p) =>
@@ -182,7 +174,7 @@ export class Account {
     return {
       ctidTraderAccountId: this.ctidTraderAccountId,
       hasMore: false,
-      tickData: [], // read from SERVER_EURUSD.DB/**
+      tickData: [],
     };
   }
 
