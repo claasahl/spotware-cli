@@ -6,6 +6,7 @@ import debug from "debug";
 import { SymbolData, SymbolDataProcessor } from "../runner/types";
 import * as R from "../../client/requests";
 import * as DB from "../../database";
+import * as U from "../../utils";
 
 const log = debug("trendbars");
 
@@ -31,12 +32,10 @@ async function mkdir(dir: string): Promise<void> {
 async function saveTrendbars(options: SaveTrendbarsOptions): Promise<void> {
   const step = 3024000000;
   const { ctidTraderAccountId, symbolId, period } = options;
-  for (
-    let fromTimestamp = options.fromTimestamp;
-    fromTimestamp < options.toTimestamp;
-    fromTimestamp += step
-  ) {
-    const toTimestamp = Math.min(fromTimestamp + step, options.toTimestamp);
+
+  let { toTimestamp } = options;
+  do {
+    const fromTimestamp = Math.max(toTimestamp - step, options.fromTimestamp);
     const timePeriod: DB.Period = {
       fromTimestamp,
       toTimestamp,
@@ -54,7 +53,18 @@ async function saveTrendbars(options: SaveTrendbarsOptions): Promise<void> {
     });
 
     await DB.write(options.path, timePeriod, response.trendbar);
-  }
+
+    if (
+      response.trendbar.length > 0 &&
+      response.trendbar[0].utcTimestampInMinutes
+    ) {
+      toTimestamp =
+        response.trendbar[0].utcTimestampInMinutes * 60000 -
+        U.period(options.period);
+    } else {
+      toTimestamp = fromTimestamp;
+    }
+  } while (toTimestamp > options.fromTimestamp);
 }
 
 function a(period: DB.Period) {
