@@ -1,4 +1,5 @@
 const fs = require("fs");
+const path = require("path");
 
 const { write } = require("../../build/database/write");
 
@@ -22,7 +23,8 @@ describe("Database", () => {
       };
       await write("./EURUSD.DB", period, tickData);
       expect(fs.promises.writeFile).toHaveBeenCalledWith(
-        "EURUSD.DB\\" +
+        "EURUSD.DB" +
+          path.sep +
           Buffer.from(JSON.stringify(period)).toString("base64") +
           ".json",
         JSON.stringify(tickData)
@@ -37,7 +39,8 @@ describe("Database", () => {
       };
       await write("./EURUSD.DB", period, tickData);
       expect(fs.promises.writeFile).toHaveBeenCalledWith(
-        "EURUSD.DB\\" +
+        "EURUSD.DB" +
+          path.sep +
           Buffer.from(JSON.stringify(period)).toString("base64") +
           ".json",
         "[]"
