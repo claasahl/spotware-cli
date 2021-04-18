@@ -5,16 +5,19 @@ import {
   ProtoOAGetTickDataRes,
   ProtoOAGetTrendbarsReq,
   ProtoOAGetTrendbarsRes,
+  ProtoOAQuoteType,
   ProtoOATrader,
   ProtoOATrendbar,
   ProtoOATrendbarPeriod,
   SpotwareSocket,
 } from "@claasahl/spotware-adapter";
 
+import * as DB from "../../database";
 import * as U from "../../utils";
 import assetClasses from "./assetClasses";
+import assets, { EUR } from "./assets";
 import categories from "./categories";
-import symbols from "./symbols";
+import symbols, { symbolById } from "./symbols";
 
 export class Account {
   private ctidTraderAccountId;
@@ -23,6 +26,7 @@ export class Account {
   } = {};
   private trendbarSubscriptions = new Map<number, ProtoOATrendbarPeriod[]>();
   readonly assetClasses;
+  readonly assets;
   readonly categories;
   readonly symbols;
   readonly accessTokens: string[];
@@ -32,6 +36,7 @@ export class Account {
   constructor(ctidTraderAccountId: number) {
     this.ctidTraderAccountId = ctidTraderAccountId;
     this.assetClasses = assetClasses;
+    this.assets = assets;
     this.categories = categories;
     this.symbols = symbols;
     this.accessTokens = [];
@@ -43,7 +48,7 @@ export class Account {
     this.trader = {
       ctidTraderAccountId,
       balance: 1000,
-      depositAssetId: 23,
+      depositAssetId: EUR.assetId,
     };
   }
 
@@ -124,7 +129,48 @@ export class Account {
     this.trendbarSubscriptions.set(symbolId, periods || []);
   }
 
-  ticks(_req: ProtoOAGetTickDataReq): ProtoOAGetTickDataRes {
+  async ticks(req: ProtoOAGetTickDataReq): Promise<ProtoOAGetTickDataRes> {
+    const period: DB.Period = {
+      fromTimestamp: req.fromTimestamp,
+      toTimestamp: req.toTimestamp,
+    };
+    const symbol = symbolById.get(req.symbolId);
+    const dir = `./SERVER/${symbol?.symbolName}.DB/${
+      ProtoOAQuoteType[req.type]
+    }`;
+    const available = await DB.readPeriods(dir);
+    const periods = DB.retainAvailablePeriods(period, available).sort(
+      DB.comparePeriod
+    );
+
+    if (periods.length > 0) {
+      const tmp = available.filter((p) =>
+        DB.intersects(p, periods[periods.length - 1])
+      );
+      if (tmp.length !== 1) {
+        throw new Error("ksdjhkjsd?????");
+      }
+
+      const tickData = (await DB.read(dir, tmp[0])).filter(
+        (t) =>
+          period.fromTimestamp <= t.timestamp &&
+          t.timestamp < period.toTimestamp
+      );
+      for (let index = tickData.length - 1; index > 0; index--) {
+        const curr = tickData[index];
+        const prev = tickData[index - 1];
+        tickData[index] = {
+          tick: curr.tick - prev.tick,
+          timestamp: curr.timestamp - prev.timestamp,
+        };
+      }
+      return {
+        ctidTraderAccountId: this.ctidTraderAccountId,
+        hasMore: false,
+        tickData,
+      };
+    }
+
     return {
       ctidTraderAccountId: this.ctidTraderAccountId,
       hasMore: false,
