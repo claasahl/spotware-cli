@@ -28,6 +28,14 @@ async function main() {
     }),
   });
   await run({
+    process: E.trendbars({
+      fromDate,
+      toDate,
+      processSymbol,
+      period: ProtoOATrendbarPeriod.D1,
+    }),
+  });
+  await run({
     process: E.ticks({
       fromDate,
       toDate,
