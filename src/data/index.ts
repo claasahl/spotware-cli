@@ -16,7 +16,7 @@ async function main() {
     // "EURCHF",
     // "EURCAD"
   );
-  const fromDate = new Date("2021-01-01T00:00:00.000Z");
+  const fromDate = new Date("2019-01-01T00:00:00.000Z");
   const toDate = new Date("2021-04-01T00:00:00.000Z");
 
   await run({
@@ -26,11 +26,13 @@ async function main() {
       processSymbol,
       period: ProtoOATrendbarPeriod.M1,
     }),
-    // process: E.ticks({
-    //   fromDate,
-    //   toDate,
-    //   processSymbol,
-    // }),
+  });
+  await run({
+    process: E.ticks({
+      fromDate,
+      toDate,
+      processSymbol,
+    }),
   });
 }
 main();
