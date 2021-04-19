@@ -41,7 +41,7 @@ async function saveTrendbars(options: SaveTrendbarsOptions): Promise<void> {
       toTimestamp,
     };
     log("%j", {
-      period: a(timePeriod),
+      period: DB.forHumans(timePeriod),
       msg: "fetching period",
     });
 
@@ -67,13 +67,6 @@ async function saveTrendbars(options: SaveTrendbarsOptions): Promise<void> {
   } while (toTimestamp > options.fromTimestamp);
 }
 
-function a(period: DB.Period) {
-  return {
-    fromTimestamp: new Date(period.fromTimestamp).toISOString(),
-    toTimestamp: new Date(period.toTimestamp).toISOString(),
-  };
-}
-
 type FetchTrendbarsOptions = {
   socket: SpotwareClientSocket;
   ctidTraderAccountId: number;
@@ -96,8 +89,8 @@ async function fetchTrendbars(options: FetchTrendbarsOptions) {
   await mkdir(dir);
   const available = await DB.readPeriods(dir);
   const periods = DB.retainUnknownPeriods(period, available);
-  log("%j", { period: a(period), msg: "period" });
-  log("%j", { periods: periods.map(a), msg: "periods" });
+  log("%j", { period: DB.forHumans(period), msg: "period" });
+  log("%j", { periods: periods.map(DB.forHumans), msg: "periods" });
 
   // fetch data
   for (const period of periods) {

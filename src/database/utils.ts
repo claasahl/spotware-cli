@@ -99,3 +99,10 @@ export function disjunction(a: Period, b: Period): Period[] {
     },
   ];
 }
+
+export function forHumans(period: Period) {
+  return {
+    fromTimestamp: new Date(period.fromTimestamp).toISOString(),
+    toTimestamp: new Date(period.toTimestamp).toISOString(),
+  };
+}

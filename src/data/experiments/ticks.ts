@@ -35,7 +35,7 @@ async function saveTickData(options: SaveTickDataOptions): Promise<void> {
   do {
     const fromTimestamp = Math.max(toTimestamp - step, options.fromTimestamp);
     log("%j", {
-      period: a({ fromTimestamp, toTimestamp }),
+      period: DB.forHumans({ fromTimestamp, toTimestamp }),
       msg: "fetching period",
     });
 
@@ -73,13 +73,6 @@ async function saveTickData(options: SaveTickDataOptions): Promise<void> {
   } while (toTimestamp > options.fromTimestamp);
 }
 
-function a(period: DB.Period) {
-  return {
-    fromTimestamp: new Date(period.fromTimestamp).toISOString(),
-    toTimestamp: new Date(period.toTimestamp).toISOString(),
-  };
-}
-
 type FetchTickDataOptions = {
   socket: SpotwareClientSocket;
   ctidTraderAccountId: number;
@@ -100,8 +93,8 @@ async function fetchTickData(options: FetchTickDataOptions) {
   await mkdir(dir);
   const available = await DB.readPeriods(dir);
   const periods = DB.retainUnknownPeriods(period, available);
-  log("%j", { period: a(period), msg: "period" });
-  log("%j", { periods: periods.map(a), msg: "periods" });
+  log("%j", { period: DB.forHumans(period), msg: "period" });
+  log("%j", { periods: periods.map(DB.forHumans), msg: "periods" });
 
   // fetch data
   for (const period of periods) {
