@@ -35,9 +35,8 @@ async function saveTrendbars(options: SaveTrendbarsOptions): Promise<void> {
 
   let { toTimestamp } = options;
   do {
-    const fromTimestamp = Math.max(toTimestamp - step, options.fromTimestamp);
     const timePeriod: DB.Period = {
-      fromTimestamp,
+      fromTimestamp: Math.max(toTimestamp - step, options.fromTimestamp),
       toTimestamp,
     };
     log("%j", {
@@ -51,19 +50,17 @@ async function saveTrendbars(options: SaveTrendbarsOptions): Promise<void> {
       period,
       ...timePeriod,
     });
-
-    await DB.write(options.path, timePeriod, response.trendbar);
-
     if (
       response.trendbar.length > 0 &&
       response.trendbar[0].utcTimestampInMinutes
     ) {
-      toTimestamp =
+      timePeriod.fromTimestamp =
         response.trendbar[0].utcTimestampInMinutes * 60000 -
         U.period(options.period);
-    } else {
-      toTimestamp = fromTimestamp;
     }
+
+    await DB.write(options.path, timePeriod, response.trendbar);
+    toTimestamp = timePeriod.fromTimestamp;
   } while (toTimestamp > options.fromTimestamp);
 }
 
