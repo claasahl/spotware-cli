@@ -135,9 +135,7 @@ export class Account {
       toTimestamp: req.toTimestamp,
     };
     const symbol = symbolById.get(req.symbolId);
-    const dir = `./SERVER/${symbol?.symbolName}.DB/${
-      ProtoOAQuoteType[req.type]
-    }`;
+    const dir = `./SERVER/${symbol?.symbolName}.DB`;
     const available = await DB.readPeriods(dir);
     const periods = DB.retainAvailablePeriods(period, available).sort(
       DB.comparePeriod
@@ -151,7 +149,7 @@ export class Account {
         throw new Error("ksdjhkjsd?????");
       }
 
-      const tickData = (await DB.read(dir, tmp[0])).filter(
+      const tickData = (await DB.readQuotes(dir, tmp[0], req.type)).filter(
         (t) =>
           period.fromTimestamp <= t.timestamp &&
           t.timestamp < period.toTimestamp
