@@ -1,5 +1,3 @@
-import fs from "fs";
-
 import { comparePeriod, Period } from "./types";
 
 export function engulfs(a: Period, b: Period): boolean {
@@ -107,12 +105,4 @@ export function forHumans(period: Period) {
     fromTimestamp: new Date(period.fromTimestamp).toISOString(),
     toTimestamp: new Date(period.toTimestamp).toISOString(),
   };
-}
-
-export async function mkdir(dir: string): Promise<void> {
-  try {
-    await fs.promises.mkdir(dir, { recursive: true });
-  } catch {
-    // ignore... for now
-  }
 }
