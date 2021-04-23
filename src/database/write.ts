@@ -1,38 +1,29 @@
 import fs from "fs";
 import { join } from "path";
-import {
-  ProtoOAQuoteType,
-  ProtoOATickData,
-  ProtoOATrendbar,
-  ProtoOATrendbarPeriod,
-} from "@claasahl/spotware-protobuf";
+import { ProtoOATickData, ProtoOATrendbar } from "@claasahl/spotware-protobuf";
 
-import { Period } from "./types";
+import { Period, QuoteTypes, TrendbarPeriods } from "./types";
 
 export async function write(
   dir: string,
   period: Period,
-  type: ProtoOAQuoteType,
+  type: QuoteTypes,
   tickData: ProtoOATickData[]
 ): Promise<void>;
 export async function write(
   dir: string,
   period: Period,
-  type: ProtoOATrendbarPeriod,
+  type: TrendbarPeriods,
   trendbars: ProtoOATrendbar[]
 ): Promise<void>;
 export async function write(
   dir: string,
   period: Period,
-  type: ProtoOAQuoteType | ProtoOATrendbarPeriod,
+  type: QuoteTypes | TrendbarPeriods,
   data: ProtoOATickData[] | ProtoOATrendbar[]
 ): Promise<void> {
   const name = JSON.stringify(period);
   const file = Buffer.from(name).toString("base64") + ".json";
-  const path = join(
-    dir,
-    ProtoOAQuoteType[type] || ProtoOATrendbarPeriod[type],
-    file
-  );
+  const path = join(dir, type, file);
   await fs.promises.writeFile(path, JSON.stringify(data));
 }
