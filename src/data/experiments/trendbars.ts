@@ -59,7 +59,12 @@ async function saveTrendbars(options: SaveTrendbarsOptions): Promise<void> {
         U.period(options.period);
     }
 
-    await DB.write(options.path, timePeriod, response.trendbar);
+    await DB.writeTrendbars(
+      options.path,
+      timePeriod,
+      period,
+      response.trendbar
+    );
     toTimestamp = timePeriod.fromTimestamp;
   } while (toTimestamp > options.fromTimestamp);
 }
@@ -80,9 +85,9 @@ async function fetchTrendbars(options: FetchTrendbarsOptions) {
   };
 
   // prepare dir
-  const dir = DB.trendbarDir(`${options.symbolName}.DB/`, options.period);
+  const dir = `${options.symbolName}.DB/`;
   await mkdir(dir);
-  const available = await DB.readPeriods(dir);
+  const available = await DB.readTrendbarPeriods(dir, options.period);
   const periods = DB.retainUnknownPeriods(period, available);
   log("%j", { period: DB.forHumans(period), msg: "period" });
   log("%j", { periods: periods.map(DB.forHumans), msg: "periods" });

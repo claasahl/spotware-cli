@@ -60,7 +60,7 @@ async function saveTickData(options: SaveTickDataOptions): Promise<void> {
       };
       toTimestamp = period.fromTimestamp;
 
-      await DB.write(options.path, period, tickData);
+      await DB.writeQuotes(options.path, period, type, tickData);
     } else if (response.tickData.length === 0) {
       const period = {
         fromTimestamp,
@@ -68,7 +68,7 @@ async function saveTickData(options: SaveTickDataOptions): Promise<void> {
       };
       toTimestamp = fromTimestamp;
 
-      await DB.write(options.path, period, []);
+      await DB.writeQuotes(options.path, period, type, []);
     }
   } while (toTimestamp > options.fromTimestamp);
 }
@@ -89,9 +89,9 @@ async function fetchTickData(options: FetchTickDataOptions) {
   };
 
   // prepare dir
-  const dir = DB.quoteDir(`${options.symbolName}.DB`, options.type);
+  const dir = `${options.symbolName}.DB`;
   await mkdir(dir);
-  const available = await DB.readPeriods(dir);
+  const available = await DB.readQuotePeriods(dir, options.type);
   const periods = DB.retainUnknownPeriods(period, available);
   log("%j", { period: DB.forHumans(period), msg: "period" });
   log("%j", { periods: periods.map(DB.forHumans), msg: "periods" });

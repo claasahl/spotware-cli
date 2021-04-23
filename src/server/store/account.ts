@@ -5,7 +5,6 @@ import {
   ProtoOAGetTickDataRes,
   ProtoOAGetTrendbarsReq,
   ProtoOAGetTrendbarsRes,
-  ProtoOAQuoteType,
   ProtoOATrader,
   ProtoOATrendbar,
   ProtoOATrendbarPeriod,
@@ -135,8 +134,8 @@ export class Account {
       toTimestamp: req.toTimestamp,
     };
     const symbol = symbolById.get(req.symbolId);
-    const dir = DB.quoteDir(`./SERVER/${symbol?.symbolName}.DB/`, req.type);
-    const available = await DB.readPeriods(dir);
+    const dir = `./SERVER/${symbol?.symbolName}.DB/`;
+    const available = await DB.readQuotePeriods(dir, req.type);
     const periods = DB.retainAvailablePeriods(period, available).sort(
       DB.comparePeriod
     );
@@ -149,7 +148,7 @@ export class Account {
         throw new Error("ksdjhkjsd?????");
       }
 
-      const tickData = (await DB.read(dir, tmp[0])).filter(
+      const tickData = (await DB.readQuotes(dir, tmp[0], req.type)).filter(
         (t) =>
           period.fromTimestamp <= t.timestamp &&
           t.timestamp < period.toTimestamp
