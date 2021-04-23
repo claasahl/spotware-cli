@@ -21,14 +21,6 @@ type SaveTrendbarsOptions = {
   path: string;
 };
 
-async function mkdir(dir: string): Promise<void> {
-  try {
-    await fs.promises.mkdir(dir, { recursive: true });
-  } catch {
-    // ignore... for now
-  }
-}
-
 async function saveTrendbars(options: SaveTrendbarsOptions): Promise<void> {
   const step = 3024000000;
   const { ctidTraderAccountId, symbolId, period } = options;
@@ -59,7 +51,7 @@ async function saveTrendbars(options: SaveTrendbarsOptions): Promise<void> {
         U.period(options.period);
     }
 
-    await DB.write(options.path, timePeriod, response.trendbar);
+    await DB.write(options.path, timePeriod, period, response.trendbar);
     toTimestamp = timePeriod.fromTimestamp;
   } while (toTimestamp > options.fromTimestamp);
 }
@@ -80,10 +72,7 @@ async function fetchTrendbars(options: FetchTrendbarsOptions) {
   };
 
   // prepare dir
-  const dir = `${options.symbolName}.DB/${
-    ProtoOATrendbarPeriod[options.period]
-  }`;
-  await mkdir(dir);
+  const dir = `${options.symbolName}.DB`;
   const available = await DB.readPeriods(dir);
   const periods = DB.retainUnknownPeriods(period, available);
   log("%j", { period: DB.forHumans(period), msg: "period" });
