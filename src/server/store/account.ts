@@ -135,9 +135,7 @@ export class Account {
       toTimestamp: req.toTimestamp,
     };
     const symbol = symbolById.get(req.symbolId);
-    const dir = `./SERVER/${symbol?.symbolName}.DB/${
-      ProtoOAQuoteType[req.type]
-    }`;
+    const dir = DB.quoteDir(`./SERVER/${symbol?.symbolName}.DB/`, req.type);
     const available = await DB.readPeriods(dir);
     const periods = DB.retainAvailablePeriods(period, available).sort(
       DB.comparePeriod

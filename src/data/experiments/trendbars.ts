@@ -80,9 +80,7 @@ async function fetchTrendbars(options: FetchTrendbarsOptions) {
   };
 
   // prepare dir
-  const dir = `${options.symbolName}.DB/${
-    ProtoOATrendbarPeriod[options.period]
-  }`;
+  const dir = DB.trendbarDir(`${options.symbolName}.DB/`, options.period);
   await mkdir(dir);
   const available = await DB.readPeriods(dir);
   const periods = DB.retainUnknownPeriods(period, available);

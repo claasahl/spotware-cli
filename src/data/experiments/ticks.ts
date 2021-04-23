@@ -89,7 +89,7 @@ async function fetchTickData(options: FetchTickDataOptions) {
   };
 
   // prepare dir
-  const dir = `${options.symbolName}.DB/${ProtoOAQuoteType[options.type]}`;
+  const dir = DB.quoteDir(`${options.symbolName}.DB`, options.type);
   await mkdir(dir);
   const available = await DB.readPeriods(dir);
   const periods = DB.retainUnknownPeriods(period, available);

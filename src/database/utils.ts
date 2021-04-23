@@ -1,3 +1,9 @@
+import {
+  ProtoOAQuoteType,
+  ProtoOATrendbarPeriod,
+} from "@claasahl/spotware-protobuf";
+import { join } from "path";
+
 import { comparePeriod, Period } from "./types";
 
 export function engulfs(a: Period, b: Period): boolean {
@@ -105,4 +111,12 @@ export function forHumans(period: Period) {
     fromTimestamp: new Date(period.fromTimestamp).toISOString(),
     toTimestamp: new Date(period.toTimestamp).toISOString(),
   };
+}
+
+export function quoteDir(dir: string, type: ProtoOAQuoteType): string {
+  return join(dir, ProtoOAQuoteType[type]);
+}
+
+export function trendbarDir(dir: string, type: ProtoOATrendbarPeriod): string {
+  return join(dir, ProtoOATrendbarPeriod[type]);
 }
