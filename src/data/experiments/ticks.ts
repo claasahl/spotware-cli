@@ -20,14 +20,6 @@ type SaveTickDataOptions = {
   path: string;
 };
 
-async function mkdir(dir: string): Promise<void> {
-  try {
-    await fs.promises.mkdir(dir, { recursive: true });
-  } catch {
-    // ignore... for now
-  }
-}
-
 async function saveTickData(options: SaveTickDataOptions): Promise<void> {
   const step = 604800000;
   const { ctidTraderAccountId, symbolId, type } = options;
@@ -90,7 +82,6 @@ async function fetchTickData(options: FetchTickDataOptions) {
 
   // prepare dir
   const dir = `${options.symbolName}.DB`;
-  await mkdir(dir);
   const available = await DB.readQuotePeriods(dir, options.type);
   const periods = DB.retainUnknownPeriods(period, available);
   log("%j", { period: DB.forHumans(period), msg: "period" });

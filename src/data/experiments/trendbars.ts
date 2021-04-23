@@ -21,14 +21,6 @@ type SaveTrendbarsOptions = {
   path: string;
 };
 
-async function mkdir(dir: string): Promise<void> {
-  try {
-    await fs.promises.mkdir(dir, { recursive: true });
-  } catch {
-    // ignore... for now
-  }
-}
-
 async function saveTrendbars(options: SaveTrendbarsOptions): Promise<void> {
   const step = 3024000000;
   const { ctidTraderAccountId, symbolId, period } = options;
@@ -86,7 +78,6 @@ async function fetchTrendbars(options: FetchTrendbarsOptions) {
 
   // prepare dir
   const dir = `${options.symbolName}.DB/`;
-  await mkdir(dir);
   const available = await DB.readTrendbarPeriods(dir, options.period);
   const periods = DB.retainUnknownPeriods(period, available);
   log("%j", { period: DB.forHumans(period), msg: "period" });

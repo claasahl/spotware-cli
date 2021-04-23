@@ -3,6 +3,7 @@ import {
   ProtoOATrendbarPeriod,
 } from "@claasahl/spotware-protobuf";
 import { join } from "path";
+import fs from "fs";
 
 import { comparePeriod, Period } from "./types";
 
@@ -119,4 +120,12 @@ export function quoteDir(dir: string, type: ProtoOAQuoteType): string {
 
 export function trendbarDir(dir: string, type: ProtoOATrendbarPeriod): string {
   return join(dir, ProtoOATrendbarPeriod[type]);
+}
+
+export async function mkdir(dir: string): Promise<void> {
+  try {
+    await fs.promises.mkdir(dir, { recursive: true });
+  } catch {
+    // ignore... for now
+  }
 }

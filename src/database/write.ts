@@ -8,13 +8,14 @@ import {
 } from "@claasahl/spotware-protobuf";
 
 import { Period } from "./types";
-import { quoteDir, trendbarDir } from "./utils";
+import { quoteDir, trendbarDir, mkdir } from "./utils";
 
 async function write(
   dir: string,
   period: Period,
   data: ProtoOATickData[] | ProtoOATrendbar[]
 ): Promise<void> {
+  await mkdir(dir);
   const name = JSON.stringify(period);
   const file = Buffer.from(name).toString("base64") + ".json";
   await fs.promises.writeFile(path.join(dir, file), JSON.stringify(data));

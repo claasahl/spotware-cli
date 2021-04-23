@@ -8,10 +8,11 @@ import {
 } from "@claasahl/spotware-protobuf";
 
 import { Period, isPeriod, comparePeriod } from "./types";
-import { quoteDir, trendbarDir } from "./utils";
+import { quoteDir, trendbarDir, mkdir } from "./utils";
 
 async function readPeriods(dir: string): Promise<Period[]> {
   const data: Period[] = [];
+  await mkdir(dir);
   const files = await fs.promises.readdir(dir);
   for (const file of files) {
     try {
@@ -43,6 +44,7 @@ export async function readTrendbarPeriods(
 }
 
 async function read<T>(dir: string, period: Period): Promise<T[]> {
+  await mkdir(dir);
   const name = JSON.stringify(period);
   const file = Buffer.from(name).toString("base64") + ".json";
   const buffer = await fs.promises.readFile(path.join(dir, file));
