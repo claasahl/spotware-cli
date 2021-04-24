@@ -29,24 +29,33 @@ async function main() {
     // "EURCAD"
   );
   const fromDate = new Date("2019-01-01T00:00:00.000Z");
-  const toDate = new Date("2021-04-01T00:00:00.000Z");
-
-  for (const period of periods) {
-    await run({
-      process: E.trendbars({
-        fromDate,
-        toDate,
-        processSymbol,
-        period,
-      }),
-    });
-  }
+  const toDate = new Date("2019-01-10T00:00:00.000Z");
+  //const toDate = new Date("2021-04-01T00:00:00.000Z");
   await run({
-    process: E.ticks({
+    process: E.structurePoints({
       fromDate,
       toDate,
       processSymbol,
+      period: ProtoOATrendbarPeriod.D1,
     }),
   });
+
+  // for (const period of periods) {
+  //   await run({
+  //     process: E.trendbars({
+  //       fromDate,
+  //       toDate,
+  //       processSymbol,
+  //       period,
+  //     }),
+  //   });
+  // }
+  // await run({
+  //   process: E.ticks({
+  //     fromDate,
+  //     toDate,
+  //     processSymbol,
+  //   }),
+  // });
 }
 main();
