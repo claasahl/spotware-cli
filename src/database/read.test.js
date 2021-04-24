@@ -252,7 +252,7 @@ describe("Database", () => {
           fromTimestamp: new Date("2021-02-14T22:00:00.000Z").getTime(),
           toTimestamp: new Date("2021-04-01T00:00:00.000Z").getTime(),
         },
-        ProtoOATrendbarPeriod.H1
+        ProtoOATrendbarPeriod.W1
       );
       expect(trendbars).toStrictEqual(chunk);
     });
@@ -268,7 +268,7 @@ describe("Database", () => {
           fromTimestamp: new Date("2021-02-25T00:00:00.000Z").getTime(),
           toTimestamp: new Date("2021-04-01T00:00:00.000Z").getTime(),
         },
-        ProtoOATrendbarPeriod.H1
+        ProtoOATrendbarPeriod.W1
       );
       expect(trendbars).toStrictEqual(chunk);
     });
