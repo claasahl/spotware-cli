@@ -1,6 +1,6 @@
 import { upper, lower } from "indicators";
 
-import { Trendbar } from "../../../utils";
+import { Trendbar } from ".";
 
 type StructurePoint = {
   timestamp: number;

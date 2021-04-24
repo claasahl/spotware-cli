@@ -4,7 +4,6 @@ import fs from "fs";
 import { SymbolData, SymbolDataProcessor } from "../runner/types";
 import * as R from "../../client/requests";
 import * as U from "../../utils";
-import { structurePoints } from "../../client/strategies/institutionalCandles/structurePoints";
 
 interface Options {
   processSymbol: (data: SymbolData) => boolean;
@@ -34,7 +33,7 @@ function processor(options: Options): SymbolDataProcessor {
     const trendbars = response.trendbar
       .filter(U.isTrendbar)
       .map((b) => U.toTrendbar(b, period));
-    const points = structurePoints(trendbars);
+    const points = U.structurePoints(trendbars);
     const tmp = {
       trendbars: trendbars.map((b) => ({
         ...b,

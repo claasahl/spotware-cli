@@ -3,6 +3,7 @@ export * from "./highLow";
 export * from "./insideBarMomentum";
 export * from "./period";
 export * from "./sma";
+export * from "./structurePoints";
 export * from "./trendbar";
 export * from "./volume";
 export * from "./vwap";
