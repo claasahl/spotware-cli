@@ -68,6 +68,13 @@ async function main() {
         new Date((b.utcTimestampInMinutes || 0) * 60000).toISOString()
       )
     );
+    console.log(
+      await DB.readTrendbarsChunk(
+        "./SERVER/EURUSD.DB",
+        p,
+        ProtoOATrendbarPeriod.W1
+      )
+    );
   }
 }
 
