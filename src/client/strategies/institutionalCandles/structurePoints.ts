@@ -7,24 +7,20 @@ export function structurePoints() {
     }
     switch (data.direction) {
       case "up": {
-        //if(data.reference.upper < candle.upper || data.reference.high < candle.high || data.reference.low < candle.low || data.reference.lower < candle.lower) {
         if (
           data.reference.upper < candle.upper ||
           data.reference.high < candle.high
         ) {
-          //if(data.reference.low < candle.low || data.reference.high < candle.high) {
           data.reference = candle;
           return data;
         }
         break;
       }
       case "down": {
-        //if(data.reference.upper > candle.upper || data.reference.high > candle.high || data.reference.low > candle.low || data.reference.lower > candle.lower) {
         if (
           data.reference.low > candle.low ||
           data.reference.lower > candle.lower
         ) {
-          //if(data.reference.low > candle.low || data.reference.high > candle.high) {
           data.reference = candle;
           return data;
         }
