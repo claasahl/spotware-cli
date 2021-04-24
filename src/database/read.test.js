@@ -177,10 +177,61 @@ describe("Database", () => {
       fs.promises.readFile.mockResolvedValue(JSON.stringify(chunk));
       const tickData = await readQuotesChunk(
         "./EURUSD.DB",
-        period,
+        {
+          fromTimestamp: new Date("2019-01-03T13:37:18.253Z").getTime(),
+          toTimestamp: new Date("2019-01-03T13:37:21.930Z").getTime(),
+        },
         ProtoOAQuoteType.ASK
       );
       expect(tickData).toStrictEqual(chunkCompressed);
+    });
+
+    describe("should return single tick", () => {
+      test("fromTimestamp matches timestamp", async () => {
+        fs.promises.readdir.mockResolvedValue([
+          Buffer.from(JSON.stringify(period)).toString("base64") + ".json",
+        ]);
+        fs.promises.readFile.mockResolvedValue(JSON.stringify(chunk));
+        const tickData = await readQuotesChunk(
+          "./EURUSD.DB",
+          {
+            fromTimestamp: new Date("2019-01-03T13:37:21.370Z").getTime(),
+            toTimestamp: new Date("2019-01-03T13:37:21.371Z").getTime(),
+          },
+          ProtoOAQuoteType.ASK
+        );
+        expect(tickData).toStrictEqual([chunk[1]]);
+      });
+      test("toTimestamp matches timestamp", async () => {
+        fs.promises.readdir.mockResolvedValue([
+          Buffer.from(JSON.stringify(period)).toString("base64") + ".json",
+        ]);
+        fs.promises.readFile.mockResolvedValue(JSON.stringify(chunk));
+        const tickData = await readQuotesChunk(
+          "./EURUSD.DB",
+          {
+            fromTimestamp: new Date("2019-01-03T13:37:21.000Z").getTime(),
+            toTimestamp: new Date("2019-01-03T13:37:21.370Z").getTime(),
+          },
+          ProtoOAQuoteType.ASK
+        );
+        expect(tickData).toStrictEqual([chunk[2]]);
+      });
+      test("fromTimestamp and toTimestamp wrap timestamp", async () => {
+        fs.promises.readdir.mockResolvedValue([
+          Buffer.from(JSON.stringify(period)).toString("base64") + ".json",
+        ]);
+        fs.promises.readFile.mockResolvedValue(JSON.stringify(chunk));
+        const tickData = await readQuotesChunk(
+          "./EURUSD.DB",
+          {
+            fromTimestamp: new Date("2019-01-03T13:37:21.000Z").getTime(),
+            toTimestamp: new Date("2019-01-03T13:37:21.200Z").getTime(),
+          },
+          ProtoOAQuoteType.ASK
+        );
+        expect(tickData).toStrictEqual([chunk[2]]);
+      });
     });
   });
 
