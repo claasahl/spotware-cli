@@ -256,5 +256,21 @@ describe("Database", () => {
       );
       expect(trendbars).toStrictEqual(chunk);
     });
+
+    test("should also return complete chunk", async () => {
+      fs.promises.readdir.mockResolvedValue([
+        Buffer.from(JSON.stringify(period)).toString("base64") + ".json",
+      ]);
+      fs.promises.readFile.mockResolvedValue(JSON.stringify(chunk));
+      const trendbars = await readTrendbarsChunk(
+        "./EURUSD.DB",
+        {
+          fromTimestamp: new Date("2021-02-25T00:00:00.000Z").getTime(),
+          toTimestamp: new Date("2021-04-01T00:00:00.000Z").getTime(),
+        },
+        ProtoOATrendbarPeriod.H1
+      );
+      expect(trendbars).toStrictEqual(chunk);
+    });
   });
 });
