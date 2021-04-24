@@ -9,8 +9,10 @@ function currencies(...names: string[]): (data: SymbolData) => boolean {
 const periods: ProtoOATrendbarPeriod[] = [
   ProtoOATrendbarPeriod.W1,
   ProtoOATrendbarPeriod.D1,
+  ProtoOATrendbarPeriod.H12,
   ProtoOATrendbarPeriod.H4,
   ProtoOATrendbarPeriod.H1,
+  ProtoOATrendbarPeriod.M30,
   ProtoOATrendbarPeriod.M15,
   ProtoOATrendbarPeriod.M5,
   ProtoOATrendbarPeriod.M1,
