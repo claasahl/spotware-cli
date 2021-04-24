@@ -1,95 +1,91 @@
 import fs from "fs";
-import { ProtoOAQuoteType } from "@claasahl/spotware-protobuf";
+import { ProtoOATrendbarPeriod } from "@claasahl/spotware-protobuf";
 import { SpotwareClientSocket } from "@claasahl/spotware-adapter";
 import debug from "debug";
 
 import { SymbolData, SymbolDataProcessor } from "../runner/types";
 import * as R from "../../client/requests";
 import * as DB from "../../database";
+import * as U from "../../utils";
 
-const log = debug("ticks");
+const log = debug("trendbars");
 
-type SaveTickDataOptions = {
+type SaveTrendbarsOptions = {
   socket: SpotwareClientSocket;
   ctidTraderAccountId: number;
   symbolId: number;
   symbolName: string;
-  type: ProtoOAQuoteType;
+  period: ProtoOATrendbarPeriod;
   fromTimestamp: number;
   toTimestamp: number;
   path: string;
 };
 
-async function saveTickData(options: SaveTickDataOptions): Promise<void> {
-  const step = 604800000;
-  const { ctidTraderAccountId, symbolId, type } = options;
+async function saveTrendbars(options: SaveTrendbarsOptions): Promise<void> {
+  const step = 3024000000;
+  const { ctidTraderAccountId, symbolId, period } = options;
+
   let { toTimestamp } = options;
   do {
-    const fromTimestamp = Math.max(toTimestamp - step, options.fromTimestamp);
+    const timePeriod: DB.Period = {
+      fromTimestamp: Math.max(toTimestamp - step, options.fromTimestamp),
+      toTimestamp,
+    };
     log("%j", {
-      period: DB.forHumans({ fromTimestamp, toTimestamp }),
+      period: DB.forHumans(timePeriod),
       msg: "fetching period",
     });
 
-    const response = await R.PROTO_OA_GET_TICKDATA_REQ(options.socket, {
+    const response = await R.PROTO_OA_GET_TRENDBARS_REQ(options.socket, {
       ctidTraderAccountId,
       symbolId,
-      type,
-      fromTimestamp,
-      toTimestamp,
+      period,
+      ...timePeriod,
     });
-
-    if (response.tickData.length > 0) {
-      const tickData = response.tickData;
-      for (let i = 1; i < tickData.length; i++) {
-        tickData[i].timestamp =
-          tickData[i - 1].timestamp + tickData[i].timestamp;
-        tickData[i].tick = tickData[i - 1].tick + tickData[i].tick;
-      }
-      const period = {
-        fromTimestamp: tickData[tickData.length - 1].timestamp,
-        toTimestamp,
-      };
-      toTimestamp = period.fromTimestamp;
-
-      await DB.writeQuotes(options.path, period, type, tickData);
-    } else if (response.tickData.length === 0) {
-      const period = {
-        fromTimestamp,
-        toTimestamp,
-      };
-      toTimestamp = fromTimestamp;
-
-      await DB.writeQuotes(options.path, period, type, []);
+    if (
+      response.trendbar.length > 0 &&
+      response.trendbar[0].utcTimestampInMinutes
+    ) {
+      timePeriod.fromTimestamp =
+        response.trendbar[0].utcTimestampInMinutes * 60000 -
+        U.period(options.period);
     }
+
+    await DB.writeTrendbars(
+      options.path,
+      timePeriod,
+      period,
+      response.trendbar
+    );
+    toTimestamp = timePeriod.fromTimestamp;
   } while (toTimestamp > options.fromTimestamp);
 }
 
-type FetchTickDataOptions = {
+type FetchTrendbarsOptions = {
   socket: SpotwareClientSocket;
   ctidTraderAccountId: number;
   symbolId: number;
   symbolName: string;
-  type: ProtoOAQuoteType;
+  period: ProtoOATrendbarPeriod;
   fromTimestamp: number;
   toTimestamp: number;
 };
-async function fetchTickData(options: FetchTickDataOptions) {
+async function fetchTrendbars(options: FetchTrendbarsOptions) {
   const period: DB.Period = {
     fromTimestamp: options.fromTimestamp,
     toTimestamp: options.toTimestamp,
   };
 
   // prepare dir
-  const dir = `${options.symbolName}.DB`;
-  const available = await DB.readQuotePeriods(dir, options.type);
+  const dir = `${options.symbolName}.DB/`;
+  const available = await DB.readTrendbarPeriods(dir, options.period);
   const periods = DB.retainUnknownPeriods(period, available);
   log("%j", { period: DB.forHumans(period), msg: "period" });
   log("%j", { periods: periods.map(DB.forHumans), msg: "periods" });
 
   // fetch data
   for (const period of periods) {
-    await saveTickData({
+    await saveTrendbars({
       ...options,
       ...period,
       path: dir,
@@ -101,6 +97,7 @@ interface Options {
   processSymbol: (data: SymbolData) => boolean;
   fromDate: Date;
   toDate: Date;
+  period: ProtoOATrendbarPeriod;
 }
 function processor(options: Options): SymbolDataProcessor {
   return async (socket, data) => {
@@ -113,23 +110,15 @@ function processor(options: Options): SymbolDataProcessor {
     const toTimestamp = options.toDate.getTime();
     const symbolId = data.symbol.symbolId;
     const symbolName = data.symbol.symbolName?.replace("/", "") || "";
-    await fetchTickData({
+    const period = options.period;
+    await fetchTrendbars({
       socket,
       ctidTraderAccountId,
       fromTimestamp,
       toTimestamp,
       symbolId,
       symbolName,
-      type: ProtoOAQuoteType.ASK,
-    });
-    await fetchTickData({
-      socket,
-      ctidTraderAccountId,
-      fromTimestamp,
-      toTimestamp,
-      symbolId,
-      symbolName,
-      type: ProtoOAQuoteType.BID,
+      period,
     });
   };
 }

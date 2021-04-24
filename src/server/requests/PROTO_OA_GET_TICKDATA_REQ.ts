@@ -24,7 +24,8 @@ export function request(socket: SpotwareSocket) {
         U.NOT_AUTHORIZED(socket, ctidTraderAccountId, clientMsgId);
         return;
       } else if (
-        Math.abs(toTimestamp - fromTimestamp) > U.MAX_PERIOD.tickData
+        Math.abs(toTimestamp - fromTimestamp) > U.MAX_PERIOD.tickData ||
+        Math.abs(toTimestamp - fromTimestamp) === 0
       ) {
         U.INCORRECT_BOUNDARIES(
           socket,

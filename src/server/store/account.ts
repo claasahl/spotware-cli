@@ -5,7 +5,6 @@ import {
   ProtoOAGetTickDataRes,
   ProtoOAGetTrendbarsReq,
   ProtoOAGetTrendbarsRes,
-  ProtoOAQuoteType,
   ProtoOATrader,
   ProtoOATrendbar,
   ProtoOATrendbarPeriod,
@@ -135,71 +134,33 @@ export class Account {
       toTimestamp: req.toTimestamp,
     };
     const symbol = symbolById.get(req.symbolId);
-    const dir = `./SERVER/${symbol?.symbolName}.DB/${
-      ProtoOAQuoteType[req.type]
-    }`;
-    const available = await DB.readPeriods(dir);
-    const periods = DB.retainAvailablePeriods(period, available).sort(
-      DB.comparePeriod
-    );
-
-    if (periods.length > 0) {
-      const tmp = available.filter((p) =>
-        DB.intersects(p, periods[periods.length - 1])
-      );
-      if (tmp.length !== 1) {
-        throw new Error("ksdjhkjsd?????");
-      }
-
-      const tickData = (await DB.read(dir, tmp[0])).filter(
-        (t) =>
-          period.fromTimestamp <= t.timestamp &&
-          t.timestamp < period.toTimestamp
-      );
-      for (let index = tickData.length - 1; index > 0; index--) {
-        const curr = tickData[index];
-        const prev = tickData[index - 1];
-        tickData[index] = {
-          tick: curr.tick - prev.tick,
-          timestamp: curr.timestamp - prev.timestamp,
-        };
-      }
-      return {
-        ctidTraderAccountId: this.ctidTraderAccountId,
-        hasMore: false,
-        tickData,
-      };
-    }
+    const dir = `./SERVER/${symbol?.symbolName}.DB/`;
+    const tickData = await DB.readQuotesChunk(dir, period, req.type);
 
     return {
       ctidTraderAccountId: this.ctidTraderAccountId,
       hasMore: false,
-      tickData: [],
+      tickData,
     };
   }
 
-  trendbars(req: ProtoOAGetTrendbarsReq): ProtoOAGetTrendbarsRes {
-    const trendbar: ProtoOATrendbar[] = [];
-    const MILLIS = U.period(req.period);
-    const timestamp = Math.round(req.fromTimestamp / MILLIS) * MILLIS;
-    let a = timestamp;
-    while (a < req.toTimestamp) {
-      trendbar.push({
-        volume: 10000,
-        low: 100000,
-        deltaOpen: 6000,
-        deltaHigh: 10000,
-        deltaClose: 400,
-        utcTimestampInMinutes: Math.round(a / 60000),
-      });
-      a += MILLIS;
-    }
+  async trendbars(
+    req: ProtoOAGetTrendbarsReq
+  ): Promise<ProtoOAGetTrendbarsRes> {
+    const period: DB.Period = {
+      fromTimestamp: req.fromTimestamp,
+      toTimestamp: req.toTimestamp,
+    };
+    const symbol = symbolById.get(req.symbolId);
+    const dir = `./SERVER/${symbol?.symbolName}.DB/`;
+    const trendbars = await DB.readTrendbarsChunk(dir, period, req.period);
+
     return {
       ctidTraderAccountId: this.ctidTraderAccountId,
       period: req.period,
       symbolId: req.symbolId,
-      timestamp,
-      trendbar,
+      timestamp: req.toTimestamp,
+      trendbar: trendbars,
     };
   }
 }
