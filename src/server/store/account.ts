@@ -175,28 +175,54 @@ export class Account {
     };
   }
 
-  trendbars(req: ProtoOAGetTrendbarsReq): ProtoOAGetTrendbarsRes {
-    const trendbar: ProtoOATrendbar[] = [];
-    const MILLIS = U.period(req.period);
-    const timestamp = Math.round(req.fromTimestamp / MILLIS) * MILLIS;
-    let a = timestamp;
-    while (a < req.toTimestamp) {
-      trendbar.push({
-        volume: 10000,
-        low: 100000,
-        deltaOpen: 6000,
-        deltaHigh: 10000,
-        deltaClose: 400,
-        utcTimestampInMinutes: Math.round(a / 60000),
+  async trendbars(
+    req: ProtoOAGetTrendbarsReq
+  ): Promise<ProtoOAGetTrendbarsRes> {
+    const period: DB.Period = {
+      fromTimestamp: req.fromTimestamp,
+      toTimestamp: req.toTimestamp,
+    };
+    const symbol = symbolById.get(req.symbolId);
+    const dir = `./SERVER/${symbol?.symbolName}.DB/`;
+    const available = await DB.readTrendbarPeriods(dir, req.period);
+    const periods = DB.retainAvailablePeriods(period, available).sort(
+      DB.comparePeriod
+    );
+
+    if (periods.length > 0) {
+      const tmp = available.filter((p) =>
+        DB.intersects(p, periods[periods.length - 1])
+      );
+      if (tmp.length !== 1) {
+        throw new Error("hjjjjjjjjjjjjjjjj?????");
+      }
+
+      const trendbars = (
+        await DB.readTrendbars(dir, tmp[0], req.period)
+      ).filter((t) => {
+        if (typeof t.utcTimestampInMinutes !== "number") {
+          return false;
+        }
+        const timestamp = t.utcTimestampInMinutes * 60000;
+        return (
+          period.fromTimestamp <= timestamp && timestamp < period.toTimestamp
+        );
       });
-      a += MILLIS;
+      return {
+        ctidTraderAccountId: this.ctidTraderAccountId,
+        period: req.period,
+        symbolId: req.symbolId,
+        timestamp: req.toTimestamp,
+        trendbar: trendbars,
+      };
     }
+
     return {
       ctidTraderAccountId: this.ctidTraderAccountId,
       period: req.period,
       symbolId: req.symbolId,
-      timestamp,
-      trendbar,
+      timestamp: req.toTimestamp,
+      trendbar: [],
     };
   }
 }
