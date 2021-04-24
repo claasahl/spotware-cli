@@ -53,5 +53,8 @@ export function structurePoints(trendbars: Trendbar[]): StructurePoint[] {
     data.reference = trendbar;
     data.direction = data.direction === "up" ? "down" : "up";
   }
+  if (data.structurePoints[0].trendbar === trendbars[0]) {
+    return data.structurePoints.slice(1);
+  }
   return data.structurePoints;
 }
