@@ -9,6 +9,7 @@ const {
   readTrendbarPeriods,
   readQuotes,
   readTrendbars,
+  readTrendbarsChunk,
 } = require("../../build/database/read");
 
 jest.mock("fs", () => ({
@@ -131,22 +132,38 @@ describe("Database", () => {
   });
 
   describe("readTrendbars", () => {
-    test("should read tick data from file", async () => {
-      const originalTickData = [
-        { timestamp: 100, tick: 3 },
-        { timestamp: 200, tick: 45 },
+    test("should read trendbars data from file", async () => {
+      const originalTrendbars = [
+        {
+          volume: 568982,
+          low: 118355,
+          deltaOpen: 819,
+          deltaClose: 1179,
+          deltaHigh: 1544,
+          utcTimestampInMinutes:
+            new Date("2021-04-18T13:00:00.000Z").getTime() / 60000,
+        },
+        {
+          volume: 471709,
+          low: 118739,
+          deltaOpen: 721,
+          deltaClose: 302,
+          deltaHigh: 1150,
+          utcTimestampInMinutes:
+            new Date("2021-04-18T14:00:00.000Z").getTime() / 60000,
+        },
       ];
-      fs.promises.readFile.mockResolvedValue(JSON.stringify(originalTickData));
+      fs.promises.readFile.mockResolvedValue(JSON.stringify(originalTrendbars));
       const period = {
-        fromTimestamp: 100,
-        toTimestamp: 200,
+        fromTimestamp: new Date("2021-04-18T12:00:00.000Z").getTime(),
+        toTimestamp: new Date("2021-04-18T14:00:00.000Z").getTime(),
       };
-      const tickData = await readTrendbars(
+      const trendbars = await readTrendbars(
         "./EURUSD.DB",
         period,
-        ProtoOATrendbarPeriod.H4
+        ProtoOATrendbarPeriod.H1
       );
-      expect(tickData).toStrictEqual(originalTickData);
+      expect(trendbars).toStrictEqual(originalTrendbars);
     });
     test("should complain if file does not contain a JSON array", async (done) => {
       fs.promises.readFile.mockResolvedValue("hello world");
