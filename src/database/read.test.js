@@ -9,6 +9,7 @@ const {
   readTrendbarPeriods,
   readQuotes,
   readTrendbars,
+  readQuotesChunk,
   readTrendbarsChunk,
 } = require("../../build/database/read");
 
@@ -128,6 +129,58 @@ describe("Database", () => {
       } catch {
         done();
       }
+    });
+  });
+
+  describe("readQuotesChunk", () => {
+    const period = Object.freeze({
+      fromTimestamp: new Date("2019-01-03T13:37:18.253Z").getTime(),
+      toTimestamp: new Date("2019-01-03T13:37:21.930Z").getTime(),
+    });
+    const chunk = Object.freeze([
+      Object.freeze({
+        tick: 10,
+        timestamp: new Date("2019-01-03T13:37:21.570Z").getTime(),
+      }),
+      Object.freeze({
+        tick: 11,
+        timestamp: new Date("2019-01-03T13:37:21.370Z").getTime(),
+      }),
+      Object.freeze({
+        tick: 12,
+        timestamp: new Date("2019-01-03T13:37:21.164Z").getTime(),
+      }),
+      Object.freeze({
+        tick: 13,
+        timestamp: new Date("2019-01-03T13:37:19.930Z").getTime(),
+      }),
+      Object.freeze({
+        tick: 14,
+        timestamp: new Date("2019-01-03T13:37:18.253Z").getTime(),
+      }),
+    ]);
+    const chunkCompressed = Object.freeze([
+      Object.freeze({
+        tick: 10,
+        timestamp: new Date("2019-01-03T13:37:21.570Z").getTime(),
+      }),
+      Object.freeze({ tick: 1, timestamp: -200 }),
+      Object.freeze({ tick: 1, timestamp: -206 }),
+      Object.freeze({ tick: 1, timestamp: -1234 }),
+      Object.freeze({ tick: 1, timestamp: -1677 }),
+    ]);
+
+    test("should return complete chunk", async () => {
+      fs.promises.readdir.mockResolvedValue([
+        Buffer.from(JSON.stringify(period)).toString("base64") + ".json",
+      ]);
+      fs.promises.readFile.mockResolvedValue(JSON.stringify(chunk));
+      const tickData = await readQuotesChunk(
+        "./EURUSD.DB",
+        period,
+        ProtoOAQuoteType.ASK
+      );
+      expect(tickData).toStrictEqual(chunkCompressed);
     });
   });
 
