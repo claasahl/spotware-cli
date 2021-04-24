@@ -2,7 +2,7 @@ import {
   FACTORY,
   Messages,
   ProtoOAPayloadType,
-  ProtoOATrendbar,
+  ProtoOATrendbarPeriod,
   SpotwareSocket,
 } from "@claasahl/spotware-adapter";
 
@@ -15,10 +15,27 @@ export function request(socket: SpotwareSocket) {
   return (message: Messages) => {
     if (message.payloadType === ProtoOAPayloadType.PROTO_OA_GET_TRENDBARS_REQ) {
       const { clientMsgId } = message;
-      const { ctidTraderAccountId } = message.payload;
+      const {
+        ctidTraderAccountId,
+        fromTimestamp,
+        toTimestamp,
+        period,
+      } = message.payload;
       const entry = STORE[ctidTraderAccountId];
+      const boundary = U.MAX_PERIOD[ProtoOATrendbarPeriod[period]];
       if (!entry) {
         U.NOT_AUTHORIZED(socket, ctidTraderAccountId, clientMsgId);
+        return;
+      } else if (
+        Math.abs(toTimestamp - fromTimestamp) > boundary ||
+        Math.abs(toTimestamp - fromTimestamp) === 0
+      ) {
+        U.INCORRECT_BOUNDARIES(
+          socket,
+          ctidTraderAccountId,
+          boundary,
+          clientMsgId
+        );
         return;
       }
 
