@@ -1,12 +1,10 @@
 import { ProtoOATrendbarPeriod } from "@claasahl/spotware-protobuf";
-import debug from "debug";
+import fs from "fs";
 
 import { SymbolData, SymbolDataProcessor } from "../runner/types";
 import * as R from "../../client/requests";
 import * as U from "../../utils";
 import { structurePoints } from "../../client/strategies/institutionalCandles/structurePoints";
-
-const log = debug("structure-points");
 
 interface Options {
   processSymbol: (data: SymbolData) => boolean;
@@ -33,10 +31,18 @@ function processor(options: Options): SymbolDataProcessor {
       fromTimestamp,
       toTimestamp,
     });
-    const points = structurePoints(
-      response.trendbar.filter(U.isTrendbar).map((b) => U.toTrendbar(b, period))
-    );
-    log("%j", points);
+    const trendbars = response.trendbar
+      .filter(U.isTrendbar)
+      .map((b) => U.toTrendbar(b, period));
+    const points = structurePoints(trendbars);
+    const tmp = {
+      trendbars: trendbars.map((b) => ({
+        ...b,
+        timestamp: new Date(b.timestamp),
+      })),
+      points: points.map((p) => ({ ...p, timestamp: new Date(p.timestamp) })),
+    };
+    fs.promises.writeFile("structurePoints.json", JSON.stringify(tmp, null, 2));
   };
 }
 export default processor;
