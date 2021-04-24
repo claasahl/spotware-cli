@@ -11,10 +11,12 @@ import {
   SpotwareSocket,
 } from "@claasahl/spotware-adapter";
 
+import * as DB from "../../database";
 import * as U from "../../utils";
 import assetClasses from "./assetClasses";
+import assets, { EUR } from "./assets";
 import categories from "./categories";
-import symbols from "./symbols";
+import symbols, { symbolById } from "./symbols";
 
 export class Account {
   private ctidTraderAccountId;
@@ -23,6 +25,7 @@ export class Account {
   } = {};
   private trendbarSubscriptions = new Map<number, ProtoOATrendbarPeriod[]>();
   readonly assetClasses;
+  readonly assets;
   readonly categories;
   readonly symbols;
   readonly accessTokens: string[];
@@ -32,6 +35,7 @@ export class Account {
   constructor(ctidTraderAccountId: number) {
     this.ctidTraderAccountId = ctidTraderAccountId;
     this.assetClasses = assetClasses;
+    this.assets = assets;
     this.categories = categories;
     this.symbols = symbols;
     this.accessTokens = [];
@@ -43,7 +47,7 @@ export class Account {
     this.trader = {
       ctidTraderAccountId,
       balance: 1000,
-      depositAssetId: 23,
+      depositAssetId: EUR.assetId,
     };
   }
 
@@ -124,36 +128,39 @@ export class Account {
     this.trendbarSubscriptions.set(symbolId, periods || []);
   }
 
-  ticks(_req: ProtoOAGetTickDataReq): ProtoOAGetTickDataRes {
+  async ticks(req: ProtoOAGetTickDataReq): Promise<ProtoOAGetTickDataRes> {
+    const period: DB.Period = {
+      fromTimestamp: req.fromTimestamp,
+      toTimestamp: req.toTimestamp,
+    };
+    const symbol = symbolById.get(req.symbolId);
+    const dir = `./SERVER/${symbol?.symbolName}.DB/`;
+    const tickData = await DB.readQuotesChunk(dir, period, req.type);
+
     return {
       ctidTraderAccountId: this.ctidTraderAccountId,
       hasMore: false,
-      tickData: [],
+      tickData,
     };
   }
 
-  trendbars(req: ProtoOAGetTrendbarsReq): ProtoOAGetTrendbarsRes {
-    const trendbar: ProtoOATrendbar[] = [];
-    const MILLIS = U.period(req.period);
-    const timestamp = Math.round(req.fromTimestamp / MILLIS) * MILLIS;
-    let a = timestamp;
-    while (a < req.toTimestamp) {
-      trendbar.push({
-        volume: 10000,
-        low: 100000,
-        deltaOpen: 6000,
-        deltaHigh: 10000,
-        deltaClose: 400,
-        utcTimestampInMinutes: Math.round(a / 60000),
-      });
-      a += MILLIS;
-    }
+  async trendbars(
+    req: ProtoOAGetTrendbarsReq
+  ): Promise<ProtoOAGetTrendbarsRes> {
+    const period: DB.Period = {
+      fromTimestamp: req.fromTimestamp,
+      toTimestamp: req.toTimestamp,
+    };
+    const symbol = symbolById.get(req.symbolId);
+    const dir = `./SERVER/${symbol?.symbolName}.DB/`;
+    const trendbars = await DB.readTrendbarsChunk(dir, period, req.period);
+
     return {
       ctidTraderAccountId: this.ctidTraderAccountId,
       period: req.period,
       symbolId: req.symbolId,
-      timestamp,
-      trendbar,
+      timestamp: req.toTimestamp,
+      trendbar: trendbars,
     };
   }
 }

@@ -1,10 +1,15 @@
 import { FACTORY, Messages, SpotwareSocket } from "@claasahl/spotware-adapter";
+import ms from "ms";
 
 export function response<T extends Messages["payload"]>(
   factory: (payload: T, clientMsgId?: string) => Messages
 ) {
-  return (socket: SpotwareSocket, payload: T, clientMsgId?: string) => {
-    socket.write(factory(payload, clientMsgId));
+  return async (
+    socket: SpotwareSocket,
+    payload: T | Promise<T>,
+    clientMsgId?: string
+  ) => {
+    socket.write(factory(await payload, clientMsgId));
   };
 }
 
@@ -60,3 +65,28 @@ export function NO_SUBSCRIPTION(
     )
   );
 }
+
+export function INCORRECT_BOUNDARIES(
+  socket: SpotwareSocket,
+  ctidTraderAccountId: number,
+  maxPeriod: number,
+  clientMsgId?: string
+) {
+  socket.write(
+    FACTORY.PROTO_OA_ERROR_RES(
+      {
+        errorCode: "INCORRECT_BOUNDARIES",
+        ctidTraderAccountId,
+        description: `Incorrect period boundaries or requested period is longer than allowed ${maxPeriod} (${ms(
+          maxPeriod
+        )}).`,
+      },
+      clientMsgId
+    )
+  );
+}
+export const MAX_PERIOD: { [key: string]: number } = {
+  H1: 21168000000,
+  W1: 158112000000,
+  tickData: 604800000,
+};

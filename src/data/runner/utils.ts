@@ -55,7 +55,7 @@ export function fetchAssetClass(
   if (assetClass) {
     return assetClass;
   }
-  throw new Error("missing asset class");
+  throw new Error(`missing asset class ${id}`);
 }
 
 export async function fetchAssets(
@@ -80,7 +80,7 @@ export function fetchAsset(assets: Map<number, ProtoOAAsset>, id?: number) {
   if (asset) {
     return asset;
   }
-  throw new Error("missing asset");
+  throw new Error(`missing asset ${id}`);
 }
 
 export async function fetchSymbolCategories(
@@ -108,7 +108,7 @@ export function fetchSymbolCategory(
   if (symbolCategory) {
     return symbolCategory;
   }
-  throw new Error("missing symbol category");
+  throw new Error(`missing symbol category ${id}`);
 }
 
 export async function fetchSymbols(
