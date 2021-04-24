@@ -10,6 +10,7 @@ import {
 import { Period, isPeriod, comparePeriod } from "./types";
 import { quoteDir, trendbarDir, mkdir, intersects } from "./utils";
 import { retainAvailablePeriods } from "./split";
+import * as U from "../utils";
 
 async function readPeriods(dir: string): Promise<Period[]> {
   const data: Period[] = [];
@@ -124,7 +125,8 @@ export async function readTrendbarsChunk(
       }
       const timestamp = t.utcTimestampInMinutes * 60000;
       return (
-        period.fromTimestamp <= timestamp && timestamp < period.toTimestamp
+        period.fromTimestamp - U.period(type) <= timestamp &&
+        timestamp <= period.toTimestamp
       );
     });
     return trendbars;
