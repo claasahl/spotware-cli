@@ -1,41 +1,42 @@
-export function structurePoints() {
-  const init = { reference: null, direction: "up", structurePoints: [] };
-  function accumulate(data, candle, index, candles) {
-    if (!data.reference) {
-      data.reference = candle;
-      return data;
-    }
-    switch (data.direction) {
-      case "up": {
-        if (
-          data.reference.upper < candle.upper ||
-          data.reference.high < candle.high
-        ) {
-          data.reference = candle;
-          return data;
-        }
-        break;
-      }
-      case "down": {
-        if (
-          data.reference.low > candle.low ||
-          data.reference.lower > candle.lower
-        ) {
-          data.reference = candle;
-          return data;
-        }
-        break;
-      }
-    }
-    data.structurePoints.push({
-      ...data.reference,
-      direction: data.direction,
-      value: data.direction === "up" ? data.reference.high : data.reference.low,
-    });
+function accumulate(data, candle, index, candles) {
+  if (!data.reference) {
     data.reference = candle;
-    data.direction = data.direction === "up" ? "down" : "up";
     return data;
   }
+  switch (data.direction) {
+    case "up": {
+      if (
+        data.reference.upper < candle.upper ||
+        data.reference.high < candle.high
+      ) {
+        data.reference = candle;
+        return data;
+      }
+      break;
+    }
+    case "down": {
+      if (
+        data.reference.low > candle.low ||
+        data.reference.lower > candle.lower
+      ) {
+        data.reference = candle;
+        return data;
+      }
+      break;
+    }
+  }
+  data.structurePoints.push({
+    ...data.reference,
+    direction: data.direction,
+    value: data.direction === "up" ? data.reference.high : data.reference.low,
+  });
+  data.reference = candle;
+  data.direction = data.direction === "up" ? "down" : "up";
+  return data;
+}
+
+export function structurePoints() {
+  const init = { reference: null, direction: "up", structurePoints: [] };
   return shownCandles
     .map((candle, index) => {
       return {
