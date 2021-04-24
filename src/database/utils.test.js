@@ -1,5 +1,3 @@
-const { ProtoOAQuoteType } = require("@claasahl/spotware-adapter");
-
 const {
   engulfs,
   touches,

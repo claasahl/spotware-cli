@@ -1,7 +1,8 @@
 const fs = require("fs");
-const path = require("path");
+const { join } = require("path");
+const { ProtoOAQuoteType } = require("@claasahl/spotware-adapter");
 
-const { write } = require("../../build/database/write");
+const { writeQuotes, writeTrendbars } = require("../../build/database/write");
 
 jest.mock("fs", () => ({
   promises: {
@@ -10,7 +11,7 @@ jest.mock("fs", () => ({
 }));
 
 describe("Database", () => {
-  describe("write", () => {
+  describe("writeQuotes", () => {
     test("should write tick data to file", async () => {
       fs.promises.writeFile.mockResolvedValue();
       const tickData = [
@@ -21,12 +22,13 @@ describe("Database", () => {
         fromTimestamp: 100,
         toTimestamp: 200,
       };
-      await write("./EURUSD.DB", period, tickData);
+      await writeQuotes("./EURUSD.DB", period, ProtoOAQuoteType.ASK, tickData);
       expect(fs.promises.writeFile).toHaveBeenCalledWith(
-        "EURUSD.DB" +
-          path.sep +
-          Buffer.from(JSON.stringify(period)).toString("base64") +
-          ".json",
+        join(
+          "EURUSD.DB",
+          "ASK",
+          Buffer.from(JSON.stringify(period)).toString("base64") + ".json"
+        ),
         JSON.stringify(tickData)
       );
     });
@@ -37,12 +39,63 @@ describe("Database", () => {
         fromTimestamp: 100,
         toTimestamp: 200,
       };
-      await write("./EURUSD.DB", period, tickData);
+      await writeQuotes("./EURUSD.DB", period, ProtoOAQuoteType.BID, tickData);
       expect(fs.promises.writeFile).toHaveBeenCalledWith(
-        "EURUSD.DB" +
-          path.sep +
-          Buffer.from(JSON.stringify(period)).toString("base64") +
-          ".json",
+        join(
+          "EURUSD.DB",
+          "BID",
+          Buffer.from(JSON.stringify(period)).toString("base64") + ".json"
+        ),
+        "[]"
+      );
+    });
+  });
+
+  describe("writeTrendbars", () => {
+    test("should write tick data to file", async () => {
+      fs.promises.writeFile.mockResolvedValue();
+      const tickData = [
+        { timestamp: 100, tick: 3 },
+        { timestamp: 200, tick: 45 },
+      ];
+      const period = {
+        fromTimestamp: 100,
+        toTimestamp: 200,
+      };
+      await writeTrendbars(
+        "./EURUSD.DB",
+        period,
+        ProtoOAQuoteType.ASK,
+        tickData
+      );
+      expect(fs.promises.writeFile).toHaveBeenCalledWith(
+        join(
+          "EURUSD.DB",
+          "ASK",
+          Buffer.from(JSON.stringify(period)).toString("base64") + ".json"
+        ),
+        JSON.stringify(tickData)
+      );
+    });
+    test("should write empty/no tick data to file", async () => {
+      fs.promises.writeFile.mockResolvedValue();
+      const tickData = [];
+      const period = {
+        fromTimestamp: 100,
+        toTimestamp: 200,
+      };
+      await writeTrendbars(
+        "./EURUSD.DB",
+        period,
+        ProtoOAQuoteType.BID,
+        tickData
+      );
+      expect(fs.promises.writeFile).toHaveBeenCalledWith(
+        join(
+          "EURUSD.DB",
+          "BID",
+          Buffer.from(JSON.stringify(period)).toString("base64") + ".json"
+        ),
         "[]"
       );
     });
