@@ -125,7 +125,7 @@ export async function readTrendbarsChunk(
       }
       const timestamp = t.utcTimestampInMinutes * 60000;
       return (
-        period.fromTimestamp - U.period(type) <= timestamp &&
+        period.fromTimestamp - U.period(type) < timestamp &&
         timestamp <= period.toTimestamp
       );
     });

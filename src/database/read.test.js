@@ -272,5 +272,53 @@ describe("Database", () => {
       );
       expect(trendbars).toStrictEqual(chunk);
     });
+
+    describe("should return single trendbar", () => {
+      test("fromTimestamp matches utcTimestamp", async () => {
+        fs.promises.readdir.mockResolvedValue([
+          Buffer.from(JSON.stringify(period)).toString("base64") + ".json",
+        ]);
+        fs.promises.readFile.mockResolvedValue(JSON.stringify(chunk));
+        const trendbars = await readTrendbarsChunk(
+          "./EURUSD.DB",
+          {
+            fromTimestamp: new Date("2021-03-07T22:00:00.000Z").getTime(),
+            toTimestamp: new Date("2021-03-07T23:00:00.000Z").getTime(),
+          },
+          ProtoOATrendbarPeriod.W1
+        );
+        expect(trendbars).toStrictEqual([chunk[2]]);
+      });
+      test("toTimestamp matches utcTimestamp", async () => {
+        fs.promises.readdir.mockResolvedValue([
+          Buffer.from(JSON.stringify(period)).toString("base64") + ".json",
+        ]);
+        fs.promises.readFile.mockResolvedValue(JSON.stringify(chunk));
+        const trendbars = await readTrendbarsChunk(
+          "./EURUSD.DB",
+          {
+            fromTimestamp: new Date("2021-03-07T07:00:00.000Z").getTime(),
+            toTimestamp: new Date("2021-03-07T22:00:00.000Z").getTime(),
+          },
+          ProtoOATrendbarPeriod.W1
+        );
+        expect(trendbars).toStrictEqual([chunk[1], chunk[2]]);
+      });
+      test("fromTimestamp and toTimestamp are 'within' trendbar", async () => {
+        fs.promises.readdir.mockResolvedValue([
+          Buffer.from(JSON.stringify(period)).toString("base64") + ".json",
+        ]);
+        fs.promises.readFile.mockResolvedValue(JSON.stringify(chunk));
+        const trendbars = await readTrendbarsChunk(
+          "./EURUSD.DB",
+          {
+            fromTimestamp: new Date("2021-03-12T14:00:00.000Z").getTime(),
+            toTimestamp: new Date("2021-03-12T15:00:00.000Z").getTime(),
+          },
+          ProtoOATrendbarPeriod.W1
+        );
+        expect(trendbars).toStrictEqual([chunk[2]]);
+      });
+    });
   });
 });
