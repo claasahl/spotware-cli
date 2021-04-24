@@ -8,7 +8,8 @@ import {
 } from "@claasahl/spotware-protobuf";
 
 import { Period, isPeriod, comparePeriod } from "./types";
-import { quoteDir, trendbarDir, mkdir } from "./utils";
+import { quoteDir, trendbarDir, mkdir, intersects } from "./utils";
+import { retainAvailablePeriods } from "./split";
 
 async function readPeriods(dir: string): Promise<Period[]> {
   const data: Period[] = [];
@@ -66,6 +67,36 @@ export async function readQuotes(
   return read(path, period);
 }
 
+export async function readQuotesChunk(
+  dir: string,
+  period: Period,
+  type: ProtoOAQuoteType
+): Promise<ProtoOATickData[]> {
+  const available = await readQuotePeriods(dir, type);
+  const periods = retainAvailablePeriods(period, available).sort(comparePeriod);
+
+  if (periods.length > 0) {
+    const tmp = available.filter((p) =>
+      intersects(p, periods[periods.length - 1])
+    );
+    const tickData = (await readQuotes(dir, tmp[0], type)).filter(
+      (t) =>
+        period.fromTimestamp <= t.timestamp && t.timestamp < period.toTimestamp
+    );
+    for (let index = tickData.length - 1; index > 0; index--) {
+      const curr = tickData[index];
+      const prev = tickData[index - 1];
+      tickData[index] = {
+        tick: curr.tick - prev.tick,
+        timestamp: curr.timestamp - prev.timestamp,
+      };
+    }
+    return tickData;
+  }
+
+  return [];
+}
+
 export async function readTrendbars(
   dir: string,
   period: Period,
@@ -73,4 +104,31 @@ export async function readTrendbars(
 ): Promise<ProtoOATrendbar[]> {
   const path = trendbarDir(dir, type);
   return read(path, period);
+}
+
+export async function readTrendbarsChunk(
+  dir: string,
+  period: Period,
+  type: ProtoOATrendbarPeriod
+): Promise<ProtoOATrendbar[]> {
+  const available = await readTrendbarPeriods(dir, type);
+  const periods = retainAvailablePeriods(period, available).sort(comparePeriod);
+
+  if (periods.length > 0) {
+    const tmp = available.filter((p) =>
+      intersects(p, periods[periods.length - 1])
+    );
+    const trendbars = (await readTrendbars(dir, tmp[0], type)).filter((t) => {
+      if (typeof t.utcTimestampInMinutes !== "number") {
+        return false;
+      }
+      const timestamp = t.utcTimestampInMinutes * 60000;
+      return (
+        period.fromTimestamp <= timestamp && timestamp < period.toTimestamp
+      );
+    });
+    return trendbars;
+  }
+
+  return [];
 }

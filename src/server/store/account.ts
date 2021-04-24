@@ -135,43 +135,12 @@ export class Account {
     };
     const symbol = symbolById.get(req.symbolId);
     const dir = `./SERVER/${symbol?.symbolName}.DB/`;
-    const available = await DB.readQuotePeriods(dir, req.type);
-    const periods = DB.retainAvailablePeriods(period, available).sort(
-      DB.comparePeriod
-    );
-
-    if (periods.length > 0) {
-      const tmp = available.filter((p) =>
-        DB.intersects(p, periods[periods.length - 1])
-      );
-      if (tmp.length !== 1) {
-        throw new Error("ksdjhkjsd?????");
-      }
-
-      const tickData = (await DB.readQuotes(dir, tmp[0], req.type)).filter(
-        (t) =>
-          period.fromTimestamp <= t.timestamp &&
-          t.timestamp < period.toTimestamp
-      );
-      for (let index = tickData.length - 1; index > 0; index--) {
-        const curr = tickData[index];
-        const prev = tickData[index - 1];
-        tickData[index] = {
-          tick: curr.tick - prev.tick,
-          timestamp: curr.timestamp - prev.timestamp,
-        };
-      }
-      return {
-        ctidTraderAccountId: this.ctidTraderAccountId,
-        hasMore: false,
-        tickData,
-      };
-    }
+    const tickData = await DB.readQuotesChunk(dir, period, req.type);
 
     return {
       ctidTraderAccountId: this.ctidTraderAccountId,
       hasMore: false,
-      tickData: [],
+      tickData,
     };
   }
 
@@ -184,45 +153,14 @@ export class Account {
     };
     const symbol = symbolById.get(req.symbolId);
     const dir = `./SERVER/${symbol?.symbolName}.DB/`;
-    const available = await DB.readTrendbarPeriods(dir, req.period);
-    const periods = DB.retainAvailablePeriods(period, available).sort(
-      DB.comparePeriod
-    );
-
-    if (periods.length > 0) {
-      const tmp = available.filter((p) =>
-        DB.intersects(p, periods[periods.length - 1])
-      );
-      if (tmp.length !== 1) {
-        throw new Error("hjjjjjjjjjjjjjjjj?????");
-      }
-
-      const trendbars = (
-        await DB.readTrendbars(dir, tmp[0], req.period)
-      ).filter((t) => {
-        if (typeof t.utcTimestampInMinutes !== "number") {
-          return false;
-        }
-        const timestamp = t.utcTimestampInMinutes * 60000;
-        return (
-          period.fromTimestamp <= timestamp && timestamp < period.toTimestamp
-        );
-      });
-      return {
-        ctidTraderAccountId: this.ctidTraderAccountId,
-        period: req.period,
-        symbolId: req.symbolId,
-        timestamp: req.toTimestamp,
-        trendbar: trendbars,
-      };
-    }
+    const trendbars = await DB.readTrendbarsChunk(dir, period, req.period);
 
     return {
       ctidTraderAccountId: this.ctidTraderAccountId,
       period: req.period,
       symbolId: req.symbolId,
       timestamp: req.toTimestamp,
-      trendbar: [],
+      trendbar: trendbars,
     };
   }
 }
