@@ -14,6 +14,7 @@ import {
 } from "@claasahl/spotware-adapter";
 
 import * as DB from "../../database";
+import { forHumans } from "../../database";
 import * as U from "../../utils";
 import assetClasses from "./assetClasses";
 import assets, { EUR } from "./assets";
@@ -84,6 +85,80 @@ export async function readQuotesChunk(
   return [];
 }
 
+export async function emitAskQuotes(
+  socket: SpotwareSocket,
+  ctidTraderAccountId: number,
+  symbolId: number
+): Promise<(ms: number) => Promise<void>> {
+  const symbol = symbolById.get(symbolId);
+  const dir = `./SERVER/${symbol?.symbolName}.DB/`;
+  const periods = await DB.readQuotePeriods(dir, ProtoOAQuoteType.ASK);
+  const state: {
+    timestamp: number;
+    periodIndex: number;
+    quotes: ProtoOATickData[];
+    quotesIndex: number;
+  } = {
+    timestamp: 0,
+    periodIndex: -1,
+    quotes: [],
+    quotesIndex: -1,
+  };
+  if (periods.length > 0) {
+    console.log("loading initial block of quotes", forHumans(periods[0]));
+    state.periodIndex = 0;
+    state.quotes = await DB.readQuotes(dir, periods[0], ProtoOAQuoteType.ASK);
+    state.quotesIndex = state.quotes.length - 1;
+    state.timestamp =
+      state.quotes.length > 0
+        ? state.quotes[state.quotes.length - 1].timestamp
+        : 0;
+  }
+  const emitQuotes = async (ms: number) => {
+    if (state.periodIndex === -1) {
+      console.log("nothing to emit");
+      // nothing to do
+      return;
+    }
+
+    state.timestamp += ms;
+    console.log("advanced time to", new Date(state.timestamp).toISOString());
+    while (
+      state.quotesIndex >= 0 &&
+      state.quotes[state.quotesIndex].timestamp < state.timestamp
+    ) {
+      socket.write(
+        FACTORY.PROTO_OA_SPOT_EVENT({
+          ctidTraderAccountId,
+          symbolId,
+          trendbar: [],
+          ask: state.quotes[state.quotesIndex].tick,
+        })
+      );
+      state.quotesIndex--;
+    }
+    if (state.quotesIndex === -1 && state.periodIndex < periods.length - 1) {
+      state.periodIndex++;
+      console.log(
+        "loading next block of quotes",
+        forHumans(periods[state.periodIndex])
+      );
+      state.quotes = await DB.readQuotes(
+        dir,
+        periods[state.periodIndex],
+        ProtoOAQuoteType.ASK
+      );
+      state.quotesIndex = state.quotes.length - 1;
+      state.timestamp =
+        state.quotes.length > 0
+          ? state.quotes[state.quotes.length - 1].timestamp
+          : 0;
+      await emitQuotes(0);
+    }
+  };
+  return emitQuotes;
+}
+
 export class Account {
   private ctidTraderAccountId;
   private subscriptions: {
@@ -121,8 +196,13 @@ export class Account {
     return !!this.subscriptions[symbolId];
   }
 
-  subscribe(socket: SpotwareSocket, symbolId: number): void {
-    const timer = setInterval(() => {
+  async subscribe(socket: SpotwareSocket, symbolId: number): Promise<void> {
+    const testing = await emitAskQuotes(
+      socket,
+      this.ctidTraderAccountId,
+      symbolId
+    );
+    const timer = setInterval(async () => {
       const trendbar: ProtoOATrendbar[] = [];
       const periods = this.trendbarSubscriptions.get(symbolId);
       if (periods) {
@@ -139,15 +219,12 @@ export class Account {
           });
         }
       }
-      socket.write(
-        FACTORY.PROTO_OA_SPOT_EVENT({
-          ctidTraderAccountId: this.ctidTraderAccountId,
-          symbolId,
-          trendbar,
-          bid: 12356,
-        })
-      );
-    }, 10);
+      try {
+        await testing(60 * 60000);
+      } catch (err) {
+        console.log("error while emitting ask quotes", err);
+      }
+    }, 1000);
     this.subscriptions[symbolId] = timer;
   }
 
