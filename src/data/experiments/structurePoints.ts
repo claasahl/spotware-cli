@@ -64,7 +64,6 @@ interface Options {
   processSymbol: (data: SymbolData) => boolean;
   fromDate: Date;
   toDate: Date;
-  period: ProtoOATrendbarPeriod;
 }
 function processor(options: Options): SymbolDataProcessor {
   return async (socket, data) => {
@@ -76,7 +75,6 @@ function processor(options: Options): SymbolDataProcessor {
     const fromTimestamp = options.fromDate.getTime();
     const toTimestamp = options.toDate.getTime();
     const symbolId = data.symbol.symbolId;
-    const period = options.period;
 
     const trendbars = await fetchTrendbars({
       socket,
