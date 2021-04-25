@@ -1,5 +1,4 @@
 import {
-  ProtoOADepthQuote,
   ProtoOAQuoteType,
   ProtoOATrendbarPeriod,
 } from "@claasahl/spotware-adapter";
