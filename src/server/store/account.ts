@@ -5,6 +5,8 @@ import {
   ProtoOAGetTickDataRes,
   ProtoOAGetTrendbarsReq,
   ProtoOAGetTrendbarsRes,
+  ProtoOAQuoteType,
+  ProtoOATickData,
   ProtoOATrader,
   ProtoOATrendbar,
   ProtoOATrendbarPeriod,
@@ -17,6 +19,70 @@ import assetClasses from "./assetClasses";
 import assets, { EUR } from "./assets";
 import categories from "./categories";
 import symbols, { symbolById } from "./symbols";
+
+export async function readTrendbarsChunk(
+  dir: string,
+  period: DB.Period,
+  type: ProtoOATrendbarPeriod
+): Promise<ProtoOATrendbar[]> {
+  const available = await DB.readTrendbarPeriods(dir, type);
+  const periods = DB.retainAvailablePeriods(period, available).sort(
+    DB.comparePeriod
+  );
+
+  if (periods.length > 0) {
+    const tmp = available.filter((p) =>
+      DB.intersects(p, periods[periods.length - 1])
+    );
+    const trendbars = (await DB.readTrendbars(dir, tmp[0], type)).filter(
+      (t) => {
+        if (typeof t.utcTimestampInMinutes !== "number") {
+          return false;
+        }
+        const timestamp = t.utcTimestampInMinutes * 60000;
+        return (
+          period.fromTimestamp - U.period(type) < timestamp &&
+          timestamp <= period.toTimestamp
+        );
+      }
+    );
+    return trendbars;
+  }
+
+  return [];
+}
+
+export async function readQuotesChunk(
+  dir: string,
+  period: DB.Period,
+  type: ProtoOAQuoteType
+): Promise<ProtoOATickData[]> {
+  const available = await DB.readQuotePeriods(dir, type);
+  const periods = DB.retainAvailablePeriods(period, available).sort(
+    DB.comparePeriod
+  );
+
+  if (periods.length > 0) {
+    const tmp = available.filter((p) =>
+      DB.intersects(p, periods[periods.length - 1])
+    );
+    const tickData = (await DB.readQuotes(dir, tmp[0], type)).filter(
+      (t) =>
+        period.fromTimestamp <= t.timestamp && t.timestamp < period.toTimestamp
+    );
+    for (let index = tickData.length - 1; index > 0; index--) {
+      const curr = tickData[index];
+      const prev = tickData[index - 1];
+      tickData[index] = {
+        tick: curr.tick - prev.tick,
+        timestamp: curr.timestamp - prev.timestamp,
+      };
+    }
+    return tickData;
+  }
+
+  return [];
+}
 
 export class Account {
   private ctidTraderAccountId;
@@ -135,7 +201,7 @@ export class Account {
     };
     const symbol = symbolById.get(req.symbolId);
     const dir = `./SERVER/${symbol?.symbolName}.DB/`;
-    const tickData = await DB.readQuotesChunk(dir, period, req.type);
+    const tickData = await readQuotesChunk(dir, period, req.type);
 
     return {
       ctidTraderAccountId: this.ctidTraderAccountId,
@@ -153,7 +219,7 @@ export class Account {
     };
     const symbol = symbolById.get(req.symbolId);
     const dir = `./SERVER/${symbol?.symbolName}.DB/`;
-    const trendbars = await DB.readTrendbarsChunk(dir, period, req.period);
+    const trendbars = await readTrendbarsChunk(dir, period, req.period);
 
     return {
       ctidTraderAccountId: this.ctidTraderAccountId,
