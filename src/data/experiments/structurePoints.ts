@@ -84,7 +84,7 @@ function processor(options: Options): SymbolDataProcessor {
       toTimestamp,
       period: ProtoOATrendbarPeriod.W1,
     });
-    const points = U.structurePoints(trendbars);
+    const points = U.structurePoints2(trendbars);
     const tmp = {
       trendbars: trendbars.map((b) => ({
         ...b,

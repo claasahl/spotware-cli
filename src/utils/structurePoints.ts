@@ -95,3 +95,22 @@ export function structurePoints(trendbars: Trendbar[]): StructurePoint[] {
   }
   return data.structurePoints;
 }
+
+type StructurePoint2 = StructurePoint & { mitigatedBy?: Trendbar };
+
+export function structurePoints2(trendbars: Trendbar[]): StructurePoint2[] {
+  const points2: StructurePoint2[] = [];
+  const points = structurePoints(trendbars);
+  for (const point of points) {
+    const { timestamp, value } = point;
+    const bars = trendbars
+      .filter((b) => b.timestamp > timestamp)
+      .filter((b) => b.high >= value && value >= b.low);
+    if (bars.length > 0) {
+      points2.push({ ...point, mitigatedBy: bars[0] });
+    } else {
+      points2.push({ ...point });
+    }
+  }
+  return points2;
+}
