@@ -45,7 +45,15 @@ export function structurePoints(trendbars: Trendbar[]): StructurePoint[] {
     direction: counts.down > counts.up ? "down" : "up",
     structurePoints: [],
   };
-  for (const trendbar of trendbars) {
+  if (counts.down !== counts.up) {
+    data.structurePoints.push({
+      timestamp: trendbars[0].timestamp,
+      direction: counts.down > counts.up ? "up" : "down",
+      value: counts.down > counts.up ? trendbars[0].high : trendbars[0].low,
+      trendbar: trendbars[0],
+    });
+  }
+  for (const trendbar of trendbars.slice(1)) {
     switch (data.direction) {
       case "up": {
         if (upwards(data.reference, trendbar)) {
