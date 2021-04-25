@@ -9,34 +9,53 @@ type StructurePoint = {
   trendbar: Trendbar;
 };
 
+function upwards(a: Trendbar, b: Trendbar): boolean {
+  return upper(a) < upper(b) || a.high < b.high;
+}
+
+function downwards(a: Trendbar, b: Trendbar): boolean {
+  return a.low > b.low || lower(a) > lower(b);
+}
+
 export function structurePoints(trendbars: Trendbar[]): StructurePoint[] {
+  if (trendbars.length === 0) {
+    return [];
+  }
+
+  const counts = {
+    up: 0,
+    down: 0,
+  };
+  for (let i = 1; i < trendbars.length; i++) {
+    const prev = trendbars[i - 1];
+    const curr = trendbars[i];
+    counts.up += upwards(prev, curr) ? 1 : 0;
+    counts.down += downwards(prev, curr) ? 1 : 0;
+    if (counts.down !== counts.up) {
+      break;
+    }
+  }
+
   const data: {
-    reference: Trendbar | null;
+    reference: Trendbar;
     direction: "up" | "down";
     structurePoints: StructurePoint[];
-  } = { reference: null, direction: "up", structurePoints: [] };
+  } = {
+    reference: trendbars[0],
+    direction: counts.down > counts.up ? "down" : "up",
+    structurePoints: [],
+  };
   for (const trendbar of trendbars) {
-    if (!data.reference) {
-      data.reference = trendbar;
-      continue;
-    }
-
     switch (data.direction) {
       case "up": {
-        if (
-          upper(data.reference) < upper(trendbar) ||
-          data.reference.high < trendbar.high
-        ) {
+        if (upwards(data.reference, trendbar)) {
           data.reference = trendbar;
           continue;
         }
         break;
       }
       case "down": {
-        if (
-          data.reference.low > trendbar.low ||
-          lower(data.reference) > lower(trendbar)
-        ) {
+        if (downwards(data.reference, trendbar)) {
           data.reference = trendbar;
           continue;
         }
