@@ -6,7 +6,7 @@ import {
   SpotwareSocket,
 } from "@claasahl/spotware-adapter";
 
-import { MAX_PERIOD } from "../../utils";
+import { maxQuotePeriod } from "../../utils";
 import { STORE } from "../store";
 import * as U from "./utils";
 
@@ -23,19 +23,18 @@ export function request(socket: SpotwareSocket) {
         type,
       } = message.payload;
       const entry = STORE[ctidTraderAccountId];
-      const boundary = MAX_PERIOD[ProtoOAQuoteType[type]];
+      const boundary = maxQuotePeriod(type);
       if (!entry) {
         U.NOT_AUTHORIZED(socket, ctidTraderAccountId, clientMsgId);
         return;
       } else if (
-        typeof boundary !== "number" ||
         Math.abs(toTimestamp - fromTimestamp) > boundary ||
         Math.abs(toTimestamp - fromTimestamp) === 0
       ) {
         U.INCORRECT_BOUNDARIES(
           socket,
           ctidTraderAccountId,
-          boundary || -1,
+          boundary,
           clientMsgId
         );
         return;

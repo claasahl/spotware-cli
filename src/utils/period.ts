@@ -1,4 +1,8 @@
-import { ProtoOATrendbarPeriod } from "@claasahl/spotware-adapter";
+import {
+  ProtoOADepthQuote,
+  ProtoOAQuoteType,
+  ProtoOATrendbarPeriod,
+} from "@claasahl/spotware-adapter";
 import ms from "ms";
 
 export function period(period: ProtoOATrendbarPeriod): number {
@@ -34,18 +38,30 @@ export function period(period: ProtoOATrendbarPeriod): number {
   }
 }
 
-export const MAX_PERIOD: { [key: string]: number | undefined } = {
-  W1: 158112000000,
-  D1: 31622400000,
-
-  H4: 21168000000,
-  H1: 21168000000,
-  M30: 21168000000,
-  M15: 21168000000,
-
-  M5: 3024000000,
-
-  M1: 604800000,
-  ASK: 604800000,
-  BID: 604800000,
-};
+export function maxTrendbarPeriod(period: ProtoOATrendbarPeriod): number {
+  switch (period) {
+    case ProtoOATrendbarPeriod.W1:
+      return 158112000000;
+    case ProtoOATrendbarPeriod.D1:
+      return 31622400000;
+    case ProtoOATrendbarPeriod.H4:
+    case ProtoOATrendbarPeriod.H1:
+    case ProtoOATrendbarPeriod.M30:
+    case ProtoOATrendbarPeriod.M15:
+      return 21168000000;
+    case ProtoOATrendbarPeriod.M5:
+      return 3024000000;
+    case ProtoOATrendbarPeriod.M1:
+      return 604800000;
+    default:
+      return 9999999999;
+  }
+}
+export function maxQuotePeriod(type: ProtoOAQuoteType): number {
+  switch (type) {
+    case ProtoOAQuoteType.ASK:
+    case ProtoOAQuoteType.BID:
+    default:
+      return 604800000;
+  }
+}
