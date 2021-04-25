@@ -85,8 +85,3 @@ export function INCORRECT_BOUNDARIES(
     )
   );
 }
-export const MAX_PERIOD: { [key: string]: number } = {
-  H1: 21168000000,
-  W1: 158112000000,
-  tickData: 604800000,
-};

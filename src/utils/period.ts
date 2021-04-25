@@ -33,3 +33,19 @@ export function period(period: ProtoOATrendbarPeriod): number {
       throw new Error("cannot convert 1MN to millis");
   }
 }
+
+export const MAX_PERIOD: { [key: string]: number | undefined } = {
+  W1: 158112000000,
+  D1: 31622400000,
+
+  H4: 21168000000,
+  H1: 21168000000,
+  M30: 21168000000,
+  M15: 21168000000,
+
+  M5: 3024000000,
+
+  M1: 604800000,
+  ASK: 604800000,
+  BID: 604800000,
+};

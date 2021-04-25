@@ -2,9 +2,11 @@ import {
   FACTORY,
   Messages,
   ProtoOAPayloadType,
+  ProtoOAQuoteType,
   SpotwareSocket,
 } from "@claasahl/spotware-adapter";
 
+import { MAX_PERIOD } from "../../utils";
 import { STORE } from "../store";
 import * as U from "./utils";
 
@@ -18,19 +20,22 @@ export function request(socket: SpotwareSocket) {
         ctidTraderAccountId,
         fromTimestamp,
         toTimestamp,
+        type,
       } = message.payload;
       const entry = STORE[ctidTraderAccountId];
+      const boundary = MAX_PERIOD[ProtoOAQuoteType[type]];
       if (!entry) {
         U.NOT_AUTHORIZED(socket, ctidTraderAccountId, clientMsgId);
         return;
       } else if (
-        Math.abs(toTimestamp - fromTimestamp) > U.MAX_PERIOD.tickData ||
+        typeof boundary !== "number" ||
+        Math.abs(toTimestamp - fromTimestamp) > boundary ||
         Math.abs(toTimestamp - fromTimestamp) === 0
       ) {
         U.INCORRECT_BOUNDARIES(
           socket,
           ctidTraderAccountId,
-          U.MAX_PERIOD.tickData,
+          boundary || -1,
           clientMsgId
         );
         return;
