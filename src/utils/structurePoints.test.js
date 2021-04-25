@@ -141,7 +141,7 @@ describe("Structure Points", () => {
     // A
 
     const barA = Object.freeze({
-      timestamp: 600,
+      timestamp: 100,
       open: 90,
       high: 100,
       low: 85,
@@ -149,7 +149,7 @@ describe("Structure Points", () => {
       volumne: 0,
     });
     const barB = Object.freeze({
-      timestamp: 500,
+      timestamp: 200,
       open: 98,
       high: 110,
       low: 93,
@@ -157,7 +157,7 @@ describe("Structure Points", () => {
       volumne: 0,
     });
     const barC = Object.freeze({
-      timestamp: 400,
+      timestamp: 300,
       open: 105,
       high: 120,
       low: 105,
@@ -165,7 +165,7 @@ describe("Structure Points", () => {
       volumne: 0,
     });
     const barD = Object.freeze({
-      timestamp: 300,
+      timestamp: 400,
       open: 100,
       high: 110,
       low: 95,
@@ -173,7 +173,7 @@ describe("Structure Points", () => {
       volumne: 0,
     });
     const barE = Object.freeze({
-      timestamp: 200,
+      timestamp: 500,
       open: 108,
       high: 120,
       low: 103,
@@ -181,7 +181,7 @@ describe("Structure Points", () => {
       volumne: 0,
     });
     const barF = Object.freeze({
-      timestamp: 100,
+      timestamp: 600,
       open: 115,
       high: 130,
       low: 115,
