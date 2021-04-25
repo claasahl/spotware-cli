@@ -60,6 +60,12 @@ async function fetchTrendbars(
   return data;
 }
 
+const periods = [
+  ProtoOATrendbarPeriod.W1,
+  ProtoOATrendbarPeriod.D1,
+  ProtoOATrendbarPeriod.H4,
+];
+
 interface Options {
   processSymbol: (data: SymbolData) => boolean;
   fromDate: Date;
@@ -75,24 +81,26 @@ function processor(options: Options): SymbolDataProcessor {
     const fromTimestamp = options.fromDate.getTime();
     const toTimestamp = options.toDate.getTime();
     const symbolId = data.symbol.symbolId;
+    const results: {
+      [key: string]: { trendbars: Trendbar[]; points: U.StructurePoint2[] };
+    } = {};
 
-    const trendbars = await fetchTrendbars({
-      socket,
-      ctidTraderAccountId,
-      symbolId,
-      fromTimestamp,
-      toTimestamp,
-      period: ProtoOATrendbarPeriod.W1,
-    });
-    const points = U.structurePoints2(trendbars);
-    const tmp = {
-      trendbars: trendbars.map((b) => ({
-        ...b,
-        timestamp: new Date(b.timestamp),
-      })),
-      points: points.map((p) => ({ ...p, timestamp: new Date(p.timestamp) })),
-    };
-    fs.promises.writeFile("structurePoints.json", JSON.stringify(tmp, null, 2));
+    for (const period of periods) {
+      const trendbars = await fetchTrendbars({
+        socket,
+        ctidTraderAccountId,
+        symbolId,
+        fromTimestamp,
+        toTimestamp,
+        period,
+      });
+      const points = U.structurePoints2(trendbars);
+      results[ProtoOATrendbarPeriod[period]] = { trendbars, points };
+    }
+    fs.promises.writeFile(
+      "structurePoints.json",
+      JSON.stringify(results, null, 2)
+    );
   };
 }
 export default processor;

@@ -96,7 +96,7 @@ export function structurePoints(trendbars: Trendbar[]): StructurePoint[] {
   return data.structurePoints;
 }
 
-type StructurePoint2 = StructurePoint & { mitigatedBy?: Trendbar };
+export type StructurePoint2 = StructurePoint & { mitigatedBy?: Trendbar };
 
 export function structurePoints2(trendbars: Trendbar[]): StructurePoint2[] {
   const points2: StructurePoint2[] = [];
