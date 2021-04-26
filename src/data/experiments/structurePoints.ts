@@ -82,7 +82,11 @@ function processor(options: Options): SymbolDataProcessor {
     const toTimestamp = options.toDate.getTime();
     const symbolId = data.symbol.symbolId;
     const results: {
-      [key: string]: { trendbars: Trendbar[]; points: U.StructurePoint2[] };
+      [key: string]: {
+        trendbars: Trendbar[];
+        points: U.StructurePoint2[];
+        trend: U.TrendThingy[];
+      };
     } = {};
 
     for (const period of periods) {
@@ -95,7 +99,8 @@ function processor(options: Options): SymbolDataProcessor {
         period,
       });
       const points = U.structurePoints2(trendbars);
-      results[ProtoOATrendbarPeriod[period]] = { trendbars, points };
+      const trend = U.trend(points);
+      results[ProtoOATrendbarPeriod[period]] = { trendbars, points, trend };
     }
     fs.promises.writeFile(
       "structurePoints.json",

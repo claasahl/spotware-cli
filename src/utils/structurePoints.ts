@@ -114,3 +114,33 @@ export function structurePoints2(trendbars: Trendbar[]): StructurePoint2[] {
   }
   return points2;
 }
+
+export type TrendThingy = {
+  type: "up" | "down" | "side";
+  points: StructurePoint2[];
+};
+
+export function trend(points: StructurePoint2[]): TrendThingy[] {
+  const data: TrendThingy[] = [];
+  let reference: TrendThingy = { type: "side", points: [] };
+  for (let index = 3; index < points.length; index++) {
+    const pointA = points[index - 3];
+    const pointB = points[index - 2];
+    const pointC = points[index - 1];
+    const pointD = points[index];
+    const up = pointA.value < pointC.value && pointB.value < pointD.value;
+    const down = pointA.value > pointC.value && pointB.value > pointD.value;
+    const type = up ? "up" : down ? "down" : "side";
+
+    if (reference.type === type) {
+      reference.points.push(pointD);
+    } else {
+      data.push(reference);
+      reference = { type, points: [pointA, pointB, pointC, pointD] };
+    }
+  }
+  if (reference) {
+    data.push(reference);
+  }
+  return data;
+}
