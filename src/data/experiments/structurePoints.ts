@@ -16,11 +16,12 @@ type OrderBlock = {
   type: "bearish" | "bullish";
   bar: U.Trendbar;
   bars: U.Trendbar[];
+  points: U.StructurePoint2[];
 };
 
 function orderBlocks(
   bars: U.Trendbar[],
-  _points: U.StructurePoint2[]
+  points: U.StructurePoint2[]
 ): OrderBlock[] {
   const orderBlocks: OrderBlock[] = [];
   for (let i = 0; i + 1 < bars.length; i++) {
@@ -30,21 +31,29 @@ function orderBlocks(
 
     const bullishTail = tail.filter(bullish).length === tail.length;
     if (bearish(bar) && bullish(next) && bullishTail) {
+      const before = points.filter(
+        (p) => p.timestamp < bar.timestamp && p.direction === "up"
+      );
       orderBlocks.push({
         timestamp: bar.timestamp,
         type: "bearish",
         bar,
         bars: [bar, next, ...tail],
+        points: before,
       });
     }
 
     const bearishTail = tail.filter(bearish).length === tail.length;
     if (bullish(bar) && bearish(next) && bearishTail) {
+      const before = points.filter(
+        (p) => p.timestamp < bar.timestamp && p.direction === "down"
+      );
       orderBlocks.push({
         timestamp: bar.timestamp,
         type: "bullish",
         bar,
         bars: [bar, next, ...tail],
+        points: before,
       });
     }
   }
@@ -103,7 +112,7 @@ async function fetchTrendbars(
 const periods = [
   ProtoOATrendbarPeriod.W1,
   ProtoOATrendbarPeriod.D1,
-  ProtoOATrendbarPeriod.H4,
+  // ProtoOATrendbarPeriod.H4,
 ];
 
 interface Options {
