@@ -1,5 +1,6 @@
 import { ProtoOATrendbarPeriod } from "@claasahl/spotware-protobuf";
 import { SpotwareClientSocket } from "@claasahl/spotware-adapter";
+import { bearish, bullish } from "indicators";
 import fs from "fs";
 import debug from "debug";
 
@@ -7,9 +8,41 @@ import { SymbolData, SymbolDataProcessor } from "../runner/types";
 import * as R from "../../client/requests";
 import * as U from "../../utils";
 import * as DB from "../../database";
-import { Trendbar } from "../../utils";
 
 const log = debug("structure-points");
+
+type OrderBlock = {
+  timestamp: number;
+  type: "bearish" | "bullish";
+  bar: U.Trendbar;
+};
+
+function orderBlocks(
+  bars: U.Trendbar[],
+  _points: U.StructurePoint2[]
+): OrderBlock[] {
+  const orderBlocks: OrderBlock[] = [];
+  for (let i = 0; i + 1 < bars.length; i++) {
+    const bar = bars[i];
+    const next = bars[i + 1];
+
+    if (bearish(bar) && bullish(next)) {
+      orderBlocks.push({
+        timestamp: bar.timestamp,
+        type: "bearish",
+        bar,
+      });
+    }
+    if (bullish(bar) && bearish(next)) {
+      orderBlocks.push({
+        timestamp: bar.timestamp,
+        type: "bullish",
+        bar,
+      });
+    }
+  }
+  return orderBlocks;
+}
 
 type FetchTrendbarsOptions = {
   socket: SpotwareClientSocket;
@@ -22,10 +55,10 @@ type FetchTrendbarsOptions = {
 
 async function fetchTrendbars(
   options: FetchTrendbarsOptions
-): Promise<Trendbar[]> {
+): Promise<U.Trendbar[]> {
   const step = U.maxTrendbarPeriod(options.period);
   const { ctidTraderAccountId, symbolId, period } = options;
-  const data: Trendbar[] = [];
+  const data: U.Trendbar[] = [];
 
   let { toTimestamp } = options;
   do {
@@ -83,8 +116,9 @@ function processor(options: Options): SymbolDataProcessor {
     const symbolId = data.symbol.symbolId;
     const results: {
       [key: string]: {
-        trendbars: Trendbar[];
+        trendbars: U.Trendbar[];
         points: U.StructurePoint2[];
+        orderBlocks: OrderBlock[];
         trend: U.TrendThingy[];
       };
     } = {};
@@ -100,7 +134,12 @@ function processor(options: Options): SymbolDataProcessor {
       });
       const points = U.structurePoints2(trendbars);
       const trend = U.trend(points);
-      results[ProtoOATrendbarPeriod[period]] = { trendbars, points, trend };
+      results[ProtoOATrendbarPeriod[period]] = {
+        trendbars,
+        points,
+        orderBlocks: orderBlocks(trendbars, points),
+        trend,
+      };
     }
     fs.promises.writeFile(
       "structurePoints.json",
