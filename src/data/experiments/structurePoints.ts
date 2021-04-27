@@ -15,7 +15,7 @@ type OrderBlock = {
   timestamp: number;
   type: "bearish" | "bullish";
   bar: U.Trendbar;
-  bars: [U.Trendbar, U.Trendbar];
+  bars: U.Trendbar[];
 };
 
 function orderBlocks(
@@ -26,21 +26,25 @@ function orderBlocks(
   for (let i = 0; i + 1 < bars.length; i++) {
     const bar = bars[i];
     const next = bars[i + 1];
+    const tail = bars.slice(i + 2, i + 5);
 
-    if (bearish(bar) && bullish(next)) {
+    const bullishTail = tail.filter(bullish).length === tail.length;
+    if (bearish(bar) && bullish(next) && bullishTail) {
       orderBlocks.push({
         timestamp: bar.timestamp,
         type: "bearish",
         bar,
-        bars: [bar, next],
+        bars: [bar, next, ...tail],
       });
     }
-    if (bullish(bar) && bearish(next)) {
+
+    const bearishTail = tail.filter(bearish).length === tail.length;
+    if (bullish(bar) && bearish(next) && bearishTail) {
       orderBlocks.push({
         timestamp: bar.timestamp,
         type: "bullish",
         bar,
-        bars: [bar, next],
+        bars: [bar, next, ...tail],
       });
     }
   }
