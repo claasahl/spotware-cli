@@ -31,9 +31,20 @@ function orderBlocks(
 
     const bullishTail = tail.filter(bullish).length === tail.length;
     if (bearish(bar) && bullish(next) && bullishTail) {
-      const before = points.filter(
+      const tmp = points.filter(
         (p) => p.timestamp < bar.timestamp && p.direction === "up"
       );
+      const before: U.StructurePoint2[] = [];
+      if (tmp.length > 0) {
+        before.push(tmp[tmp.length - 1]);
+        let value = tmp[tmp.length - 1].value;
+        for (let i = tmp.length - 2; i >= 0; i--) {
+          if (tmp[i].value >= value) {
+            value = tmp[i].value;
+            before.push(tmp[i]);
+          }
+        }
+      }
       orderBlocks.push({
         timestamp: bar.timestamp,
         type: "bearish",
@@ -45,9 +56,20 @@ function orderBlocks(
 
     const bearishTail = tail.filter(bearish).length === tail.length;
     if (bullish(bar) && bearish(next) && bearishTail) {
-      const before = points.filter(
+      const tmp = points.filter(
         (p) => p.timestamp < bar.timestamp && p.direction === "down"
       );
+      const before: U.StructurePoint2[] = [];
+      if (tmp.length > 0) {
+        before.push(tmp[tmp.length - 1]);
+        let value = tmp[tmp.length - 1].value;
+        for (let i = tmp.length - 2; i >= 0; i--) {
+          if (tmp[i].value <= value) {
+            value = tmp[i].value;
+            before.push(tmp[i]);
+          }
+        }
+      }
       orderBlocks.push({
         timestamp: bar.timestamp,
         type: "bullish",
