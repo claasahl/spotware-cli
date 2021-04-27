@@ -15,6 +15,7 @@ type OrderBlock = {
   timestamp: number;
   type: "bearish" | "bullish";
   bar: U.Trendbar;
+  bars: [U.Trendbar, U.Trendbar];
 };
 
 function orderBlocks(
@@ -31,6 +32,7 @@ function orderBlocks(
         timestamp: bar.timestamp,
         type: "bearish",
         bar,
+        bars: [bar, next],
       });
     }
     if (bullish(bar) && bearish(next)) {
@@ -38,6 +40,7 @@ function orderBlocks(
         timestamp: bar.timestamp,
         type: "bullish",
         bar,
+        bars: [bar, next],
       });
     }
   }
