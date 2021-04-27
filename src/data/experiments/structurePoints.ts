@@ -36,9 +36,8 @@ function orderBlocks(
       );
       const before: U.StructurePoint2[] = [];
       if (tmp.length > 0) {
-        before.push(tmp[tmp.length - 1]);
-        let value = tmp[tmp.length - 1].value;
-        for (let i = tmp.length - 2; i >= 0; i--) {
+        let value = bar.high;
+        for (let i = tmp.length - 1; i >= 0; i--) {
           if (tmp[i].value >= value) {
             value = tmp[i].value;
             before.push(tmp[i]);
@@ -61,9 +60,8 @@ function orderBlocks(
       );
       const before: U.StructurePoint2[] = [];
       if (tmp.length > 0) {
-        before.push(tmp[tmp.length - 1]);
-        let value = tmp[tmp.length - 1].value;
-        for (let i = tmp.length - 2; i >= 0; i--) {
+        let value = bar.low;
+        for (let i = tmp.length - 1; i >= 0; i--) {
           if (tmp[i].value <= value) {
             value = tmp[i].value;
             before.push(tmp[i]);
