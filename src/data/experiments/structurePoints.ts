@@ -11,13 +11,58 @@ import * as DB from "../../database";
 
 const log = debug("structure-points");
 
+function brokenUpperStructurePoints(
+  bar: U.Trendbar,
+  points: U.StructurePoint2[]
+): U.StructurePoint2[] {
+  const tmp = points.filter(
+    (p) => p.timestamp < bar.timestamp && p.direction === "up"
+  );
+  const before: U.StructurePoint2[] = [];
+  if (tmp.length > 0) {
+    let value = bar.high + range(bar);
+    for (let i = tmp.length - 1; i >= 0; i--) {
+      if (tmp[i].value >= value) {
+        value = tmp[i].value;
+        before.push(tmp[i]);
+      }
+    }
+  }
+  const brokenStructurePoints = before.filter(
+    (p) => p.mitigatedBy && p.mitigatedBy.timestamp > bar.timestamp
+  );
+  return brokenStructurePoints;
+}
+
+function brokenLowerStructurePoints(
+  bar: U.Trendbar,
+  points: U.StructurePoint2[]
+): U.StructurePoint2[] {
+  const tmp = points.filter(
+    (p) => p.timestamp < bar.timestamp && p.direction === "down"
+  );
+  const before: U.StructurePoint2[] = [];
+  if (tmp.length > 0) {
+    let value = bar.low - range(bar);
+    for (let i = tmp.length - 1; i >= 0; i--) {
+      if (tmp[i].value <= value) {
+        value = tmp[i].value;
+        before.push(tmp[i]);
+      }
+    }
+  }
+  const brokenStructurePoints = before.filter(
+    (p) => p.mitigatedBy && p.mitigatedBy.timestamp > bar.timestamp
+  );
+  return brokenStructurePoints;
+}
+
 type OrderBlock = {
   timestamp: number;
   type: "bearish" | "bullish";
   bar: U.Trendbar;
   bars: U.Trendbar[];
   points: U.StructurePoint2[];
-  brokeStructure: boolean;
 };
 
 function orderBlocks(
@@ -32,62 +77,28 @@ function orderBlocks(
 
     const bullishTail = tail.filter(bullish).length === tail.length;
     if (bearish(bar) && bullish(next) && bullishTail) {
-      const tmp = points.filter(
-        (p) => p.timestamp < bar.timestamp && p.direction === "up"
-      );
-      const before: U.StructurePoint2[] = [];
-      if (tmp.length > 0) {
-        let value = bar.high + range(bar);
-        for (let i = tmp.length - 1; i >= 0; i--) {
-          if (tmp[i].value >= value) {
-            value = tmp[i].value;
-            before.push(tmp[i]);
-          }
-        }
-      }
-      const brokeStructure =
-        before.filter(
-          (p) => p.mitigatedBy && p.mitigatedBy.timestamp > bar.timestamp
-        ).length > 0;
-      if (brokeStructure) {
+      const brokenStructurePoints = brokenUpperStructurePoints(bar, points);
+      if (brokenStructurePoints.length > 0) {
         orderBlocks.push({
           timestamp: bar.timestamp,
           type: "bearish",
           bar,
           bars: [bar, next, ...tail],
-          points: before,
-          brokeStructure,
+          points: brokenStructurePoints,
         });
       }
     }
 
     const bearishTail = tail.filter(bearish).length === tail.length;
     if (bullish(bar) && bearish(next) && bearishTail) {
-      const tmp = points.filter(
-        (p) => p.timestamp < bar.timestamp && p.direction === "down"
-      );
-      const before: U.StructurePoint2[] = [];
-      if (tmp.length > 0) {
-        let value = bar.low - range(bar);
-        for (let i = tmp.length - 1; i >= 0; i--) {
-          if (tmp[i].value <= value) {
-            value = tmp[i].value;
-            before.push(tmp[i]);
-          }
-        }
-      }
-      const brokeStructure =
-        before.filter(
-          (p) => p.mitigatedBy && p.mitigatedBy.timestamp > bar.timestamp
-        ).length > 0;
-      if (brokeStructure) {
+      const brokenStructurePoints = brokenLowerStructurePoints(bar, points);
+      if (brokenStructurePoints.length > 0) {
         orderBlocks.push({
           timestamp: bar.timestamp,
           type: "bullish",
           bar,
           bars: [bar, next, ...tail],
-          points: before,
-          brokeStructure,
+          points: brokenStructurePoints,
         });
       }
     }
