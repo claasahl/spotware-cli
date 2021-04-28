@@ -13,6 +13,7 @@ const log = debug("structure-points");
 
 function brokenUpperStructurePoints(
   bar: U.Trendbar,
+  tail: U.Trendbar[],
   points: U.StructurePoint2[]
 ): U.StructurePoint2[] {
   const tmp = points.filter(
@@ -28,14 +29,17 @@ function brokenUpperStructurePoints(
       }
     }
   }
-  const brokenStructurePoints = before.filter(
-    (p) => p.mitigatedBy && p.mitigatedBy.timestamp > bar.timestamp
-  );
+  const endOfTail =
+    tail.length === 0 ? bar.timestamp : tail[tail.length - 1].timestamp;
+  const brokenStructurePoints = before
+    .filter((p) => p.mitigatedBy && p.mitigatedBy.timestamp > bar.timestamp)
+    .filter((p) => p.mitigatedBy && p.mitigatedBy.timestamp <= endOfTail);
   return brokenStructurePoints;
 }
 
 function brokenLowerStructurePoints(
   bar: U.Trendbar,
+  tail: U.Trendbar[],
   points: U.StructurePoint2[]
 ): U.StructurePoint2[] {
   const tmp = points.filter(
@@ -51,9 +55,11 @@ function brokenLowerStructurePoints(
       }
     }
   }
-  const brokenStructurePoints = before.filter(
-    (p) => p.mitigatedBy && p.mitigatedBy.timestamp > bar.timestamp
-  );
+  const endOfTail =
+    tail.length === 0 ? bar.timestamp : tail[tail.length - 1].timestamp;
+  const brokenStructurePoints = before
+    .filter((p) => p.mitigatedBy && p.mitigatedBy.timestamp > bar.timestamp)
+    .filter((p) => p.mitigatedBy && p.mitigatedBy.timestamp <= endOfTail);
   return brokenStructurePoints;
 }
 
@@ -77,13 +83,22 @@ function orderBlocks(
 
     const bullishTail = tail.filter(bullish).length === tail.length;
     if (bearish(bar) && bullish(next) && bullishTail) {
-      const brokenStructurePoints = brokenUpperStructurePoints(bar, points);
+      const mitigatedBy = bars.slice(i + 2).findIndex((b) => b.low < bar.high);
+      const tail =
+        mitigatedBy === -1
+          ? bars.slice(i + 1)
+          : bars.slice(i + 1, i + 3 + mitigatedBy);
+      const brokenStructurePoints = brokenUpperStructurePoints(
+        bar,
+        tail,
+        points
+      );
       if (brokenStructurePoints.length > 0) {
         orderBlocks.push({
           timestamp: bar.timestamp,
           type: "bearish",
           bar,
-          bars: [bar, next, ...tail],
+          bars: [bar, ...tail],
           points: brokenStructurePoints,
         });
       }
@@ -91,13 +106,22 @@ function orderBlocks(
 
     const bearishTail = tail.filter(bearish).length === tail.length;
     if (bullish(bar) && bearish(next) && bearishTail) {
-      const brokenStructurePoints = brokenLowerStructurePoints(bar, points);
+      const mitigatedBy = bars.slice(i + 2).findIndex((b) => b.high < bar.low);
+      const tail =
+        mitigatedBy === -1
+          ? bars.slice(i + 1)
+          : bars.slice(i + 1, i + 3 + mitigatedBy);
+      const brokenStructurePoints = brokenLowerStructurePoints(
+        bar,
+        tail,
+        points
+      );
       if (brokenStructurePoints.length > 0) {
         orderBlocks.push({
           timestamp: bar.timestamp,
           type: "bullish",
           bar,
-          bars: [bar, next, ...tail],
+          bars: [bar, ...tail],
           points: brokenStructurePoints,
         });
       }
