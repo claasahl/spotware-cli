@@ -17,6 +17,7 @@ type OrderBlock = {
   bar: U.Trendbar;
   bars: U.Trendbar[];
   points: U.StructurePoint2[];
+  brokeStructure: boolean;
 };
 
 function orderBlocks(
@@ -44,13 +45,20 @@ function orderBlocks(
           }
         }
       }
-      orderBlocks.push({
-        timestamp: bar.timestamp,
-        type: "bearish",
-        bar,
-        bars: [bar, next, ...tail],
-        points: before,
-      });
+      const brokeStructure =
+        before.filter(
+          (p) => p.mitigatedBy && p.mitigatedBy.timestamp > bar.timestamp
+        ).length > 0;
+      if (brokeStructure) {
+        orderBlocks.push({
+          timestamp: bar.timestamp,
+          type: "bearish",
+          bar,
+          bars: [bar, next, ...tail],
+          points: before,
+          brokeStructure,
+        });
+      }
     }
 
     const bearishTail = tail.filter(bearish).length === tail.length;
@@ -68,13 +76,20 @@ function orderBlocks(
           }
         }
       }
-      orderBlocks.push({
-        timestamp: bar.timestamp,
-        type: "bullish",
-        bar,
-        bars: [bar, next, ...tail],
-        points: before,
-      });
+      const brokeStructure =
+        before.filter(
+          (p) => p.mitigatedBy && p.mitigatedBy.timestamp > bar.timestamp
+        ).length > 0;
+      if (brokeStructure) {
+        orderBlocks.push({
+          timestamp: bar.timestamp,
+          type: "bullish",
+          bar,
+          bars: [bar, next, ...tail],
+          points: before,
+          brokeStructure,
+        });
+      }
     }
   }
   return orderBlocks;
