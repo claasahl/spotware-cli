@@ -1,6 +1,6 @@
 import { ProtoOATrendbarPeriod } from "@claasahl/spotware-protobuf";
 import { SpotwareClientSocket } from "@claasahl/spotware-adapter";
-import { bearish, bullish } from "indicators";
+import { bearish, bullish, range } from "indicators";
 import fs from "fs";
 import debug from "debug";
 
@@ -37,7 +37,7 @@ function orderBlocks(
       );
       const before: U.StructurePoint2[] = [];
       if (tmp.length > 0) {
-        let value = bar.high;
+        let value = bar.high + range(bar);
         for (let i = tmp.length - 1; i >= 0; i--) {
           if (tmp[i].value >= value) {
             value = tmp[i].value;
@@ -68,7 +68,7 @@ function orderBlocks(
       );
       const before: U.StructurePoint2[] = [];
       if (tmp.length > 0) {
-        let value = bar.low;
+        let value = bar.low - range(bar);
         for (let i = tmp.length - 1; i >= 0; i--) {
           if (tmp[i].value <= value) {
             value = tmp[i].value;
