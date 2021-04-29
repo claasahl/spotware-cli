@@ -1,6 +1,7 @@
 export * from "./atr";
 export * from "./highLow";
 export * from "./insideBarMomentum";
+export * from "./orderBlock";
 export * from "./period";
 export * from "./sma";
 export * from "./structurePoints";
