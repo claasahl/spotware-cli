@@ -183,6 +183,7 @@ const periods = [
   ProtoOATrendbarPeriod.W1,
   ProtoOATrendbarPeriod.D1,
   ProtoOATrendbarPeriod.H4,
+  ProtoOATrendbarPeriod.M30,
 ];
 
 interface Options {
@@ -210,15 +211,11 @@ function processor(options: Options): SymbolDataProcessor {
     } = {};
 
     for (const period of periods) {
-      const w1Period = U.period(ProtoOATrendbarPeriod.W1);
-      const thisPeriod = U.period(period);
-      const quotient = Math.min(1, (thisPeriod / w1Period) * 1.5);
-
       const trendbars = await fetchTrendbars({
         socket,
         ctidTraderAccountId,
         symbolId,
-        fromTimestamp: toTimestamp - (toTimestamp - fromTimestamp) * quotient,
+        fromTimestamp,
         toTimestamp,
         period,
       });
