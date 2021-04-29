@@ -21,14 +21,15 @@ const periods: ProtoOATrendbarPeriod[] = [
 async function main() {
   const processSymbol = currencies(
     // "EURGBP",
-    "EURUSD"
+    // "EURUSD"
+    "XAUUSD"
     // "EURAUD",
     // "EURNZD",
     // "EURJPY",
     // "EURCHF",
     // "EURCAD"
   );
-  const fromDate = new Date("2019-01-01T00:00:00.000Z");
+  const fromDate = new Date("2021-03-01T00:00:00.000Z");
   const toDate = new Date("2021-04-01T00:00:00.000Z");
   await run({
     process: E.structurePoints({
