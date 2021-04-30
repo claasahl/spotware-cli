@@ -118,6 +118,19 @@ describe("order block", () => {
         })
       );
     });
+    test("GBPJPY H1 2021-04-19", () => {
+      const bars = require("../../testdata/gbpjpy--h1--2021-04.json");
+      const points = structurePoints2(bars);
+      const blocks = orderBlocks(bars, points);
+
+      const timestamp = new Date("2021-04-19T08:00:00.000Z").getTime();
+      const ob = blocks.filter((ob) => ob.timestamp === timestamp)[0];
+      expect(ob).toStrictEqual(
+        expect.objectContaining({
+          timestamp,
+        })
+      );
+    });
 
     //
     // EURUSD
