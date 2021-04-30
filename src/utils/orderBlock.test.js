@@ -3,6 +3,9 @@ const { orderBlocks } = require("../../build/utils/orderBlock");
 
 describe("order block", () => {
   describe("real world examples", () => {
+    //
+    // XAUUSD
+    //
     test("XAUUSD H4 2021-02-25", () => {
       const bars = require("../../testdata/xauusd--h4--2021-02.json");
       const points = structurePoints2(bars);
@@ -55,6 +58,10 @@ describe("order block", () => {
         })
       );
     });
+
+    //
+    // NZDUSD
+    //
     test("NZDUSD H4 2021-03-04", () => {
       const bars = require("../../testdata/nzdusd--h4--2021-03.json");
       const points = structurePoints2(bars);
