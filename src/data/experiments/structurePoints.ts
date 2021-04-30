@@ -65,6 +65,7 @@ const periods = [
   ProtoOATrendbarPeriod.H4,
   ProtoOATrendbarPeriod.H1,
   ProtoOATrendbarPeriod.M30,
+  ProtoOATrendbarPeriod.M5,
 ];
 
 interface Options {
