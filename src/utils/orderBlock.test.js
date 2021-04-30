@@ -118,5 +118,22 @@ describe("order block", () => {
         })
       );
     });
+
+    //
+    // EURUSD
+    //
+    test("EURUSD H4 2021-03-3", () => {
+      const bars = require("../../testdata/eurusd--h4--2021-03.json");
+      const points = structurePoints2(bars);
+      const blocks = orderBlocks(bars, points);
+
+      const timestamp = new Date("2021-03-03T06:00:00.000Z").getTime();
+      const ob = blocks.filter((ob) => ob.timestamp === timestamp)[0];
+      expect(ob).toStrictEqual(
+        expect.objectContaining({
+          timestamp,
+        })
+      );
+    });
   });
 });

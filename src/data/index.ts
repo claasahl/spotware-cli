@@ -21,8 +21,8 @@ const periods: ProtoOATrendbarPeriod[] = [
 async function main() {
   const processSymbol = currencies(
     // "EURGBP",
-    // "EURUSD"
-    "GBPJPY"
+    "EURUSD"
+    // "GBPJPY"
     // "EURAUD",
     // "EURNZD",
     // "EURJPY",
