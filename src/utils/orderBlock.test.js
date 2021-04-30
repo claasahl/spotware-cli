@@ -16,6 +16,19 @@ describe("order block", () => {
         })
       );
     });
+    test("XAUUSD H4 2021-02-25", () => {
+      const bars = require("../../testdata/xauusd--h4--2021-02.json");
+      const points = structurePoints2(bars);
+      const blocks = orderBlocks(bars, points);
+
+      const timestamp = new Date("2021-02-25T02:00:00.000Z").getTime();
+      const ob = blocks.filter((ob) => ob.timestamp === timestamp)[0];
+      expect(ob).toStrictEqual(
+        expect.objectContaining({
+          timestamp,
+        })
+      );
+    });
     test("NZDUSD H4 2021-03-04", () => {
       const bars = require("../../testdata/nzdusd--h4--2021-03.json");
       const points = structurePoints2(bars);
