@@ -133,6 +133,23 @@ describe("order block", () => {
     });
 
     //
+    // GBPUSD
+    //
+    test("GBPUSD M30 2021-03-24", () => {
+      const bars = require("../../testdata/gbpusd--m30--2021-04.json");
+      const points = structurePoints2(bars);
+      const blocks = orderBlocks(bars, points);
+
+      const timestamp = new Date("2021-04-22T10:30:00.000Z").getTime();
+      const ob = blocks.filter((ob) => ob.timestamp === timestamp)[0];
+      expect(ob).toStrictEqual(
+        expect.objectContaining({
+          timestamp,
+        })
+      );
+    });
+
+    //
     // EURUSD
     //
     test("EURUSD H4 2021-03-3", () => {
