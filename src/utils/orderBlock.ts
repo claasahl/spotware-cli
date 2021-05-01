@@ -17,7 +17,7 @@ export function engulfing(bar1: Trendbar, bar2: Trendbar): boolean {
 }
 
 export function largeBody(bar: Trendbar): boolean {
-  return 0.6 <= body(bar) / range(bar);
+  return 0.4 <= body(bar) / range(bar);
 }
 
 function brokenUpperStructurePoints(
