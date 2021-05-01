@@ -210,6 +210,21 @@ describe("order block", () => {
     });
   });
 
+  describe("real world negative examples", () => {
+    //
+    // AUDUSD
+    //
+    test("no order block -- AUDUSD H1 2021-01-04", () => {
+      const bars = require("../../testdata/audusd--h1--2021-01.json");
+      const points = structurePoints2(bars);
+      const blocks = orderBlocks(bars, points);
+
+      const timestamp = new Date("2021-01-04T21:00:00.000Z").getTime();
+      const ob = blocks.filter((ob) => ob.timestamp === timestamp)[0];
+      expect(ob).toEqual(undefined);
+    });
+  });
+
   describe("engulfing", () => {
     test("bar2 engulfs bar1", () => {
       const bar1 = { open: 10, close: 20 };
