@@ -85,7 +85,7 @@ export function orderBlocks(
     const bar = bars[i];
     const next = bars[i + 1];
 
-    if (bearish(bar) && engulfing(bar, next)) {
+    if (bearish(bar) && bullish(next) && engulfing(bar, next)) {
       const mitigatedBy = bars.slice(i + 2).findIndex((b) => b.low < bar.high);
       const tail =
         mitigatedBy === -1
@@ -106,7 +106,7 @@ export function orderBlocks(
         });
       }
     }
-    if (bullish(bar) && engulfing(bar, next)) {
+    if (bullish(bar) && bearish(next) && engulfing(bar, next)) {
       const mitigatedBy = bars.slice(i + 2).findIndex((b) => b.high < bar.low);
       const tail =
         mitigatedBy === -1
