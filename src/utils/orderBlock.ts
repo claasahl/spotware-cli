@@ -1,7 +1,20 @@
-import { bearish, bullish, range } from "indicators";
+import { bearish, bullish, Engulfing, lower, range, upper } from "indicators";
 
 import { StructurePoint2 } from "./structurePoints";
 import { Trendbar } from "./trendbar";
+
+/**
+ * Is `bar1` engulfed by `bar2`?
+ * @param bar1
+ * @param bar2
+ */
+export function engulfing(bar1: Trendbar, bar2: Trendbar): boolean {
+  const upperWithinBodyOfBar2 =
+    lower(bar2) <= upper(bar1) && upper(bar1) <= upper(bar2);
+  const lowerWithinBodyOfBar2 =
+    lower(bar2) <= lower(bar1) && lower(bar1) <= upper(bar2);
+  return upperWithinBodyOfBar2 && lowerWithinBodyOfBar2;
+}
 
 function brokenUpperStructurePoints(
   bar: Trendbar,

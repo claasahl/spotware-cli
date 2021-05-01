@@ -1,5 +1,5 @@
 const { structurePoints2 } = require("../../build/utils/structurePoints");
-const { orderBlocks } = require("../../build/utils/orderBlock");
+const { orderBlocks, engulfing } = require("../../build/utils/orderBlock");
 
 describe("order block", () => {
   describe("real world examples", () => {
@@ -207,6 +207,43 @@ describe("order block", () => {
           timestamp,
         })
       );
+    });
+  });
+
+  describe("engulfing", () => {
+    test("bar2 engulfs bar1", () => {
+      const bar1 = { open: 10, close: 20 };
+      const bar2 = { open: 9, close: 21 };
+      expect(engulfing(bar1, bar2)).toStrictEqual(true);
+    });
+    test("bar2 engulfs bar1 (equal lower price)", () => {
+      const bar1 = { open: 10, close: 20 };
+      const bar2 = { open: 10, close: 21 };
+      expect(engulfing(bar1, bar2)).toStrictEqual(true);
+    });
+    test("bar2 engulfs bar1 (equal upper price)", () => {
+      const bar1 = { open: 10, close: 20 };
+      const bar2 = { open: 9, close: 20 };
+      expect(engulfing(bar1, bar2)).toStrictEqual(true);
+    });
+    test("bar engulfs itself", () => {
+      const bar = { open: 10, close: 20 };
+      expect(engulfing(bar, bar)).toStrictEqual(true);
+    });
+    test("bar2 does not engulf bar1", () => {
+      const bar1 = { open: 10, close: 20 };
+      const bar2 = { open: 16, close: 12 };
+      expect(engulfing(bar1, bar2)).toStrictEqual(false);
+    });
+    test("bar2 does not engulf bar1 (lower price)", () => {
+      const bar1 = { open: 10, close: 20 };
+      const bar2 = { open: 11, close: 20 };
+      expect(engulfing(bar1, bar2)).toStrictEqual(false);
+    });
+    test("bar2 does not engulf bar1 (upper price)", () => {
+      const bar1 = { open: 10, close: 20 };
+      const bar2 = { open: 10, close: 19 };
+      expect(engulfing(bar1, bar2)).toStrictEqual(false);
     });
   });
 });
