@@ -38,6 +38,17 @@ describe("isTrendbar", () => {
     });
     expect(result).toBe(true);
   });
+  test("postive example (edge case)", () => {
+    const result = T.isTrendbar({
+      volume: 6724,
+      low: 76866,
+      deltaOpen: 0,
+      deltaClose: 298,
+      deltaHigh: 304,
+      utcTimestampInMinutes: 26828700,
+    });
+    expect(result).toBe(true);
+  });
   test("negative example", () => {
     const result = T.isTrendbar({
       volume: 10,
