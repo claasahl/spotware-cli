@@ -1,4 +1,4 @@
-import { bearish, bullish, lower, range, upper } from "indicators";
+import { bearish, body, bullish, lower, range, upper } from "indicators";
 
 import { StructurePoint2 } from "./structurePoints";
 import { Trendbar } from "./trendbar";
@@ -14,6 +14,10 @@ export function engulfing(bar1: Trendbar, bar2: Trendbar): boolean {
   const lowerWithinBodyOfBar2 =
     lower(bar2) <= lower(bar1) && lower(bar1) <= upper(bar2);
   return upperWithinBodyOfBar2 && lowerWithinBodyOfBar2;
+}
+
+export function largeBody(bar: Trendbar): boolean {
+  return 0.6 <= body(bar) / range(bar);
 }
 
 function brokenUpperStructurePoints(
@@ -85,7 +89,12 @@ export function orderBlocks(
     const bar = bars[i];
     const next = bars[i + 1];
 
-    if (bearish(bar) && bullish(next) && engulfing(bar, next)) {
+    if (
+      bearish(bar) &&
+      bullish(next) &&
+      engulfing(bar, next) &&
+      largeBody(bar)
+    ) {
       const mitigatedBy = bars
         .slice(i + 2)
         .findIndex((b) => lower(b) <= bar.high);
@@ -108,7 +117,12 @@ export function orderBlocks(
         });
       }
     }
-    if (bullish(bar) && bearish(next) && engulfing(bar, next)) {
+    if (
+      bullish(bar) &&
+      bearish(next) &&
+      engulfing(bar, next) &&
+      largeBody(bar)
+    ) {
       const mitigatedBy = bars
         .slice(i + 2)
         .findIndex((b) => bar.low <= upper(b));
