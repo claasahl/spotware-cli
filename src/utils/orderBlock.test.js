@@ -120,6 +120,23 @@ describe("order block", () => {
     });
 
     //
+    // CADCHF
+    //
+    test("CADCHF H2 2021-03-10", () => {
+      const bars = require("../../testdata/cadchf--h2--2021-03.json");
+      const points = structurePoints2(bars);
+      const blocks = orderBlocks(bars, points);
+
+      const timestamp = new Date("2021-03-10T06:00:00.000Z").getTime();
+      const ob = blocks.filter((ob) => ob.timestamp === timestamp)[0];
+      expect(ob).toStrictEqual(
+        expect.objectContaining({
+          timestamp,
+        })
+      );
+    });
+
+    //
     // GBPUSD
     //
     test("GBPUSD H4 2021-02-04", () => {
