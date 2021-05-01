@@ -223,6 +223,15 @@ describe("order block", () => {
       const ob = blocks.filter((ob) => ob.timestamp === timestamp)[0];
       expect(ob).toEqual(undefined);
     });
+    test("no order block -- AUDUSD H1 2021-01-07", () => {
+      const bars = require("../../testdata/audusd--h1--2021-01.json");
+      const points = structurePoints2(bars);
+      const blocks = orderBlocks(bars, points);
+
+      const timestamp = new Date("2021-01-07T16:00:00.000Z").getTime();
+      const ob = blocks.filter((ob) => ob.timestamp === timestamp)[0];
+      expect(ob).toEqual(undefined);
+    });
   });
 
   describe("engulfing", () => {
