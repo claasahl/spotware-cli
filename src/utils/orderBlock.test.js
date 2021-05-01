@@ -123,7 +123,7 @@ describe("order block", () => {
       const points = structurePoints2(bars);
       const blocks = orderBlocks(bars, points);
 
-      const timestamp = new Date("2021-04-22T10:30:00.000Z").getTime();
+      const timestamp = new Date("2021-04-22T11:00:00.000Z").getTime();
       const ob = blocks.filter((ob) => ob.timestamp === timestamp)[0];
       expect(ob).toStrictEqual(
         expect.objectContaining({
