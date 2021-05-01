@@ -137,6 +137,23 @@ describe("order block", () => {
     });
 
     //
+    // CHFJPY
+    //
+    test("CADCHF H4 2021-03-10", () => {
+      const bars = require("../../testdata/chfjpy--h4--2021-02.json");
+      const points = structurePoints2(bars);
+      const blocks = orderBlocks(bars, points);
+
+      const timestamp = new Date("2021-02-16T18:00:00.000Z").getTime();
+      const ob = blocks.filter((ob) => ob.timestamp === timestamp)[0];
+      expect(ob).toStrictEqual(
+        expect.objectContaining({
+          timestamp,
+        })
+      );
+    });
+
+    //
     // GBPUSD
     //
     test("GBPUSD H4 2021-02-04", () => {
