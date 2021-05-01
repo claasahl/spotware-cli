@@ -133,23 +133,6 @@ describe("order block", () => {
     });
 
     //
-    // EURUSD
-    //
-    test("EURUSD H4 2021-03-3", () => {
-      const bars = require("../../testdata/eurusd--h4--2021-03.json");
-      const points = structurePoints2(bars);
-      const blocks = orderBlocks(bars, points);
-
-      const timestamp = new Date("2021-03-03T06:00:00.000Z").getTime();
-      const ob = blocks.filter((ob) => ob.timestamp === timestamp)[0];
-      expect(ob).toStrictEqual(
-        expect.objectContaining({
-          timestamp,
-        })
-      );
-    });
-
-    //
     // AUDUSD
     //
     test("AUDUSD H1 2021-01-06", () => {
@@ -200,7 +183,22 @@ describe("order block", () => {
     });
 
     //
+    // EURUSD
+    // ... they used to be in the "positive samples"-section
+    //
+    test("no order block -- EURUSD H4 2021-03-3", () => {
+      const bars = require("../../testdata/eurusd--h4--2021-03.json");
+      const points = structurePoints2(bars);
+      const blocks = orderBlocks(bars, points);
+
+      const timestamp = new Date("2021-03-03T06:00:00.000Z").getTime();
+      const ob = blocks.filter((ob) => ob.timestamp === timestamp)[0];
+      expect(ob).toEqual(undefined);
+    });
+
+    //
     // NZDUSD
+    // not sure where I got these from... they used to be in the "positive samples"-section
     //
     test("no order block -- NZDUSD H4 2021-03-04", () => {
       const bars = require("../../testdata/nzdusd--h4--2021-03.json");
