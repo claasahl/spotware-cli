@@ -84,10 +84,8 @@ export function orderBlocks(
   for (let i = 0; i + 1 < bars.length; i++) {
     const bar = bars[i];
     const next = bars[i + 1];
-    const tail = bars.slice(i + 2, i + 5);
 
-    const bullishTail = tail.filter(bullish).length === tail.length;
-    if (bearish(bar) && bullish(next) && bullishTail) {
+    if (bearish(bar) && engulfing(bar, next)) {
       const mitigatedBy = bars.slice(i + 2).findIndex((b) => b.low < bar.high);
       const tail =
         mitigatedBy === -1
@@ -108,9 +106,7 @@ export function orderBlocks(
         });
       }
     }
-
-    const bearishTail = tail.filter(bearish).length === tail.length;
-    if (bullish(bar) && bearish(next) && bearishTail) {
+    if (bullish(bar) && engulfing(bar, next)) {
       const mitigatedBy = bars.slice(i + 2).findIndex((b) => b.high < bar.low);
       const tail =
         mitigatedBy === -1
