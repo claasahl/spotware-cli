@@ -105,6 +105,19 @@ describe("order block", () => {
     //
     // GBPJPY
     //
+    test("GBPJPY H4 2020-12-11", () => {
+      const bars = require("../../testdata/gbpjpy--h4--2020-12.json");
+      const points = structurePoints2(bars);
+      const blocks = orderBlocks(bars, points);
+
+      const timestamp = new Date("2020-12-11T10:00:00.000Z").getTime();
+      const ob = blocks.filter((ob) => ob.timestamp === timestamp)[0];
+      expect(ob).toStrictEqual(
+        expect.objectContaining({
+          timestamp,
+        })
+      );
+    });
     test("GBPJPY H4 2021-03-24", () => {
       const bars = require("../../testdata/gbpjpy--h4--2021-03.json");
       const points = structurePoints2(bars);
