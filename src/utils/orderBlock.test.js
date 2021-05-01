@@ -103,6 +103,23 @@ describe("order block", () => {
     });
 
     //
+    // EURUSD
+    //
+    test("EURUSD H4 2021-03-3", () => {
+      const bars = require("../../testdata/eurusd--h4--2021-03.json");
+      const points = structurePoints2(bars);
+      const blocks = orderBlocks(bars, points);
+
+      const timestamp = new Date("2021-03-03T06:00:00.000Z").getTime();
+      const ob = blocks.filter((ob) => ob.timestamp === timestamp)[0];
+      expect(ob).toStrictEqual(
+        expect.objectContaining({
+          timestamp,
+        })
+      );
+    });
+
+    //
     // GBPUSD
     //
     test("GBPUSD H4 2021-02-04", () => {
@@ -183,20 +200,6 @@ describe("order block", () => {
     });
 
     //
-    // EURUSD
-    // ... they used to be in the "positive samples"-section
-    //
-    test("no order block -- EURUSD H4 2021-03-3", () => {
-      const bars = require("../../testdata/eurusd--h4--2021-03.json");
-      const points = structurePoints2(bars);
-      const blocks = orderBlocks(bars, points);
-
-      const timestamp = new Date("2021-03-03T06:00:00.000Z").getTime();
-      const ob = blocks.filter((ob) => ob.timestamp === timestamp)[0];
-      expect(ob).toEqual(undefined);
-    });
-
-    //
     // NZDUSD
     // not sure where I got these from... they used to be in the "positive samples"-section
     //
@@ -254,15 +257,17 @@ describe("order block", () => {
       const bar2 = { open: 16, close: 12 };
       expect(engulfing(bar1, bar2)).toStrictEqual(false);
     });
-    test("bar2 does not engulf bar1 (lower price)", () => {
+    test("bar2 does not engulf bar1 (lower price), but ok with increased tolerance", () => {
       const bar1 = { open: 10, close: 20 };
       const bar2 = { open: 11, close: 20 };
       expect(engulfing(bar1, bar2)).toStrictEqual(false);
+      expect(engulfing(bar1, bar2, 1)).toStrictEqual(true);
     });
-    test("bar2 does not engulf bar1 (upper price)", () => {
+    test("bar2 does not engulf bar1 (upper price), but ok with increased tolerance", () => {
       const bar1 = { open: 10, close: 20 };
       const bar2 = { open: 10, close: 19 };
       expect(engulfing(bar1, bar2)).toStrictEqual(false);
+      expect(engulfing(bar1, bar2, 1)).toStrictEqual(true);
     });
   });
 });

@@ -8,11 +8,17 @@ import { Trendbar } from "./trendbar";
  * @param bar1
  * @param bar2
  */
-export function engulfing(bar1: Trendbar, bar2: Trendbar): boolean {
+export function engulfing(
+  bar1: Trendbar,
+  bar2: Trendbar,
+  tolerance = 0
+): boolean {
   const upperWithinBodyOfBar2 =
-    lower(bar2) <= upper(bar1) && upper(bar1) <= upper(bar2);
+    lower(bar2) - tolerance <= upper(bar1) &&
+    upper(bar1) <= upper(bar2) + tolerance;
   const lowerWithinBodyOfBar2 =
-    lower(bar2) <= lower(bar1) && lower(bar1) <= upper(bar2);
+    lower(bar2) - tolerance <= lower(bar1) &&
+    lower(bar1) <= upper(bar2) + tolerance;
   return upperWithinBodyOfBar2 && lowerWithinBodyOfBar2;
 }
 
@@ -92,7 +98,7 @@ export function orderBlocks(
     if (
       bearish(bar) &&
       bullish(next) &&
-      engulfing(bar, next) &&
+      engulfing(bar, next, 5) &&
       largeBody(bar)
     ) {
       const mitigatedBy = bars
@@ -120,7 +126,7 @@ export function orderBlocks(
     if (
       bullish(bar) &&
       bearish(next) &&
-      engulfing(bar, next) &&
+      engulfing(bar, next, 5) &&
       largeBody(bar)
     ) {
       const mitigatedBy = bars
