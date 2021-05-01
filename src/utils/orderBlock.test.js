@@ -191,5 +191,22 @@ describe("order block", () => {
         })
       );
     });
+
+    //
+    // AUDUSD
+    //
+    test("AUDUSD H1 2021-01-06", () => {
+      const bars = require("../../testdata/audusd--h1--2021-01.json");
+      const points = structurePoints2(bars);
+      const blocks = orderBlocks(bars, points);
+
+      const timestamp = new Date("2021-01-06T23:00:00.000Z").getTime();
+      const ob = blocks.filter((ob) => ob.timestamp === timestamp)[0];
+      expect(ob).toStrictEqual(
+        expect.objectContaining({
+          timestamp,
+        })
+      );
+    });
   });
 });
