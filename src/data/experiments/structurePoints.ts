@@ -52,7 +52,9 @@ async function fetchTrendbars(
         U.period(options.period);
     }
 
-    const bars = response.trendbar.filter(U.isTrendbar).map(U.toTrendbar);
+    const bars = response.trendbar
+      .filter(U.isTrendbar)
+      .map((b) => U.toTrendbar(b, options.period));
     data.splice(0, 0, ...bars);
     toTimestamp = timePeriod.fromTimestamp;
   } while (toTimestamp > options.fromTimestamp);
