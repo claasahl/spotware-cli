@@ -122,12 +122,12 @@ describe("order block", () => {
     //
     // CADCHF
     //
-    test("CADCHF H2 2021-03-10", () => {
-      const bars = require("../../testdata/cadchf--h2--2021-03.json");
+    test("CADCHF H1 2021-03-10", () => {
+      const bars = require("../../testdata/cadchf--h1--2021-03.json");
       const points = structurePoints2(bars);
       const blocks = orderBlocks(bars, points);
 
-      const timestamp = new Date("2021-03-10T06:00:00.000Z").getTime();
+      const timestamp = new Date("2021-03-10T07:00:00.000Z").getTime();
       const ob = blocks.filter((ob) => ob.timestamp === timestamp)[0];
       expect(ob).toStrictEqual(
         expect.objectContaining({
@@ -139,7 +139,7 @@ describe("order block", () => {
     //
     // CHFJPY
     //
-    test("CADCHF H4 2021-03-10", () => {
+    test("CHFJPY H4 2021-02-16", () => {
       const bars = require("../../testdata/chfjpy--h4--2021-02.json");
       const points = structurePoints2(bars);
       const blocks = orderBlocks(bars, points);
