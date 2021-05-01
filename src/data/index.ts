@@ -22,7 +22,9 @@ async function main() {
   const processSymbol = currencies(
     // "EURGBP",
     // "EURUSD"
-    "GBPUSD"
+    "AUDUSD",
+    "NZDUSD",
+    "GBPJPY"
     // "EURAUD",
     // "EURNZD",
     // "EURJPY",
