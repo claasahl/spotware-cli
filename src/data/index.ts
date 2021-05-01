@@ -22,41 +22,39 @@ async function main() {
   const processSymbol = currencies(
     // "EURGBP",
     // "EURUSD"
-    "AUDUSD",
-    "NZDUSD",
-    "GBPJPY"
+    "AUDUSD"
     // "EURAUD",
     // "EURNZD",
     // "EURJPY",
     // "EURCHF",
     // "EURCAD"
   );
-  const fromDate = new Date("2020-12-01T00:00:00.000Z");
-  const toDate = new Date("2021-05-01T00:00:00.000Z");
-  // await run({
-  //   process: E.structurePoints({
-  //     fromDate,
-  //     toDate,
-  //     processSymbol,
-  //   }),
-  // });
-
-  for (const period of periods) {
-    await run({
-      process: E.trendbars({
-        fromDate,
-        toDate,
-        processSymbol,
-        period,
-      }),
-    });
-  }
+  const fromDate = new Date("2021-01-01T00:00:00.000Z");
+  const toDate = new Date("2021-02-01T00:00:00.000Z");
   await run({
-    process: E.ticks({
+    process: E.structurePoints({
       fromDate,
       toDate,
       processSymbol,
     }),
   });
+
+  // for (const period of periods) {
+  //   await run({
+  //     process: E.trendbars({
+  //       fromDate,
+  //       toDate,
+  //       processSymbol,
+  //       period,
+  //     }),
+  //   });
+  // }
+  // await run({
+  //   process: E.ticks({
+  //     fromDate,
+  //     toDate,
+  //     processSymbol,
+  //   }),
+  // });
 }
 main();
