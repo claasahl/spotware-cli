@@ -139,12 +139,12 @@ describe("order block", () => {
     //
     // CHFJPY
     //
-    test("CHFJPY H4 2021-02-16", () => {
-      const bars = require("../../testdata/chfjpy--h4--2021-02.json");
+    test("CHFJPY H1 2021-02-17", () => {
+      const bars = require("../../testdata/chfjpy--h1--2021-02.json");
       const points = structurePoints2(bars);
-      const blocks = orderBlocks(bars, points);
+      const blocks = orderBlocks(bars, points, 500);
 
-      const timestamp = new Date("2021-02-16T18:00:00.000Z").getTime();
+      const timestamp = new Date("2021-02-17T00:00:00.000Z").getTime();
       const ob = blocks.filter((ob) => ob.timestamp === timestamp)[0];
       expect(ob).toStrictEqual(
         expect.objectContaining({

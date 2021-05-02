@@ -88,9 +88,9 @@ export type OrderBlock = {
 
 export function orderBlocks(
   bars: Trendbar[],
-  points: StructurePoint2[]
+  points: StructurePoint2[],
+  tolerance = 6
 ): OrderBlock[] {
-  const tolerance = 6;
   const orderBlocks: OrderBlock[] = [];
   for (let i = 0; i + 1 < bars.length; i++) {
     const bar = bars[i];
@@ -104,7 +104,7 @@ export function orderBlocks(
     ) {
       const mitigatedBy = bars
         .slice(i + 2)
-        .findIndex((b) => lower(b) <= bar.high - tolerance);
+        .findIndex((b) => lower(b) <= upper(bar));
       const tail =
         mitigatedBy === -1
           ? bars.slice(i + 1)
@@ -132,7 +132,7 @@ export function orderBlocks(
     ) {
       const mitigatedBy = bars
         .slice(i + 2)
-        .findIndex((b) => bar.low + tolerance <= upper(b));
+        .findIndex((b) => lower(bar) <= upper(b));
       const tail =
         mitigatedBy === -1
           ? bars.slice(i + 1)
