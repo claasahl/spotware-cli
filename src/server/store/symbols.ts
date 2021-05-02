@@ -12,7 +12,7 @@ export const BTCEUR = Object.freeze({
   symbolCategoryId: CATEGORIES.CRYTOS.id,
   digits: 2,
   holiday: [],
-  pipPosition: 5,
+  pipPosition: 1,
   schedule: [],
 });
 
@@ -23,9 +23,9 @@ export const EURUSD = Object.freeze({
   quoteAssetId: ASSETS.USD.assetId,
   enabled: true,
   symbolCategoryId: CATEGORIES.FOREX.id,
-  digits: 2,
+  digits: 5,
   holiday: [],
-  pipPosition: 5,
+  pipPosition: 4,
   schedule: [],
 });
 
@@ -36,9 +36,9 @@ export const EURGBP = Object.freeze({
   quoteAssetId: ASSETS.GBP.assetId,
   enabled: false,
   symbolCategoryId: CATEGORIES.FOREX.id,
-  digits: 2,
+  digits: 5,
   holiday: [],
-  pipPosition: 5,
+  pipPosition: 4,
   schedule: [],
 });
 
@@ -51,7 +51,7 @@ export const XAGEUR = Object.freeze({
   symbolCategoryId: CATEGORIES.METALS.id,
   digits: 2,
   holiday: [],
-  pipPosition: 5,
+  pipPosition: 2,
   schedule: [],
 });
 
@@ -64,7 +64,7 @@ export const XAUUSD = Object.freeze({
   symbolCategoryId: CATEGORIES.METALS.id,
   digits: 2,
   holiday: [],
-  pipPosition: 5,
+  pipPosition: 2,
   schedule: [],
 });
 export const NZDUSD = Object.freeze({
@@ -74,9 +74,9 @@ export const NZDUSD = Object.freeze({
   quoteAssetId: ASSETS.USD.assetId,
   enabled: true,
   symbolCategoryId: CATEGORIES.FOREX.id,
-  digits: 2,
+  digits: 5,
   holiday: [],
-  pipPosition: 5,
+  pipPosition: 4,
   schedule: [],
 });
 export const AUDUSD = Object.freeze({
@@ -86,9 +86,9 @@ export const AUDUSD = Object.freeze({
   quoteAssetId: ASSETS.USD.assetId,
   enabled: true,
   symbolCategoryId: CATEGORIES.FOREX.id,
-  digits: 2,
+  digits: 5,
   holiday: [],
-  pipPosition: 5,
+  pipPosition: 4,
   schedule: [],
 });
 export const GBPUSD = Object.freeze({
@@ -98,9 +98,9 @@ export const GBPUSD = Object.freeze({
   quoteAssetId: ASSETS.USD.assetId,
   enabled: true,
   symbolCategoryId: CATEGORIES.FOREX.id,
-  digits: 2,
+  digits: 5,
   holiday: [],
-  pipPosition: 5,
+  pipPosition: 4,
   schedule: [],
 });
 export const GBPJPY = Object.freeze({
@@ -110,9 +110,9 @@ export const GBPJPY = Object.freeze({
   quoteAssetId: ASSETS.JPY.assetId,
   enabled: true,
   symbolCategoryId: CATEGORIES.FOREX.id,
-  digits: 2,
+  digits: 3,
   holiday: [],
-  pipPosition: 5,
+  pipPosition: 2,
   schedule: [],
 });
 export const CHFJPY = Object.freeze({
@@ -134,9 +134,9 @@ export const CADCHF = Object.freeze({
   quoteAssetId: ASSETS.CHF.assetId,
   enabled: true,
   symbolCategoryId: CATEGORIES.FOREX.id,
-  digits: 2,
+  digits: 5,
   holiday: [],
-  pipPosition: 5,
+  pipPosition: 4,
   schedule: [],
 });
 
