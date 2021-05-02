@@ -122,9 +122,9 @@ export const CHFJPY = Object.freeze({
   quoteAssetId: ASSETS.JPY.assetId,
   enabled: true,
   symbolCategoryId: CATEGORIES.FOREX.id,
-  digits: 2,
+  digits: 3,
   holiday: [],
-  pipPosition: 5,
+  pipPosition: 2,
   schedule: [],
 });
 export const CADCHF = Object.freeze({
