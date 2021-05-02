@@ -98,20 +98,28 @@ export function orderBlocks(
   for (let i = 0; i + 1 < bars.length; i++) {
     const bar = bars[i];
     const next = bars[i + 1];
+    let bullishTail = 2;
+    while (i + bullishTail < bars.length && bullish(bars[i + bullishTail])) {
+      bullishTail++;
+    }
+    let bearishTail = 2;
+    while (i + bearishTail < bars.length && bearish(bars[i + bearishTail])) {
+      bearishTail++;
+    }
 
     if (
       bearish(bar) &&
       bullish(next) &&
-      engulfing(bar, next, tolerance) &&
+      (engulfing(bar, next, tolerance) || bullishTail > 4) &&
       largeBody(bar)
     ) {
       const mitigatedBy = bars
-        .slice(i + 2)
+        .slice(i + bullishTail)
         .findIndex((b) => lower(b) <= upper(bar));
       const tail =
         mitigatedBy === -1
           ? bars.slice(i + 1)
-          : bars.slice(i + 1, i + 3 + mitigatedBy);
+          : bars.slice(i + 1, i + bullishTail + 1 + mitigatedBy);
       const brokenStructurePoints = brokenUpperStructurePoints(
         bar,
         tail,
@@ -130,16 +138,16 @@ export function orderBlocks(
     if (
       bullish(bar) &&
       bearish(next) &&
-      engulfing(bar, next, tolerance) &&
+      (engulfing(bar, next, tolerance) || bearishTail > 4) &&
       largeBody(bar)
     ) {
       const mitigatedBy = bars
-        .slice(i + 2)
+        .slice(i + bearishTail)
         .findIndex((b) => lower(bar) <= upper(b));
       const tail =
         mitigatedBy === -1
           ? bars.slice(i + 1)
-          : bars.slice(i + 1, i + 3 + mitigatedBy);
+          : bars.slice(i + 1, i + bearishTail + 1 + mitigatedBy);
       const brokenStructurePoints = brokenLowerStructurePoints(
         bar,
         tail,
