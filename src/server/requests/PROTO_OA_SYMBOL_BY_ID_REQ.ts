@@ -20,10 +20,21 @@ export function request(socket: SpotwareSocket) {
         U.NOT_AUTHORIZED(socket, ctidTraderAccountId, clientMsgId);
         return;
       }
+      const symbolIds = message.payload.symbolId;
+      const symbols = entry.symbols.filter((s) =>
+        symbolIds.includes(s.symbolId)
+      );
+      if (symbols.length < symbolIds.length) {
+        const missing = symbolIds.filter(
+          (id) => !symbols.map((s) => s.symbolId).includes(id)
+        );
+        U.SYMBOL_NOT_FOUND(socket, ctidTraderAccountId, missing, clientMsgId);
+        return;
+      }
 
       response(
         socket,
-        { ctidTraderAccountId, archivedSymbol: [], symbol: entry.symbols },
+        { ctidTraderAccountId, archivedSymbol: [], symbol: symbols },
         clientMsgId
       );
     }

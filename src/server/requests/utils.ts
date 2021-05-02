@@ -85,3 +85,21 @@ export function INCORRECT_BOUNDARIES(
     )
   );
 }
+
+export function SYMBOL_NOT_FOUND(
+  socket: SpotwareSocket,
+  ctidTraderAccountId: number,
+  symbolIds: number[],
+  clientMsgId?: string
+) {
+  socket.write(
+    FACTORY.PROTO_OA_ERROR_RES(
+      {
+        errorCode: "SYMBOL_NOT_FOUND",
+        ctidTraderAccountId,
+        description: `No symbols with requested ID: ${symbolIds.join(", ")}.`,
+      },
+      clientMsgId
+    )
+  );
+}
