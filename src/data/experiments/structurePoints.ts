@@ -62,10 +62,10 @@ async function fetchTrendbars(
 }
 
 const periods = [
-  // ProtoOATrendbarPeriod.W1,
-  // ProtoOATrendbarPeriod.D1,
-  ProtoOATrendbarPeriod.H4,
-  ProtoOATrendbarPeriod.H1,
+  ProtoOATrendbarPeriod.W1,
+  ProtoOATrendbarPeriod.D1,
+  // ProtoOATrendbarPeriod.H4,
+  // ProtoOATrendbarPeriod.H1,
   // ProtoOATrendbarPeriod.M30,
   // ProtoOATrendbarPeriod.M5,
 ];
