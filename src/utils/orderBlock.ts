@@ -90,6 +90,7 @@ export function orderBlocks(
   bars: Trendbar[],
   points: StructurePoint2[]
 ): OrderBlock[] {
+  const tolerance = 6;
   const orderBlocks: OrderBlock[] = [];
   for (let i = 0; i + 1 < bars.length; i++) {
     const bar = bars[i];
@@ -98,12 +99,12 @@ export function orderBlocks(
     if (
       bearish(bar) &&
       bullish(next) &&
-      engulfing(bar, next, 5) &&
+      engulfing(bar, next, tolerance) &&
       largeBody(bar)
     ) {
       const mitigatedBy = bars
         .slice(i + 2)
-        .findIndex((b) => lower(b) <= bar.high);
+        .findIndex((b) => lower(b) <= bar.high - tolerance);
       const tail =
         mitigatedBy === -1
           ? bars.slice(i + 1)
@@ -126,12 +127,12 @@ export function orderBlocks(
     if (
       bullish(bar) &&
       bearish(next) &&
-      engulfing(bar, next, 5) &&
+      engulfing(bar, next, tolerance) &&
       largeBody(bar)
     ) {
       const mitigatedBy = bars
         .slice(i + 2)
-        .findIndex((b) => bar.low <= upper(b));
+        .findIndex((b) => bar.low + tolerance <= upper(b));
       const tail =
         mitigatedBy === -1
           ? bars.slice(i + 1)
