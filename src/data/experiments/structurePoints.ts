@@ -94,6 +94,12 @@ function processor(options: Options): SymbolDataProcessor {
       };
     } = {};
 
+    const response = await R.PROTO_OA_SYMBOL_BY_ID_REQ(socket, {
+      ctidTraderAccountId,
+      symbolId: [symbolId],
+    });
+    const symbolDetails = response.symbol[0];
+
     for (const period of periods) {
       const trendbars = await fetchTrendbars({
         socket,
@@ -108,7 +114,7 @@ function processor(options: Options): SymbolDataProcessor {
       results[ProtoOATrendbarPeriod[period]] = {
         trendbars,
         points,
-        orderBlocks: U.orderBlocks(trendbars, points),
+        orderBlocks: U.orderBlocks(trendbars, points, symbolDetails),
         trend,
       };
     }

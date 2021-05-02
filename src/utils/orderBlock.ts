@@ -1,3 +1,4 @@
+import { ProtoOALightSymbol, ProtoOASymbol } from "@claasahl/spotware-protobuf";
 import { bearish, body, bullish, lower, range, upper } from "indicators";
 
 import { StructurePoint2 } from "./structurePoints";
@@ -89,8 +90,10 @@ export type OrderBlock = {
 export function orderBlocks(
   bars: Trendbar[],
   points: StructurePoint2[],
-  tolerance = 6
+  symbol: ProtoOASymbol
 ): OrderBlock[] {
+  const onePip = Math.pow(10, 5 - symbol.pipPosition);
+  const tolerance = 0.5 * onePip;
   const orderBlocks: OrderBlock[] = [];
   for (let i = 0; i + 1 < bars.length; i++) {
     const bar = bars[i];
